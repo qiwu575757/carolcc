@@ -9,12 +9,14 @@
 #include <string>
 #include <vector>
 
+#include "value.h"
+class value;
 class function;
 class variable;
 class arguments;
 class type;
 
-class variable
+class variable:public value
 {
 public:
 private:
@@ -22,7 +24,7 @@ private:
     type* _type;
 };
 
-class arguments{
+class arguments:public value{
 public:
 private:
     function* _parent;
@@ -31,9 +33,9 @@ private:
 };
 
 
-class function {
+class function :public value{
 public:
-    function(type* _type,std::string id,arguments* _args):_type(_type),_id(id),_args(_args){};
+    function(type* _type,std::string &id,arguments* _args):_type(_type),_id(id),_args(_args){};
 
 private:
     type* _type;

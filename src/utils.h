@@ -2,8 +2,8 @@
 #ifndef EASYCC_ERROR_H
 #define EASYCC_ERROR_H
 
-#include "stdio.h"
-
+#include <stdio.h>
+#include <stdlib.h>
 
 #define __DEBUG 
 #define __WARN
@@ -12,7 +12,11 @@
 
 #ifdef __DEBUG
 #define ERROR(format, ...) \
-        printf("\x1b[32m" format "\x1b[0m",##__VA_ARGS__); 
+        do{\
+                printf("\x1b[32m""%s:%d " format "\x1b[0m",__FILE__,__LINE__,##__VA_ARGS__);\
+                exit(1);\
+        }\
+        while(0)
 #else 
 #define ERROR(format, ...) 
 #endif

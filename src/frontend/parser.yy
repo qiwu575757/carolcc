@@ -19,6 +19,7 @@
         char buf[512]={0};
         for (i=0;i<len;++i)
         {
+            //TODO: may have bugs
             sprintf(buf,"%s%d ",buf,yytext[i]);
         }
         fprintf(stderr, "ERROR: text %s\n",yytext);
