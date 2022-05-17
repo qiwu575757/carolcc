@@ -1,7 +1,10 @@
 
 #ifndef COMPILER_INSTRUCTION_H
 #define COMPILER_INSTRUCTION_H
-class instruction{
+#include "value.h"
+
+class value;
+class instruction : public value{
 
 };
 

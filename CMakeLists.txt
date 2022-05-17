@@ -11,7 +11,7 @@ IF(BISON_FOUND)
       COMMAND ${BISON_EXECUTABLE}
               --defines=${CMAKE_SOURCE_DIR}/src/frontend/parser.h
               --output=${BISONOUTPUT}
-              ${CMAKE_SOURCE_DIR}/src/frontend/parser.y
+              ${CMAKE_SOURCE_DIR}/src/frontend/parser.yy
       COMMENT "Generating parser.cpp"
     )
 ENDIF()
