@@ -13,7 +13,7 @@
 #ifdef __DEBUG
 #define ERROR(format, ...) \
         do{\
-                printf("\x1b[32m""%s:%d " format "\x1b[0m",__FILE__,__LINE__,##__VA_ARGS__);\
+                printf("\x1b[32m""%s:%d " format "\x1b[0m\n",__FILE__,__LINE__,##__VA_ARGS__);\
                 exit(1);\
         }\
         while(0)

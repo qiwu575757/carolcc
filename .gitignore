@@ -11,3 +11,5 @@ cmake-build-debug/
 cmake_install.cmake
 CMakeCache.txt
 Makefile
+
+.cache/clangd/index

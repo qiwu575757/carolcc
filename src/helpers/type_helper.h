@@ -8,7 +8,8 @@
 enum class type_helper{
     INT,
     FLOAT,
-    VOID
+    VOID,
+    PTR
 };
 class type {
 public:

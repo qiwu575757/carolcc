@@ -17,6 +17,12 @@ public:
     virtual void visit(tree_var_decl &node) = 0;
     virtual void visit(tree_exp &node) = 0;
     virtual void visit(tree_init_val &node) = 0;
+    virtual void visit(tree_init_val_array &node) = 0;
+    virtual void visit(tree_init_val_arraylist &node) = 0;
+    virtual void visit(tree_func_fparams &node) = 0;
+    virtual void visit(tree_func_fparam &node) = 0;
+    virtual void visit(tree_func_fparamone &node) = 0;
+    virtual void visit(tree_func_fparamarray &node) = 0;
     virtual void visit(tree_decl &node) = 0;
     virtual void visit(tree_const_def &node) = 0;
     virtual void visit(tree_var_def_list &node) = 0;

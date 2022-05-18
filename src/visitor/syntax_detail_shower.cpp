@@ -337,3 +337,9 @@ void syntax_detail_shower::visit(tree_l_or_exp &node) {
     father_node = this_node;
     if(node.l_or_exp)node.l_or_exp->accept(*this);
     }
+void syntax_detail_shower::visit(tree_init_val_array &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_init_val_arraylist &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_func_fparams &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_func_fparam &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_func_fparamone &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_func_fparamarray &node) {ERROR("TODO");}

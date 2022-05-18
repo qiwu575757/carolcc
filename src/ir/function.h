@@ -16,18 +16,12 @@ class variable;
 class arguments;
 class type;
 
-class variable:public value
-{
-public:
-private:
-    std::string id;
-    type* _type;
-};
 
 class arguments:public value{
 public:
+    explicit arguments(unsigned _arg_number):_arg_number(_arg_number){};
+    void add_arg(variable* arg);
 private:
-    function* _parent;
     unsigned _arg_number;
     std::vector<variable*> _argument_list;
 };

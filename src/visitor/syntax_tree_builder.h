@@ -23,6 +23,12 @@ public:
     void visit(tree_var_decl &node) final;
     void visit(tree_exp &node) final;
     void visit(tree_init_val &node) final;
+    void visit(tree_init_val_array &node) final;
+    void visit(tree_init_val_arraylist &node) final;
+    void visit(tree_func_fparams &node) final;
+    void visit(tree_func_fparam &node) final;
+    void visit(tree_func_fparamone &node) final;
+    void visit(tree_func_fparamarray &node) final;
     void visit(tree_decl &node) final;
     void visit(tree_const_def &node) final;
     void visit(tree_var_def_list &node) final;
@@ -45,7 +51,7 @@ public:
     void visit(tree_l_or_exp &node) final;
     syntax_tree_builder(){
         _module = new module();
-    };;
+    };
 private :
     module* _module;
 };
