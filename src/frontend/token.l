@@ -12,10 +12,6 @@ extern int yyline;
 
 #define SAVE_TOKEN yylval.string = new std::string(yytext,yyleng)
 #define TOKEN(t) (yylval.token=t)
-
-int cal8(char *s);
-int cal10(char *s);
-int cal16(char *s);
 %}
 
 
@@ -30,7 +26,7 @@ int cal16(char *s);
 [1-9][0-9]*{ILEN}?			{ SAVE_TOKEN; return TINTEGER; }
 0[Xx][0-9a-fA-F]+{ILEN}?	{ SAVE_TOKEN; return TINTEGER; }
 
-[0-9]+[Ee]"-"[0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
+[0-9]+[Ee]"-"[0-9]+ {SAVE_TOKEN; return TFLOATNUM;}//here may have problems
 [0-9]*"."[0-9]*[Ee][-+][0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
 [0-9]*"."[0-9]*  {SAVE_TOKEN; return TFLOATNUM;}
 0[Xx][0-9a-fA-F]*"."[0-9a-fA-F]*[Pp][+-][0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
