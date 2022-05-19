@@ -1,4 +1,7 @@
 %option noyywrap yylineno
+
+ILEN ([Uu](L|l|LL|ll)?|(L|l|LL|ll)[Uu]?)
+
 %{
 
 #include <string>
@@ -9,6 +12,10 @@ extern int yyline;
 
 #define SAVE_TOKEN yylval.string = new std::string(yytext,yyleng)
 #define TOKEN(t) (yylval.token=t)
+
+int cal8(char *s);
+int cal10(char *s);
+int cal16(char *s);
 %}
 
 
@@ -17,6 +24,16 @@ extern int yyline;
 [ \t] {}
 \n {yyline++;}
 [0-9]+  {SAVE_TOKEN; return TINTEGER;}
+[0-9]+[Ee][0-9]+  {SAVE_TOKEN; return TINTEGER;}
+[0-9]+[Ee]"+"[0-9]+  {SAVE_TOKEN; return TINTEGER;}
+0[0-7]*{ILEN}?				{ SAVE_TOKEN;  return TINTEGER; }
+[1-9][0-9]*{ILEN}?			{ SAVE_TOKEN; return TINTEGER; }
+0[Xx][0-9a-fA-F]+{ILEN}?	{ SAVE_TOKEN; return TINTEGER; }
+
+[0-9]+[Ee]"-"[0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
+[0-9]*"."[0-9]*[Ee][-+][0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
+[0-9]*"."[0-9]*  {SAVE_TOKEN; return TFLOATNUM;}
+0[Xx][0-9a-fA-F]*"."[0-9a-fA-F]*[Pp][+-][0-9]+ {SAVE_TOKEN; return TFLOATNUM;}
 
 return {return TOKEN(TRETURN);}
 const {return TOKEN(TCONST);}
@@ -59,5 +76,9 @@ while {return TOKEN(TWHILE);}
 "||" {return TOKEN(TLOGOR);}
 
 "=" {return TOKEN(TASSIGN);}
+
+"/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"   {}//MultilineComment
+"//".*$                             {}//SingleLineComment
+
 <<EOF>> {yyterminate();}
 %%

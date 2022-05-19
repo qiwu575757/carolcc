@@ -356,7 +356,7 @@ public:
     void accept(visitor_base &v) final;
 
     std::string id;
-    std::shared_ptr<tree_exp> exp;
+    std::list<std::shared_ptr<tree_exp>> exps;
 };
 
 class tree_number : public syntax_tree_node {
