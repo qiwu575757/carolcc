@@ -2,13 +2,14 @@
     #include "visitor/syntax_tree_builder.h"
     #include "helpers/type_helper.h"
     #include "syntax_tree.h"
+    #include "utils.h"
     #include "string.h"
     #include "error.h"
     #include "runtime.h"
     #include <vector>
     #include <typeinfo>
     extern tree_comp_unit *root;
-    bool DEBUG = false;
+    extern debug_log parser_logger;
 
     extern int yyline;
     extern int yylex();
@@ -175,27 +176,27 @@ CompUnit
     : FuncDef
         {
             root = new tree_comp_unit();
-		    if (DEBUG)
-                printf("CompUnit\n");
+		    parser_logger.print
+                ("CompUnit\n");
 		    root->functions.push_back(std::shared_ptr<tree_func_def>($1));
         }
     | CompUnit FuncDef
         {
-		    if (DEBUG)
-                printf("CompUnit\n");
+		    parser_logger.print
+                ("CompUnit\n");
 		    root->functions.push_back(std::shared_ptr<tree_func_def>($2));
         }
     | Decl
         {
             root = new tree_comp_unit();
-		    if (DEBUG)
-                printf("CompUnit\n");
+		    parser_logger.print
+                ("CompUnit\n");
             root->definitions.push_back(std::shared_ptr<tree_decl>($1));
         }
     | CompUnit Decl
         {
-		    if (DEBUG)
-                printf("CompUnit\n");
+		    parser_logger.print
+                ("CompUnit\n");
             root->definitions.push_back(std::shared_ptr<tree_decl>($2));
         }
     ;
@@ -203,15 +204,15 @@ CompUnit
 Decl
     : ConstDecl
         {
-		    if (DEBUG)
-                printf("Decl\n");
+		    parser_logger.print
+                ("Decl\n");
             $$ = new tree_decl();
             $$->const_decl=std::shared_ptr<tree_const_decl>($1);
         }
     | VarDecl
         {
-		    if (DEBUG)
-                printf("Decl\n");
+		    parser_logger.print
+                ("Decl\n");
             $$ = new tree_decl();
             $$->var_decl=std::shared_ptr<tree_var_decl>($1);
         }
@@ -220,8 +221,8 @@ Decl
 ConstDecl
     : "const" BType ConstDefList ";"
         {
-		    if (DEBUG)
-                printf("ConstDecl\n");
+		    parser_logger.print
+                ("ConstDecl\n");
             $$ = new tree_const_decl();
             $$->b_type=std::shared_ptr<tree_basic_type>($2);
             $$->const_def_list=std::shared_ptr<tree_const_def_list>($3);
@@ -231,15 +232,15 @@ ConstDecl
 ConstDefList
     : ConstDef
         {
-		    if (DEBUG)
-                printf("ConstDefList\n");
+		    parser_logger.print
+                ("ConstDefList\n");
             $$ = new tree_const_def_list();
             $$->const_defs.push_back(std::shared_ptr<tree_const_def>($1));
         }
     | ConstDefList "," ConstDef
         {
-		    if (DEBUG)
-                printf("ConstDefList\n");
+		    parser_logger.print
+                ("ConstDefList\n");
             $1->const_defs.push_back(std::shared_ptr<tree_const_def>($3));
             $$ = $1;
         }
@@ -248,22 +249,22 @@ ConstDefList
 BType
     : "int"
         {
-		    if (DEBUG)
-                printf("BType\n");
+		    parser_logger.print
+                ("BType\n");
             $$ = new tree_basic_type();
             $$->type=type_helper::INT;
         };
     | "float"
         {
-		    if (DEBUG)
-                printf("BType\n");
+		    parser_logger.print
+                ("BType\n");
             $$ = new tree_basic_type();
             $$->type=type_helper::FLOAT;
         }
     | "void"
         {
-		    if (DEBUG)
-                printf("BType\n");
+		    parser_logger.print
+                ("BType\n");
             $$ = new tree_basic_type();
             $$->type=type_helper::VOID;
         }
@@ -272,8 +273,8 @@ BType
 ConstDef
     : TIDENTIFIER ConstExpArrayList "=" ConstInitVal
         {
-		    if (DEBUG)
-                printf("ConstDef\n");
+		    parser_logger.print
+                ("ConstDef\n");
             $$ = new tree_const_def();
             $$->id=*$1;
             $$->const_exp_list=std::shared_ptr<tree_const_exp_list>($2);
@@ -281,8 +282,8 @@ ConstDef
         }
     | TIDENTIFIER "=" ConstInitVal
         {
-		    if (DEBUG)
-                printf("ConstDef\n");
+		    parser_logger.print
+                ("ConstDef\n");
             $$ = new tree_const_def();
             $$->id=*$1;
             $$->const_init_val=std::shared_ptr<tree_const_init_val>($3);
@@ -292,15 +293,15 @@ ConstDef
 ConstExpArrayList
     : "[" ConstExp "]"
         {
-		    if (DEBUG)
-                printf("ConstExpArrayList\n");
+		    parser_logger.print
+                ("ConstExpArrayList\n");
             $$ = new tree_const_exp_list();
             $$->const_exp.push_back(std::shared_ptr<tree_const_exp>($2));
         }
     | ConstExpArrayList "[" ConstExp "]"
         {
-		    if (DEBUG)
-                printf("ConstExpArrayList\n");
+		    parser_logger.print
+                ("ConstExpArrayList\n");
             $1->const_exp.push_back(std::shared_ptr<tree_const_exp>($3));
             $$ = $1;
         }
@@ -309,21 +310,21 @@ ConstExpArrayList
 ConstInitVal
     : ConstExp
         {
-		    if (DEBUG)
-                printf("ConstInitVal\n");
+		    parser_logger.print
+                ("ConstInitVal\n");
             $$ = new tree_const_init_val();
             $$->const_exp= std::shared_ptr<tree_const_exp>($1) ;
         }
     | "{"  "}"
         {
-		    if (DEBUG)
-                printf("ConstInitVal\n");
+		    parser_logger.print
+                ("ConstInitVal\n");
             $$ = new tree_const_init_val();
         }
     | "{" ConstInitVallist "}"
         {
-		    if (DEBUG)
-                printf("ConstInitVal\n");
+		    parser_logger.print
+                ("ConstInitVal\n");
             $$ = new tree_const_init_val();
             $$->const_val_list = std::shared_ptr<tree_const_val_list>($2) ;
         }
@@ -332,15 +333,15 @@ ConstInitVal
 ConstInitVallist
     : ConstInitVal
         {
-		    if (DEBUG)
-                printf("ConstInitVallist\n");
+		    parser_logger.print
+                ("ConstInitVallist\n");
             $$ = new tree_const_val_list();
             $$->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>($1));
         }
     | ConstInitVallist "," ConstInitVal
         {
-		    if (DEBUG)
-                printf("ConstInitVallist\n");
+		    parser_logger.print
+                ("ConstInitVallist\n");
             $1->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>($3));
             $$ = $1;
         }
@@ -349,8 +350,8 @@ ConstInitVallist
 ConstExp
     : AddExp
         {
-		    if (DEBUG)
-                printf("ConstExp\n");
+		    parser_logger.print
+                ("ConstExp\n");
             $$ = new tree_const_exp();
             $$->add_exp = std::shared_ptr<tree_add_exp>($1);
         }
@@ -359,8 +360,8 @@ ConstExp
 VarDecl
     : BType VarDefList ";"
         {
-		    if (DEBUG)
-                printf("VarDecl\n");
+		    parser_logger.print
+                ("VarDecl\n");
             $$ = new tree_var_decl();
             $$->b_type=std::shared_ptr<tree_basic_type>($1);
             $$->var_def_list=std::shared_ptr<tree_var_def_list>($2);
@@ -370,15 +371,15 @@ VarDecl
 VarDefList
     : VarDef
         {
-		    if (DEBUG)
-                printf("VarDefList\n");
+		    parser_logger.print
+                ("VarDefList\n");
             $$ = new tree_var_def_list();
             $$->var_defs.push_back(std::shared_ptr<tree_var_def>($1));
         }
     |  VarDefList "," VarDef
         {
-		    if (DEBUG)
-                printf("VarDefList\n");
+		    parser_logger.print
+                ("VarDefList\n");
             $1->var_defs.push_back(std::shared_ptr<tree_var_def>($3));
             $$ = $1;
         }
@@ -387,31 +388,31 @@ VarDefList
 VarDef
     : TIDENTIFIER
         {
-		    if (DEBUG)
-                printf("VarDef\n");
+		    parser_logger.print
+                ("VarDef\n");
             $$ = new tree_var_def();
             $$->id = *$1;
         }
     | TIDENTIFIER "=" InitVal
         {
-		    if (DEBUG)
-                printf("VarDef\n");
+		    parser_logger.print
+                ("VarDef\n");
             $$ = new tree_var_def();
             $$->id = *$1;
             $$->init_val = std::shared_ptr<tree_init_val>($3);
         };
     | TIDENTIFIER ArrayDef
         {
-		    if (DEBUG)
-                printf("VarDef\n");
+		    parser_logger.print
+                ("VarDef\n");
             $$ = new tree_var_def();
             $$->id = *$1;
             $$->array_def = std::shared_ptr<tree_arrray_def>($2);
         }
     | TIDENTIFIER ArrayDef "=" InitValArray
         {
-		    if (DEBUG)
-                printf("VarDef\n");
+		    parser_logger.print
+                ("VarDef\n");
             $$ = new tree_var_def();
             $$->id = *$1;
             $$->array_def = std::shared_ptr<tree_arrray_def>($2);
@@ -422,15 +423,15 @@ VarDef
 ArrayDef
     : "[" ConstExp "]"
         {
-		    if (DEBUG)
-                printf("ArrayDef\n");
+		    parser_logger.print
+                ("ArrayDef\n");
             $$ = new tree_arrray_def();
             $$->const_exps.push_back(std::shared_ptr<tree_const_exp>($2));
         }
     | ArrayDef "[" ConstExp "]"
         {
-		    if (DEBUG)
-                printf("ArrayDef\n");
+		    parser_logger.print
+                ("ArrayDef\n");
             $$->const_exps.push_back(std::shared_ptr<tree_const_exp>($3));
             $$ = $1;
         }
@@ -440,8 +441,8 @@ ArrayDef
 InitVal
     : Exp
         {
-		    if (DEBUG)
-                printf("InitVal\n");
+		    parser_logger.print
+                ("InitVal\n");
             $$ = new tree_init_val();
             $$->exp=std::shared_ptr<tree_exp>($1);
         }
@@ -450,14 +451,14 @@ InitVal
 InitValArray
     : "{" "}"
         {
-		    if (DEBUG)
-                printf("InitValArray\n");
+		    parser_logger.print
+                ("InitValArray\n");
             $$ = new tree_init_val_array();
         }
     | "{" InitValArrayList "}"
         {
-		    if (DEBUG)
-                printf("InitValArray\n");
+		    parser_logger.print
+                ("InitValArray\n");
             $$ = new tree_init_val_array();
             $$->init_val_arraylist = std::shared_ptr<tree_init_val_arraylist>($2);
         }
@@ -467,29 +468,29 @@ InitValArray
 InitValArrayList
     : InitValArray
         {
-		    if (DEBUG)
-                printf("InitValArrayList\n");
+		    parser_logger.print
+                ("InitValArrayList\n");
             $$ = new tree_init_val_arraylist();
             $$->initvalarrays.push_back(std::shared_ptr<tree_init_val_array>($1));
         }
     | InitValArrayList "," InitValArray
         {
-		    if (DEBUG)
-                printf("InitValArrayList\n");
+		    parser_logger.print
+                ("InitValArrayList\n");
             $1->initvalarrays.push_back(std::shared_ptr<tree_init_val_array>($3));
             $$ = $1;
         }
     | InitVal
         {
-		    if (DEBUG)
-                printf("InitValArrayList\n");
+		    parser_logger.print
+                ("InitValArrayList\n");
             $$ = new tree_init_val_arraylist();
             $$->initvals.push_back(std::shared_ptr<tree_init_val>($1));
         }
     | InitValArrayList "," InitVal
         {
-		    if (DEBUG)
-                printf("InitValArrayList\n");
+		    parser_logger.print
+                ("InitValArrayList\n");
             $1->initvals.push_back(std::shared_ptr<tree_init_val>($3));
             $$ = $1;
         }
@@ -499,8 +500,8 @@ InitValArrayList
 FuncDef
     : BType TIDENTIFIER "("")" Block
         {
-		    if (DEBUG)
-                printf("FuncDef\n");
+		    parser_logger.print
+                ("FuncDef\n");
             $$ = new tree_func_def();
             $$->type = std::shared_ptr<tree_basic_type>($1);
             $$->id = *$2;
@@ -508,8 +509,8 @@ FuncDef
         }
     | BType TIDENTIFIER "(" FuncFParams ")" Block
         {
-		    if (DEBUG)
-                printf("FuncDef\n");
+		    parser_logger.print
+                ("FuncDef\n");
             $$ = new tree_func_def();
             $$->type = std::shared_ptr<tree_basic_type>($1);
             $$->id = *$2;
@@ -522,15 +523,15 @@ FuncDef
 FuncFParams
     : FuncFParam
         {
-		    if (DEBUG)
-                printf("FuncFParams\n");
+		    parser_logger.print
+                ("FuncFParams\n");
             $$ = new tree_func_fparams();
             $$->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>($1));
         }
     | FuncFParams "," FuncFParam
         {
-		    if (DEBUG)
-                printf("FuncFParams\n");
+		    parser_logger.print
+                ("FuncFParams\n");
             $1->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>($3));
             $$ = $1;
         }
@@ -539,15 +540,15 @@ FuncFParams
 FuncFParam
     : FuncFParamOne
         {
-		    if (DEBUG)
-                printf("FuncFParam\n");
+		    parser_logger.print
+                ("FuncFParam\n");
             $$ = new tree_func_fparam();
             $$->funcfparamone = std::shared_ptr<tree_func_fparamone>($1);
         }
     | FuncFParamArray
         {
-		    if (DEBUG)
-                printf("FuncFParam\n");
+		    parser_logger.print
+                ("FuncFParam\n");
             $$ = new tree_func_fparam();
             $$->funcfparamarray = std::shared_ptr<tree_func_fparamarray>($1);
         }
@@ -556,8 +557,8 @@ FuncFParam
 FuncFParamOne
     : BType TIDENTIFIER
         {
-		    if (DEBUG)
-                printf("FuncFParamOne\n");
+		    parser_logger.print
+                ("FuncFParamOne\n");
             $$ = new tree_func_fparamone();
             $$->b_type = std::shared_ptr<tree_basic_type>($1);
             $$->id = *$2;
@@ -567,16 +568,16 @@ FuncFParamOne
 FuncFParamArray
     : BType TIDENTIFIER "[" "]"
         {
-		    if (DEBUG)
-                printf("FuncFParamArray\n");
+		    parser_logger.print
+                ("FuncFParamArray\n");
             $$ = new tree_func_fparamarray();
             $$->b_type = std::shared_ptr<tree_basic_type>($1);
             $$->id = *$2;
         }
     | FuncFParamArray "[" Exp "]"
         {
-		    if (DEBUG)
-                printf("FuncFParamArray\n");
+		    parser_logger.print
+                ("FuncFParamArray\n");
             $1->exps.push_back(std::shared_ptr<tree_exp>($3));
             $$ = $1;
         }
@@ -585,14 +586,14 @@ FuncFParamArray
 Block
     : "{" "}"
         {
-		    if (DEBUG)
-                printf("Block\n");
+		    parser_logger.print
+                ("Block\n");
             $$ = new tree_block();
         }
     | "{" BlockItemList "}"
         {
-		    if (DEBUG)
-                printf("Block\n");
+		    parser_logger.print
+                ("Block\n");
             $$ = new tree_block();
             $$->block_item_list=std::shared_ptr<tree_block_item_list>($2);
         }
@@ -601,15 +602,15 @@ Block
 BlockItemList
     : BlockItem
         {
-		    if (DEBUG)
-                printf("BlockItemList\n");
+		    parser_logger.print
+                ("BlockItemList\n");
             $$ = new tree_block_item_list();
             $$->block_items.push_back(std::shared_ptr<tree_block_item>($1));
         }
     |  BlockItemList BlockItem
         {
-		    if (DEBUG)
-                printf("BlockItemList\n");
+		    parser_logger.print
+                ("BlockItemList\n");
             $1->block_items.push_back(std::shared_ptr<tree_block_item>($2));
             $$=$1;
         }
@@ -618,15 +619,15 @@ BlockItemList
 BlockItem
     : Decl
         {
-		    if (DEBUG)
-                printf("BlockItem\n");
+		    parser_logger.print
+                ("BlockItem\n");
             $$ = new tree_block_item();
             $$->decl=std::shared_ptr<tree_decl>($1);
         }
     | Stmt
         {
-		    if (DEBUG)
-                printf("BlockItem\n");
+		    parser_logger.print
+                ("BlockItem\n");
             $$ = new tree_block_item();
             $$->stmt=std::shared_ptr<tree_stmt>($1);
         }
@@ -637,8 +638,8 @@ Stmt
     : LVal "=" Exp ";"
         /* assign statement */
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto a_stmt = new tree_assign_stmt();
             a_stmt->l_val=std::shared_ptr<tree_l_val>($1);
@@ -647,29 +648,29 @@ Stmt
         }
     | ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
         }
     | Exp ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             $$->exp=std::shared_ptr<tree_exp>($1) ;
         }
     | Block
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             $$->block=std::shared_ptr<tree_block>($1) ;
         }
     /* if statement */
     | "if" "(" Cond ")" Stmt
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto if_stmt = new tree_if_stmt();
             if_stmt->cond = std::shared_ptr<tree_cond>($3);
@@ -678,8 +679,8 @@ Stmt
         }
     | "if" "(" Cond ")" Stmt "else" Stmt
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto if_else_stmt = new tree_if_else_stmt();
             if_else_stmt->cond = std::shared_ptr<tree_cond>($3);
@@ -691,8 +692,8 @@ Stmt
     /* while statement */
     | "while" "(" Cond ")" Stmt
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto while_stmt = new tree_while_stmt();
             while_stmt->cond = std::shared_ptr<tree_cond>($3);
@@ -701,16 +702,16 @@ Stmt
         }
     | "continue" ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto continue_stmt = new tree_continue_stmt();
             $$->continue_stmt = std::shared_ptr<tree_continue_stmt>(continue_stmt) ;
         }
     | "break" ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto break_stmt = new tree_break_stmt();
             $$->break_stmt = std::shared_ptr<tree_break_stmt>(break_stmt) ;
@@ -718,16 +719,16 @@ Stmt
     /* return statement */
     | "return" ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto a_stmt = new tree_return_null_stmt();
             $$->return_null_stmt=std::shared_ptr<tree_return_null_stmt>(a_stmt) ;
         }
     | "return" Exp ";"
         {
-		    if (DEBUG)
-                printf("Stmt\n");
+		    parser_logger.print
+                ("Stmt\n");
             $$ = new tree_stmt();
             auto a_stmt = new tree_return_stmt();
             a_stmt->exp=std::shared_ptr<tree_exp>($2);
@@ -739,8 +740,8 @@ Stmt
 Exp
     : AddExp
         {
-		    if (DEBUG)
-                printf("Exp\n");
+		    parser_logger.print
+                ("Exp\n");
             $$ = new tree_exp();
             $$->add_exp = std::shared_ptr<tree_add_exp>($1);
         }
@@ -749,8 +750,8 @@ Exp
 Cond
     : LOrExp
         {
-		    if (DEBUG)
-                printf("Cond\n");
+		    parser_logger.print
+                ("Cond\n");
             $$ = new tree_cond();
             $$->l_or_exp = std::shared_ptr<tree_l_or_exp>($1);
         }
@@ -759,15 +760,15 @@ Cond
 LVal
     : TIDENTIFIER
         {
-		    if (DEBUG)
-                printf("LVal\n");
+		    parser_logger.print
+                ("LVal\n");
             $$ = new tree_l_val();
             $$->id = *$1;
         }
     | ArrayIdent
         {
-		    if (DEBUG)
-                printf("LVal\n");
+		    parser_logger.print
+                ("LVal\n");
             $$ = new tree_l_val();
             $$->array_ident = std::shared_ptr<tree_array_ident>($1);
         }
@@ -776,16 +777,16 @@ LVal
 ArrayIdent
     : TIDENTIFIER "[" Exp "]"
         {
-		    if (DEBUG)
-                printf("ArrayIdent\n");
+		    parser_logger.print
+                ("ArrayIdent\n");
             $$ = new tree_array_ident();
             $$->id = *$1;
             $$->exps.push_back(std::shared_ptr<tree_exp>($3));
         }
     | ArrayIdent "[" Exp "]"
         {
-		    if (DEBUG)
-                printf("ArrayIdent\n");
+		    parser_logger.print
+                ("ArrayIdent\n");
             $1->exps.push_back(std::shared_ptr<tree_exp>($3));
             $$ = $1;
         }
@@ -794,15 +795,15 @@ ArrayIdent
 Number
     : TINTEGER
         {
-		    if (DEBUG)
-                printf("Number INTEGER\n");
+		    parser_logger.print
+                ("Number INTEGER\n");
             $$ = new tree_number();
             $$->int_value = atoi($1->c_str());
         }
     | TFLOATNUM
         {
-		    if (DEBUG)
-                printf("Number TFLOATNUM\n");
+		    parser_logger.print
+                ("Number TFLOATNUM\n");
             $$ = new tree_number();
             $$->float_value = (float)atof($1->c_str());
         }
@@ -811,22 +812,22 @@ Number
 PrimaryExp
     : "(" Exp ")"
         {
-		    if (DEBUG)
-                printf("PrimaryExp\n");
+		    parser_logger.print
+                ("PrimaryExp\n");
             $$ = new tree_primary_exp();
             $$->exp = std::shared_ptr<tree_exp>($2);
         }
     | LVal
         {
-		    if (DEBUG)
-                printf("PrimaryExp\n");
+		    parser_logger.print
+                ("PrimaryExp\n");
             $$ = new tree_primary_exp();
             $$->l_val = std::shared_ptr<tree_l_val>($1);
         }
     | Number
         {
-		    if (DEBUG)
-                printf("PrimaryExp\n");
+		    parser_logger.print
+                ("PrimaryExp\n");
             $$ = new tree_primary_exp();
             $$->number = std::shared_ptr<tree_number>($1);
         }
@@ -835,31 +836,31 @@ PrimaryExp
 UnaryExp
     : PrimaryExp
         {
-		    if (DEBUG)
-                printf("UnaryExp\n");
+		    parser_logger.print
+                ("UnaryExp\n");
             $$ = new tree_unary_exp();
             $$->primary_exp = std::shared_ptr<tree_primary_exp>($1);
         }
     | "+" UnaryExp
         {
-		    if (DEBUG)
-                printf("UnaryExp\n");
+		    parser_logger.print
+                ("UnaryExp\n");
             $$ = new tree_unary_exp();
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($2);
             $$->oprt="+";
         }
     | "-" UnaryExp
         {
-		    if (DEBUG)
-                printf("UnaryExp\n");
+		    parser_logger.print
+                ("UnaryExp\n");
             $$ = new tree_unary_exp();
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($2);
             $$->oprt="-";
         }
     | "!" UnaryExp
         {
-		    if (DEBUG)
-                printf("UnaryExp\n");
+		    parser_logger.print
+                ("UnaryExp\n");
             $$ = new tree_unary_exp();
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($2);
             $$->oprt="!";
@@ -867,8 +868,8 @@ UnaryExp
     /* FUNCTION CALL */
     | FuncCall
         {
-		    if (DEBUG)
-                printf("FuncCall\n");
+		    parser_logger.print
+                ("FuncCall\n");
             $$ = new tree_unary_exp();
             $$->func_call = std::shared_ptr<tree_func_call>($1);
         }
@@ -877,15 +878,15 @@ UnaryExp
 FuncCall
     : TIDENTIFIER "(" ")"
         {
-		    if (DEBUG)
-                printf("FuncCall\n");
+		    parser_logger.print
+                ("FuncCall\n");
             $$ = new tree_func_call();
             $$->id = *$1;
         }
     | TIDENTIFIER "(" FuncRParamList ")"
         {
-		    if (DEBUG)
-                printf("FuncCall\n");
+		    parser_logger.print
+                ("FuncCall\n");
             $$ = new tree_func_call();
             $$->id = *$1;
             $$->funcr_paramlist = std::shared_ptr<tree_funcr_paramlist>($3);
@@ -895,15 +896,15 @@ FuncCall
 FuncRParamList
     : Exp
         {
-		    if (DEBUG)
-                printf("FuncRParamList\n");
+		    parser_logger.print
+                ("FuncRParamList\n");
             $$ = new tree_funcr_paramlist();
             $$->exps.push_back(std::shared_ptr<tree_exp>($1));
         }
     | FuncRParamList "," Exp
         {
-		    if (DEBUG)
-                printf("FuncRParamList\n");
+		    parser_logger.print
+                ("FuncRParamList\n");
             $1->exps.push_back(std::shared_ptr<tree_exp>($3));
             $$ = $1;
         }
@@ -914,15 +915,15 @@ FuncRParamList
 MulExp
     : UnaryExp
         {
-		    if (DEBUG)
-                printf("MulExp\n");
+		    parser_logger.print
+                ("MulExp\n");
             $$ = new tree_mul_exp();
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($1);
         }
     | MulExp "*" UnaryExp
         {
-		    if (DEBUG)
-                printf("MulExp\n");
+		    parser_logger.print
+                ("MulExp\n");
             $$ = new tree_mul_exp();
             $$->mul_exp=std::shared_ptr<tree_mul_exp>($1);
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($3);
@@ -930,8 +931,8 @@ MulExp
         }
     | MulExp "/" UnaryExp
         {
-		    if (DEBUG)
-                printf("MulExp\n");
+		    parser_logger.print
+                ("MulExp\n");
             $$ = new tree_mul_exp();
             $$->mul_exp=std::shared_ptr<tree_mul_exp>($1);
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($3);
@@ -939,8 +940,8 @@ MulExp
         }
     | MulExp "%" UnaryExp
         {
-		    if (DEBUG)
-                printf("MulExp\n");
+		    parser_logger.print
+                ("MulExp\n");
             $$ = new tree_mul_exp();
             $$->mul_exp=std::shared_ptr<tree_mul_exp>($1);
             $$->unary_exp=std::shared_ptr<tree_unary_exp>($3);
@@ -950,15 +951,15 @@ MulExp
 AddExp
     : MulExp
         {
-		    if (DEBUG)
-                printf("AddExp\n");
+		    parser_logger.print
+                ("AddExp\n");
             $$ = new tree_add_exp();
             $$->mul_exp=std::shared_ptr<tree_mul_exp>($1);
         }
     | AddExp "+" MulExp
         {
-		    if (DEBUG)
-                printf("AddExp\n");
+		    parser_logger.print
+                ("AddExp\n");
             $$ = new tree_add_exp();
             $$->add_exp=std::shared_ptr<tree_add_exp>($1);
             $$->oprt="+";
@@ -966,8 +967,8 @@ AddExp
         }
     | AddExp "-" MulExp
         {
-		    if (DEBUG)
-                printf("AddExp\n");
+		    parser_logger.print
+                ("AddExp\n");
             $$ = new tree_add_exp();
             $$->add_exp=std::shared_ptr<tree_add_exp>($1);
             $$->oprt="-";
@@ -977,15 +978,15 @@ AddExp
 RelExp
     : AddExp
         {
-		    if (DEBUG)
-                printf("RelExp\n");
+		    parser_logger.print
+                ("RelExp\n");
             $$ = new tree_rel_exp();
             $$->add_exp=std::shared_ptr<tree_add_exp>($1);
         }
     | RelExp "<" AddExp
         {
-		    if (DEBUG)
-                printf("RelExp\n");
+		    parser_logger.print
+                ("RelExp\n");
             $$ = new tree_rel_exp();
             $$->rel_exp=std::shared_ptr<tree_rel_exp>($1);
             $$->oprt="<";
@@ -993,8 +994,8 @@ RelExp
         }
     | RelExp ">" AddExp
         {
-		    if (DEBUG)
-                printf("RelExp\n");
+		    parser_logger.print
+                ("RelExp\n");
             $$ = new tree_rel_exp();
             $$->rel_exp=std::shared_ptr<tree_rel_exp>($1);
             $$->oprt=">";
@@ -1002,8 +1003,8 @@ RelExp
         }
     | RelExp "<=" AddExp
         {
-		    if (DEBUG)
-                printf("RelExp\n");
+		    parser_logger.print
+                ("RelExp\n");
             $$ = new tree_rel_exp();
             $$->rel_exp=std::shared_ptr<tree_rel_exp>($1);
             $$->oprt="<=";
@@ -1011,8 +1012,8 @@ RelExp
         }
     | RelExp ">=" AddExp
         {
-		    if (DEBUG)
-                printf("RelExp\n");
+		    parser_logger.print
+                ("RelExp\n");
             $$ = new tree_rel_exp();
             $$->rel_exp=std::shared_ptr<tree_rel_exp>($1);
             $$->oprt=">=";
@@ -1022,15 +1023,15 @@ RelExp
 EqExp
     : RelExp
         {
-		    if (DEBUG)
-                printf("EqExp\n");
+		    parser_logger.print
+                ("EqExp\n");
             $$ = new tree_eq_exp();
             $$->rel_exp=std::shared_ptr<tree_rel_exp>($1);
         }
     | EqExp "==" RelExp
         {
-		    if (DEBUG)
-                printf("EqExp\n");
+		    parser_logger.print
+                ("EqExp\n");
             $$ = new tree_eq_exp();
             $$->eq_exp=std::shared_ptr<tree_eq_exp>($1);
             $$->oprt="==";
@@ -1038,8 +1039,8 @@ EqExp
         }
     | EqExp "!=" RelExp
         {
-		    if (DEBUG)
-                printf("EqExp\n");
+		    parser_logger.print
+                ("EqExp\n");
             $$ = new tree_eq_exp();
             $$->eq_exp=std::shared_ptr<tree_eq_exp>($1);
             $$->oprt="!=";
@@ -1049,15 +1050,15 @@ EqExp
 LAndExp
     : EqExp
         {
-		    if (DEBUG)
-                printf("LAndExp\n");
+		    parser_logger.print
+                ("LAndExp\n");
             $$ = new tree_l_and_exp();
             $$->eq_exp=std::shared_ptr<tree_eq_exp>($1);
         }
     | LAndExp "&&" EqExp
         {
-		    if (DEBUG)
-                printf("LAndExp\n");
+		    parser_logger.print
+                ("LAndExp\n");
             $$ = new tree_l_and_exp();
             $$->l_and_exp=std::shared_ptr<tree_l_and_exp>($1);
             $$->eq_exp=std::shared_ptr<tree_eq_exp>($3);
@@ -1066,15 +1067,15 @@ LAndExp
 LOrExp
     : LAndExp
         {
-		    if (DEBUG)
-                printf("LOrExp\n");
+		    parser_logger.print
+                ("LOrExp\n");
             $$ = new tree_l_or_exp();
             $$->l_and_exp=std::shared_ptr<tree_l_and_exp>($1);
         }
     | LOrExp "||" LAndExp
         {
-		    if (DEBUG)
-                printf("LOrExp\n");
+		    parser_logger.print
+                ("LOrExp\n");
             $$ = new tree_l_or_exp();
             $$->l_or_exp=std::shared_ptr<tree_l_or_exp>($1);
             $$->l_and_exp=std::shared_ptr<tree_l_and_exp>($3);

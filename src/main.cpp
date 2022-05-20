@@ -10,13 +10,14 @@
 extern int yyparse();
 extern int yyrestart(FILE *);
 extern FILE *yyin;
+debug_log parser_logger("parser_logger");
 int yyline;
 tree_comp_unit *root;
 //std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
 
 FILE *output;
 int main(int argc, char *argv[]) {
-        处理input_file
+//        处理input_file
    if (argc < 2) {
        yyparse();
        return 0;
@@ -44,12 +45,13 @@ int main(int argc, char *argv[]) {
    }
    if (!yyin)
        perror(input_file);
+   parser_logger.set_screen(false);
    yyparse();
-    auto *md_shower = new syntax_tree_shower();
-    auto *md_detail_shower = new syntax_detail_shower();
-    md_shower->visit(*root);
-    syntax_tree_builder* builder = new syntax_tree_builder();
+   auto *md_shower = new syntax_tree_shower();
+   auto *md_detail_shower = new syntax_detail_shower();
+   md_shower->visit(*root);
+   syntax_tree_builder *builder = new syntax_tree_builder();
 
-    md_detail_shower->visit(*root);
-    return 0;
+   md_detail_shower->visit(*root);
+   return 0;
 }

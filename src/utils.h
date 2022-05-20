@@ -78,23 +78,23 @@ private:
         switch (log_type) {
             case LOG_TYPE::ERROR:
                 printf(RED);
-                printf("ERROR|");
+//                printf("ERROR|");
                 break;
             case LOG_TYPE::DEBUG:
                 printf(GREEN);
-                printf("DEBUG|");
+//                printf("DEBUG|");
                 break;
             case LOG_TYPE::WARN:
                 printf(YELLOW);
-                printf("WARN|");
+//                printf("WARN|");
                 break;
             case LOG_TYPE::TRACE:
                 printf(MAGENTA);
-                printf("TRACE|");
+//                printf("TRACE|");
                 break;
             case LOG_TYPE::INFO:
                 printf(BLUE);
-                printf("INFO|");
+//                printf("INFO|");
                 break;
         }
     }
@@ -104,7 +104,7 @@ private:
 
 public:
     explicit logger(const std::string &file_name, LOG_TYPE type, bool to_screen, bool to_file)
-        : log_file_name(file_name), log_type(type), to_screen(to_screen), to_file(to_file) ,print_file_position(true){
+        : log_file_name(file_name), log_type(type), to_screen(to_screen), to_file(to_file) ,print_file_position(false){
         std::string name = file_name + ".log";
         f = fopen(name.c_str(), "w+");
     }
