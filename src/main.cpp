@@ -10,6 +10,7 @@
 extern int yyparse();
 extern int yyrestart(FILE *);
 extern FILE *yyin;
+debug_log parser_logger("parser_logger");
 int yyline;
 tree_comp_unit *root;
 //std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
