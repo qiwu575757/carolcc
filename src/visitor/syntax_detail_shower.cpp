@@ -18,10 +18,12 @@ void syntax_detail_shower::visit(tree_comp_unit &node) {
     dg.set("syntax_detail",graphType::LeiTu,"syntax_detail","describe attributes here");
     dg.begin();
     dg.LeiTu_add(father_node,"comp_unit_"+std::to_string(no));
+    if(!node.definitions.empty())
     for(auto nd : node.definitions){
         father_node = this_node;
         nd->accept(*this);
     }
+    if(!node.functions.empty())
     for(auto nd : node.functions){
         father_node = this_node;
         nd->accept(*this);
@@ -34,6 +36,7 @@ void syntax_detail_shower::visit(tree_func_def &node) {
     std::string this_node = "func_def_"+std::to_string(no);
     std::printf("%s\n",this_node.c_str());
     dg.LeiTu_add(father_node,"func_def_"+std::to_string(no));
+    if(!node.block.empty())
     for(auto nd : node.block){
         father_node = this_node;
         nd->accept(*this);
@@ -73,6 +76,7 @@ void syntax_detail_shower::visit(tree_const_def_list &node) {
     std::string this_node = "const_def_"+std::to_string(no);
     std::printf("%s\n",this_node.c_str());
     dg.LeiTu_add(father_node,"const_def_"+std::to_string(no));
+    if(!node.const_defs.empty())
     for(auto nd : node.const_defs){
         father_node = this_node;
         nd->accept(*this);
@@ -337,9 +341,207 @@ void syntax_detail_shower::visit(tree_l_or_exp &node) {
     father_node = this_node;
     if(node.l_or_exp)node.l_or_exp->accept(*this);
     }
-void syntax_detail_shower::visit(tree_init_val_array &node) {ERROR("TODO");}
-void syntax_detail_shower::visit(tree_init_val_arraylist &node) {ERROR("TODO");}
-void syntax_detail_shower::visit(tree_func_fparams &node) {ERROR("TODO");}
-void syntax_detail_shower::visit(tree_func_fparam &node) {ERROR("TODO");}
-void syntax_detail_shower::visit(tree_func_fparamone &node) {ERROR("TODO");}
-void syntax_detail_shower::visit(tree_func_fparamarray &node) {ERROR("TODO");}
+void syntax_detail_shower::visit(tree_init_val_array &node) {
+    no++;
+    std::string this_node = "init_val_array"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"init_val_array"+std::to_string(no));
+    father_node = this_node;
+    if(node.init_val_arraylist)node.init_val_arraylist->accept(*this);
+}
+void syntax_detail_shower::visit(tree_init_val_arraylist &node) {
+    no++;
+    std::string this_node = "init_val_arraylist"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"init_val_arraylist"+std::to_string(no));
+    if(!node.initvalarrays.empty())
+    for(auto nd : node.initvalarrays){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+    if(!node.initvals.empty())
+    for(auto nd : node.initvals){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_func_fparams &node) {
+    no++;
+    std::string this_node = "func_fparams"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"func_fparams"+std::to_string(no));
+    if(!node.funcfparamlist.empty())
+    for(auto nd : node.funcfparamlist){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_func_fparam &node) {
+    no++;
+    std::string this_node = "func_fparam"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"func_fparam"+std::to_string(no));
+    father_node = this_node;
+    if(node.funcfparamarray)node.funcfparamarray->accept(*this);
+    father_node = this_node;
+    if(node.funcfparamone)node.funcfparamone->accept(*this);
+}
+void syntax_detail_shower::visit(tree_func_fparamone &node) {
+    no++;
+    std::string this_node = "func_fparamone"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"func_fparamone"+std::to_string(no));
+    father_node = this_node;
+    if(node.b_type)node.b_type->accept(*this);
+    father_node = this_node;
+    dg.LeiTu_add_attr(father_node,node.id);
+}
+void syntax_detail_shower::visit(tree_func_fparamarray &node) {
+    no++;
+    std::string this_node = "func_fparamarray"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,"func_fparamarray"+std::to_string(no));
+    father_node = this_node;
+    if(node.b_type)node.b_type->accept(*this);
+    father_node = this_node;
+    dg.LeiTu_add_attr(father_node,node.id);
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+
+void syntax_detail_shower::visit(tree_const_val_list &node){
+    no++;
+    std::string this_node = "tree_const_val_list"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    
+    if(!node.const_init_vals.empty())
+    for(auto nd : node.const_init_vals){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_const_exp_list &node){
+    no++;
+    std::string this_node = "tree_const_exp_list"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    
+    if(!node.const_exp.empty())
+    for(auto nd : node.const_exp){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_arrray_def &node){
+    no++;
+    std::string this_node = "tree_arrray_def"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    
+    if(!node.const_exps.empty())
+    for(auto nd : node.const_exps){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_if_stmt &node){
+    no++;
+    std::string this_node = "tree_if_stmt"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    father_node = this_node;
+    if(node.stmt)node.stmt->accept(*this);
+}
+void syntax_detail_shower::visit(tree_if_else_stmt &node){
+    no++;
+    std::string this_node = "tree_if_else_stmt"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    father_node = this_node;
+    if(node.stmt1)node.stmt1->accept(*this);
+    father_node = this_node;
+    if(node.stmt2)node.stmt2->accept(*this);
+}
+void syntax_detail_shower::visit(tree_while_stmt &node){
+    no++;
+    std::string this_node = "tree_while_stmt"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    father_node = this_node;
+    if(node.stmt)node.stmt->accept(*this);
+    father_node = this_node;
+}
+void syntax_detail_shower::visit(tree_break_stmt &node){
+    no++;
+    std::string this_node = "tree_break_stmt"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+}
+void syntax_detail_shower::visit(tree_continue_stmt &node){
+    no++;
+    std::string this_node = "tree_continue_stmt"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+}
+void syntax_detail_shower::visit(tree_cond &node){
+    no++;
+    std::string this_node = "tree_cond"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    if(node.l_or_exp)node.l_or_exp->accept(*this);
+    father_node = this_node;
+}
+void syntax_detail_shower::visit(tree_array_ident &node){
+    no++;
+    std::string this_node = "tree_array_ident"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    dg.LeiTu_add_attr(father_node,node.id);
+    father_node = this_node;
+    
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_detail_shower::visit(tree_func_call &node){
+    no++;
+    std::string this_node = "tree_func_call"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    if(node.funcr_paramlist)node.funcr_paramlist->accept(*this);
+    father_node = this_node;
+    dg.LeiTu_add_attr(father_node,node.id);
+}
+void syntax_detail_shower::visit(tree_funcr_paramlist &node){
+    no++;
+    std::string this_node = "tree_funcr_paramlist"+std::to_string(no);
+    std::printf("%s\n",this_node.c_str());
+    dg.LeiTu_add(father_node,this_node);
+    father_node = this_node;
+    
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        father_node = this_node;
+        nd->accept(*this);
+    }
+}

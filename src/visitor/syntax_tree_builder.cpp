@@ -108,3 +108,16 @@ void syntax_tree_builder::visit(tree_init_val_array &node) {
 void syntax_tree_builder::visit(tree_init_val_arraylist &node) {
     ERROR("TODO");
 }
+
+void syntax_tree_builder::visit(tree_const_val_list &node) {}
+void syntax_tree_builder::visit(tree_const_exp_list &node) {}
+void syntax_tree_builder::visit(tree_arrray_def &node) {}
+void syntax_tree_builder::visit(tree_if_stmt &node) {}
+void syntax_tree_builder::visit(tree_if_else_stmt &node) {}
+void syntax_tree_builder::visit(tree_while_stmt &node) {}
+void syntax_tree_builder::visit(tree_break_stmt &node) {}
+void syntax_tree_builder::visit(tree_continue_stmt &node) {}
+void syntax_tree_builder::visit(tree_cond &node) {}
+void syntax_tree_builder::visit(tree_array_ident &node) {}
+void syntax_tree_builder::visit(tree_func_call &node) {}
+void syntax_tree_builder::visit(tree_funcr_paramlist &node) {}

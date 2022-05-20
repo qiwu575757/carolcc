@@ -43,5 +43,17 @@ public:
     virtual void visit(tree_eq_exp &node) = 0;
     virtual void visit(tree_l_and_exp &node) = 0;
     virtual void visit(tree_l_or_exp &node) = 0;
+    virtual void visit(tree_const_val_list &node) = 0;
+    virtual void visit(tree_const_exp_list &node) = 0;
+    virtual void visit(tree_arrray_def &node) = 0;
+    virtual void visit(tree_if_stmt &node) = 0;
+    virtual void visit(tree_if_else_stmt &node) = 0;
+    virtual void visit(tree_while_stmt &node) = 0;
+    virtual void visit(tree_break_stmt &node) = 0;
+    virtual void visit(tree_continue_stmt &node) = 0;
+    virtual void visit(tree_cond &node) = 0;
+    virtual void visit(tree_array_ident &node) = 0;
+    virtual void visit(tree_func_call &node) = 0;
+    virtual void visit(tree_funcr_paramlist &node) = 0;
 };
 #endif// CAROLCC_VISITOR_BASE_H

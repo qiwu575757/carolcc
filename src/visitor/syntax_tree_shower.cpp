@@ -332,14 +332,200 @@ void syntax_tree_shower::visit(tree_l_or_exp &node) {
     if (node.l_or_exp) node.l_or_exp->accept(*this);
 }
 void syntax_tree_shower::visit(tree_init_val_array &node) {
-    ERROR("todo");
+    index++;
+    std::string this_node = "init_val_array"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"init_val_array"+std::to_string(index));
+    last_node = this_node;
+    if(node.init_val_arraylist)node.init_val_arraylist->accept(*this);
 }
 void syntax_tree_shower::visit(tree_init_val_arraylist &node) {
-    ERROR("todo");
+    index++;
+    std::string this_node = "init_val_arraylist"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"init_val_arraylist"+std::to_string(index));
+    if(!node.initvalarrays.empty())
+    for(auto nd : node.initvalarrays){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+    if(!node.initvals.empty())
+    for(auto nd : node.initvals){
+        last_node = this_node;
+        nd->accept(*this);
+    }
 }
-void syntax_tree_shower::visit(tree_func_fparam &node) { ERROR("todo"); }
-void syntax_tree_shower::visit(tree_func_fparamone &node) { ERROR("TODO"); }
-void syntax_tree_shower::visit(tree_func_fparamarray &node) { ERROR("TODO"); }
 void syntax_tree_shower::visit(tree_func_fparams &node) {
-    ERROR("TODO");
+    index++;
+    std::string this_node = "func_fparams"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"func_fparams"+std::to_string(index));
+    if(!node.funcfparamlist.empty())
+    for(auto nd : node.funcfparamlist){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_tree_shower::visit(tree_func_fparam &node) {
+    index++;
+    std::string this_node = "func_fparam"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"func_fparam"+std::to_string(index));
+    last_node = this_node;
+    if(node.funcfparamarray)node.funcfparamarray->accept(*this);
+    last_node = this_node;
+    if(node.funcfparamone)node.funcfparamone->accept(*this);
+}
+void syntax_tree_shower::visit(tree_func_fparamone &node) {
+    index++;
+    std::string this_node = "func_fparamone"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"func_fparamone"+std::to_string(index));
+    last_node = this_node;
+    if(node.b_type)node.b_type->accept(*this);
+    last_node = this_node;
+}
+void syntax_tree_shower::visit(tree_func_fparamarray &node) {
+    index++;
+    std::string this_node = "func_fparamarray"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,"func_fparamarray"+std::to_string(index));
+    last_node = this_node;
+    if(node.b_type)node.b_type->accept(*this);
+    last_node = this_node;
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+
+void syntax_tree_shower::visit(tree_const_val_list &node){
+    index++;
+    std::string this_node = "tree_const_val_list"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    
+    if(!node.const_init_vals.empty())
+    for(auto nd : node.const_init_vals){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_tree_shower::visit(tree_const_exp_list &node){
+    index++;
+    std::string this_node = "tree_const_exp_list"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    
+    if(!node.const_exp.empty())
+    for(auto nd : node.const_exp){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_tree_shower::visit(tree_arrray_def &node){
+    index++;
+    std::string this_node = "tree_arrray_def"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    
+    if(!node.const_exps.empty())
+    for(auto nd : node.const_exps){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_tree_shower::visit(tree_if_stmt &node){
+    index++;
+    std::string this_node = "tree_if_stmt"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    last_node = this_node;
+    if(node.stmt)node.stmt->accept(*this);
+}
+void syntax_tree_shower::visit(tree_if_else_stmt &node){
+    index++;
+    std::string this_node = "tree_if_else_stmt"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    last_node = this_node;
+    if(node.stmt1)node.stmt1->accept(*this);
+    last_node = this_node;
+    if(node.stmt2)node.stmt2->accept(*this);
+}
+void syntax_tree_shower::visit(tree_while_stmt &node){
+    index++;
+    std::string this_node = "tree_while_stmt"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    if(node.cond)node.cond->accept(*this);
+    last_node = this_node;
+    if(node.stmt)node.stmt->accept(*this);
+    last_node = this_node;
+}
+void syntax_tree_shower::visit(tree_break_stmt &node){
+    index++;
+    std::string this_node = "tree_break_stmt"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+}
+void syntax_tree_shower::visit(tree_continue_stmt &node){
+    index++;
+    std::string this_node = "tree_continue_stmt"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+}
+void syntax_tree_shower::visit(tree_cond &node){
+    index++;
+    std::string this_node = "tree_cond"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    if(node.l_or_exp)node.l_or_exp->accept(*this);
+    last_node = this_node;
+}
+void syntax_tree_shower::visit(tree_array_ident &node){
+    index++;
+    std::string this_node = "tree_array_ident"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        last_node = this_node;
+        nd->accept(*this);
+    }
+}
+void syntax_tree_shower::visit(tree_func_call &node){
+    index++;
+    std::string this_node = "tree_func_call"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    if(node.funcr_paramlist)node.funcr_paramlist->accept(*this);
+}
+void syntax_tree_shower::visit(tree_funcr_paramlist &node){
+    index++;
+    std::string this_node = "tree_funcr_paramlist"+std::to_string(index);
+    std::printf("%s\n",this_node.c_str());
+    g.ZhuangTaiTu_add(last_node,this_node);
+    last_node = this_node;
+    
+    if(!node.exps.empty())
+    for(auto nd : node.exps){
+        last_node = this_node;
+        nd->accept(*this);
+    }
 }

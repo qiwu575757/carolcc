@@ -46,6 +46,18 @@ public:
     void visit(tree_eq_exp &node) final;
     void visit(tree_l_and_exp &node) final;
     void visit(tree_l_or_exp &node) final;
+    void visit(tree_const_val_list &node) final;
+    void visit(tree_const_exp_list &node) final;
+    void visit(tree_arrray_def &node) final;
+    void visit(tree_if_stmt &node) final;
+    void visit(tree_if_else_stmt &node) final;
+    void visit(tree_while_stmt &node) final;
+    void visit(tree_break_stmt &node) final;
+    void visit(tree_continue_stmt &node) final;
+    void visit(tree_cond &node) final;
+    void visit(tree_array_ident &node) final;
+    void visit(tree_func_call &node) final;
+    void visit(tree_funcr_paramlist &node) final;
 };
 
 

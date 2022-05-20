@@ -46,10 +46,10 @@ int main(int argc, char *argv[]) {
         perror(input_file);
     yyparse();
     // auto *md_shower = new syntax_tree_shower();
-    // auto *md_detail_shower = new syntax_detail_shower();
+    auto *md_detail_shower = new syntax_detail_shower();
     // md_shower->visit(*root);
     // syntax_tree_builder* builder = new syntax_tree_builder();
 
-    // md_detail_shower->visit(*root);
+    md_detail_shower->visit(*root);
     return 0;
 }
