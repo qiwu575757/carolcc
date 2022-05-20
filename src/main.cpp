@@ -16,40 +16,40 @@ tree_comp_unit *root;
 
 FILE *output;
 int main(int argc, char *argv[]) {
-    //     处理input_file
-//    if (argc < 2) {
-//        yyparse();
-//        return 0;
-//    }
-//    char *input_file = nullptr, *output_file = nullptr;
-//    for (int ch; (ch = getopt(argc, argv, "O:So:")) != -1;) {
-//        switch (ch) {
-//            case 'S':
-//                break;// 啥也不干，为了测评机
-//            case 'o':
-//                output_file = strdup(optarg);
-//                break;
-//            case 'O':
-//                break;
-//            default:
-//                break;
-//        }
-//    }
-//    input_file = argv[argc - 1];
-//    yyin = fopen(input_file, "r");
-//    if (output_file != nullptr) {
-//        output = fopen(output_file, "w");
-//    } else {
-//        output = stdout;
-//    }
-//    if (!yyin)
-//        perror(input_file);
-//    yyparse();
-    // auto *md_shower = new syntax_tree_shower();
-    // auto *md_detail_shower = new syntax_detail_shower();
-    // md_shower->visit(*root);
-    // syntax_tree_builder* builder = new syntax_tree_builder();
+        处理input_file
+   if (argc < 2) {
+       yyparse();
+       return 0;
+   }
+   char *input_file = nullptr, *output_file = nullptr;
+   for (int ch; (ch = getopt(argc, argv, "O:So:")) != -1;) {
+       switch (ch) {
+           case 'S':
+               break;// 啥也不干，为了测评机
+           case 'o':
+               output_file = strdup(optarg);
+               break;
+           case 'O':
+               break;
+           default:
+               break;
+       }
+   }
+   input_file = argv[argc - 1];
+   yyin = fopen(input_file, "r");
+   if (output_file != nullptr) {
+       output = fopen(output_file, "w");
+   } else {
+       output = stdout;
+   }
+   if (!yyin)
+       perror(input_file);
+   yyparse();
+    auto *md_shower = new syntax_tree_shower();
+    auto *md_detail_shower = new syntax_detail_shower();
+    md_shower->visit(*root);
+    syntax_tree_builder* builder = new syntax_tree_builder();
 
-    // md_detail_shower->visit(*root);
+    md_detail_shower->visit(*root);
     return 0;
 }
