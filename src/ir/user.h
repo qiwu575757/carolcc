@@ -15,10 +15,15 @@ public:
 class User : public Value {
 public:
     User(Type* type, const char *name,unsigned use_number);
-
+    /**
+     *  设置User类的参数,同时维护 v的use链
+     * @param no  是第几个参数
+     * @param v  具体的参数
+     */
+    void setOperand(unsigned no,Value* v);
 
 private:
-    std::vector<Value*> _use_list;
+    std::vector<Value*> _operands_list;
     unsigned _use_number; // 使用的变量的数量
 
 };

@@ -17,7 +17,8 @@ private:
 public:
     Value(const std::string &name, Type *type);;
     Value(Type *type, const std::string &name);;
-    void AddUse(User * user,unsigned value_num);
+    Type* getType();
+    void addUse(User * user,unsigned value_num);
 };
 
 
