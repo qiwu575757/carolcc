@@ -2,7 +2,7 @@
 #ifndef COMPILER_FUNCTION_H
 #define COMPILER_FUNCTION_H
 
-#include "base_block.h"
+#include "BaseBlock.h"
 #include "helpers/type_helper.h"
 
 
@@ -10,32 +10,31 @@
 #include <vector>
 
 #include "value.h"
-class value;
-class function;
-class variable;
-class arguments;
-class type;
-
-
-class arguments:public value{
+class Value;
+class Function;
+class Variable;
+class Argument;
+class Type;
+class Argument : public  Value{
 public:
-    explicit arguments(unsigned _arg_number):_arg_number(_arg_number){};
-    void add_arg(variable* arg);
+    Argument(Type *type, const std::string &name,Function* parent,unsigned arg_no);
 private:
-    unsigned _arg_number;
-    std::vector<variable*> _argument_list;
+    Function *_parent;
+    unsigned _arg_no; // 第几个参数
+    //TODO: bound_arrays
+
 };
 
 
-class function :public value{
+
+class Function :public Value {
 public:
-    function(type* _type,std::string &id,arguments* _args):_type(_type),_id(id),_args(_args){};
+    Function(FuncType* type,const std::string &name);
 
 private:
-    type* _type;
-    std::string _id;
-    arguments* _args;
-    std::vector<base_block*> _base_block_list;
+    std::vector<Argument*> _args;
+    std::vector<BaseBlock *> _base_block_list;
+
 
 };
 #endif//COMPILER_FUNCTION_H

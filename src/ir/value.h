@@ -3,37 +3,24 @@
 #include "helpers/type_helper.h"
 #include <string>
 #include <vector>
-class value;
-class type;
-class variable;
-class value
-{
+class Use;
+class User;
+class Value;
+class Type;
+class Variable;
+class Value {
 private:
-    /* data */
-public:
-    value(/* args */)=default;
-    ~value()=default;
-};
+    std::vector<Use *> _user_list;
+    std::string _name;
+    Type *_type;
 
-class variable:public value
-{
 public:
-    variable(std::string &id,type* type):value(),_id(id),_type(type){}
-private:
-    std::string _id;
-    type* _type;
-
-};
-
-class array : public variable{
-public:
-    array(std::string &id,type* type): variable(id,type){};
-    void add_exp(value* exp);
-private:
-    std::vector<value*> _exps;
+    Value(const std::string &name, Type *type);;
+    Value(Type *type, const std::string &name);;
+    void AddUse(User * user,unsigned value_num);
 };
 
 
 
 
-#endif // !COMPILER_VALUE_H
+#endif// !COMPILER_VALUE_H
