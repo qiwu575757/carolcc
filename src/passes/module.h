@@ -8,11 +8,11 @@
 class scope;
 class function;
 class varible;
-class module
+class Module
 {
 public:
-    module(/* args */)=default;
-    ~module()=default;
+    Module(/* args */)=default;
+    ~Module()=default;
 private:
     std::vector<function*> _func_list;
     std::vector<varible*> _global_variable_list;
