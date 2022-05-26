@@ -15,10 +15,14 @@ private:
     Type *_type;
 
 public:
-    Value(const std::string &name, Type *type);;
-    Value(Type *type, const std::string &name);;
+    Value(const std::string &name, Type *type);
+    Value(Type *type, const std::string &name);
     Type* getType();
     void addUse(User * user,unsigned value_num);
+
+    std::string Value::getName() {
+        return _name;
+    }
 };
 
 

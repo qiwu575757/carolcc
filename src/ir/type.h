@@ -16,6 +16,7 @@ public:
     VoidTyID,     // Void
     LabelTyID,    // Labels, e.g., BasicBlock
     IntegerTyID,  // Integers, include 32 bits and 1 bit
+    FloatTyID,    // Float
     FunctionTyID, // Functions
     ArrayTyID,    // Arrays
     PointerTyID,  // Pointer
@@ -31,6 +32,7 @@ public:
   bool isVoidTy() const { return getTypeID() == VoidTyID; }
   bool isLabelTy() const { return getTypeID() == LabelTyID; }
   bool isIntegerTy() const { return getTypeID() == IntegerTyID; }
+  bool isFloatTy() const { return getTypeID() == FloatTyID; }
   bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
   bool isArrayTy() const { return getTypeID() == ArrayTyID; }
   bool isPointerTy() const { return getTypeID() == PointerTyID; }
@@ -39,6 +41,7 @@ public:
   static Type *getLabelTy(Module *m) { return m->getLabelTy(); }
   static IntegerType *getInt1Ty(Module *m) { return m->getInt1Ty(); }
   static IntegerType *getInt32Ty(Module *m) { return m->getInt32Ty(); }
+  static FloatType *getFloatTy(Module *m) { return m->getFloatTy(); }
   static PointerType *getInt32PtrTy(Module *m) { return m->getInt32PtrTy(); }
 
   Type *getPointerElementType();
@@ -69,6 +72,10 @@ public:
 
 private:
   unsigned _num_bits;
+};
+
+class FloatType : public Type {
+
 };
 
 class FunctionType : public Type {
@@ -110,7 +117,7 @@ private:
 class PointerType : public Type {
 public:
   PointerType(Type *contained);
-  
+
   Type *getElementType() const { return _contained; }
 
   static PointerType *get(Type *contained) { return new PointerType(contained); }
