@@ -3,6 +3,7 @@
 #define COMPILER_BASEBLOCK_H
 #include "Instruction.h"
 #include "value.h"
+#include "type.h"
 #include <list>
 #include <memory>
 class Instruction;
@@ -12,11 +13,12 @@ class BaseBlock :public Value {
 private:
 
     std::list<Instruction*> _instructions;
-    std::string _label;
-
+    BaseBlock *_father;
+    Function *_func;
 public:
-    void addInstruction(Instruction* inst);
-
+    void clearFather() {
+        _father = nullptr;
+    }
 };
 
 
