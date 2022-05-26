@@ -6,11 +6,17 @@
 #include <list>
 #include <memory>
 class Instruction;
+class Function;
 class Value;
 class BaseBlock :public Value {
 private:
+
     std::list<Instruction*> _instructions;
+    std::string _label;
+
 public:
+    void addInstruction(Instruction* inst);
+
 };
 
 

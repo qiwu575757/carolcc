@@ -15,10 +15,23 @@
 #include <string>
 
 #define __ERROR
+#define __ASSERT
 #define __DEBUG
 #define __WARN
 #define __TRACE
 #define __INFO
+
+#ifdef __ASSERT
+#define MyAssert(info, cond)                                           \
+    do {                                                               \
+        if (!(cond)) {                                                 \
+            printf(RED "[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
+            exit(2);                                                   \
+        }                                                              \
+    } while (0)
+#else
+#define MyAssert(info, cond)
+#endif
 
 #ifdef __ERROR
 #define ERROR(format, ...)                                                     \
@@ -29,6 +42,7 @@
 #else
 #define ERROR(format, ...)
 #endif
+
 
 #ifdef __WARN
 #define WARNNING(format, ...) \
@@ -78,23 +92,23 @@ private:
         switch (log_type) {
             case LOG_TYPE::ERROR:
                 printf(RED);
-//                printf("ERROR|");
+                //                printf("ERROR|");
                 break;
             case LOG_TYPE::DEBUG:
                 printf(GREEN);
-//                printf("DEBUG|");
+                //                printf("DEBUG|");
                 break;
             case LOG_TYPE::WARN:
                 printf(YELLOW);
-//                printf("WARN|");
+                //                printf("WARN|");
                 break;
             case LOG_TYPE::TRACE:
                 printf(MAGENTA);
-//                printf("TRACE|");
+                //                printf("TRACE|");
                 break;
             case LOG_TYPE::INFO:
                 printf(BLUE);
-//                printf("INFO|");
+                //                printf("INFO|");
                 break;
         }
     }
@@ -104,7 +118,7 @@ private:
 
 public:
     explicit logger(const std::string &file_name, LOG_TYPE type, bool to_screen, bool to_file)
-        : log_file_name(file_name), log_type(type), to_screen(to_screen), to_file(to_file) ,print_file_position(false){
+        : log_file_name(file_name), log_type(type), to_screen(to_screen), to_file(to_file), print_file_position(false) {
         std::string name = file_name + ".log";
         f = fopen(name.c_str(), "w+");
     }
@@ -114,8 +128,8 @@ public:
     explicit logger(const std::string &file_name) : logger(file_name, LOG_TYPE::INFO){};
     void set_file(bool flag) { this->to_file = flag; }
     void set_screen(bool flag) { this->to_screen = flag; }
-    void set_caller_position(bool flag){
-        this->print_file_position=flag;
+    void set_caller_position(bool flag) {
+        this->print_file_position = flag;
     }
     void set_level(LOG_TYPE type) {
         this->log_type = type;
@@ -128,7 +142,7 @@ public:
 
             open_color();
 
-            if(print_file_position)
+            if (print_file_position)
                 printf("[%s:%d] ", __FILE__, __LINE__);
             printf(fmt, args);
 
@@ -153,30 +167,25 @@ public:
     }
     ~logger() { fclose(f); }
 };
-class error_log : public logger{
+class error_log : public logger {
 public:
-    explicit error_log(const std::string& name): logger(name,LOG_TYPE::ERROR){};
-
+    explicit error_log(const std::string &name) : logger(name, LOG_TYPE::ERROR){};
 };
-class debug_log : public logger{
+class debug_log : public logger {
 public:
-    explicit debug_log(const std::string& name): logger(name,LOG_TYPE::DEBUG){};
-
+    explicit debug_log(const std::string &name) : logger(name, LOG_TYPE::DEBUG){};
 };
-class warn_log : public logger{
+class warn_log : public logger {
 public:
-    explicit warn_log(const std::string& name): logger(name,LOG_TYPE::WARN){};
-
+    explicit warn_log(const std::string &name) : logger(name, LOG_TYPE::WARN){};
 };
-class info_log : public logger{
+class info_log : public logger {
 public:
-    explicit info_log(const std::string& name): logger(name,LOG_TYPE::INFO){};
-
+    explicit info_log(const std::string &name) : logger(name, LOG_TYPE::INFO){};
 };
-class trace_log : public logger{
+class trace_log : public logger {
 public:
-    explicit trace_log(const std::string& name): logger(name,LOG_TYPE::TRACE){};
-
+    explicit trace_log(const std::string &name) : logger(name, LOG_TYPE::TRACE){};
 };
 
 //error_log test("errortest");
@@ -191,4 +200,6 @@ public:
 //debug_log test5("errortest");
 //test5.set_caller_position(false);
 //test5.println("hello world");
+
+
 #endif// EASYCC_ERROR_H

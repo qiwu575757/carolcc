@@ -1,6 +1,7 @@
 
 #ifndef COMPILER_INSTRUCTION_H
 #define COMPILER_INSTRUCTION_H
+#include "BaseBlock.h"
 #include "user.h"
 
 class BaseBlock;
@@ -47,44 +48,45 @@ public:
 
 
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
-    Instruction(Type *type, BaseBlock *parent, OpKind op_id, unsigned op_nums);
+    Instruction(Type *type, OpKind op_id, unsigned op_nums, BaseBlock *parent);
 
 private:
     BaseBlock *_parent;
     OpKind _op_id;
 };
 
-class UnaryInst : public Instruction{
+class UnaryInst : public Instruction {
 private:
-    UnaryInst(Type* type,OpKind op_id,Value *v1);
+    UnaryInst(Type *type, OpKind op_id, Value *v1);
+    UnaryInst(Type *type, OpKind op_id, Value *v1, BaseBlock *parent);
 
 public:
-    static UnaryInst *createNeg(Value *v1);
-    static UnaryInst *createNot(Value *v1);
-
+    static UnaryInst *createNeg(Value *v1, BaseBlock *parent);
+    static UnaryInst *createNot(Value *v1, BaseBlock *parent);
 };
 
 class BinaryInst : public Instruction {
 private:
     BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
+    BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2, BaseBlock *parent);
 
 public:
-    static BinaryInst *createAdd(Value *v1, Value *v2);
-    static BinaryInst *createSub(Value *v1, Value *v2);
-    static BinaryInst *createMul(Value *v1, Value *v2);
-    static BinaryInst *createDiv(Value *v1, Value *v2);
-    static BinaryInst *createRem(Value *v1, Value *v2);
-    static BinaryInst *createShl(Value *v1, Value *v2);
-    static BinaryInst *createLshr(Value *v1, Value *v2);
-    static BinaryInst *createAshr(Value *v1, Value *v2);
-    static BinaryInst *createAnd(Value *v1, Value *v2);
-    static BinaryInst *createOr(Value *v1, Value *v2);
-    static BinaryInst *createXor(Value *v1, Value *v2);
+    static BinaryInst *createAdd(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createSub(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createMul(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createDiv(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createRem(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createShl(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createLshr(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createAshr(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createAnd(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createOr(Value *v1, Value *v2, BaseBlock *parent);
+    static BinaryInst *createXor(Value *v1, Value *v2, BaseBlock *parent);
 };
 
-class CmpInst : public Instruction{
+class CmpInst : public Instruction {
 public:
-    enum CmpOp{
+    enum CmpOp {
         EQ,
         NEQ,
         GT,
@@ -92,16 +94,27 @@ public:
         LT,
         LE
     };
-private:
-    CmpInst(Type* type,CmpOp op_id,Value *v1,Value *v2);
+    //    static CmpInst *createCmp(Type *type,CmpOp op_id,Value *v1,Value *v2);
+    static CmpInst *createEQ(Type *type, Value *v1, Value *v2, BaseBlock *parent);
+    static CmpInst *createNEQ(Type *type, Value *v1, Value *v2, BaseBlock *parent);
+    static CmpInst *createGT(Type *type, Value *v1, Value *v2, BaseBlock *parent);
+    static CmpInst *createGE(Type *type, Value *v1, Value *v2, BaseBlock *parent);
+    static CmpInst *createLT(Type *type, Value *v1, Value *v2, BaseBlock *parent);
+    static CmpInst *createLE(Type *type, Value *v1, Value *v2, BaseBlock *parent);
 
-};
-class RetInstr : public Instruction{
 private:
-    RetInstr(Type * type,Value *v);
-    RetInstr(Type * type,OpKind op_id,Value *v);
+    CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
+    CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BaseBlock *parent);
+};
+class ReturnInst : public Instruction {
+private:
+    ReturnInst(Type *type, Value *v);
+    ReturnInst(Type *type, Value *v, BaseBlock *parent);
+    ReturnInst(Type *type, OpKind op_id, Value *v);
+
 public:
-    static RetInstr *createRet(Value *v);
+    static ReturnInst *createRet(Value *v,BaseBlock *parent);
+    static ReturnInst *createVoidRet(BaseBlock *parent);
 };
 
 

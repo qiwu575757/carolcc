@@ -4,12 +4,10 @@
 
 #include "BaseBlock.h"
 #include "helpers/type_helper.h"
-
-
+#include "type.h"
+#include "value.h"
 #include <string>
 #include <vector>
-
-#include "value.h"
 class Value;
 class Function;
 class Variable;
