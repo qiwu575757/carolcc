@@ -109,6 +109,12 @@ bool Type::eq(Type rhs) {
         return true;
     }
 }
+Type *Type::getVoidTy(Module *m) { return m->getVoidTy(); }
+Type *Type::getLabelTy(Module *m) { return m->getLabelTy(); }
+IntegerType *Type::getInt1Ty(Module *m) { return m->getInt1Ty(); }
+IntegerType *Type::getInt32Ty(Module *m) { return m->getInt32Ty(); }
+FloatType *Type::getFloatTy(Module *m) { return m->getFloatTy(); }
+PointerType *Type::getInt32PtrTy(Module *m) { return m->getInt32PtrTy(); }
 // IntegerType
 IntegerType::IntegerType(unsigned num_bits)
     : Type(Type::IntegerTyID), _num_bits(num_bits) {}
@@ -129,16 +135,17 @@ bool IntegerType::isInt32() {
     }
 }
 // FunctionType
-FunctionType::FunctionType(Type *result, std::vector<Type *> params)
-    : Type(Type::FunctionTyID) {
-    exit_ifnot(_InvalidRetVal_Constructor_FunctionType,
-               isValidReturnType(result) && "Invalid return type for function!");
-    _result = result;
+FunctionType::FunctionType(Type *result, std::vector<Type *> &params)
+    : Type(Type::FunctionTyID), _result(result) {
+    //    exit_ifnot(_InvalidRetVal_Constructor_FunctionType,
+    //               isValidReturnType(result) && "Invalid return type for function!");
+    MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidReturnType(result) && "Invalid return type for function!");
 
     for (auto p: params) {
-        exit_ifnot(_InvalidArgType_Constructor_FunctionType,
-                   isValidArgumentType(p) &&
-                           "Not a valid type for function argument!");
+        //        exit_ifnot(_InvalidArgType_Constructor_FunctionType,
+        //                   isValidArgumentType(p) &&
+        //                           "Not a valid type for function argument!");
+        MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidArgumentType(p));
         _args.push_back(p);
     }
 }
@@ -159,9 +166,7 @@ Type *FunctionType::getResultType() const { return _result; }
 // ArrayType
 ArrayType::ArrayType(Type *contained, unsigned num_elements)
     : Type(Type::ArrayTyID), _num_elements(num_elements) {
-    exit_ifnot(_InvalidElemType_Constructor_ArrayType,
-               isValidElementType(contained) &&
-                       "Not a valid type for array element!");
+    MyAssert("_InvalidElemType_Constructor_ArrayType", isValidElementType(contained));
     _contained = contained;
 }
 
@@ -171,8 +176,8 @@ bool ArrayType::isValidElementType(Type *ty) {
 
 std::vector<unsigned> ArrayType::getDims() const {
     std::vector<unsigned> rets;
-    auto elem_ty = contained_;
-    rets.push_back(num_elements_);
+    auto elem_ty = _contained;
+    rets.push_back(_num_elements);
     while (elem_ty->isArrayTy()) {
         auto arr = static_cast<ArrayType *>(elem_ty);
         rets.push_back(arr->getNumOfElements());

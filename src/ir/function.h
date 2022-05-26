@@ -4,7 +4,6 @@
 
 #include "BaseBlock.h"
 #include "helpers/type_helper.h"
-#include "passes/module.h"
 #include "type.h"
 #include "utils.h"
 #include "value.h"
@@ -18,6 +17,8 @@ class Variable;
 class Argument;
 class Type;
 class Module;
+class BaseBlock;
+class BasicBlock;
 
 extern error_log function_logger;
 class Argument : public Value {
@@ -26,8 +27,7 @@ public:
     inline Function *getParent() const { return _parent; }
     unsigned getArgNo() const {
         if (_parent == nullptr) {
-            function_logger.println("Argument have no parent");
-            exit(1);
+            ERROR("Argument have no parent");
         }
         return _arg_no;
     }
@@ -48,7 +48,7 @@ private:
 class Function : public Value {
 public:
     Function(FunctionType *type, const std::string &name, Module *parent);
-    static Function *create(FunctionType *type, const std::string &name, Moudle *parent);
+    static Function *create(FunctionType *type, const std::string &name, Module *parent);
 
     FunctionType *getFunctionType() const;
     Type *getResultType() const;
@@ -59,13 +59,13 @@ public:
     void addBasicBlockAfter(std::vector<BasicBlock *>::iterator after_pos,
                             BasicBlock *bb);
     unsigned getNumBasicBlocks() const {
-        return _basic_blocks.size();
+        return _basic_block_list.size();
     }
     std::vector<BasicBlock *> &getBasicBlocks() {
-        return _basic_blocks;
+        return _basic_block_list;
     }
     BasicBlock *getEntryBlock() {
-        return *_basic_blocks.begin();
+        return *_basic_block_list.begin();
     }
     void removeBasicBlock(BasicBlock *basicblock);
 

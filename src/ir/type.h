@@ -1,7 +1,6 @@
 #ifndef COMPILER_TYPE_H
 #define COMPILER_TYPE_H
 
-#include "passes/module.h"
 #include <iostream>
 #include <vector>
 
@@ -10,6 +9,7 @@ class FunctionType;
 class ArrayType;
 class FloatType;
 class PointerType;
+class Module;
 
 class Type {
 public:
@@ -37,12 +37,12 @@ public:
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
 
-    static Type *getVoidTy(Module *m) { return m->getVoidTy(); }
-    static Type *getLabelTy(Module *m) { return m->getLabelTy(); }
-    static IntegerType *getInt1Ty(Module *m) { return m->getInt1Ty(); }
-    static IntegerType *getInt32Ty(Module *m) { return m->getInt32Ty(); }
-    static FloatType *getFloatTy(Module *m) { return m->getFloatTy(); }
-    static PointerType *getInt32PtrTy(Module *m) { return m->getInt32PtrTy(); }
+    static Type *getVoidTy(Module *m);
+    static Type *getLabelTy(Module *m);
+    static IntegerType *getInt1Ty(Module *m);
+    static IntegerType *getInt32Ty(Module *m);
+    static FloatType *getFloatTy(Module *m);
+    static PointerType *getInt32PtrTy(Module *m);
 
     Type *getPointerElementType();
 
@@ -84,7 +84,7 @@ public:
 
 class FunctionType : public Type {
 public:
-    FunctionType(Type *result, std::vector<Type *> params);
+    FunctionType(Type *result, std::vector<Type *> &params);
 
     static bool isValidReturnType(Type *ty);
     static bool isValidArgumentType(Type *ty);

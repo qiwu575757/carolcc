@@ -1,7 +1,6 @@
 
 #ifndef COMPILER_BASEBLOCK_H
 #define COMPILER_BASEBLOCK_H
-#include "function.h"
 #include "instruction.h"
 #include "type.h"
 #include "value.h"

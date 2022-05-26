@@ -1,4 +1,5 @@
 
+#include "function.h"
 #include "instruction.h"
 #include "type.h"
 #include "user.h"
