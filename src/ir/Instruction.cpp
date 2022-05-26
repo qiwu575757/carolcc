@@ -1,15 +1,20 @@
 
-#include "value.h"
 #include "Instruction.h"
 #include "user.h"
+#include "value.h"
 Instruction::Instruction(Type *type, BaseBlock *parent, Instruction::OpKind op_id, unsigned int op_nums)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
 }
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums) : Instruction(type, nullptr, op_id, op_nums) {}
-  UnaryInst::UnaryInst(Type* type,OpKind op_id,Value *v1):Instruction(type,op_id,1){
-      setOperand(0,v1);
-
-  }
+UnaryInst::UnaryInst(Type *type, OpKind op_id, Value *v1) : Instruction(type, op_id, 1) {
+    setOperand(0, v1);
+}
+UnaryInst *UnaryInst::createNeg(Value *v1) {
+    return new UnaryInst(v1->getType(), Instruction::NEG, v1);
+}
+UnaryInst *UnaryInst::createNot(Value *v1) {
+    return new UnaryInst(v1->getType(), Instruction::NOT, v1);
+}
 
 BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *v2)
     : Instruction(type, op_id, 2) {
@@ -49,4 +54,15 @@ BinaryInst *BinaryInst::createOr(Value *v1, Value *v2) {
 }
 BinaryInst *BinaryInst::createXor(Value *v1, Value *v2) {
     return new BinaryInst(v1->getType(), Instruction::XOR, v1, v2);
+}
+RetInstr::RetInstr(Type *type, Instruction::OpKind op_id, Value *v) : Instruction(type, op_id, 1) {
+    setOperand(0, v);
+}
+RetInstr::RetInstr(Type *type, Value *v) : Instruction(type, Instruction::RET, 1) {
+    setOperand(0, v);
+}
+RetInstr *RetInstr::createRet(Value *v) {
+    return new RetInstr(v->getType(), Instruction::RET, v);
+}
+CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2) : Instruction(type, Instruction::CMP, ) {
 }
