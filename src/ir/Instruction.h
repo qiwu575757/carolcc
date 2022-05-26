@@ -39,6 +39,9 @@ public:
         LOAD,
         STORE,
 
+        // other instructions
+        CMP,
+        PHI
 
     };
 
@@ -54,6 +57,10 @@ private:
 class UnaryInst : public Instruction{
 private:
     UnaryInst(Type* type,OpKind op_id,Value *v1);
+
+public:
+    static UnaryInst *createNeg(Value *v1);
+    static UnaryInst *createNot(Value *v1);
 
 };
 
@@ -74,7 +81,27 @@ public:
     static BinaryInst *createOr(Value *v1, Value *v2);
     static BinaryInst *createXor(Value *v1, Value *v2);
 };
-class UnaryInst : public Instruction {
+
+class CmpInst : public Instruction{
+public:
+    enum CmpOp{
+        EQ,
+        NEQ,
+        GT,
+        GE,
+        LT,
+        LE
+    };
+private:
+    CmpInst(Type* type,CmpOp op_id,Value *v1,Value *v2);
+
+};
+class RetInstr : public Instruction{
+private:
+    RetInstr(Type * type,Value *v);
+    RetInstr(Type * type,OpKind op_id,Value *v);
+public:
+    static RetInstr *createRet(Value *v);
 };
 
 
