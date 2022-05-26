@@ -1,10 +1,15 @@
 
+#include "value.h"
 #include "Instruction.h"
 #include "user.h"
 Instruction::Instruction(Type *type, BaseBlock *parent, Instruction::OpKind op_id, unsigned int op_nums)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
 }
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums) : Instruction(type, nullptr, op_id, op_nums) {}
+  UnaryInst::UnaryInst(Type* type,OpKind op_id,Value *v1):Instruction(type,op_id,1){
+      setOperand(0,v1);
+
+  }
 
 BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *v2)
     : Instruction(type, op_id, 2) {

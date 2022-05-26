@@ -11,7 +11,11 @@ public:
         // terminator instructions
         RET,
         BR,
-        // binary Instructions
+
+        // unary instructions
+        NEG,
+        NOT,
+        // binary instructions
         ADD,
         FADD,//float add
         SUB,
@@ -45,6 +49,12 @@ public:
 private:
     BaseBlock *_parent;
     OpKind _op_id;
+};
+
+class UnaryInst : public Instruction{
+private:
+    UnaryInst(Type* type,OpKind op_id,Value *v1);
+
 };
 
 class BinaryInst : public Instruction {
