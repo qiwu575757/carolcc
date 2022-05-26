@@ -5,10 +5,11 @@
 #include "user.h"
 #include "value.h"
 
+class ArrayType;
 class Constant : public User {
 public:
-    Constant(Type *ty, const char *name = "", unsigned num_ops = 0)
-      : User(ty, name, num_ops) {}
+    explicit Constant(Type *ty, const char *name = "", unsigned num_ops = 0)
+        : User(ty, name, num_ops) {}
 
     // virtual void print() override;
 };
@@ -18,10 +19,9 @@ private:
     int _value;
 
 public:
-    ConstantInt(Type *ty, int value) :
-        Constant(ty, "", 0), _value(value) {}
-    int getValue() { return _value; }
-    void setValue(int value) { _value = value; }
+    ConstantInt(Type *ty, int value) : Constant(ty, "", 0), _value(value) {}
+    int getValue() const;
+    void setValue(int value);
 };
 
 class ConstantArray : public Constant {

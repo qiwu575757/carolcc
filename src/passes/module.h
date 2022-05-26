@@ -1,22 +1,28 @@
 #ifndef COMPILER_MODULE_H
 #define COMPILER_MODULE_H
+#include "ir/function.h"
+#include "ir/global_variable.h"
+#include "ir/type.h"
+#include "ir/value.h"
+#include "utils.h"
 #include <list>
 #include <map>
 #include <string>
-#include "ir/function.h"
-#include<vector>
-#include<unordered_map>
-#include "type.h"
-#include "value.h"
-#include "globalvariable.h"
+#include <unordered_map>
+#include <vector>
 
-extern error_log module_logger;
 class GlobalVariable;
+class IntegerType;
+class FloatType;
+class PointerType;
 
 class Module {
 public:
-    enum IRLevel { HIR, MIR_MEM, MIR_SSA, LIR };
-    Module (std::string name);
+    enum IRLevel { HIR,
+                   MIR_MEM,
+                   MIR_SSA,
+                   LIR };
+    explicit Module(const std::string &name);
     Type *getVoidTy();
     Type *getLabelTy();
     IntegerType *getInt1Ty();
@@ -58,46 +64,46 @@ public:
     }
 
     Function *getMainFunction() {
-        for (auto func : _function_list) {
+        for (auto func: _function_list) {
             if (func->getName() == "main") {
                 return func;
             }
         }
     }
     Function *getFunction(std::string func_name) {
-        for (auto func : _function_list) {
+        for (auto func: _function_list) {
             if (func->getName() == func_name) {
                 return func;
             }
         }
-        module_logger.println("No given function");
-        exit(1);
+        ERROR("no function given");
     }
 
 private:
     std::list<GlobalVariable *> _global_variable_list;//全局变量表
-    std::list<Function *> _function_list;//函数表
-    std::map<std::string, Value *> _value_sym_table;//符号表
+    std::list<Function *> _function_list;             //函数表
+    std::map<std::string, Value *> _value_sym_table;  //符号表
     std::string _module_name;
 
     IRLevel _ir_level = HIR;
 
 private:
-  IntegerType *_int1_type;
-  IntegerType *_int32_tpye;
-  FloatType *_float_tpye;
-  Type *_label_type;
-  Type *_void_type;
-  PointerType *_int32ptr_type;
+    IntegerType *_int1_type;
+    IntegerType *_int32_type;
+    FloatType *_float_type;
+    Type *_label_type;
+    Type *_void_type;
+    PointerType *_int32ptr_type;
+    PointerType *_floatptr_type;
 };
 
-class scope{
+class scope {
 public:
     void enter();
     void exit();
 
 private:
-    std::vector<std::unordered_map<std::string,GlobalVariable*>> _table;
+    std::vector<std::unordered_map<std::string, GlobalVariable *>> _table;
 };
 
-#endif // !COMPILER_MODULE_H
+#endif// !COMPILER_MODULE_H

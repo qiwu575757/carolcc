@@ -1,7 +1,7 @@
 
 #include "user.h"
 #include "utils.h"
-User::User(Type *type, const char *name, unsigned int use_number) : Value(name,type),_use_number(use_number){
+User::User(Type *type, const std::string &name, unsigned int use_number) : Value(name,type),_use_number(use_number){
     _operands_list.resize(use_number);
 }
 void User::setOperand(unsigned no, Value *v) {

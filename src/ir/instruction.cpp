@@ -1,9 +1,9 @@
 
-#include "Instruction.h"
-#include "user.h"
-#include "value.h"
+#include "instruction.h"
 #include "type.h"
+#include "user.h"
 #include "utils.h"
+#include "value.h"
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums, BaseBlock *parent)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
     MyAssert("null parent", _parent != nullptr);
@@ -116,7 +116,9 @@ ReturnInst::ReturnInst(Type *type, Value *v, BaseBlock *parent)
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BaseBlock *parent) {
-    return new ReturnInst(Type::getVoidTy())
+    return new ReturnInst(Type::getVoidTy(parent->getFunction()->getParent()),parent);
+}
+ReturnInst::ReturnInst(Type *type,BaseBlock*parent) : Instruction(type,Instruction::RET,0,parent){
 }
 CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2, BaseBlock *parent)
     : Instruction(type, Instruction::CMP, 2, parent) {

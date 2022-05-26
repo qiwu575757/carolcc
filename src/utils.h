@@ -37,7 +37,7 @@
 #define ERROR(format, ...)                                                     \
     do {                                                                       \
         printf(RED "[%s:%d]" format RESET, __FILE__, __LINE__, ##__VA_ARGS__); \
-        exit(1);                                                               \
+        exit(3);                                                               \
     } while (0)
 #else
 #define ERROR(format, ...)

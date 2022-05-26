@@ -9,3 +9,6 @@ Value::Value(Type *type, const std::string &name):_type(type),_name(name) {
 Type *Value::getType() {
     return _type;
 }
+std::string Value::getName() {
+    return _name;
+}

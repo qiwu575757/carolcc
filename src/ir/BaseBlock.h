@@ -1,9 +1,10 @@
 
 #ifndef COMPILER_BASEBLOCK_H
 #define COMPILER_BASEBLOCK_H
-#include "Instruction.h"
-#include "value.h"
+#include "function.h"
+#include "instruction.h"
 #include "type.h"
+#include "value.h"
 #include <list>
 #include <memory>
 class Instruction;
@@ -16,6 +17,8 @@ private:
     BaseBlock *_father;
     Function *_func;
 public:
+    void addInstruction(Instruction *inst);
+    Function* getFunction();
     void clearFather() {
         _father = nullptr;
     }

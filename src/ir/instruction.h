@@ -1,4 +1,3 @@
-
 #ifndef COMPILER_INSTRUCTION_H
 #define COMPILER_INSTRUCTION_H
 #include "BaseBlock.h"
@@ -108,6 +107,7 @@ private:
 };
 class ReturnInst : public Instruction {
 private:
+    ReturnInst(Type *type ,BaseBlock*parent);
     ReturnInst(Type *type, Value *v);
     ReturnInst(Type *type, Value *v, BaseBlock *parent);
     ReturnInst(Type *type, OpKind op_id, Value *v);
@@ -115,6 +115,10 @@ private:
 public:
     static ReturnInst *createRet(Value *v,BaseBlock *parent);
     static ReturnInst *createVoidRet(BaseBlock *parent);
+};
+
+class BranchInst : public Instruction {
+
 };
 
 

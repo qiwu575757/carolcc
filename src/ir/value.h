@@ -19,10 +19,7 @@ public:
     Value(Type *type, const std::string &name);
     Type* getType();
     void addUse(User * user,unsigned value_num);
-
-    std::string Value::getName() {
-        return _name;
-    }
+    std::string getName();
 };
 
 
