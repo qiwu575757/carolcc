@@ -1,7 +1,7 @@
 #ifndef COMPILER_GLOBALVARIABLE_H
 #define COMPILER_GLOBALVARIABLE_H
 #include "constant.h"
-#include "module.h"
+#include "passes/module.h"
 #include "user.h"
 
 class GlobalVariable : public User {
