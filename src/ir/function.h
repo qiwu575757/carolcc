@@ -4,13 +4,13 @@
 
 #include "BaseBlock.h"
 #include "helpers/type_helper.h"
-#include <string>
-#include <vector>
-#include <algorithm>
-#include "value.h"
+#include "passes/module.h"
 #include "type.h"
 #include "utils.h"
-#include "passes/module.h"
+#include "value.h"
+#include <algorithm>
+#include <string>
+#include <vector>
 
 class Value;
 class Function;
@@ -20,9 +20,9 @@ class Type;
 class Module;
 
 extern error_log function_logger;
-class Argument : public  Value{
+class Argument : public Value {
 public:
-    Argument(Type *type, const std::string &name,Function* parent,unsigned arg_no);
+    Argument(Type *type, const std::string &name, Function *parent, unsigned arg_no);
     inline Function *getParent() const { return _parent; }
     unsigned getArgNo() const {
         if (_parent == nullptr) {
@@ -32,24 +32,23 @@ public:
         return _arg_no;
     }
 
-  void setArrayBound(std::vector<Value *> &array_bound) {
-    _array_bound.assign(array_bound.begin(), array_bound.end());
-  }
+    void setArrayBound(std::vector<Value *> &array_bound) {
+        _array_bound.assign(array_bound.begin(), array_bound.end());
+    }
 
-  std::vector<Value *> &getArrayBound() { return _array_bound; }
+    std::vector<Value *> &getArrayBound() { return _array_bound; }
 
 private:
     Function *_parent;
-    unsigned _arg_no; // 第几个参数
+    unsigned _arg_no;// 第几个参数
     std::vector<Value *> _array_bound;
 };
 
 
-
-class Function :public Value {
+class Function : public Value {
 public:
-    Function(FunctionType* type,const std::string &name, Moudle *parent);
-    static Function *create(FunctionType* type,const std::string &name, Moudle *parent);
+    Function(FunctionType *type, const std::string &name, Module *parent);
+    static Function *create(FunctionType *type, const std::string &name, Moudle *parent);
 
     FunctionType *getFunctionType() const;
     Type *getResultType() const;
@@ -84,27 +83,26 @@ public:
 
     // Method about baseblocklist
     void removeBaseBlock(BaseBlock *baseblock) {
-        std::vector<BaseBlock *>::iterator pos = find(_base_block_list.begin(),_base_block_list.end(), baseblock);
+        std::vector<BaseBlock *>::iterator pos = find(_base_block_list.begin(), _base_block_list.end(), baseblock);
         _base_block_list.erase(pos);
     }
     void addBaseBlock(BaseBlock *baseblock);
     void insertBaseBlock(std::vector<BaseBlock *>::iterator iter,
                          BaseBlock *baseblock) {
-      _base_block_list.insert(iter, baseblock);
-      baseblock->clearFather();
+        _base_block_list.insert(iter, baseblock);
+        baseblock->clearFather();
     }
-  std::vector<BaseBlock *> &getBaseBlocks() {
-      return _base_block_list;
-}
+    std::vector<BaseBlock *> &getBaseBlocks() {
+        return _base_block_list;
+    }
 
 private:
-    std::vector<Argument*> _args;
+    std::vector<Argument *> _args;
     std::vector<BaseBlock *> _base_block_list;
     Module *_parent;
     std::vector<BasicBlock *> _basic_block_list;
 
 private:
     void buildArgs();
-
 };
 #endif//COMPILER_FUNCTION_H

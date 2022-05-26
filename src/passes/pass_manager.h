@@ -8,9 +8,9 @@ class pass_manager
 {
 private:
     std::vector<pass*> passes;
-    module *_m;
+    Module *_m;
 public:
-    pass_manager(module* m):_m(m){};
+    pass_manager(Module* m):_m(m){};
     ~pass_manager();
     template <typename pass_type> void add_pass(){
         passes.push_back(new pass_type(typeid(pass_type).name(),_m));

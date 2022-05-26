@@ -2,7 +2,7 @@
 #include "passes/module.h"
 #include <cassert>
 
-Type::Type(TypeID id) { _id = id; }
+Type::Type(TypeID id) : _id(id) {}
 
 Type *Type::getPointerElementType() {
     if (this->isPointerTy())
@@ -186,5 +186,5 @@ PointerType::PointerType(Type *contained)
 FloatType *FloatType::get() {
     return new FloatType();
 }
-FloatType::FloatType() :Type(Type::FloatTyID){
+FloatType::FloatType() : Type(Type::FloatTyID) {
 }

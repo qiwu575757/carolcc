@@ -6,7 +6,6 @@
 #include "visitor_base.h"
 #include "passes/module.h"
 #include "helpers/type_helper.h"
-class module;
 
 
 class syntax_tree_builder : public visitor_base {
@@ -62,10 +61,10 @@ public:
     void visit(tree_func_call &node) final;
     void visit(tree_funcr_paramlist &node) final;
     syntax_tree_builder(){
-        _module = new module();
+        _module = new Module("sysy code");
     };
 private :
-    module* _module;
+    Module* _module;
 };
 
 

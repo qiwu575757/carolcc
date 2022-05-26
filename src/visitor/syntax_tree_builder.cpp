@@ -5,8 +5,7 @@
 #include "syntax_tree_builder.h"
 #include "utils.h"
 
-value* temp_val;
-type* temp_type;
+Value* temp_val;
 
 
 void syntax_tree_builder::visit(syntax_tree_node &node) {
@@ -23,17 +22,17 @@ void syntax_tree_builder::visit(tree_comp_unit &node) {
     }
 }
 void syntax_tree_builder::visit(tree_func_def &node) {
-    node.type->accept(*this);
-    auto func_type = temp_type;
-
-    arguments* func_args ;
-    if(node.funcfparams!= nullptr){
-        node.funcfparams->accept(*this);
-        func_args = static_cast<arguments*>(temp_val);
-    }
-    else {
-        func_args= nullptr;
-    }
+//    node.type->accept(*this);
+//    auto func_type = temp_type;
+//
+//    arguments* func_args ;
+//    if(node.funcfparams!= nullptr){
+//        node.funcfparams->accept(*this);
+//        func_args = static_cast<arguments*>(temp_val);
+//    }
+//    else {
+//        func_args= nullptr;
+//    }
 
 
 
@@ -43,7 +42,7 @@ void syntax_tree_builder::visit(tree_block &node) {
 void syntax_tree_builder::visit(tree_const_decl &node) {
 }
 void syntax_tree_builder::visit(tree_basic_type &node) {
-    temp_type = new type(node.type);
+//    temp_type = new type(node.type);
 }
 void syntax_tree_builder::visit(tree_const_def_list &node) {
 }
@@ -73,12 +72,12 @@ void syntax_tree_builder::visit(tree_eq_exp &node) {}
 void syntax_tree_builder::visit(tree_l_and_exp &node) {}
 void syntax_tree_builder::visit(tree_l_or_exp &node) {}
 void syntax_tree_builder::visit(tree_func_fparams &node) {
-    auto* args = new arguments(node.funcfparamlist.size());
-    for(const auto& arg:node.funcfparamlist){
-        arg->accept(*this);
-        args->add_arg(static_cast<variable *>(temp_val));
-    }
-    temp_val=args;
+//    auto* args = new arguments(node.funcfparamlist.size());
+//    for(const auto& arg:node.funcfparamlist){
+//        arg->accept(*this);
+//        args->add_arg(static_cast<variable *>(temp_val));
+//    }
+//    temp_val=args;
 
 }
 void syntax_tree_builder::visit(tree_func_fparam &node) {
@@ -94,13 +93,13 @@ void syntax_tree_builder::visit(tree_func_fparam &node) {
 
 }
 void syntax_tree_builder::visit(tree_func_fparamone &node) {
-    auto var = new variable(node.id,new type(type_helper::INT)) ;
-    temp_val = var;
+//    auto var = new Variable(node.id,new type(type_helper::INT)) ;
+//    temp_val = var;
 
 }
 void syntax_tree_builder::visit(tree_func_fparamarray &node) {
-    auto var = new variable(node.id,new type(type_helper::PTR)) ;
-    temp_val = var;
+//    auto var = new variable(node.id,new type(type_helper::PTR)) ;
+//    temp_val = var;
 }
 void syntax_tree_builder::visit(tree_init_val_array &node) {
     ERROR("TODO");

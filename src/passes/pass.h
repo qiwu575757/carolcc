@@ -2,21 +2,21 @@
 #define COMPILER_PASS_H
 
 #include "module.h"
-#include <string>
 #include <memory>
-class pass
-{
+#include <string>
+class pass {
 private:
     std::string _name;
-    std::shared_ptr<module> _m;
+    Module *_m;
+
 public:
-    pass(std::string name,std::shared_ptr<module> m):_name(name),_m(m){};
-    void set_name(std::string name){
-        _name =  name;
+    pass(std::string &name, Module *m) : _name(name), _m(m){};
+    void set_name(std::string &name) {
+        _name = name;
     }
 
-    ~pass();
+    ~pass() = default;
 };
 
 
-#endif // COMPILER_PASS_H
+#endif// COMPILER_PASS_H
