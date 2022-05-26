@@ -10,7 +10,7 @@
 #include "value.h"
 #include "type.h"
 #include "utils.h"
-#include "module.h"
+#include "passes/module.h"
 
 class Value;
 class Function;
@@ -84,7 +84,7 @@ public:
 
     // Method about baseblocklist
     void removeBaseBlock(BaseBlock *baseblock) {
-        std::vector<BaseBlock *>::iterator pos = find(_base_block_list.begin(),_base_block_list.end(), baseblcok);
+        std::vector<BaseBlock *>::iterator pos = find(_base_block_list.begin(),_base_block_list.end(), baseblock);
         _base_block_list.erase(pos);
     }
     void addBaseBlock(BaseBlock *baseblock);
