@@ -6,7 +6,7 @@ void Value::addUse(User *user, unsigned value_num) {
 Value::Value(const std::string &name, Type *type) : _name(name), _type(type) {}
 Value::Value(Type *type, const std::string &name):_type(type),_name(name) {
 }
-Type *Value::getType() {
+Type *Value::getType() const{
     return _type;
 }
 std::string Value::getName() {

@@ -6,41 +6,55 @@
 Argument::Argument(Type *type, const std::string &name, Function *parent, unsigned int arg_no)
     : Value(name, type), _arg_no(arg_no), _parent(parent) {
 }
+
 Function::Function(FunctionType *type, const std::string &name, Module *parent)
     : Value(type, name), _parent(parent) {
-    parent->AddFunction(this);
+        parent->AddFunction(this);
+        buildArgs();
 }
+
 Module *Function::getParent() const {
     return _parent;
 }
+
 FunctionType *Function::getFunctionType() const {
-    ERROR("TODO");
-    return nullptr;
+    return static_cast<FunctionType *>(getType());
 }
+
 Function *Function::create(FunctionType *type, const std::string &name, Module *parent) {
-    ERROR("TODO");
-    return nullptr;
+    return new Function(type, name, parent);
 }
+
 Type *Function::getResultType() const {
-    ERROR("TODO");
-    return nullptr;
+    return getFunctionType()->getResultType();
 }
+
 void Function::addBasicBlock(BasicBlock *basicblock) {
-    ERROR("TODO");
+    _basic_block_list.push_back(basicblock);
 }
+
 void Function::addBasicBlockAfter(std::vector<BasicBlock *>::iterator after_pos, BasicBlock *bb) {
-    ERROR("TODO");
+    after_pos++;
+    _basic_block_list.insert(after_pos,bb);//insert 默认在 after_pos之前插入
 }
+
 void Function::removeBasicBlock(BasicBlock *basicblock) {
-    ERROR("TODO");
+    std::vector<BasicBlock *>::iterator pos = find(_basic_block_list.begin(),_basic_block_list.end(), basicblock);
+    _basic_block_list.erase(pos);
 }
+
 unsigned Function::getNumArgs() const {
-    ERROR("TODO");
-    return 0;
+    return getFunctionType()->getNumArgs();
 }
+
 void Function::addBaseBlock(BaseBlock *baseblock) {
-    ERROR("TODO");
+    _base_block_list.push_back(baseblock);
 }
+
 void Function::buildArgs() {
-    ERROR("TODO");
+    auto *function_type = getFunctionType();
+    unsigned num_args = getNumArgs();
+    for ( int i = 0; i < num_args; i++ ) {
+        _args.push_back(new Argument(function_type->getArgType(i),"", this, i));
+    }
 }
