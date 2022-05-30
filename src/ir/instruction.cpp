@@ -1,6 +1,7 @@
 
-#include "function.h"
 #include "instruction.h"
+#include "function.h"
+#include "passes/module.h"
 #include "type.h"
 #include "user.h"
 #include "utils.h"
@@ -169,4 +170,32 @@ CmpInst *CmpInst::createLT(Type *type, Value *v1, Value *v2, BaseBlock *parent) 
 }
 CmpInst *CmpInst::createLE(Type *type, Value *v1, Value *v2, BaseBlock *parent) {
     return new CmpInst(type, CmpOp::LE, v1, v2, parent);
+}
+BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, Value *false_block, BaseBlock *parent)
+    : Instruction(parent->getFunction()->getParent()->getInt1Ty(),
+                  Instruction::BR, 3, parent),
+      _br_kind(br_op) {
+    setOperand(0, cond);
+    setOperand(1, true_block);
+    setOperand(2, false_block);
+}
+BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *block, BaseBlock *parent)
+    : Instruction(parent->getFunction()->getParent()->getInt1Ty(),
+                  Instruction::BR, 2, parent),
+      _br_kind(br_op) {
+    setOperand(0, cond);
+    setOperand(1, block);
+}
+BranchInst::BranchInst(BranchInst::BrOp br_op, Value *block, BaseBlock *parent)
+    : Instruction(parent->getFunction()->getParent()->getVoidTy(), Instruction::BR, 1, parent), _br_kind(br_op) {
+    setOperand(0, block);
+}
+BranchInst *BranchInst::createIf(CmpInst *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent) {
+    return new BranchInst(BranchInst::IF, cond, true_block, false_block, parent);
+}
+BranchInst *BranchInst::createWhile(CmpInst *cond, BaseBlock *block, BaseBlock *parent) {
+    return new BranchInst(BranchInst::WHILE, cond, block, parent);
+}
+BranchInst *BranchInst::createBranch(BaseBlock *block, BaseBlock *parent) {
+    return new BranchInst(BranchInst::BRANCH, block, parent);
 }

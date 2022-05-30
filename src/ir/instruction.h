@@ -118,7 +118,23 @@ public:
 };
 
 class BranchInst : public Instruction {
+public:
+    enum BrOp {
+        WHILE,
+        IF,
+        BRANCH,
+    };
 
+private:
+    BrOp _br_kind;
+    BranchInst(BrOp br_op, Value *cond, Value *true_block, Value *false_block, BaseBlock *parent);
+    BranchInst(BrOp br_op, Value *cond, Value *block, BaseBlock *parent);
+    BranchInst(BrOp br_op, Value *block, BaseBlock *parent);
+
+public:
+    static BranchInst *createIf(CmpInst *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent);
+    static BranchInst *createWhile(CmpInst *cond, BaseBlock *block, BaseBlock *parent);
+    static BranchInst *createBranch(BaseBlock *block, BaseBlock *parent);
 };
 
 
