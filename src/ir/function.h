@@ -7,6 +7,7 @@
 #include "type.h"
 #include "utils.h"
 #include "value.h"
+#include "constant.h"
 #include <algorithm>
 #include <string>
 #include <vector>
@@ -45,7 +46,7 @@ private:
 };
 
 
-class Function : public Value {
+class Function : public GlobalValue {
 public:
     Function(FunctionType *type, const std::string &name, Module *parent);
     static Function *create(FunctionType *type, const std::string &name, Module *parent);

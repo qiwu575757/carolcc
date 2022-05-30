@@ -5,7 +5,7 @@
 #include "user.h"
 
 class Module;
-class GlobalVariable : public User {
+class GlobalVariable : public GlobalValue {
 private:
     bool _is_const : true;
     Constant *_init_value;

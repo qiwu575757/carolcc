@@ -6,9 +6,10 @@
 #include "value.h"
 
 class ArrayType;
+
 class Constant : public User {
 public:
-    explicit Constant(Type *ty, const char *name = "", unsigned num_ops = 0)
+    explicit Constant(Type *ty, const std::string &name = "", unsigned num_ops = 0)
         : User(ty, name, num_ops) {}
 
     // virtual void print() override;
@@ -44,6 +45,12 @@ public:
     Constant *getElement(int index);
 
     unsigned getNumElements() const { return _const_array.size(); }
+};
+
+class GlobalValue : public Constant {
+public:
+    explicit GlobalValue(Type *ty, const std::string &name = "", unsigned num_ops = 0) :
+        Constant(ty,name,num_ops) {}
 };
 
 #endif

@@ -21,3 +21,4 @@ ConstantArray::ConstantArray(ArrayType *ty, const std::vector<Constant *> &value
     }
     this->_const_array.assign(values.begin(), values.end());
 }
+
