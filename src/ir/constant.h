@@ -24,6 +24,16 @@ public:
     void setValue(int value);
 };
 
+class ConstantFloat : public Constant {
+private:
+    float _value;
+
+public:
+    ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {}
+    float getValue() const;
+    void setValue(float value);
+};
+
 class ConstantArray : public Constant {
 private:
     std::vector<Constant *> _const_array;

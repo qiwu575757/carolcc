@@ -5,6 +5,12 @@ int ConstantInt::getValue() const {
 void ConstantInt::setValue(int value) {
     _value = value;
 }
+float ConstantFloat::getValue() const {
+    return _value;
+}
+void ConstantFloat::setValue(float value) {
+    _value = value;
+}
 Constant *ConstantArray::getElement(int index) {
     return this->_const_array.at(index);
 }
