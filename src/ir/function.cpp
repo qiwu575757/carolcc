@@ -8,7 +8,7 @@ Argument::Argument(Type *type, const std::string &name, Function *parent, unsign
 }
 
 Function::Function(FunctionType *type, const std::string &name, Module *parent)
-    : Value(type, name), _parent(parent) {
+    : GlobalValue(type, name), _parent(parent) {
         parent->AddFunction(this);
         buildArgs();
 }
