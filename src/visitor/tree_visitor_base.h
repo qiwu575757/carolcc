@@ -3,7 +3,7 @@
 #define CAROLCC_VISITOR_BASE_H
 #include "syntax_tree.h"
 class tree_comp_unit;
-class visitor_base {
+class tree_visitor_base {
 public:
     virtual void visit(syntax_tree_node &node) = 0;
     virtual void visit(tree_comp_unit &node) = 0;

@@ -3,13 +3,13 @@
 //
 #ifndef COMPILER_SYNTAX_TREE_BUILDER_H
 #define COMPILER_SYNTAX_TREE_BUILDER_H
-#include "visitor_base.h"
-#include "passes/module.h"
-#include "ir/instruction.h"
 #include "helpers/type_helper.h"
+#include "ir/instruction.h"
+#include "passes/module.h"
+#include "tree_visitor_base.h"
 
 
-class syntax_tree_builder : public visitor_base {
+class syntax_tree_builder : public tree_visitor_base {
 public:
     void visit(syntax_tree_node &node) final;
     void visit(tree_comp_unit &node) final;
