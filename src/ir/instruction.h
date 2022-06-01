@@ -17,13 +17,13 @@ public:
         NOT,
         // binary instructions
         ADD,
-        FADD,//float add
+//        FADD,//float add
         SUB,
-        FSUB,
+//        FSUB,
         MUL,
         DIV,
         REM,
-        FMUL,
+//        FMUL,
 
         // bitwise binary instructions
         SHL,
@@ -41,7 +41,8 @@ public:
 
         // other instructions
         CMP,
-        PHI
+        PHI,
+        GEP, // get element ptr
 
     };
 
@@ -132,10 +133,26 @@ private:
     BranchInst(BrOp br_op, Value *block, BaseBlock *parent);
 
 public:
-    static BranchInst *createIf(CmpInst *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent);
-    static BranchInst *createWhile(CmpInst *cond, BaseBlock *block, BaseBlock *parent);
+    static BranchInst *createIf(Value *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent);
+    static BranchInst *createWhile(Value *cond, BaseBlock *block, BaseBlock *parent);
     static BranchInst *createBranch(BaseBlock *block, BaseBlock *parent);
 };
 
+class StoreInst : public Instruction{
+private:
+    StoreInst(Value *value,Value* ptr,BaseBlock *parent);
+public:
+    static StoreInst *createStore(Value *value,Value* ptr,BaseBlock *parent);
+};
+class LoadInst:public Instruction{
+private:
+    LoadInst(Value* ptr,BaseBlock *parent);
+public:
+    static LoadInst *createLoad(Value* ptr,BaseBlock *parent);
+};
+//class GetElementPtrInst:public Instruction{
+//private:
+//    GetElementPtrInst(Type* ty,Value* array_ptr,)
+//};
 
 #endif//COMPILER_INSTRUCTION_H

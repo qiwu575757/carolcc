@@ -118,9 +118,9 @@ ReturnInst::ReturnInst(Type *type, Value *v, BaseBlock *parent)
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BaseBlock *parent) {
-    return new ReturnInst(Type::getVoidTy(parent->getFunction()->getParent()),parent);
+    return new ReturnInst(Type::getVoidTy(parent->getFunction()->getParent()), parent);
 }
-ReturnInst::ReturnInst(Type *type,BaseBlock*parent) : Instruction(type,Instruction::RET,0,parent){
+ReturnInst::ReturnInst(Type *type, BaseBlock *parent) : Instruction(type, Instruction::RET, 0, parent) {
 }
 CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2, BaseBlock *parent)
     : Instruction(type, Instruction::CMP, 2, parent) {
@@ -190,12 +190,30 @@ BranchInst::BranchInst(BranchInst::BrOp br_op, Value *block, BaseBlock *parent)
     : Instruction(parent->getFunction()->getParent()->getVoidTy(), Instruction::BR, 1, parent), _br_kind(br_op) {
     setOperand(0, block);
 }
-BranchInst *BranchInst::createIf(CmpInst *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent) {
+BranchInst *BranchInst::createIf(Value *cond, BaseBlock *true_block, BaseBlock *false_block, BaseBlock *parent) {
     return new BranchInst(BranchInst::IF, cond, true_block, false_block, parent);
 }
-BranchInst *BranchInst::createWhile(CmpInst *cond, BaseBlock *block, BaseBlock *parent) {
+BranchInst *BranchInst::createWhile(Value *cond, BaseBlock *block, BaseBlock *parent) {
     return new BranchInst(BranchInst::WHILE, cond, block, parent);
 }
 BranchInst *BranchInst::createBranch(BaseBlock *block, BaseBlock *parent) {
     return new BranchInst(BranchInst::BRANCH, block, parent);
+}
+
+StoreInst::StoreInst(Value *value, Value *ptr, BaseBlock *parent)
+: Instruction(Type::getInt32PtrTy(parent->getFunction()->getParent()),Instruction::STORE,2,parent){
+    WARNNING("还没处理浮点类型");
+    setOperand(0,value);
+    setOperand(1,ptr);
+}
+StoreInst *StoreInst::createStore(Value *value,Value* ptr,BaseBlock *parent) {
+    return  new StoreInst(value,ptr,parent);
+}
+LoadInst::LoadInst(Value *ptr, BaseBlock *parent)
+:Instruction(Type::getInt32Ty(parent->getFunction()->getParent()),Instruction::LOAD,1,parent){
+    WARNNING("还没处理浮点类型");
+
+}
+LoadInst *LoadInst::createLoad(Value *ptr, BaseBlock *parent) {
+    return new LoadInst(ptr,parent);
 }

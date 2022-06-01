@@ -5,6 +5,7 @@
 #define COMPILER_SYNTAX_TREE_BUILDER_H
 #include "visitor_base.h"
 #include "passes/module.h"
+#include "ir/instruction.h"
 #include "helpers/type_helper.h"
 
 
