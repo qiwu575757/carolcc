@@ -125,7 +125,7 @@ tree_l_or_exp          *l_or_exp;
 %token TASSIGN  "="
 
 
-%type <comp_unit>        CompUnit
+%type <comp_unit>        CompUnit // ysx
 %type <decl>             Decl
 %type <const_decl>       ConstDecl
 %type <basic_type>       BType
@@ -136,10 +136,12 @@ tree_l_or_exp          *l_or_exp;
 %type <const_init_val>   ConstInitVal
 %type <const_init_val_list>   ConstInitVallist
 %type <var_decl>         VarDecl
+%type <func_call>        FuncCall 
+%type <funcr_paramlist>  FuncRParamList
 %type <var_def>          VarDef
 %type <var_def_list>     VarDefList
-%type <array_def>        ArrayDef
-%type <init_val>         InitVal
+%type <array_def>        ArrayDef 
+%type <init_val>         InitVal // dyb
 %type <init_val_array>   InitValArray
 %type <init_val_arraylist>InitValArrayList
 %type <func_def>         FuncDef
@@ -152,14 +154,12 @@ tree_l_or_exp          *l_or_exp;
 %type <block_item_list>  BlockItemList
 %type <stmt>             Stmt
 %type <cond>             Cond
-%type <number>           Number
-%type <exp>              Exp
+%type <number>           Number // wq
+%type <exp>              Exp  
 %type <l_val>            LVal
 %type <array_ident>      ArrayIdent
 %type <primary_exp>      PrimaryExp
 %type <unary_exp>        UnaryExp
-%type <func_call>        FuncCall
-%type <funcr_paramlist>  FuncRParamList
 %type <mul_exp>          MulExp
 %type <add_exp>          AddExp
 %type <rel_exp>          RelExp
