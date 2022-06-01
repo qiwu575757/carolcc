@@ -28,8 +28,8 @@ class BasicBlock:public BaseBlock{
     std::list<Instruction *>&getInstructions();
     BasicBlock *create(Module *m, const std::string &name,Function *func);
     BasicBlock *create(Module *m, const std::string);
-    void setParentOfFunc(Function *parent);
-    Function *getParentOfFunc();
+    void setParentFunc(Function *parent);
+    Function *getParentFunc();
     Module *getModule() const;
     const Instruction *getTerminator() const;
     void addInstr(Instruction *instr);
@@ -45,7 +45,8 @@ class BasicBlock:public BaseBlock{
     void clearSuccBasicBlockList();
 
     bool hasRet();
-    bool isEntry() { return getName() == "entry"; }
+    bool isEntry();
+    /*活跃变量分析*/
     auto &getActiveIns();
     auto &getActiveOuts();
     auto &getDefinedVals();
@@ -56,6 +57,63 @@ class BasicBlock:public BaseBlock{
       std::unordered_set<Value *> *,
       std::unordered_map<BasicBlock *, std::unordered_set<Value *>> *);
   void initDefinedVals(std::unordered_set<Value *> *);
+};
+
+class IfBlock : public BaseBlock {
+public:
+  // this will auto add this to function's baseblock list
+  // don't use this in nested structure
+  static IfBlock *create(Module *m, const std::string &name, Function *func);
+  static IfBlock *create(Module *m, const std::string &name);
+  void addCondBaseBlock(BaseBlock *bb);
+  void addIfBodyBaseBlock(BaseBlock *bb);
+  void addElseBodyBaseBlock(BaseBlock *bb);
+
+  std::list<BaseBlock *> &getCondBaseBlockList();
+  std::list<BaseBlock *> &getIfBodyBaseBlockList();
+  std::list<BaseBlock *> &getElseBodyBaseBlockList();
+
+  void removeCondBaseBlock(BaseBlock *bb);
+  void removeIfBodyBaseBlock(BaseBlock *bb);
+  void removeElseBodyBaseBlock(BaseBlock *bb);
+  void removeBaseBlock(BaseBlock *bb);
+  void insertCondBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
+  void insertIfBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
+  void insertElseBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
+
+  void clearCondBaseBlockList();
+
+private:
+
+  std::list<BaseBlock *> _cond; /**/
+  std::list<BaseBlock *> _if_body;
+  std::list<BaseBlock *> _else_body;
+};
+
+class WhileBlock : public BaseBlock {
+public:
+  // this will auto add this to function's baseblock list
+  // don't use this in nested structure
+  static WhileBlock *create(Module *m, const std::string &name,
+                            Function *func);
+  static WhileBlock *create(Module *m, const std::string &name);
+
+  void addCondBaseBlock(BaseBlock *bb);
+  void addBodyBaseBlock(BaseBlock *bb);
+
+  std::list<BaseBlock *> &getCondBaseBlockList();
+  std::list<BaseBlock *> &getBodyBaseBlockList();
+
+  void removeCondBaseBlock(BaseBlock *bb);
+  void removeWhileBodyBaseBlock(BaseBlock *bb);
+  void removeBaseBlock(BaseBlock *bb);
+  void insertCondBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
+  void insertWhileBodyBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
+
+
+private:
+  std::list<BaseBlock *> _cond;
+  std::list<BaseBlock *> _body;
 };
 
 #endif
