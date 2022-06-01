@@ -2,7 +2,7 @@
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_builder.h"
 #include "visitor/syntax_tree_shower.h"
-#include "visitor/visitor_base.h"
+#include "visitor/tree_visitor_base.h"
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>

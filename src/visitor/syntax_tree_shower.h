@@ -3,10 +3,10 @@
 //
 #ifndef COMPILER_SYNTAX_TREE_SHOWER_H
 #define COMPILER_SYNTAX_TREE_SHOWER_H
-#include "visitor_base.h"
 #include "helpers/type_helper.h"
+#include "tree_visitor_base.h"
 
-class syntax_tree_shower : public visitor_base {
+class syntax_tree_shower : public tree_visitor_base {
 public:
     void visit(syntax_tree_node &node) final;
     void visit(tree_comp_unit &node) final;
