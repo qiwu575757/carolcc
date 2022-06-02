@@ -96,7 +96,6 @@ void SYSYBuilder::visit(tree_basic_type &node) {
 }
 
 void SYSYBuilder::visit(tree_const_def_list &node) {
-    // ysx todo
     for (auto &def: node.const_defs) {
         def->accept(*this);
     }

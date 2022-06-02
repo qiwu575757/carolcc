@@ -285,3 +285,13 @@ ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
 Type *ZExtInst::getDestType() const{
     return _dest_ty;
 }
+AllocaInst::AllocaInst(Type *ty, BasicBlock *parent)
+: Instruction(PointerType::get(ty),Instruction::ALLOCA,0,parent),_alloca_ty(ty),_init(false){
+
+}
+AllocaInst *AllocaInst::createAlloca(Type *ty, BasicBlock *parent) {
+    return new AllocaInst(ty,parent);
+}
+Type *AllocaInst::getAllocaType() const {
+    return _alloca_ty;
+}

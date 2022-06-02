@@ -126,3 +126,15 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   {
       return LoadInst::createLoad( ptr,this->_basic_block);
   }
+  GetElementPtrInst *IRBuilder::createGEP(Value *ptr, std::vector<Value *> &idxs) {
+      return GetElementPtrInst::createGEP( ptr, idxs,this->_basic_block);
+  }
+  CallInst *IRBuilder::createCall(Function *func, std::vector<Value *> &args) {
+      return CallInst::createCall( func, args,this->_basic_block);
+  }
+  ZExtInst *IRBuilder::creatZExtInst(Type *ty, Value *val) {
+      return ZExtInst::creatZExtInst(ty,val,this->_basic_block);
+  }
+  AllocaInst *IRBuilder::createAlloca(Type *ty) {
+      return AllocaInst::createAlloca(ty,this->_basic_block);
+  }

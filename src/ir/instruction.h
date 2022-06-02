@@ -181,10 +181,22 @@ public:
 
 class ZExtInst : public Instruction {
 private:
-    ZExtInst(Type *ty, Value *val,BasicBlock *parent);
+    ZExtInst(Type *ty, Value *val, BasicBlock *parent);
+
 public:
-    static ZExtInst* creatZExtInst(Type *ty, Value *val,BasicBlock *parent);
-    Type* getDestType()const;
-    Type* _dest_ty;
+    static ZExtInst *creatZExtInst(Type *ty, Value *val, BasicBlock *parent);
+    Type *getDestType() const;
+    Type *_dest_ty;
+};
+class AllocaInst : public Instruction {
+private:
+    AllocaInst(Type *ty, BasicBlock *parent);
+
+    Type *_alloca_ty;
+    bool _init;
+
+public:
+    static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
+    Type *getAllocaType() const;
 };
 #endif//COMPILER_INSTRUCTION_H
