@@ -26,8 +26,10 @@ bool G_pre_enter_scope = false;
 std::vector<Value *> G_array_init;
 // 用于计算数值与val转换
 int G_tmp_int = 0;
+float G_tmp_float = 0;
 // 标记当前为计算数值状态 并且使用到 G_tmp_int
 bool G_tmp_int_using = false;
+bool G_tmp_float_using = false;
 // 标记当前为全局初始化状态 说明全局变量必须计算初值
 bool G_in_global_init = false;
 
@@ -57,11 +59,11 @@ bool G_in_global_init = false;
 %type<func_fparam>       FuncFParam // done
 %type<func_fparamone>    FuncFParamOne // done
 %type<func_fparamarray>  FuncFParamArray // done
-%type <block>            Block 
-%type <block_item>       BlockItem
-%type <block_item_list>  BlockItemList
-%type <stmt>             Stmt
-%type <cond>             Cond
+%type <block>            Block // done
+%type <block_item>       BlockItem // done
+%type <block_item_list>  BlockItemList // done
+%type <stmt>             Stmt // done
+%type <cond>             Cond // done
 */
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
@@ -196,39 +198,30 @@ void SYSYBuilder::visit(tree_block &node) {
             } else {
                 auto allocaBB = BasicBlock::create(&*module, "");
                 builder->SetInstrInsertPoint(allocaBB);
-                
                 builder->pushBaseBlock(allocaBB);
-
                 blockitem->accept(*this);
             }
-
-
-            
-        } else if (blockitem->Stmt) {
-        if (blockitem->Stmt->AssignStmt || blockitem->Stmt->BreakStmt ||
-            blockitem->Stmt->ContinueStmt || blockitem->Stmt->Exp ||
-            blockitem->Stmt->ReturnStmt) {
-            if (base_layer.size() == 0) {
-            if (builder->GetInsertBlock()->getBaseFather() != nullptr) {
-                auto baseBB = BasicBlock::create(&*module, "", cur_fun);
-                builder->SetInsertPoint(baseBB);
+        } else if (blockitem->stmt!=nullptr) {
+            if (blockitem->stmt->assigm_stmt || blockitem->stmt->break_stmt ||
+                blockitem->stmt->continue_stmt || blockitem->stmt->exp ||
+                blockitem->stmt->return_stmt || blockitem->stmt->return_null_stmt) {
+                if (builder->GetInsertBaseBlockList().size()==0) {
+                if (builder->GetInsertBasicBlock()->getBaseFather() != nullptr) {
+                    auto baseBB = BasicBlock::create(&*module, "", G_cur_fun);
+                    builder->SetInstrInsertPoint(baseBB);
+                }
+                blockitem->accept(*this);
+                } else {
+                auto baseBB = BasicBlock::create(&*module, "");
+                builder->SetInstrInsertPoint(baseBB);
+                builder->pushBaseBlock(baseBB);
+                blockitem->accept(*this);
+                }
+            } 
+            else {
+                blockitem->accept(*this);
             }
-            blockitem->accept(*this);
-            } else {
-            auto baseBB = BasicBlock::create(&*module, "");
-            builder->SetInsertPoint(baseBB);
-            auto &cur_base_list = getCurBaseList(BL_types[BL_types.size() - 1]);
-            cur_base_list.push_back(baseBB);
-            auto cur_base = base_layer[base_layer.size() - 1];
-            baseBB->setBaseFather(cur_base);
-            blockitem->accept(*this);
-            }
-        } else {
-            blockitem->accept(*this);
         }
-        }
-        // if (builder->GetInsertBlock()->getTerminator() != nullptr)
-        // break;
     }
 
     if (need_exit_scope) {
@@ -281,37 +274,56 @@ void SYSYBuilder::visit(tree_exp &node) {
 
 void SYSYBuilder::visit(tree_init_val &node) {
     /*dyb TODO*/
-    if (node.exp != nullptr) {
-        node.exp->accept(*this);
+    if (node.exp != nullptr) { // 表达式
+        if (G_tmp_type->isIntegerTy()){
+            G_tmp_int_using = true;
+            node.exp->accept(*this);
+            G_tmp_int_using = false;
+            G_tmp_val = (Value*)(new ConstantInt(TyInt32,G_tmp_int));
+        }
+        else if (G_tmp_type->isFloatTy()){
+            G_tmp_float_using = true;
+            node.exp->accept(*this);
+            G_tmp_float_using = false;
+            G_tmp_val = (Value*)(new ConstantFloat(TyFloat,G_tmp_float));
+        }
+        else{
+            node.exp->accept(*this);
+        }
     } 
+    else{
+        ERROR("tree_init_val has null exp");
+    }
 }
 
 void SYSYBuilder::visit(tree_init_val_array &node) {
-    /*TODO*/
+    /*dyb TODO 把处理后的数据放在node.instant_init 里方便父节点处理*/
+    ERROR("visit tree_init_val_array error");
 }
 
 void SYSYBuilder::visit(tree_init_val_arraylist &node) {
     /*TODO*/
+    ERROR("visit tree_init_val_arraylist error");
 }
 
 void SYSYBuilder::visit(tree_func_fparams &node) {
     /*TODO*/
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_func_fparam &node) {
     /*TODO*/
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_func_fparamone &node) {
     /*TODO*/
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_func_fparamarray &node) {
     /*TODO*/
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_decl &node) {
@@ -340,7 +352,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
 
 void SYSYBuilder::visit(tree_var_def_list &node) {
     //ysx todo
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_var_def &node) {
@@ -381,15 +393,68 @@ void SYSYBuilder::visit(tree_var_def &node) {
 }
 
 void SYSYBuilder::visit(tree_block_item_list &node) {
-    /*TODO*/
+    /*dyb TODO*/
+    ERROR("error tree_block_item_list");
 }
 
 void SYSYBuilder::visit(tree_block_item &node) {
-    /*TODO*/
+    /*dyb TODO*/
+    if (node.decl->const_decl!=nullptr) {
+        node.decl->const_decl->accept(*this);
+        return;
+    } else if (node.decl->var_decl!=nullptr) {
+        node.decl->var_decl->accept(*this);
+        return;
+    } else if (node.stmt!=nullptr) {
+        node.stmt->accept(*this);
+        return;
+    }
+    ERROR("error tree_block_item");
 }
 
 void SYSYBuilder::visit(tree_stmt &node) {
     /*TODO*/
+    if(node.assigm_stmt!=nullptr){
+        node.assigm_stmt->accept(*this);
+        return;
+    }
+    else if(node.block!=nullptr){
+        node.block->accept(*this);
+        return;
+    }
+    else if(node.break_stmt!=nullptr){
+        node.break_stmt->accept(*this);
+        return;
+    }
+    else if(node.continue_stmt!=nullptr){
+        node.continue_stmt->accept(*this);
+        return;
+    }
+    else if(node.exp!=nullptr){ //
+        node.exp->accept(*this);
+        return;
+    }
+    else if(node.if_else_stmt!=nullptr){
+        node.if_else_stmt->accept(*this);
+        return;
+    }
+    else if(node.if_stmt!=nullptr){
+        node.if_stmt->accept(*this);
+        return;
+    }
+    else if(node.return_null_stmt!=nullptr){
+        node.return_null_stmt->accept(*this);
+        return;
+    }
+    else if(node.return_stmt!=nullptr){
+        node.return_stmt->accept(*this);
+        return;
+    }
+    else if(node.while_stmt!=nullptr){
+        node.while_stmt->accept(*this);
+        return;
+    }
+    ERROR("error tree_block_item");
 }
 
 void SYSYBuilder::visit(tree_assign_stmt &node) {
@@ -446,7 +511,7 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
 
 void SYSYBuilder::visit(tree_const_val_list &node) {
     /*TODO*/
-    TRACE("visit tree_const_val_list error");
+    ERROR("visit tree_const_val_list error");
 }
 
 void SYSYBuilder::visit(tree_const_exp_list &node) {
@@ -479,6 +544,7 @@ void SYSYBuilder::visit(tree_continue_stmt &node) {
 
 void SYSYBuilder::visit(tree_cond &node) {
     /*TODO*/
+    node.l_or_exp->accept(this*);
 }
 
 void SYSYBuilder::visit(tree_array_ident &node) {
@@ -491,5 +557,5 @@ void SYSYBuilder::visit(tree_func_call &node) {
 
 void SYSYBuilder::visit(tree_funcr_paramlist &node){
         //ysx todo
-    TRACE("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error");
 };
