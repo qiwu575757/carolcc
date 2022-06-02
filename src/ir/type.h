@@ -45,7 +45,9 @@ public:
     bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
-
+    bool isBool();
+    bool isInt32();
+    
     static Type *getVoidTy();
     static Type *getLabelTy();
     static IntegerType *getInt1Ty();

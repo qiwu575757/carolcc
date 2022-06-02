@@ -11,7 +11,6 @@ class Constant : public User {
 public:
     explicit Constant(Type *ty, const std::string &name = "", unsigned num_ops = 0)
         : User(ty, name, num_ops) {}
-
     // virtual void print() override;
 };
 
@@ -23,6 +22,7 @@ public:
     ConstantInt(Type *ty, int value) : Constant(ty, "", 0), _value(value) {}
     int getValue() const;
     void setValue(int value);
+    static ConstantInt *get(int val, Module *m);
 };
 
 class ConstantFloat : public Constant {
@@ -33,6 +33,7 @@ public:
     ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {}
     float getValue() const;
     void setValue(float value);
+    static ConstantFloat *get(float val, Module *m);
 };
 
 class ConstantArray : public Constant {

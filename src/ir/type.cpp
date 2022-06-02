@@ -117,6 +117,29 @@ bool Type::eq(Type rhs) {
         return true;
     }
 }
+
+bool Type::isBool() {
+    if (getTypeID() == IntegerTyID) {
+      if (static_cast<IntegerType *>(this)->getNumBits() == 1) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+}
+bool Type::isInt32() {
+    if (getTypeID() == IntegerTyID) {
+      if (static_cast<IntegerType *>(this)->getNumBits() == 32) {
+        return true;
+      } else {
+        return false;
+      }
+    } else {
+      return false;
+    }
+}
 Type *Type::getVoidTy() { return void_type; }
 Type *Type::getLabelTy() { return label_type; }
 IntegerType *Type::getInt1Ty() { return int1_type; }
