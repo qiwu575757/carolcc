@@ -1,13 +1,24 @@
 #include "ir_builder.h"
 
-IRBuilder::IRBuilder(BasicBlock *bb) 
+IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb) 
 { 
-    this->_basic_block = bb; 
+    this->_basic_block = basicb; 
+    this->_base_block = baseb; 
 };
-BasicBlock *IRBuilder::GetInsertBlock() {
+BaseBlock *IRBuilder::GetInsertBaseBlock() 
+{
+    return this->_base_block; 
+}
+BasicBlock *IRBuilder::GetInsertBasicBlock() 
+{
     return this->_basic_block; 
 }
-void IRBuilder::SetInsertPoint(BasicBlock *bb) {
+void IRBuilder::SetBasicBlockInsertPoint(BaseBlock *bb)
+{
+    this->_base_block = bb;
+}
+void IRBuilder::SetInstrInsertPoint(BasicBlock *bb) 
+{
     this->_basic_block = bb;
 } //
   

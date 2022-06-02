@@ -20,11 +20,13 @@ class SYSYBuilder : public tree_visitor_base {
 public:
   SYSYBuilder() {
     module = std::shared_ptr<Module>(new Module("SysY code"));
-    builder = std::unique_ptr<IRBuilder>(new IRBuilder(nullptr));
-    auto TyVoid = Type::getVoidTy(&*module);
-    auto TyInt32 = Type::getInt32Ty(&*module);
-    auto TyPtr = Type::getInt32PtrTy(&*module);
+    builder = std::unique_ptr<IRBuilder>(new IRBuilder(nullptr,nullptr));
 
+    auto TyVoid = Type::getVoidTy(&*module); // 改
+    auto TyInt32 = Type::getInt32Ty(&*module); // 改
+    auto TyPtr = Type::getInt32PtrTy(&*module); // 改
+
+    /**** 库函数引用 ****/
     auto getint_type = FunctionType::get(TyInt32, {});
     // auto getch_type = FunctionType::get(TyInt32, false);
     auto getint_fun = Function::create(getint_type, "getint", module.get());
@@ -79,7 +81,7 @@ public:
     auto mtend_type = FunctionType::get(TyVoid, mtend_params);
 
     auto mtend_fun = Function::create(mtend_type, "__mtend", module.get());
-
+    
     scope.enter();
     scope.push("getint", getint_fun);
     scope.push("getch", getch_fun);
@@ -91,15 +93,9 @@ public:
     scope.push("_sysy_stoptime", stoptime_fun);
     scope.push("__mtstart", mtstart_fun);
     scope.push("__mtend", mtend_fun);
+    /**** 库函数引用 END ****/
+
   }
-
-  void irPrint();
-
-  void hirPrint();
-
-  void irToC();
-
-  void HirToC();
 
   std::shared_ptr<Module> getModule() { return this->module; }
 

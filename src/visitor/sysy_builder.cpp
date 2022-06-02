@@ -1,12 +1,10 @@
 #include "sysy_builder.h"
 #include <iostream>
+#include "utils.h"
+
+#define CONST(num) ConstantInt::get(num, &*module)
 
 /*** 全局变量 ***/
-
-
-
-/*** 全局变量 ***/
-
 // store temporary value
 Value *G_tmp_val = nullptr;
 // 函数传参是否需要地址
@@ -17,19 +15,31 @@ Function *G_cur_fun = nullptr;
 bool G_pre_enter_scope = false;
 // 数组初始化填入值
 std::vector<Value *> G_array_init;
-// 维护上下block关系
-enum BaseListType { WHILE_COND, WHILE_BODY, IF_COND, IF_THEN, IF_ELSE }; //
-// 维护上下block关系
-std::vector<BaseListType> G_base_layer_types;
-// 
-std::vector<BaseBlock *> G_base_layer;
 // 用于计算数值与val转换
 int G_tmp_int = 0;
 // 标记当前为计算数值状态 并且使用到 G_tmp_int
 bool G_tmp_int_using = false;
-// 标记当前为全局初始化状态
+// 标记当前为全局初始化状态 说明全局变量必须计算初值
 bool G_in_global_init = false;
 
+/*** 全局变量 ***/
+
+
+/*
+%type <init_val>         InitVal // dyb var def
+%type <init_val_array>   InitValArray // var def
+%type <init_val_arraylist>InitValArrayList // var def
+%type <func_def>         FuncDef
+%type<func_fparams>      FuncFParams
+%type<func_fparam>       FuncFParam
+%type<func_fparamone>    FuncFParamOne
+%type<func_fparamarray>  FuncFParamArray
+%type <block>            Block
+%type <block_item>       BlockItem
+%type <block_item_list>  BlockItemList
+%type <stmt>             Stmt
+%type <cond>             Cond
+*/
 
 void SYSYBuilder::visit(tree_comp_unit &node){
     /*TODO*/
@@ -45,6 +55,9 @@ void SYSYBuilder::visit(tree_block &node){
 
 void SYSYBuilder::visit(tree_const_decl &node){
     /*TODO*/
+    for (auto n : node.const_def_list) {
+        n->accept(*this);
+    }
 }
 
 void SYSYBuilder::visit(tree_basic_type &node){
@@ -65,6 +78,9 @@ void SYSYBuilder::visit(tree_const_exp &node){
 
 void SYSYBuilder::visit(tree_var_decl &node){
     /*TODO*/
+    for (auto n : node.var_def_list) {
+        n->accept(*this);
+    }
 }
 
 void SYSYBuilder::visit(tree_exp &node){
@@ -109,10 +125,41 @@ void SYSYBuilder::visit(tree_const_def &node){
 
 void SYSYBuilder::visit(tree_var_def_list &node){
     /*TODO*/
+    TRACE("visit tree_var_def_list error");
 }
 
 void SYSYBuilder::visit(tree_var_def &node){
     /*TODO*/
+    if(node.array_def!=nullptr){ // 数组
+        Type *TyArray = TyInt32;
+        std::vector<int32_t> array_bounds;
+    }
+    else{ // 不是数组
+        if (scope.in_global_scope()){
+            if(node.init_val!=nullptr) { // 变量赋值
+                G_in_global_init = true;
+                node.init_val->accept(*this);
+                G_in_global_init = false;
+                auto initializer = static_cast<Constant *>(G_tmp_val);
+                auto var = GlobalVariable::create(node.id, &*module, TyInt32, false,
+                                          initializer);
+                scope.push(node.id, var);
+            }
+            else{
+                auto var = GlobalVariable::create(node.id, &*module, TyInt32, false,
+                                           CONST(0)); 
+                scope.push(node.id, var);
+            }            
+        }
+        else{
+            auto val_alloc = builder->CreateAlloca(TyInt32);
+            scope.push(node.id, val_alloc);
+            if (node.init_val != nullptr) { // 变量赋值
+                node.init_val->accept(*this);
+                builder->CreateStore(G_tmp_val, val_alloc);
+            }
+        }
+    }
 }
 
 void SYSYBuilder::visit(tree_block_item_list &node){
@@ -181,6 +228,7 @@ void SYSYBuilder::visit(tree_l_or_exp &node){
 
 void SYSYBuilder::visit(tree_const_val_list &node){
     /*TODO*/
+    TRACE("visit tree_const_val_list error");
 }
 
 void SYSYBuilder::visit(tree_const_exp_list &node){

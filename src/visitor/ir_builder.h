@@ -8,13 +8,16 @@
 class IRBuilder {
 private:
   BasicBlock *_basic_block;
+  BaseBlock *_base_block;
 
 public:
-  IRBuilder(BasicBlock *bb);
+  IRBuilder(BasicBlock *basicb,BaseBlock *baseb);
   ~IRBuilder() = default;
-  BasicBlock *GetInsertBlock();
+  BasicBlock *GetInsertBasicBlock();
+  BaseBlock *GetInsertBaseBlock();
   //在该个基本块中插入指令
-  void SetInsertPoint(BasicBlock *bb);
+  void SetInstrInsertPoint(BasicBlock *bb);
+  void SetBasicBlockInsertPoint(BaseBlock *bb);
 
   UnaryInst *createNeg(Value *v1);
   UnaryInst *createNot(Value *v1);
