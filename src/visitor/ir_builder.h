@@ -7,17 +7,26 @@
 
 class IRBuilder {
 private:
-    BasicBlock *_basic_block;
-    BaseBlock *_base_block;
-
+    BasicBlock *_basic_block; //注意这个块和父基本块不是父子关系 只是用于插入指令
+    BaseBlock *_father_block;
+    std::list<BaseBlock *> _base_block_list;
 public:
     IRBuilder(BasicBlock *basicb, BaseBlock *baseb);
     ~IRBuilder() = default;
+    // 获得用于插入指令的基本块，注意这个块和父基本块不是父子关系
     BasicBlock *GetInsertBasicBlock();
-    BaseBlock *GetInsertBaseBlock();
-    //在该个基本块中插入指令
+    // 获得基本块列表的父基本快
+    BaseBlock *GetFatherBlock();
+    // 获得基本块列表
+    std::list<BaseBlock *> GetInsertBaseBlockList();
+    //在该基本块中插入指令
     void SetInstrInsertPoint(BasicBlock *bb);
-    void SetBasicBlockInsertPoint(BaseBlock *bb);
+    //在该基本块表中插入基本块 这个实在设定父基本块时将对应的基本块表设定进来
+    void SetBasicBlockInsertPoint(std::list<BaseBlock *>);
+    //设定父基本块 方便维护父子关系
+    void SetFatherBlock(BaseBlock *bb);
+    //将baseblock插入基本块列表，并同时维护父子块关系
+    void pushBaseBlock(BaseBlock *bb);
 
     UnaryInst *createNeg(Value *v1);
     UnaryInst *createNot(Value *v1);

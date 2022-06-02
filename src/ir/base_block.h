@@ -21,6 +21,8 @@ public:
         IF,
         WHILE,
     };
+    void setFunction(Function *func);
+    void setBaseFather(BaseBlock *father);
     void addInstruction(Instruction *inst);
     BaseBlock *getBaseFather();
     Function* getFunction();

@@ -14,6 +14,7 @@ class Instruction;
 class Module;
 
 class BasicBlock:public BaseBlock{
+    
     public:
     std::list<BasicBlock *> _pre_bbs;
     std::list<BasicBlock *> _succ_bbs;
@@ -24,10 +25,9 @@ class BasicBlock:public BaseBlock{
     std::list<Instruction *> _instructions;
     std::unordered_set<Value *> _active_in, _active_out, _defined_vals; /*活跃变量进入，活跃变量输出，本模块定义的变量*/
     std::unordered_map<Value *, BasicBlock *> _inherited_vals; /*继承莫个基本块的变量*/
-
+    static BasicBlock *create(Module *m, const std::string &name,Function *func);
+    static BasicBlock *create(Module *m, const std::string);
     std::list<Instruction *>&getInstructions();
-    BasicBlock *create(Module *m, const std::string &name,Function *func);
-    BasicBlock *create(Module *m, const std::string);
     void setParentFunc(Function *parent);
     Function *getParentFunc();
     Module *getModule() const;

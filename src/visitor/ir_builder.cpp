@@ -3,19 +3,31 @@
 IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb) 
 { 
     this->_basic_block = basicb; 
-    this->_base_block = baseb; 
+    this->_father_block = baseb; 
 };
-BaseBlock *IRBuilder::GetInsertBaseBlock() 
+std::list<BaseBlock *> IRBuilder::GetInsertBaseBlockList() 
 {
-    return this->_base_block; 
+    return this->_base_block_list; 
+}
+void IRBuilder::pushBaseBlock(BaseBlock *bb){
+    this->_base_block_list.push_back(bb);
+    bb->setBaseFather(this->_father_block);
+}
+BaseBlock *IRBuilder::GetFatherBlock() 
+{
+    return this->_father_block; 
 }
 BasicBlock *IRBuilder::GetInsertBasicBlock() 
 {
     return this->_basic_block; 
 }
-void IRBuilder::SetBasicBlockInsertPoint(BaseBlock *bb)
+void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> bbl)
 {
-    this->_base_block = bb;
+    this->_base_block_list = bbl;
+}
+void IRBuilder::SetFatherBlock(BaseBlock *bb) 
+{
+    this->_father_block = bb;
 }
 void IRBuilder::SetInstrInsertPoint(BasicBlock *bb) 
 {
