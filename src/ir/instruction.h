@@ -1,6 +1,6 @@
 #ifndef COMPILER_INSTRUCTION_H
 #define COMPILER_INSTRUCTION_H
-#include "basicblock.h"
+#include "basic_block.h"
 #include "user.h"
 
 class BasicBlock;

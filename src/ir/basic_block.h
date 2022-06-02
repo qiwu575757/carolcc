@@ -1,5 +1,5 @@
-#ifndef SRC_IR_BASICBLOCK_H
-#define SRC_IR_BASICBLOCK_H
+#ifndef SRC_IR_BASIC_BLOCK_H
+#define SRC_IR_BASIC_BLOCK_H
 
 #include <list>
 #include <map>
@@ -7,7 +7,7 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include "baseblock.h"
+#include "base_block.h"
 #include "value.h"
 class Function;
 class Instruction;

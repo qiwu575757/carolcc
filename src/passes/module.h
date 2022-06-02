@@ -97,13 +97,22 @@ private:
     PointerType *_floatptr_type;
 };
 
-class scope {
+class Scope {
 public:
     void enter();
     void exit();
-
+    bool in_global_scope();
+    /*压入名字-值 返回检查*/
+    bool push(std::string name, Value *val);
+    /*重载 压入名字-值-参数 返回检查*/
+    bool push(std::string name, Value *val, std::vector<Value *>params);
+    /*找到则返回否则返回空指针*/
+    Value *find(std::string name);
+    /*重载 找到则返回否则返回空指针*/
+    Value *find(std::string name, std::vector<Value *> &params);
 private:
-    std::vector<std::unordered_map<std::string, GlobalVariable *>> _table;
+    std::vector<std::map <std::string, Value *> > _inner_value;
+    std::vector<std::map <std::string, std::vector<Value *> > > _array_param;
 };
 
 #endif// !COMPILER_MODULE_H
