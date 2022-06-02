@@ -79,3 +79,82 @@ bool BasicBlock::isEntry()
 {
     /*TODO*/
 }
+
+/// IF BLOCK ///
+void IfBlock::addCondBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::addIfBodyBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::addElseBodyBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::removeCondBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::removeIfBodyBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::removeElseBodyBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::removeBaseBlock(BaseBlock *bb)
+{
+
+}
+void IfBlock::insertCondBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb)
+{
+
+}
+void IfBlock::insertIfBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb)
+{
+
+}
+void IfBlock::insertElseBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb)
+{
+
+}
+void IfBlock::clearCondBaseBlockList()
+{
+
+}
+/// IF BLOCK END///
+
+
+/// WHILE BLOCK ///
+void WhileBlock::addCondBaseBlock(BaseBlock *bb)
+{
+    
+}
+void WhileBlock::addBodyBaseBlock(BaseBlock *bb)
+{
+    
+}
+void WhileBlock::removeCondBaseBlock(BaseBlock *bb)
+{
+    
+}
+void WhileBlock::removeWhileBodyBaseBlock(BaseBlock *bb)
+{
+    
+}
+void WhileBlock::removeBaseBlock(BaseBlock *bb)
+{
+    
+}
+void WhileBlock::insertCondBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb)
+{
+    
+}
+void WhileBlock::insertWhileBodyBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb)
+{
+    
+}
+/// WHILE BLOCK END///
