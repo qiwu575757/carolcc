@@ -499,7 +499,7 @@ void SYSYBuilder::visit(tree_number &node) {
         }
     } else {
         if (G_tmp_type->getTypeID() == Type::FloatTyID) {
-            G_tmp_val = CONST_GLOAT(node.float_value);
+            G_tmp_val = CONST_FLOAT(node.float_value);
         } else {
             G_tmp_val = CONST_INT(node.int_value);
         }
@@ -638,7 +638,7 @@ void SYSYBuilder::visit(tree_rel_exp &node) {
             G_tmp_val = builder->createLT(new IntegerType(1),l_val,r_val);
         } else if (node.oprt == ">") {
             G_tmp_val = builder->createGT(new IntegerType(1),l_val,r_val);
-        } else if (node.oprt == ">") {
+        } else if (node.oprt == ">=") {
             G_tmp_val = builder->createGE(new IntegerType(1),l_val,r_val);
         }
     }
