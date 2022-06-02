@@ -1,6 +1,7 @@
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_builder.h"
+#include "visitor/sysy_builder.h"
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/tree_visitor_base.h"
 #include <cstdio>
@@ -47,6 +48,7 @@ int main(int argc, char *argv[]) {
         perror(input_file);
     yyparse();
     // auto *md_shower = new syntax_tree_shower();
+    auto *builder = new SYSYBuilder();
     auto *md_detail_shower = new syntax_detail_shower();
     // md_shower->visit(*root);
     // syntax_tree_builder* builder = new syntax_tree_builder();

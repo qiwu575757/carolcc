@@ -9,3 +9,7 @@ void User::setOperand(unsigned no, Value *v) {
     this->_operands_list.at(no) = v;
     v->addUse(this,no);
 }
+Value *User::getOperand(unsigned int no)const {
+    MyAssert("out of index",no>=0&&no<_use_number);
+    return _operands_list.at(no);
+}

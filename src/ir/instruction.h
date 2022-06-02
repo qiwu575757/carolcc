@@ -2,6 +2,7 @@
 #define COMPILER_INSTRUCTION_H
 #include "basic_block.h"
 #include "user.h"
+#include <vector>
 
 class BasicBlock;
 class User;
@@ -17,13 +18,13 @@ public:
         NOT,
         // binary instructions
         ADD,
-//        FADD,//float add
+        //        FADD,//float add
         SUB,
-//        FSUB,
+        //        FSUB,
         MUL,
         DIV,
         REM,
-//        FMUL,
+        //        FMUL,
 
         // bitwise binary instructions
         SHL,
@@ -42,7 +43,9 @@ public:
         // other instructions
         CMP,
         PHI,
-        GEP, // get element ptr
+        GEP,// get element ptr
+        Call,
+        ZExt,
 
     };
 
@@ -108,13 +111,13 @@ private:
 };
 class ReturnInst : public Instruction {
 private:
-    ReturnInst(Type *type ,BasicBlock*parent);
+    ReturnInst(Type *type, BasicBlock *parent);
     ReturnInst(Type *type, Value *v);
     ReturnInst(Type *type, Value *v, BasicBlock *parent);
     ReturnInst(Type *type, OpKind op_id, Value *v);
 
 public:
-    static ReturnInst *createRet(Value *v,BasicBlock *parent);
+    static ReturnInst *createRet(Value *v, BasicBlock *parent);
     static ReturnInst *createVoidRet(BasicBlock *parent);
 };
 
@@ -138,21 +141,50 @@ public:
     static BranchInst *createBranch(BasicBlock *block, BasicBlock *parent);
 };
 
-class StoreInst : public Instruction{
+class StoreInst : public Instruction {
 private:
-    StoreInst(Value *value,Value* ptr,BasicBlock *parent);
-public:
-    static StoreInst *createStore(Value *value,Value* ptr,BasicBlock *parent);
-};
-class LoadInst:public Instruction{
-private:
-    LoadInst(Value* ptr,BasicBlock *parent);
-public:
-    static LoadInst *createLoad(Value* ptr,BasicBlock *parent);
-};
-//class GetElementPtrInst:public Instruction{
-//private:
-//    GetElementPtrInst(Type* ty,Value* array_ptr,)
-//};
+    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
 
+public:
+    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
+};
+class LoadInst : public Instruction {
+private:
+    LoadInst(Value *ptr, BasicBlock *parent);
+
+public:
+    static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
+};
+class GetElementPtrInst : public Instruction {
+private:
+    GetElementPtrInst(value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
+    GetElementPtrInst(Type *ty, unsigned num_ops, BasicBlock *parent, Type *elem_ty);
+
+public:
+    static Type *getElementType(Value *ptr, std::vector<Value *> idxs);
+    static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
+    Type *getElementType() const;
+
+
+    Type *_elem_ty;
+};
+class CallInst : public Instruction {
+private:
+    CallInst(Function *func, std::vector<Value *> &args, BasicBlock *parent);
+    CallInst(Function *func, BasicBlock *parent);
+
+public:
+    static CallInst *createCall(Function *func, std::vector<Value *> &args, BasicBlock *parent);
+    FunctionType *getFunctionType() const;
+    Function *getFunction() const;
+};
+
+class ZExtInst : public Instruction {
+private:
+    ZExtInst(Type *ty, Value *val,BasicBlock *parent);
+public:
+    static ZExtInst* creatZExtInst(Type *ty, Value *val,BasicBlock *parent);
+    Type* getDestType()const;
+    Type* _dest_ty;
+};
 #endif//COMPILER_INSTRUCTION_H

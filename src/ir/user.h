@@ -21,6 +21,7 @@ public:
      * @param v  具体的参数
      */
     void setOperand(unsigned no, Value *v);
+    Value* getOperand(unsigned no)const;
 
 private:
     std::vector<Value *> _operands_list;

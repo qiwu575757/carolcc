@@ -1,9 +1,9 @@
 #ifndef VISITOR_IR_BUILDER_H
 #define VISITOR_IR_BUILDER_H
 
-#include "basic_block.h"
-#include "instruction.h"
-#include "value.h"
+#include "ir/basic_block.h"
+#include "ir/instruction.h"
+#include "ir/value.h"
 
 class IRBuilder {
 private:

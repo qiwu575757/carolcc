@@ -172,7 +172,7 @@ CmpInst *CmpInst::createLE(Type *type, Value *v1, Value *v2, BasicBlock *parent)
     return new CmpInst(type, CmpOp::LE, v1, v2, parent);
 }
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, Value *false_block, BasicBlock *parent)
-    : Instruction(parent->getFunction()->getParent()->getInt1Ty(),
+    : Instruction(Type::getInt1Ty(),
                   Instruction::BR, 3, parent),
       _br_kind(br_op) {
     setOperand(0, cond);
@@ -180,14 +180,14 @@ BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, V
     setOperand(2, false_block);
 }
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *block, BasicBlock *parent)
-    : Instruction(parent->getFunction()->getParent()->getInt1Ty(),
+    : Instruction(Type::getInt1Ty(),
                   Instruction::BR, 2, parent),
       _br_kind(br_op) {
     setOperand(0, cond);
     setOperand(1, block);
 }
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *block, BasicBlock *parent)
-    : Instruction(parent->getFunction()->getParent()->getVoidTy(), Instruction::BR, 1, parent), _br_kind(br_op) {
+    : Instruction(Type::getVoidTy(), Instruction::BR, 1, parent), _br_kind(br_op) {
     setOperand(0, block);
 }
 BranchInst *BranchInst::createIf(Value *cond, BasicBlock *true_block, BasicBlock *false_block, BasicBlock *parent) {
@@ -201,19 +201,87 @@ BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
 }
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-: Instruction(Type::getInt32PtrTy(),Instruction::STORE,2,parent){
+    : Instruction(Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
     WARNNING("还没处理浮点类型");
-    setOperand(0,value);
-    setOperand(1,ptr);
+    setOperand(0, value);
+    setOperand(1, ptr);
 }
-StoreInst *StoreInst::createStore(Value *value,Value* ptr,BasicBlock *parent) {
-    return  new StoreInst(value,ptr,parent);
+StoreInst *StoreInst::createStore(Value *value, Value *ptr, BasicBlock *parent) {
+    return new StoreInst(value, ptr, parent);
 }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
-:Instruction(Type::getInt32Ty(),Instruction::LOAD,1,parent){
+    : Instruction(Type::getInt32Ty(), Instruction::LOAD, 1, parent) {
     WARNNING("还没处理浮点类型");
-
 }
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
-    return new LoadInst(ptr,parent);
+    return new LoadInst(ptr, parent);
+}
+GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock *parent, Type *elem_ty)
+    : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
+}
+GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent)
+    : Instruction(PointerType::get(getElementType(ptr, idxs)), Instruction::GEP,
+                  1 + idxs.size(), parent) {
+              setOperand(0,ptr);
+              for(int i=0;i<idxs.size();i++){
+                  setOperand(i+1,idxs[i]);
+              }
+              //ptr[idxs]的类型
+              _elem_ty=getElementType(ptr,idxs);
+}
+Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> idxs) {
+    Type *ty = ptr->getType()->getPointerElementType();
+    MyAssert("error type", ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy());
+    if (ty->isArrayTy()) {
+        auto *arr_type = static_cast<ArrayType *>(ty);
+        for (int i = 0; i < idxs.size(); ++i) {
+            ty = arr_type->getElementType();
+            if (i < idxs.size() - 1) {
+                MyAssert("error type", ty->isArrayTy());
+            }
+            if (ty->isArrayTy()) {
+                arr_type = static_cast<ArrayType *>(ty);
+            }
+        }
+    }
+    return ty;
+}
+Type *GetElementPtrInst::getElementType() const {
+    return _elem_ty;
+}
+GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent) {
+    return new GetElementPtrInst(ptr,idxs,parent);
+}
+CallInst::CallInst(Function *func, BasicBlock *parent)
+: Instruction(func->getResultType(),Instruction::Call,func->getNumArgs()+1,parent){
+    MyAssert("call error args number ",func->getNumArgs()==0);
+    setOperand(0,func);
+}
+CallInst::CallInst(Function *func, std::vector<Value *> &args, BasicBlock *parent)
+: Instruction(func->getResultType(),Instruction::Call,args.size()+1,parent){
+    MyAssert("call error args number ",func->getNumArgs()==args.size());
+    setOperand(0,func);
+    for(int i=0;i<args.size();i++){
+        setOperand(i+1,args[i]);
+    }
+}
+CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args, BasicBlock *parent) {
+    return new CallInst(func,args,parent);
+}
+FunctionType *CallInst::getFunctionType() const {
+    return static_cast<FunctionType*> (getOperand(0)->getType());
+}
+Function *CallInst::getFunction() const {
+    return static_cast<Function*> (getOperand(0));
+}
+
+ZExtInst::ZExtInst(Type *ty, Value *val, BasicBlock *parent)
+: Instruction(ty,Instruction::ZExt,1,parent),_dest_ty(ty){
+    setOperand(0,val);
+}
+ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
+    return new ZExtInst(ty,val,parent);
+}
+Type *ZExtInst::getDestType() const{
+    return _dest_ty;
 }

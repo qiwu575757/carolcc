@@ -1,16 +1,16 @@
 #ifndef VISTOR_SYSYBUILDER_HPP
 #define VISTOR_SYSYBUILDER_HPP
 
-#include "basic_block.h"
-#include "constant.h"
-#include "function.h"
-#include "global_variable.h"
+#include "ir/basic_block.h"
+#include "ir/constant.h"
+#include "ir/function.h"
+#include "ir/global_variable.h"
 #include "ir_builder.h"
-#include "instruction.h"
-#include "module.h"
-#include "type.h"
-#include "user.h"
-#include "value.h"
+#include "ir/instruction.h"
+#include "passes/module.h"
+#include "ir/type.h"
+#include "ir/user.h"
+#include "ir/value.h"
 #include "tree_visitor_base.h"
 #include "syntax_tree.h"
 #include <map>
@@ -22,9 +22,9 @@ public:
     module = std::shared_ptr<Module>(new Module("SysY code"));
     builder = std::unique_ptr<IRBuilder>(new IRBuilder(nullptr,nullptr));
 
-    auto TyVoid = Type::getVoidTy(&*module); // 改
-    auto TyInt32 = Type::getInt32Ty(&*module); // 改
-    auto TyPtr = Type::getInt32PtrTy(&*module); // 改
+    auto TyVoid = Type::getVoidTy(); // 改
+    auto TyInt32 = Type::getInt32Ty(); // 改
+    auto TyPtr = Type::getInt32PtrTy(); // 改
 
     /**** 库函数引用 ****/
     auto getint_type = FunctionType::get(TyInt32, {});
@@ -62,7 +62,7 @@ public:
     auto starttime_type = FunctionType::get(TyVoid, starttime_params);
 
     auto starttime_fun =
-        Function::create(starttime_type,SYSYCBuilder "_sysy_starttime", module.get());
+        Function::create(starttime_type, "_sysy_starttime", module.get());
 
     std::vector<Type *> stoptime_params;
     stoptime_params.push_back(TyInt32);

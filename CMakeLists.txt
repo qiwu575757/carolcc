@@ -35,7 +35,5 @@ MESSAGE("source is ${source_files}")
 SET(INCLUDE_DIRECTORIES ./ )
 INCLUDE_DIRECTORIES(src/)
 
-
-
 ADD_EXECUTABLE(${PROJECT_NAME} ${source_files} ${BISONOUTPUT} ${FLEXOUTPUT})
 
