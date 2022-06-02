@@ -10,6 +10,15 @@ class ArrayType;
 class FloatType;
 class PointerType;
 class Module;
+class Type;
+extern IntegerType *int1_type;
+extern IntegerType *int32_type;
+extern FloatType *float_type;
+extern Type *label_type;
+extern Type *void_type;
+extern PointerType *int32ptr_type;
+extern PointerType *floatptr_type;
+
 
 class Type {
 public:
@@ -37,12 +46,13 @@ public:
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
 
-    static Type *getVoidTy(Module *m);
-    static Type *getLabelTy(Module *m);
-    static IntegerType *getInt1Ty(Module *m);
-    static IntegerType *getInt32Ty(Module *m);
-    static FloatType *getFloatTy(Module *m);
-    static PointerType *getInt32PtrTy(Module *m);
+    static Type *getVoidTy();
+    static Type *getLabelTy();
+    static IntegerType *getInt1Ty();
+    static IntegerType *getInt32Ty();
+    static FloatType *getFloatTy();
+    static PointerType *getInt32PtrTy();
+    static PointerType *getFloatPtrTy();
 
     Type *getPointerElementType();
 

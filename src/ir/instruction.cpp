@@ -118,7 +118,7 @@ ReturnInst::ReturnInst(Type *type, Value *v, BasicBlock *parent)
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {
-    return new ReturnInst(Type::getVoidTy(parent->getFunction()->getParent()), parent);
+    return new ReturnInst(Type::getVoidTy(), parent);
 }
 ReturnInst::ReturnInst(Type *type, BasicBlock *parent) : Instruction(type, Instruction::RET, 0, parent) {
 }
@@ -201,7 +201,7 @@ BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
 }
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-: Instruction(Type::getInt32PtrTy(parent->getFunction()->getParent()),Instruction::STORE,2,parent){
+: Instruction(Type::getInt32PtrTy(),Instruction::STORE,2,parent){
     WARNNING("还没处理浮点类型");
     setOperand(0,value);
     setOperand(1,ptr);
@@ -210,7 +210,7 @@ StoreInst *StoreInst::createStore(Value *value,Value* ptr,BasicBlock *parent) {
     return  new StoreInst(value,ptr,parent);
 }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
-:Instruction(Type::getInt32Ty(parent->getFunction()->getParent()),Instruction::LOAD,1,parent){
+:Instruction(Type::getInt32Ty(),Instruction::LOAD,1,parent){
     WARNNING("还没处理浮点类型");
 
 }

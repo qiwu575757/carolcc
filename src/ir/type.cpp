@@ -2,6 +2,14 @@
 #include "passes/module.h"
 #include <cassert>
 
+IntegerType *int1_type = IntegerType::get(1);
+IntegerType *int32_type = IntegerType::get(32);
+FloatType *float_type = FloatType::get();
+Type *label_type = new Type(Type::LabelTyID);
+Type *void_type = new Type(Type::VoidTyID);
+PointerType *int32ptr_type = PointerType::get(int32_type);
+PointerType *floatptr_type = PointerType::get(float_type);
+
 Type::Type(TypeID id) : _id(id) {}
 
 Type *Type::getPointerElementType() {
@@ -109,12 +117,13 @@ bool Type::eq(Type rhs) {
         return true;
     }
 }
-Type *Type::getVoidTy(Module *m) { return m->getVoidTy(); }
-Type *Type::getLabelTy(Module *m) { return m->getLabelTy(); }
-IntegerType *Type::getInt1Ty(Module *m) { return m->getInt1Ty(); }
-IntegerType *Type::getInt32Ty(Module *m) { return m->getInt32Ty(); }
-FloatType *Type::getFloatTy(Module *m) { return m->getFloatTy(); }
-PointerType *Type::getInt32PtrTy(Module *m) { return m->getInt32PtrTy(); }
+Type *Type::getVoidTy() { return void_type; }
+Type *Type::getLabelTy() { return label_type; }
+IntegerType *Type::getInt1Ty() { return int1_type; }
+IntegerType *Type::getInt32Ty() { return int32_type; }
+FloatType *Type::getFloatTy() { return float_type; }
+PointerType *Type::getInt32PtrTy() { return int32ptr_type; }
+PointerType *Type::getFloatPtrTy() {return floatptr_type;}
 // IntegerType
 IntegerType::IntegerType(unsigned num_bits)
     : Type(Type::IntegerTyID), _num_bits(num_bits) {}

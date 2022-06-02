@@ -23,13 +23,6 @@ public:
                    MIR_SSA,
                    LIR };
     explicit Module(const std::string &name);
-    Type *getVoidTy();
-    Type *getLabelTy();
-    IntegerType *getInt1Ty();
-    IntegerType *getInt32Ty();
-    FloatType *getFloatTy();
-    PointerType *getInt32PtrTy();
-    PointerType *getFloatPtrTy();
 
     void AddFunction(Function *function);
     void RemoveFunction(Function *function) {
@@ -87,14 +80,6 @@ private:
 
     IRLevel _ir_level = HIR;
 
-private:
-    IntegerType *_int1_type;
-    IntegerType *_int32_type;
-    FloatType *_float_type;
-    Type *_label_type;
-    Type *_void_type;
-    PointerType *_int32ptr_type;
-    PointerType *_floatptr_type;
 };
 
 class Scope {
