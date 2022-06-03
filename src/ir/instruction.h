@@ -157,12 +157,12 @@ public:
 };
 class GetElementPtrInst : public Instruction {
 private:
-    GetElementPtrInst(value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
+    GetElementPtrInst(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent);
     GetElementPtrInst(Type *ty, unsigned num_ops, BasicBlock *parent, Type *elem_ty);
 
 public:
     static Type *getElementType(Value *ptr, std::vector<Value *> idxs);
-    static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
+    static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent);
     Type *getElementType() const;
 
 

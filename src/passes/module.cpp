@@ -13,17 +13,17 @@ void Scope::exit() {
 bool Scope::in_global_scope() {
     return this->_inner_value.size() == 1;
 }
-bool Scope::push(std::string &name, Value *val) {
+bool Scope::push(std::string name, Value *val) {
     int _layer_num = this->_inner_value.size();
     auto res = this->_inner_value[_layer_num - 1].insert({name, val});
     return res.second;
 }
-bool Scope::push(std::string &name, Value *val, std::vector<Value *> params) {
+bool Scope::push(std::string name, Value *val, std::vector<Value *>params) {
     int _layer_num = this->_inner_value.size();
     auto res = this->_array_param[_layer_num - 1].insert({name, params});
     return res.second;
 }
-Value *Scope::find(std::string &name) {
+Value *Scope::find(std::string name) {
     for (auto s = this->_inner_value.rbegin(); s != this->_inner_value.rend(); s++) {
         auto iter = s->find(name);
         if (iter != s->end()) {
@@ -33,8 +33,8 @@ Value *Scope::find(std::string &name) {
     return nullptr;
 }
 
-Value *Scope::find(std::string &name, std::vector<Value *> &params) {
-    for (auto s = this->_array_param.rbegin(); s != this->_array_param..rend(); s++) {
+Value *Scope::find(std::string name, std::vector<Value *> &params) {
+    for (auto s = this->_array_param.rbegin(); s != this->_array_param.rend(); s++) {
         auto iter = s->find(name);
         if (iter != s->end()) {
             params.assign(iter->second.begin(), iter->second.end());

@@ -68,18 +68,18 @@ bool G_in_global_init = false;
 */
 
 /* wuqi TODO
-%type <number>           Number //
-%type <exp>              Exp
-%type <l_val>            LVal
-%type <array_ident>      ArrayIdent
-%type <primary_exp>      PrimaryExp
-%type <unary_exp>        UnaryExp
-%type <mul_exp>          MulExp
-%type <add_exp>          AddExp
-%type <rel_exp>          RelExp
-%type <eq_exp>           EqExp
-%type <l_and_exp>        LAndExp
-%type <l_or_exp>         LOrExp
+%type <number>           Number // done
+%type <exp>              Exp // done
+%type <l_val>            LVal // done
+%type <array_ident>      ArrayIdent // done
+%type <primary_exp>      PrimaryExp // done
+%type <unary_exp>        UnaryExp // done
+%type <mul_exp>          MulExp // done
+%type <add_exp>          AddExp // done
+%type <rel_exp>          RelExp // done
+%type <eq_exp>           EqExp // done
+%type <l_and_exp>        LAndExp // done
+%type <l_or_exp>         LOrExp // done
 */
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
@@ -285,7 +285,12 @@ void SYSYBuilder::visit(tree_var_decl &node) {
 }
 
 void SYSYBuilder::visit(tree_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
+    if (node.add_exp != nullptr) {
+        node.add_exp->accept(*this);
+    } else {
+        ERROR("tree_exp has null add exp");
+    }
 }
 
 void SYSYBuilder::visit(tree_init_val &node) {
@@ -486,7 +491,27 @@ void SYSYBuilder::visit(tree_return_null_stmt &node) {
 }
 
 void SYSYBuilder::visit(tree_l_val &node) {
-    /*TODO*/
+    /*wuqi TODO*/
+    auto var = scope.find(node.id);
+    if (var->getType()->isIntegerTy() || var->getType()->isFloatTy()) {
+        G_tmp_val = var;
+    } else {
+        auto is_int = var->getType()->getPointerElementType()->isIntegerTy();
+        auto is_float = var->getType()->getPointerElementType()->isFloatTy();
+        auto is_ptr = var->getType()->getPointerElementType()->isPointerTy();
+
+        if (node.array_ident == nullptr) { // like f(a)
+            if (is_int || is_float) {
+                G_tmp_val = var;
+            } else if (is_ptr) {
+                G_tmp_val = builder->createLoad(var);
+            } else {
+                G_tmp_val = builder->createGEP(var, {CONST_INT(0)});
+            }
+        } else {
+            node.array_ident->accept(*this);
+        }
+    }
 }
 
 void SYSYBuilder::visit(tree_number &node) {
@@ -508,11 +533,92 @@ void SYSYBuilder::visit(tree_number &node) {
 
 void SYSYBuilder::visit(tree_primary_exp &node) {
     /*wuqi TODO*/
-
+    if (G_tmp_value_using) {
+        if (node.exp != nullptr) {
+            node.exp->accept(*this);
+        } else if (node.l_val != nullptr) {
+            node.l_val->accept(*this);
+            if (G_tmp_type->getTypeID() == Type::FloatTyID) {
+                G_tmp_float = static_cast<ConstantFloat *>(G_tmp_val)->getValue();
+            } else {
+                G_tmp_int = static_cast<ConstantInt *>(G_tmp_val)->getValue();
+            }
+        } else if (node.number != nullptr) {
+            node.number->accept(*this);
+        }
+    } else {
+        if (node.exp != nullptr) {
+            node.exp->accept(*this);
+        } else if (node.l_val != nullptr) {
+            if (G_require_address) { //若要求传参需要地址
+                G_require_address = false;
+                node.l_val->accept(*this);
+                while (!G_tmp_val->getType()->getPointerElementType()->isFloatTy()
+                    && !G_tmp_val->getType()->getPointerElementType()->isIntegerTy()) {
+                        G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0)});
+                }
+            } else { //保证返回值 G_tmp_val 是 float/int num
+                node.l_val->accept(*this);
+                if (G_tmp_val->getType()->isIntegerTy() || G_tmp_val->getType()->isFloatTy()) {
+                    return;
+                } else {
+                    G_tmp_val = builder->createLoad(G_tmp_val);
+                }
+            }
+        } else if (node.number != nullptr) {
+            node.number->accept(*this);
+        }
+    }
 }
 
 void SYSYBuilder::visit(tree_unary_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
+    if (G_tmp_value_using) {
+        if (node.primary_exp != nullptr) {
+            node.primary_exp->accept(*this);
+        } else if (node.unary_exp != nullptr) {
+            node.unary_exp->accept(*this);
+        } else {
+            ERROR("Function call in visit tree_unary_exp");
+        }
+
+        if (node.oprt == "-") {
+            if (G_tmp_type->getTypeID() == Type::FloatTyID) {
+                G_tmp_float = -G_tmp_float;
+            } else {
+                G_tmp_int = -G_tmp_int;
+            }
+        } else if (node.oprt != "+") { // for operation !
+            ERROR("Not operation in visit tree_unary_exp");
+        }
+    } else {
+        if (node.primary_exp != nullptr) {
+            node.primary_exp->accept(*this);
+        } else if (node.unary_exp != nullptr) {
+            node.unary_exp->accept(*this);
+        } else {
+            node.func_call->accept(*this);
+        }
+
+        if (node.oprt == "-") {
+            // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
+            //             ? CONST_FLOAT(0.0) : CONST_INT(0);
+            if (G_tmp_type->getTypeID() == Type::FloatTyID) {
+                auto const0 = CONST_FLOAT(0.0);
+                G_tmp_val = builder->createSub(const0,G_tmp_val);
+            } else {
+                auto const0 = CONST_INT(0);
+                G_tmp_val = builder->createSub(const0,G_tmp_val);
+            }
+        } else if (node.oprt == "!") {
+            if (G_tmp_type->getTypeID() == Type::IntegerTyID) {
+                auto const0 = CONST_INT(0);
+                G_tmp_val = builder->createEQ(new IntegerType(1),G_tmp_val,const0);
+            } else {
+                ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+            }
+        }
+    }
 }
 
 void SYSYBuilder::visit(tree_mul_exp &node) {
@@ -542,7 +648,7 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
                 if (G_tmp_type->getTypeID() == Type::IntegerTyID) {
                     G_tmp_int = l_val / r_val;
                 } else {
-                    ERROR("Invalid oprt % for float type");
+                    ERROR("Invalid oprt Mod for float type");
                 }
             }
         } else {
@@ -616,7 +722,7 @@ void SYSYBuilder::visit(tree_add_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_rel_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
     if (node.rel_exp == nullptr) {
         node.add_exp->accept(*this);
     } else {
@@ -645,7 +751,7 @@ void SYSYBuilder::visit(tree_rel_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_eq_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
     if (node.eq_exp == nullptr) {
         node.rel_exp->accept(*this);
     } else {
@@ -670,7 +776,7 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_l_and_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
     if (node.l_and_exp == nullptr) {
         node.eq_exp->accept(*this);
     } else {
@@ -691,7 +797,7 @@ void SYSYBuilder::visit(tree_l_and_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_l_or_exp &node) {
-    /*TODO*/
+    /*wuqi TODO*/
     if (node.l_or_exp == nullptr) {
         node.l_and_exp->accept(*this);
     } else {
@@ -752,11 +858,44 @@ void SYSYBuilder::visit(tree_continue_stmt &node) {
 
 void SYSYBuilder::visit(tree_cond &node) {
     /*TODO*/
-    node.l_or_exp->accept(this*);
+    node.l_or_exp->accept(*this);
 }
 
 void SYSYBuilder::visit(tree_array_ident &node) {
-    /*TODO*/
+    /*wuqi TODO*/
+    auto var = scope.find(node.id);
+    auto is_int = var->getType()->getPointerElementType()->isIntegerTy();
+    auto is_float = var->getType()->getPointerElementType()->isFloatTy();
+    auto is_ptr = var->getType()->getPointerElementType()->isPointerTy();
+
+    Value *tmp_ptr;
+    if (is_int || is_float) {
+        tmp_ptr = var;
+        for (auto exp : node.exps) {
+            exp->accept(*this);
+            tmp_ptr = builder->createGEP(tmp_ptr, {G_tmp_val});
+        }
+    } else if (is_ptr) {
+        std::vector<Value *> array_params;
+        scope.find(node.id, array_params);
+        tmp_ptr = builder->createLoad(var);
+        int i = 0;
+        for (auto exp: node.exps) {
+            exp->accept(*this);
+            auto val = G_tmp_val;
+            for (int j = i + 1; j < array_params.size(); j++) { // 获取偏移地址
+                val = builder->createMul(val, array_params[j]);
+            }
+            tmp_ptr = builder->createGEP(tmp_ptr, {val});
+        }
+    } else {
+        tmp_ptr = var;
+        for (auto exp : node.exps) {
+            exp->accept(*this);
+            tmp_ptr = builder->createGEP(tmp_ptr, {G_tmp_val});
+        }
+    }
+    G_tmp_val = tmp_ptr;
 }
 
 void SYSYBuilder::visit(tree_func_call &node) {

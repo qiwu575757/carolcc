@@ -6,6 +6,8 @@
 #include "user.h"
 #include "utils.h"
 #include "value.h"
+
+
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums, BasicBlock *parent)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
     MyAssert("null parent", _parent != nullptr);
@@ -219,7 +221,7 @@ LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
 }
-GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent)
+GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent)
     : Instruction(PointerType::get(getElementType(ptr, idxs)), Instruction::GEP,
                   1 + idxs.size(), parent) {
               setOperand(0,ptr);
@@ -249,7 +251,7 @@ Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> idxs) {
 Type *GetElementPtrInst::getElementType() const {
     return _elem_ty;
 }
-GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent) {
+GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent) {
     return new GetElementPtrInst(ptr,idxs,parent);
 }
 CallInst::CallInst(Function *func, BasicBlock *parent)

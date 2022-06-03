@@ -1,39 +1,39 @@
 #include "ir_builder.h"
 
-IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb) 
-{ 
-    this->_basic_block = basicb; 
-    this->_father_block = baseb; 
-};
-std::list<BaseBlock *> IRBuilder::GetInsertBaseBlockList() 
+IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb)
 {
-    return this->_base_block_list; 
+    this->_basic_block = basicb;
+    this->_father_block = baseb;
+};
+std::list<BaseBlock *> IRBuilder::GetInsertBaseBlockList()
+{
+    return this->_base_block_list;
 }
 void IRBuilder::pushBaseBlock(BaseBlock *bb){
     this->_base_block_list.push_back(bb);
     bb->setBaseFather(this->_father_block);
 }
-BaseBlock *IRBuilder::GetFatherBlock() 
+BaseBlock *IRBuilder::GetFatherBlock()
 {
-    return this->_father_block; 
+    return this->_father_block;
 }
-BasicBlock *IRBuilder::GetInsertBasicBlock() 
+BasicBlock *IRBuilder::GetInsertBasicBlock()
 {
-    return this->_basic_block; 
+    return this->_basic_block;
 }
 void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> bbl)
 {
     this->_base_block_list = bbl;
 }
-void IRBuilder::SetFatherBlock(BaseBlock *bb) 
+void IRBuilder::SetFatherBlock(BaseBlock *bb)
 {
     this->_father_block = bb;
 }
-void IRBuilder::SetInstrInsertPoint(BasicBlock *bb) 
+void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
 {
     this->_basic_block = bb;
 } //
-  
+
   UnaryInst * IRBuilder::createNeg(Value *v1)
   {
       return UnaryInst::createNeg(v1, this->_basic_block);
@@ -138,7 +138,7 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   {
       return LoadInst::createLoad( ptr,this->_basic_block);
   }
-  GetElementPtrInst *IRBuilder::createGEP(Value *ptr, std::vector<Value *> &idxs) {
+  GetElementPtrInst *IRBuilder::createGEP(Value *ptr, std::vector<Value *> idxs) {
       return GetElementPtrInst::createGEP( ptr, idxs,this->_basic_block);
   }
   CallInst *IRBuilder::createCall(Function *func, std::vector<Value *> &args) {
