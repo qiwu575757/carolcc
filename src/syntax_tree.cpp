@@ -130,7 +130,7 @@ void tree_unary_exp::accept(tree_visitor_base &v) {
 void tree_func_call::accept(tree_visitor_base &v) {
     v.visit(*this);
 }
-void tree_funcr_paramlist::accept(tree_visitor_base &v) {
+void tree_func_paramlist::accept(tree_visitor_base &v) {
     v.visit(*this);
 }
 void tree_mul_exp::accept(tree_visitor_base &v) {

@@ -5,6 +5,7 @@
 #include <list>
 #include <memory>
 #include <string>
+#include <vector>
 
 
 class tree_visitor_base;
@@ -51,7 +52,7 @@ class tree_number;
 class tree_primary_exp;
 class tree_unary_exp;
 class tree_func_call;
-class tree_funcr_paramlist;
+class tree_func_paramlist;
 class tree_mul_exp;
 class tree_add_exp;
 class tree_rel_exp;
@@ -119,12 +120,12 @@ public:
 
     std::shared_ptr<tree_const_val_list> const_val_list;
     std::shared_ptr<tree_const_exp> const_exp;
+    std::vector<int> bounds;
 };
 
 class tree_const_val_list : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
-
     std::list<std::shared_ptr<tree_const_init_val>> const_init_vals;
 };
 
@@ -391,10 +392,10 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::string id;
-    std::shared_ptr<tree_funcr_paramlist> funcr_paramlist;
+    std::shared_ptr<tree_func_paramlist> funcr_paramlist;
 };
 
-class tree_funcr_paramlist : public syntax_tree_node {
+class tree_func_paramlist : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 

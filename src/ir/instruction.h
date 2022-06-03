@@ -193,10 +193,12 @@ private:
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init;
+    bool _init{}:false;
 
 public:
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
+    void setInit(){_init = false;}
+    bool getInit(){return _init;}
     Type *getAllocaType() const;
 };
 #endif//COMPILER_INSTRUCTION_H

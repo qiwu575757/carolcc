@@ -60,7 +60,7 @@ public:
     void visit(tree_cond &node) final;
     void visit(tree_array_ident &node) final;
     void visit(tree_func_call &node) final;
-    void visit(tree_funcr_paramlist &node) final;
+    void visit(tree_func_paramlist &node) final;
     syntax_tree_builder(){
         _module = new Module("sysy code");
     };

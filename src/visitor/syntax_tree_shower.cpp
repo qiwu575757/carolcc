@@ -516,9 +516,9 @@ void syntax_tree_shower::visit(tree_func_call &node){
     last_node = this_node;
     if(node.funcr_paramlist)node.funcr_paramlist->accept(*this);
 }
-void syntax_tree_shower::visit(tree_funcr_paramlist &node){
+void syntax_tree_shower::visit(tree_func_paramlist &node){
     index++;
-    std::string this_node = "tree_funcr_paramlist"+std::to_string(index);
+    std::string this_node = "tree_func_paramlist"+std::to_string(index);
     std::printf("%s\n",this_node.c_str());
     g.ZhuangTaiTu_add(last_node,this_node);
     last_node = this_node;

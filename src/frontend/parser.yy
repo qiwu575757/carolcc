@@ -77,7 +77,7 @@ tree_number            *number;
 tree_primary_exp       *primary_exp;
 tree_unary_exp         *unary_exp;
 tree_func_call         *func_call;
-tree_funcr_paramlist   *funcr_paramlist;
+tree_func_paramlist   *func_paramlist;
 tree_mul_exp           *mul_exp;
 tree_add_exp           *add_exp;
 tree_rel_exp           *rel_exp;
@@ -137,7 +137,7 @@ tree_l_or_exp          *l_or_exp;
 %type <const_init_val_list>   ConstInitVallist
 %type <var_decl>         VarDecl
 %type <func_call>        FuncCall 
-%type <funcr_paramlist>  FuncRParamList
+%type <func_paramlist>  FuncParamList
 %type <var_def>          VarDef
 %type <var_def_list>     VarDefList
 %type <array_def>        ArrayDef 
@@ -883,28 +883,28 @@ FuncCall
             $$ = new tree_func_call();
             $$->id = *$1;
         }
-    | TIDENTIFIER "(" FuncRParamList ")"
+    | TIDENTIFIER "(" FuncParamList ")"
         {
 		    parser_logger.print
                 ("FuncCall\n");
             $$ = new tree_func_call();
             $$->id = *$1;
-            $$->funcr_paramlist = std::shared_ptr<tree_funcr_paramlist>($3);
+            $$->func_paramlist = std::shared_ptr<tree_func_paramlist>($3);
         }
     ;
 
-FuncRParamList
+FuncParamList
     : Exp
         {
 		    parser_logger.print
-                ("FuncRParamList\n");
-            $$ = new tree_funcr_paramlist();
+                ("FuncParamList\n");
+            $$ = new tree_func_paramlist();
             $$->exps.push_back(std::shared_ptr<tree_exp>($1));
         }
-    | FuncRParamList "," Exp
+    | FuncParamList "," Exp
         {
 		    parser_logger.print
-                ("FuncRParamList\n");
+                ("FuncParamList\n");
             $1->exps.push_back(std::shared_ptr<tree_exp>($3));
             $$ = $1;
         }

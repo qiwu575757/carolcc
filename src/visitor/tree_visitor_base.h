@@ -54,6 +54,6 @@ public:
     virtual void visit(tree_cond &node) = 0;
     virtual void visit(tree_array_ident &node) = 0;
     virtual void visit(tree_func_call &node) = 0;
-    virtual void visit(tree_funcr_paramlist &node) = 0;
+    virtual void visit(tree_func_paramlist &node) = 0;
 };
 #endif// CAROLCC_VISITOR_BASE_H
