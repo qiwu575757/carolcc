@@ -119,4 +119,4 @@ void syntax_tree_builder::visit(tree_continue_stmt &node) {}
 void syntax_tree_builder::visit(tree_cond &node) {}
 void syntax_tree_builder::visit(tree_array_ident &node) {}
 void syntax_tree_builder::visit(tree_func_call &node) {}
-void syntax_tree_builder::visit(tree_funcr_paramlist &node) {}
+void syntax_tree_builder::visit(tree_func_paramlist &node) {}

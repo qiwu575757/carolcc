@@ -54,7 +54,7 @@ public:
     BranchInst *createBranch(BasicBlock *block);
     StoreInst *createStore(Value *value, Value *ptr);
     LoadInst *createLoad(Value *ptr);
-    GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> &idxs);
+    GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> idxs);
     CallInst *createCall(Function *func, std::vector<Value *> &args);
     ZExtInst *creatZExtInst(Type *ty, Value *val);
     AllocaInst *createAlloca(Type *ty);

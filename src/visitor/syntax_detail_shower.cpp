@@ -532,9 +532,9 @@ void syntax_detail_shower::visit(tree_func_call &node){
     father_node = this_node;
     dg.LeiTu_add_attr(father_node,node.id);
 }
-void syntax_detail_shower::visit(tree_funcr_paramlist &node){
+void syntax_detail_shower::visit(tree_func_paramlist &node){
     no++;
-    std::string this_node = "tree_funcr_paramlist"+std::to_string(no);
+    std::string this_node = "tree_func_paramlist"+std::to_string(no);
     std::printf("%s\n",this_node.c_str());
     dg.LeiTu_add(father_node,this_node);
     father_node = this_node;

@@ -138,7 +138,7 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   {
       return LoadInst::createLoad( ptr,this->_basic_block);
   }
-  GetElementPtrInst *IRBuilder::createGEP(Value *ptr, std::vector<Value *> &idxs) {
+  GetElementPtrInst *IRBuilder::createGEP(Value *ptr, std::vector<Value *> idxs) {
       return GetElementPtrInst::createGEP( ptr, idxs,this->_basic_block);
   }
   CallInst *IRBuilder::createCall(Function *func, std::vector<Value *> &args) {
