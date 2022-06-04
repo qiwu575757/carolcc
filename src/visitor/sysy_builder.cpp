@@ -41,12 +41,6 @@ bool G_in_global_init = false;
 
 //%type <comp_unit>        CompUnit // ysx
 //%type <basic_type>       BType
-//%type <const_exp>        ConstExp
-//%type <const_def>        ConstDef
-//%type <const_def_list>   ConstDefList
-//%type <const_exp_list>   ConstExpArrayList
-//%type <const_init_val>   ConstInitVal
-//%type <const_init_val_list>   ConstInitVallist
 //%type <var_decl>         VarDecl
 //%type <func_call>        FuncCall
 //%type <funcr_paramlist>  FuncRParamList
@@ -147,7 +141,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                 auto array_alloc = builder->createAlloca(TyFloatPtr);
                 builder->createStore(static_cast<Value *>(args[i]), array_alloc);
                 std::vector<Value *> array_params;
-                array_params.push_back(new ConstantInt(TyFloat, 0));
+                array_params.push_back(CONST_FLOAT(0));
                 for (auto array_param: param->funcfparamarray->exps) {
                     array_param->accept(*this);
                     array_params.push_back(G_tmp_val);
@@ -250,8 +244,6 @@ void SYSYBuilder::visit(tree_const_def_list &node) {
 
 void SYSYBuilder::visit(tree_const_init_val &node) {
     //ysx todo
-    //    std::shared_ptr<tree_const_val_list> const_val_list;
-    //    std::shared_ptr<tree_const_exp> const_exp;
     if (node.const_exp != nullptr) {
         node.const_exp->accept(*this);
     } else {
@@ -312,9 +304,17 @@ void SYSYBuilder::visit(tree_const_exp &node) {
 
 void SYSYBuilder::visit(tree_var_decl &node) {
     // ysx todo
-    for (auto& n: node.var_def_list->var_defs) {
-        n->accept(*this);
+    switch (node.b_type->type) {
+        case type_helper::INT:
+            G_tmp_type = Type::getInt32Ty();
+            break;
+        case type_helper::FLOAT:
+            G_tmp_type = Type::getFloatTy();
+            break;
+        default:
+            ERROR("error type");
     }
+    node.var_def_list->accept(*this);
 }
 
 void SYSYBuilder::visit(tree_exp &node) {
@@ -431,19 +431,29 @@ void SYSYBuilder::visit(tree_const_def &node) {
 }
 
 void SYSYBuilder::visit(tree_var_def_list &node) {
-    //ysx todo
-    ERROR("visit tree_var_def_list error");
+    for(auto& def:node.var_defs){
+        def->accept(*this);
+    }
 }
 
 void SYSYBuilder::visit(tree_var_def &node) {
     //ysx todo
     if (node.array_def != nullptr) {// 数组
-        std::vector<int32_t> array_bounds;
+        std::vector<int> array_bounds;
         // dim v
         for (auto exp: node.array_def->const_exps) {
             exp->accept(*this);
             int dim_v = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             array_bounds.push_back(dim_v);
+        }
+        Type* ty_array=Type::getInt32Ty();
+        for(auto i = array_bounds.size()-1;i>=0;i--){
+            ty_array = ArrayType::get(ty_array,array_bounds[i]);
+        }
+        if(scope.in_global_scope()){
+            if(node.init_val_array!=nullptr){
+                node.init_val_array.
+            }
         }
         // array type
         // ysx
@@ -454,10 +464,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 node.init_val->accept(*this);
                 G_in_global_init = false;
                 auto initializer = static_cast<Constant *>(G_tmp_val);
-                auto var = GlobalVariable(node.id, &*module, TyInt32, false, initializer);
+                auto var = GlobalVariable::create(node.id, &*module, TyInt32, false, initializer);
                 scope.push(node.id, (Value *) (&var));
             } else {
-                auto var = GlobalVariable(node.id, &*module, TyInt32, false, new ConstantInt(TyInt32, 0));
+                auto var = GlobalVariable::create(node.id, &*module, TyInt32, false, CONST_INT(0));
                 scope.push(node.id, (Value *) (&var));
             }
         } else {

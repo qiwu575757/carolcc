@@ -179,14 +179,15 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::shared_ptr<tree_init_val_arraylist> init_val_arraylist;
+    std::vector<int> bounds;
 };
 
 class tree_init_val_arraylist : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
-    std::list<std::shared_ptr<tree_init_val_array>> initvalarrays;
-    std::list<std::shared_ptr<tree_init_val>> initvals;
+    std::list<std::shared_ptr<tree_init_val_array>> init_var_array;
+    std::list<std::shared_ptr<tree_init_val>> init_vars;
 };
 
 class tree_func_def : public syntax_tree_node {

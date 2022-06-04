@@ -354,13 +354,13 @@ void syntax_detail_shower::visit(tree_init_val_arraylist &node) {
     std::string this_node = "init_val_arraylist"+std::to_string(no);
     std::printf("%s\n",this_node.c_str());
     dg.LeiTu_add(father_node,"init_val_arraylist"+std::to_string(no));
-    if(!node.initvalarrays.empty())
-    for(auto nd : node.initvalarrays){
+    if(!node.init_var_array.empty())
+    for(auto nd : node.init_var_array){
         father_node = this_node;
         nd->accept(*this);
     }
-    if(!node.initvals.empty())
-    for(auto nd : node.initvals){
+    if(!node.init_vars.empty())
+    for(auto nd : node.init_vars){
         father_node = this_node;
         nd->accept(*this);
     }
