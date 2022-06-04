@@ -471,13 +471,13 @@ InitValArrayList
 		    parser_logger.print
                 ("InitValArrayList\n");
             $$ = new tree_init_val_arraylist();
-            $$->initvalarrays.push_back(std::shared_ptr<tree_init_val_array>($1));
+            $$->init_var_array.push_back(std::shared_ptr<tree_init_val_array>($1));
         }
     | InitValArrayList "," InitValArray
         {
 		    parser_logger.print
                 ("InitValArrayList\n");
-            $1->initvalarrays.push_back(std::shared_ptr<tree_init_val_array>($3));
+            $1->init_var_array.push_back(std::shared_ptr<tree_init_val_array>($3));
             $$ = $1;
         }
     | InitVal
@@ -485,13 +485,13 @@ InitValArrayList
 		    parser_logger.print
                 ("InitValArrayList\n");
             $$ = new tree_init_val_arraylist();
-            $$->initvals.push_back(std::shared_ptr<tree_init_val>($1));
+            $$->init_vars.push_back(std::shared_ptr<tree_init_val>($1));
         }
     | InitValArrayList "," InitVal
         {
 		    parser_logger.print
                 ("InitValArrayList\n");
-            $1->initvals.push_back(std::shared_ptr<tree_init_val>($3));
+            $1->init_vars.push_back(std::shared_ptr<tree_init_val>($3));
             $$ = $1;
         }
     ;

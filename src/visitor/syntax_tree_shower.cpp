@@ -344,13 +344,13 @@ void syntax_tree_shower::visit(tree_init_val_arraylist &node) {
     std::string this_node = "init_val_arraylist"+std::to_string(index);
     std::printf("%s\n",this_node.c_str());
     g.ZhuangTaiTu_add(last_node,"init_val_arraylist"+std::to_string(index));
-    if(!node.initvalarrays.empty())
-    for(auto nd : node.initvalarrays){
+    if(!node.init_var_array.empty())
+    for(auto nd : node.init_var_array){
         last_node = this_node;
         nd->accept(*this);
     }
-    if(!node.initvals.empty())
-    for(auto nd : node.initvals){
+    if(!node.init_vars.empty())
+    for(auto nd : node.init_vars){
         last_node = this_node;
         nd->accept(*this);
     }
