@@ -5,15 +5,15 @@ IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb)
     this->_basic_block = basicb;
     this->_father_block = baseb;
 };
-std::list<BaseBlock *> IRBuilder::GetInsertBaseBlockList()
+std::list<BaseBlock *>* IRBuilder::GetInsertBaseBlockList()
 {
     return this->_base_block_list;
 }
 void IRBuilder::pushBaseBlock(BaseBlock *bb){
-    this->_base_block_list.push_back(bb);
+    this->_base_block_list->push_back(bb);
     bb->setBaseFather(this->_father_block);
 }
-BaseBlock *IRBuilder::GetFatherBlock()
+BaseBlock *IRBuilder::GetBaseBlockFatherBlock()
 {
     return this->_father_block;
 }
@@ -21,11 +21,11 @@ BasicBlock *IRBuilder::GetInsertBasicBlock()
 {
     return this->_basic_block;
 }
-void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> bbl)
+void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> *bbl)
 {
     this->_base_block_list = bbl;
 }
-void IRBuilder::SetFatherBlock(BaseBlock *bb)
+void IRBuilder::SetBaseBlockFatherBlock(BaseBlock *bb)
 {
     this->_father_block = bb;
 }
@@ -149,4 +149,10 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   }
   AllocaInst *IRBuilder::createAlloca(Type *ty) {
       return AllocaInst::createAlloca(ty,this->_basic_block);
+  }
+  HIR *IRBuilder::createBreak() {
+      return HIR::createBreak(this->_basic_block);
+  }
+  HIR *IRBuilder::createContinue() {
+      return HIR::createContinue(this->_basic_block);
   }

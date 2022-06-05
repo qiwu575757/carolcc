@@ -297,8 +297,8 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::shared_ptr<tree_cond> cond;
-    std::shared_ptr<tree_stmt> stmt1;
-    std::shared_ptr<tree_stmt> stmt2;
+    std::shared_ptr<tree_stmt> then_stmt;
+    std::shared_ptr<tree_stmt> else_stmt;
 };
 
 class tree_while_stmt : public syntax_tree_node {

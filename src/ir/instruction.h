@@ -44,8 +44,11 @@ public:
         CMP,
         PHI,
         GEP,// get element ptr
-        Call,
-        ZExt,
+        CALL,
+        ZEXT,
+        // HIR
+        BREAK,
+        CONTINUE,
 
     };
 
@@ -157,12 +160,12 @@ public:
 };
 class GetElementPtrInst : public Instruction {
 private:
-    GetElementPtrInst(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent);
+    GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
     GetElementPtrInst(Type *ty, unsigned num_ops, BasicBlock *parent, Type *elem_ty);
 
 public:
-    static Type *getElementType(Value *ptr, std::vector<Value *> idxs);
-    static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent);
+    static Type *getElementType(Value *ptr, std::vector<Value *> &idxs);
+    static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
     Type *getElementType() const;
 
 
@@ -193,12 +196,20 @@ private:
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init{}:false;
+    bool _init{} : false;
 
 public:
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
-    void setInit(){_init = false;}
-    bool getInit(){return _init;}
+    void setInit() { _init = false; }
+    bool getInit() { return _init; }
     Type *getAllocaType() const;
+};
+class HIR : public Instruction {
+private:
+    HIR(Type *type, OpKind op_id, BasicBlock *parent);
+public:
+    static HIR* createBreak(BasicBlock *parent);
+    static HIR* createContinue(BasicBlock *parent);
+
 };
 #endif//COMPILER_INSTRUCTION_H

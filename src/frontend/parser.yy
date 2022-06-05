@@ -684,8 +684,8 @@ Stmt
             $$ = new tree_stmt();
             auto if_else_stmt = new tree_if_else_stmt();
             if_else_stmt->cond = std::shared_ptr<tree_cond>($3);
-            if_else_stmt->stmt1 = std::shared_ptr<tree_stmt>($5);
-            if_else_stmt->stmt2 = std::shared_ptr<tree_stmt>($7);
+            if_else_stmt->then_stmt = std::shared_ptr<tree_stmt>($5);
+            if_else_stmt->else_stmt = std::shared_ptr<tree_stmt>($7);
             $$->if_else_stmt = std::shared_ptr<tree_if_else_stmt>(if_else_stmt) ;
 
         }

@@ -100,6 +100,7 @@ public:
   std::shared_ptr<Module> getModule() { return this->module; }
 
 private:
+    void visit(syntax_tree_node &node) final;
     void visit(tree_comp_unit &node) final;
     void visit(tree_func_def &node) final;
     void visit(tree_block &node) final;

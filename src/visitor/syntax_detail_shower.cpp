@@ -469,9 +469,9 @@ void syntax_detail_shower::visit(tree_if_else_stmt &node){
     father_node = this_node;
     if(node.cond)node.cond->accept(*this);
     father_node = this_node;
-    if(node.stmt1)node.stmt1->accept(*this);
+    if(node.then_stmt)node.then_stmt->accept(*this);
     father_node = this_node;
-    if(node.stmt2)node.stmt2->accept(*this);
+    if(node.else_stmt)node.else_stmt->accept(*this);
 }
 void syntax_detail_shower::visit(tree_while_stmt &node){
     no++;

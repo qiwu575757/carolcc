@@ -88,9 +88,9 @@ public:
     void exit();
     bool in_global_scope();
     /*压入名字-值 返回检查*/
-    bool push(std::string &name, Value *val);
+    bool push(const std::string &name, Value *val);
     /*重载 压入名字-值-参数 返回检查*/
-    bool push(std::string &name, Value *val, std::vector<Value *>params);
+    bool push(const std::string &name, Value *val, std::vector<Value *>params);
     /*找到则返回否则返回空指针*/
     Value *find(std::string &name);
     /*重载 找到则返回否则返回空指针*/

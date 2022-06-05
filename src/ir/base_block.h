@@ -32,8 +32,7 @@ public:
     
     std::string getName();
 
-    BaseBlock(BlockType ty, Module *m, const std::string &name,
-                     Function *func);
+    BaseBlock(BlockType ty, const std::string &name, Function *func);
     
     BlockType _block_type;
 };
