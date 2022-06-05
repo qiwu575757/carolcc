@@ -203,8 +203,7 @@ BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
 }
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-    : Instruction(Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
-    WARNNING("还没处理浮点类型");
+    : Instruction(value->getType()->isFloatTy()? Type::getFloatPtrTy():Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
 }
@@ -212,8 +211,8 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr, BasicBlock *parent) 
     return new StoreInst(value, ptr, parent);
 }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
-    : Instruction(Type::getInt32Ty(), Instruction::LOAD, 1, parent) {
-    WARNNING("还没处理浮点类型");
+    : Instruction(ptr->getType()->getPointerElementType()
+        , Instruction::LOAD, 1, parent) {
 }
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);

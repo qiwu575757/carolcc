@@ -96,7 +96,9 @@ public:
     /**** 库函数引用 END ****/
 
   }
-
+  void build(tree_comp_unit* node){
+    node->accept(*this);
+  }
   std::shared_ptr<Module> getModule() { return this->module; }
 
 private:

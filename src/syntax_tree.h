@@ -70,8 +70,8 @@ class tree_comp_unit : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
-    std::list<std::shared_ptr<tree_func_def>> functions;
-    std::list<std::shared_ptr<tree_decl>> definitions;
+    std::vector<std::shared_ptr<tree_func_def>> functions;
+    std::vector<std::shared_ptr<tree_decl>> definitions;
 };
 
 class tree_decl : public syntax_tree_node {

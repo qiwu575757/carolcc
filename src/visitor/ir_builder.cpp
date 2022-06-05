@@ -4,6 +4,7 @@ IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb)
 {
     this->_basic_block = basicb;
     this->_father_block = baseb;
+    this->_base_block_list=nullptr;
 };
 std::list<BaseBlock *>* IRBuilder::GetInsertBaseBlockList()
 {

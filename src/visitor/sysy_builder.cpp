@@ -38,10 +38,11 @@ bool G_in_global_init = false;
 
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
-    for (auto &func: node.functions) {
+    MyAssert("no function defined",node.functions.size()!=0);
+    for (auto func: node.functions) {
         func->accept(*this);
     }
-    for (auto &defs: node.functions) {
+    for (auto defs: node.functions) {
         defs->accept(*this);
     }
 }
@@ -151,9 +152,9 @@ void SYSYBuilder::visit(tree_block &node) {
         scope.enter();
     }
 
-    for (auto &blockitem: node.block_item_list->block_items) {
+    for (auto &blockitem: (node.block_item_list)->block_items) {
         if (blockitem->decl != nullptr) {
-            if (builder->GetInsertBaseBlockList()->empty()) {
+            if (builder->GetInsertBaseBlockList()==nullptr) {
                 auto allocaBB = BasicBlock::create("", G_cur_fun);
                 builder->SetInstrInsertPoint(allocaBB);
                 blockitem->accept(*this);

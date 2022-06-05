@@ -14,3 +14,6 @@ CMakeCache.txt
 Makefile
 
 .cache/clangd/index
+*.log
+*/*.log
+*/core
