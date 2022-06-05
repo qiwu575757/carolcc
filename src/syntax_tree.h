@@ -393,7 +393,7 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::string id;
-    std::shared_ptr<tree_func_paramlist> funcr_paramlist;
+    std::shared_ptr<tree_func_paramlist> func_param_list;
 };
 
 class tree_func_paramlist : public syntax_tree_node {

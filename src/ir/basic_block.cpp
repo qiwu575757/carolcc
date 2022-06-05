@@ -65,6 +65,9 @@ BasicBlock::BasicBlock(const std::string &name, Function *func)
 BasicBlock::BasicBlock(const std::string &name)
     : BaseBlock(BlockType::BASIC, name, nullptr) {
 }
+BasicBlock::BasicBlock()
+: BasicBlock("", nullptr){
+}
 
 /// IF BLOCK ///
 void IfBlock::addCondBaseBlock(BaseBlock *bb) {

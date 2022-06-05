@@ -17,7 +17,8 @@ class BasicBlock : public BaseBlock {
 
     BasicBlock(const std::string &name, Function *func);
     BasicBlock(const std::string &name);
-    BasicBlock() : BaseBlock(BaseBlock::BlockType::IF, <#initializer #>, nullptr) {}
+    BasicBlock();
+
 
 public:
     std::list<BasicBlock *> _pre_bbs;

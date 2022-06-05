@@ -1074,9 +1074,9 @@ void SYSYBuilder::visit(tree_func_call &node) {
     auto func = module->getFunction(node.id);
     MyAssert("func not found", func != nullptr);
     std::vector<Value *> args;
-    if (node.funcr_paramlist != nullptr) {
-        for (int i = 0; i < node.funcr_paramlist->exps.size(); i++) {
-            auto arg = node.funcr_paramlist->exps[i];
+    if (node.func_param_list != nullptr) {
+        for (int i = 0; i < node.func_param_list->exps.size(); i++) {
+            auto arg = node.func_param_list->exps[i];
             auto arg_type = func->getFunctionType()->getArgType(i);
             if (arg_type->isFloatTy() || arg_type->isIntegerTy()) {
                 G_require_address = false;

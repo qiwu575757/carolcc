@@ -196,7 +196,7 @@ private:
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init{} : false;
+    bool _init ;
 
 public:
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
