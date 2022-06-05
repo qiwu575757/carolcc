@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
 PROJECT(compiler)
-
+SET(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -O0 -Wall -g2 -ggdb")
 FIND_PACKAGE(BISON REQUIRED)
 SET(BISONOUTPUT ${CMAKE_SOURCE_DIR}/src/frontend/parser.cpp)
 
