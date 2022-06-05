@@ -155,8 +155,8 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::string id;
-    std::shared_ptr<tree_init_val> init_val;
-    std::shared_ptr<tree_init_val_array> init_val_array;
+    std::shared_ptr<tree_init_val> init_val; // 非数组的初始化
+    std::shared_ptr<tree_init_val_array> init_val_array; // 数组的初始化值
     std::shared_ptr<tree_arrray_def> array_def;
 };
 
@@ -400,7 +400,7 @@ class tree_func_paramlist : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
-    std::list<std::shared_ptr<tree_exp>> exps;
+    std::vector<std::shared_ptr<tree_exp>> exps;
 };
 
 class tree_mul_exp : public syntax_tree_node {
