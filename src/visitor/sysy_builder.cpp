@@ -251,14 +251,12 @@ void SYSYBuilder::visit(tree_basic_type &node) {
 }
 
 void SYSYBuilder::visit(tree_const_def_list &node) {
-    // ysx todo
     for (auto &def: node.const_defs) {
         def->accept(*this);
     }
 }
 
 void SYSYBuilder::visit(tree_const_init_val &node) {
-    //ysx todo
     if (node.const_exp != nullptr) {
         node.const_exp->accept(*this);
     } else {
@@ -318,7 +316,6 @@ void SYSYBuilder::visit(tree_const_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_var_decl &node) {
-    // ysx todo
     switch (node.b_type->type) {
         case type_helper::INT:
             G_tmp_type = Type::getInt32Ty();
@@ -403,7 +400,6 @@ void SYSYBuilder::visit(tree_decl &node) {
 }
 
 void SYSYBuilder::visit(tree_const_def &node) {
-    // ysx todo
     if (node.const_init_val == nullptr) {
         ERROR("const_def need init value");
     } else {
@@ -451,13 +447,12 @@ void SYSYBuilder::visit(tree_const_def &node) {
 }
 
 void SYSYBuilder::visit(tree_var_def_list &node) {
-    for(auto& def:node.var_defs){
+    for (auto &def: node.var_defs) {
         def->accept(*this);
     }
 }
 
 void SYSYBuilder::visit(tree_var_def &node) {
-    //ysx todo
     if (node.array_def != nullptr) {// 数组
         std::vector<int> array_bounds;
         // dim v
@@ -466,17 +461,43 @@ void SYSYBuilder::visit(tree_var_def &node) {
             int dim_v = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             array_bounds.push_back(dim_v);
         }
-        Type* ty_array=Type::getInt32Ty();
-        for(auto i = array_bounds.size()-1;i>=0;i--){
-            ty_array = ArrayType::get(ty_array,array_bounds[i]);
+        Type *ty_array = Type::getInt32Ty();
+        for (auto i = array_bounds.size() - 1; i >= 0; i--) {
+            ty_array = ArrayType::get(ty_array, array_bounds[i]);
         }
-        if(scope.in_global_scope()){
-            if(node.init_val_array!=nullptr){
-                node.init_val_array.
+        if (scope.in_global_scope()) {
+            if (node.init_val_array != nullptr) {
+                node.init_val_array->bounds.assign(array_bounds.begin(), array_bounds.end());
+                G_in_global_init = true;
+                node.init_val_array->accept(*this);
+                G_in_global_init = false;
+                auto initializer = ConstantArray::turn(array_bounds, G_array_init);
+                auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, initializer);
+                scope.push(node.id, var);
+            }
+        } else {// local array
+            auto array_alloca = builder->createAlloca(ty_array);
+            scope.push(node.id, array_alloca);
+            if (node.init_val_array != nullptr) {
+                array_alloca->setInit();
+                node.init_val_array->bounds.assign(array_bounds.begin(), array_bounds.end());
+                node.init_val_array->accept(*this);
+
+                auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
+                for (int i = 1; i < node.init_val_array->bounds.size(); i++) {
+                    ptr = builder->createGEP(ptr, {CONST_INT(0)});
+                }
+                for (int i = 0; i < G_array_init.size(); i++) {
+                    if (i != 0) {
+                        auto p = builder->createGEP(ptr, {CONST_INT(i)});
+                        builder->createStore(G_array_init[i], p);
+                    } else {
+                        builder->createStore(G_array_init[i], ptr);
+                    }
+                }
             }
         }
-        // array type
-        // ysx
+
     } else {// 不是数组
         if (scope.in_global_scope()) {
             if (node.init_val != nullptr) {// 变量赋值
@@ -903,12 +924,11 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_const_val_list &node) {
-    // ysx todo
     ERROR("error call");
 }
 
 void SYSYBuilder::visit(tree_const_exp_list &node) {
-    // ysx todo
+    ERROR("error call");
 }
 
 void SYSYBuilder::visit(tree_arrray_def &node) {
@@ -937,7 +957,7 @@ void SYSYBuilder::visit(tree_continue_stmt &node) {
 
 void SYSYBuilder::visit(tree_cond &node) {
     /*TODO*/
-    node.l_or_exp->accept(this *);
+    node.l_or_exp->accept(*this );
 }
 
 void SYSYBuilder::visit(tree_array_ident &node) {
@@ -978,10 +998,27 @@ void SYSYBuilder::visit(tree_array_ident &node) {
 }
 
 void SYSYBuilder::visit(tree_func_call &node) {
-    // ysx todo
+    auto func = module->getFunction(node.id);
+    MyAssert("func not found",func!= nullptr);
+    std::vector<Value *> args;
+    if (node.funcr_paramlist != nullptr) {
+        for (int i=0;i<node.funcr_paramlist->exps.size();i++) {
+            auto arg = node.funcr_paramlist->exps[i];
+            auto arg_type = func->getFunctionType()->getArgType(i);
+            if(arg_type->isFloatTy()||arg_type->isIntegerTy()){
+                G_require_address=false;
+            }
+            else {
+                G_require_address=true;
+            }
+            arg->accept(*this);
+            G_require_address=false;
+            args.push_back(G_tmp_val);
+        }
+    }
+    builder->createCall(func, args);
 }
 
 void SYSYBuilder::visit(tree_func_paramlist &node) {
-    //ysx todo
     ERROR("visit tree_var_def_list error");
 };
