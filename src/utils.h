@@ -36,7 +36,7 @@
 #ifdef __ERROR
 #define ERROR(format, ...)                                                     \
     do {                                                                       \
-        printf(RED "[%s:%d]" format RESET, __FILE__, __LINE__, ##__VA_ARGS__); \
+        printf(RED "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
         exit(3);                                                               \
     } while (0)
 #else

@@ -9,22 +9,22 @@ class IRBuilder {
 private:
     BasicBlock *_basic_block; //注意这个块和父基本块不是父子关系 只是用于插入指令
     BaseBlock *_father_block;
-    std::list<BaseBlock *> _base_block_list;
+    std::list<BaseBlock *>* _base_block_list;
 public:
     IRBuilder(BasicBlock *basicb, BaseBlock *baseb);
     ~IRBuilder() = default;
     // 获得用于插入指令的基本块，注意这个块和父基本块不是父子关系
     BasicBlock *GetInsertBasicBlock();
     // 获得基本块列表的父基本快
-    BaseBlock *GetFatherBlock();
+    BaseBlock *GetBaseBlockFatherBlock();
     // 获得基本块列表
-    std::list<BaseBlock *> GetInsertBaseBlockList();
+    std::list<BaseBlock *>* GetInsertBaseBlockList();
     //在该基本块中插入指令
     void SetInstrInsertPoint(BasicBlock *bb);
     //在该基本块表中插入基本块 这个实在设定父基本块时将对应的基本块表设定进来
-    void SetBasicBlockInsertPoint(std::list<BaseBlock *>);
+    void SetBasicBlockInsertPoint(std::list<BaseBlock *>*);
     //设定父基本块 方便维护父子关系
-    void SetFatherBlock(BaseBlock *bb);
+    void SetBaseBlockFatherBlock(BaseBlock *bb);
     //将baseblock插入基本块列表，并同时维护父子块关系
     void pushBaseBlock(BaseBlock *bb);
 
@@ -58,5 +58,7 @@ public:
     CallInst *createCall(Function *func, std::vector<Value *> &args);
     ZExtInst *creatZExtInst(Type *ty, Value *val);
     AllocaInst *createAlloca(Type *ty);
+    HIR* createBreak();
+    HIR* createContinue();
 };
 #endif

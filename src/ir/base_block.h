@@ -1,7 +1,6 @@
 
 #ifndef COMPILER_BASEBLOCK_H
 #define COMPILER_BASEBLOCK_H
-#include "instruction.h"
 #include "type.h"
 #include "value.h"
 #include <list>
@@ -32,8 +31,7 @@ public:
     
     std::string getName();
 
-    BaseBlock(BlockType ty, Module *m, const std::string &name,
-                     Function *func);
+    BaseBlock(BlockType ty, const std::string &name, Function *func);
     
     BlockType _block_type;
 };

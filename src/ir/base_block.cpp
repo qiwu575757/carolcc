@@ -21,3 +21,6 @@ void BaseBlock::setFunction(Function *func)
 { 
      this->_func = func; 
 }
+BaseBlock::BaseBlock(BlockType ty, const std::string &name, Function *func)
+    :Value(Type::getLabelTy(),name),_func(func),_block_type(ty),_father(nullptr){
+}

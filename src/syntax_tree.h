@@ -70,8 +70,8 @@ class tree_comp_unit : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
-    std::list<std::shared_ptr<tree_func_def>> functions;
-    std::list<std::shared_ptr<tree_decl>> definitions;
+    std::vector<std::shared_ptr<tree_func_def>> functions;
+    std::vector<std::shared_ptr<tree_decl>> definitions;
 };
 
 class tree_decl : public syntax_tree_node {
@@ -297,8 +297,8 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::shared_ptr<tree_cond> cond;
-    std::shared_ptr<tree_stmt> stmt1;
-    std::shared_ptr<tree_stmt> stmt2;
+    std::shared_ptr<tree_stmt> then_stmt;
+    std::shared_ptr<tree_stmt> else_stmt;
 };
 
 class tree_while_stmt : public syntax_tree_node {
@@ -393,7 +393,7 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::string id;
-    std::shared_ptr<tree_func_paramlist> funcr_paramlist;
+    std::shared_ptr<tree_func_paramlist> func_param_list;
 };
 
 class tree_func_paramlist : public syntax_tree_node {

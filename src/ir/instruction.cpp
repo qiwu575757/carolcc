@@ -203,8 +203,7 @@ BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
 }
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-    : Instruction(Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
-    WARNNING("还没处理浮点类型");
+    : Instruction(value->getType()->isFloatTy()? Type::getFloatPtrTy():Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
 }
@@ -212,8 +211,8 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr, BasicBlock *parent) 
     return new StoreInst(value, ptr, parent);
 }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
-    : Instruction(Type::getInt32Ty(), Instruction::LOAD, 1, parent) {
-    WARNNING("还没处理浮点类型");
+    : Instruction(ptr->getType()->getPointerElementType()
+        , Instruction::LOAD, 1, parent) {
 }
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);
@@ -221,7 +220,7 @@ LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
 }
-GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent)
+GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent)
     : Instruction(PointerType::get(getElementType(ptr, idxs)), Instruction::GEP,
                   1 + idxs.size(), parent) {
               setOperand(0,ptr);
@@ -231,7 +230,7 @@ GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> idxs, Basi
               //ptr[idxs]的类型
               _elem_ty=getElementType(ptr,idxs);
 }
-Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> idxs) {
+Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> &idxs) {
     Type *ty = ptr->getType()->getPointerElementType();
     MyAssert("error type", ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy());
     if (ty->isArrayTy()) {
@@ -251,16 +250,16 @@ Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> idxs) {
 Type *GetElementPtrInst::getElementType() const {
     return _elem_ty;
 }
-GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> idxs, BasicBlock *parent) {
+GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent) {
     return new GetElementPtrInst(ptr,idxs,parent);
 }
 CallInst::CallInst(Function *func, BasicBlock *parent)
-: Instruction(func->getResultType(),Instruction::Call,func->getNumArgs()+1,parent){
+: Instruction(func->getResultType(),Instruction::CALL,func->getNumArgs()+1,parent){
     MyAssert("call error args number ",func->getNumArgs()==0);
     setOperand(0,func);
 }
 CallInst::CallInst(Function *func, std::vector<Value *> &args, BasicBlock *parent)
-: Instruction(func->getResultType(),Instruction::Call,args.size()+1,parent){
+: Instruction(func->getResultType(),Instruction::CALL,args.size()+1,parent){
     MyAssert("call error args number ",func->getNumArgs()==args.size());
     setOperand(0,func);
     for(int i=0;i<args.size();i++){
@@ -278,7 +277,7 @@ Function *CallInst::getFunction() const {
 }
 
 ZExtInst::ZExtInst(Type *ty, Value *val, BasicBlock *parent)
-: Instruction(ty,Instruction::ZExt,1,parent),_dest_ty(ty){
+: Instruction(ty,Instruction::ZEXT,1,parent),_dest_ty(ty){
     setOperand(0,val);
 }
 ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
@@ -296,4 +295,13 @@ AllocaInst *AllocaInst::createAlloca(Type *ty, BasicBlock *parent) {
 }
 Type *AllocaInst::getAllocaType() const {
     return _alloca_ty;
+}
+HIR::HIR(Type *type, OpKind op_id, BasicBlock *parent)
+    : Instruction(type,op_id,0,parent){
+}
+HIR *HIR::createBreak(BasicBlock *parent) {
+    return new HIR(Type::getVoidTy(),Instruction::BREAK,parent);
+}
+HIR *HIR::createContinue(BasicBlock *parent) {
+    return new HIR(Type::getVoidTy(),Instruction::CONTINUE,parent);
 }

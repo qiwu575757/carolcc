@@ -469,9 +469,9 @@ void syntax_detail_shower::visit(tree_if_else_stmt &node){
     father_node = this_node;
     if(node.cond)node.cond->accept(*this);
     father_node = this_node;
-    if(node.stmt1)node.stmt1->accept(*this);
+    if(node.then_stmt)node.then_stmt->accept(*this);
     father_node = this_node;
-    if(node.stmt2)node.stmt2->accept(*this);
+    if(node.else_stmt)node.else_stmt->accept(*this);
 }
 void syntax_detail_shower::visit(tree_while_stmt &node){
     no++;
@@ -528,7 +528,7 @@ void syntax_detail_shower::visit(tree_func_call &node){
     std::printf("%s\n",this_node.c_str());
     dg.LeiTu_add(father_node,this_node);
     father_node = this_node;
-    if(node.funcr_paramlist)node.funcr_paramlist->accept(*this);
+    if(node.func_param_list)node.func_param_list->accept(*this);
     father_node = this_node;
     dg.LeiTu_add_attr(father_node,node.id);
 }

@@ -457,9 +457,9 @@ void syntax_tree_shower::visit(tree_if_else_stmt &node){
     last_node = this_node;
     if(node.cond)node.cond->accept(*this);
     last_node = this_node;
-    if(node.stmt1)node.stmt1->accept(*this);
+    if(node.then_stmt)node.then_stmt->accept(*this);
     last_node = this_node;
-    if(node.stmt2)node.stmt2->accept(*this);
+    if(node.else_stmt)node.else_stmt->accept(*this);
 }
 void syntax_tree_shower::visit(tree_while_stmt &node){
     index++;
@@ -514,7 +514,7 @@ void syntax_tree_shower::visit(tree_func_call &node){
     std::printf("%s\n",this_node.c_str());
     g.ZhuangTaiTu_add(last_node,this_node);
     last_node = this_node;
-    if(node.funcr_paramlist)node.funcr_paramlist->accept(*this);
+    if(node.func_param_list)node.func_param_list->accept(*this);
 }
 void syntax_tree_shower::visit(tree_func_paramlist &node){
     index++;

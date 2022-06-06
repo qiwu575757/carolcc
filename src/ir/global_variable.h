@@ -1,7 +1,6 @@
 #ifndef COMPILER_GLOBAL_VARIABLE_H
 #define COMPILER_GLOBAL_VARIABLE_H
 #include "constant.h"
-#include "passes/module.h"
 #include "user.h"
 
 class Module;

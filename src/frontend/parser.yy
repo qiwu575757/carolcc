@@ -77,7 +77,7 @@ tree_number            *number;
 tree_primary_exp       *primary_exp;
 tree_unary_exp         *unary_exp;
 tree_func_call         *func_call;
-tree_func_paramlist   *func_paramlist;
+tree_func_paramlist   *func_param_list;
 tree_mul_exp           *mul_exp;
 tree_add_exp           *add_exp;
 tree_rel_exp           *rel_exp;
@@ -137,7 +137,7 @@ tree_l_or_exp          *l_or_exp;
 %type <const_init_val_list>   ConstInitVallist
 %type <var_decl>         VarDecl
 %type <func_call>        FuncCall 
-%type <func_paramlist>  FuncParamList
+%type <func_param_list>  FuncParamList
 %type <var_def>          VarDef
 %type <var_def_list>     VarDefList
 %type <array_def>        ArrayDef 
@@ -684,8 +684,8 @@ Stmt
             $$ = new tree_stmt();
             auto if_else_stmt = new tree_if_else_stmt();
             if_else_stmt->cond = std::shared_ptr<tree_cond>($3);
-            if_else_stmt->stmt1 = std::shared_ptr<tree_stmt>($5);
-            if_else_stmt->stmt2 = std::shared_ptr<tree_stmt>($7);
+            if_else_stmt->then_stmt = std::shared_ptr<tree_stmt>($5);
+            if_else_stmt->else_stmt = std::shared_ptr<tree_stmt>($7);
             $$->if_else_stmt = std::shared_ptr<tree_if_else_stmt>(if_else_stmt) ;
 
         }
@@ -889,7 +889,7 @@ FuncCall
                 ("FuncCall\n");
             $$ = new tree_func_call();
             $$->id = *$1;
-            $$->func_paramlist = std::shared_ptr<tree_func_paramlist>($3);
+            $$->func_param_list = std::shared_ptr<tree_func_paramlist>($3);
         }
     ;
 
