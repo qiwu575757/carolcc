@@ -444,21 +444,20 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 scope.push(node.id, var);
             }
             else {
-                node.init_val_array->bounds.assign(array_bounds.begin(), array_bounds.end());
-                int length = 1;
-                for (auto i : array_bounds) {
-                    length *= i;
-                }
-                std::vector<Value *> array_init;
-                if (G_tmp_type == TyInt32) {
-                    array_init.assign(length,CONST_INT(0));
-                } else if (G_tmp_type == TyFloat) {
-                    array_init.assign(length,CONST_FLOAT(0.0));
-                } else {
-                    ERROR("");
-                }
-                auto initializer = ConstantArray::turn(array_bounds, array_init);
-                auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, initializer);
+                // int length = 1;
+                // for (auto i : array_bounds) {
+                //     length *= i;
+                // }
+                // std::vector<Value *> array_init;
+                // if (G_tmp_type == TyInt32) {
+                //     array_init.assign(length,CONST_INT(0));
+                // } else if (G_tmp_type == TyFloat) {
+                //     array_init.assign(length,CONST_FLOAT(0.0));
+                // } else {
+                //     ERROR("");
+                // }
+                // auto initializer = ConstantArray::turn(array_bounds, nullptr);
+                auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, nullptr);
                 scope.push(node.id, var);
             }
         } else {// local array
@@ -481,6 +480,9 @@ void SYSYBuilder::visit(tree_var_def &node) {
                         builder->createStore(G_array_init[i], ptr);
                     }
                 }
+            }
+            else {
+                // TODO
             }
         }
 

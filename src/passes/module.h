@@ -69,7 +69,7 @@ public:
                 return func;
             }
         }
-        ERROR("no function given");
+        ERROR("no function given %s", func_name.c_str());
     }
 
 private:

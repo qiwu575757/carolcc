@@ -57,19 +57,19 @@ public:
         Function::create(putarray_type, "putarray", module.get());
 
     std::vector<Type *> starttime_params;
-    starttime_params.push_back(TyInt32);
+    // starttime_params.push_back(TyInt32);
 
     auto starttime_type = FunctionType::get(TyVoid, starttime_params);
 
     auto starttime_fun =
-        Function::create(starttime_type, "_sysy_starttime", module.get());
+        Function::create(starttime_type, "starttime", module.get());
 
     std::vector<Type *> stoptime_params;
-    stoptime_params.push_back(TyInt32);
+    // stoptime_params.push_back(TyInt32);
     auto stoptime_type = FunctionType::get(TyVoid, stoptime_params);
 
     auto stoptime_fun =
-        Function::create(stoptime_type, "_sysy_stoptime", module.get());
+        Function::create(stoptime_type, "stoptime", module.get());
 
     auto mtstart_type = FunctionType::get(TyInt32, {});
 
@@ -81,7 +81,7 @@ public:
     auto mtend_type = FunctionType::get(TyVoid, mtend_params);
 
     auto mtend_fun = Function::create(mtend_type, "__mtend", module.get());
-    
+
     scope.enter();
     scope.push("getint", getint_fun);
     scope.push("getch", getch_fun);
@@ -89,8 +89,8 @@ public:
     scope.push("putch", putch_fun);
     scope.push("getarray", getarray_fun);
     scope.push("putarray", putarray_fun);
-    scope.push("_sysy_starttime", starttime_fun);
-    scope.push("_sysy_stoptime", stoptime_fun);
+    scope.push("starttime", starttime_fun);
+    scope.push("stoptime", stoptime_fun);
     scope.push("__mtstart", mtstart_fun);
     scope.push("__mtend", mtend_fun);
     /**** 库函数引用 END ****/
