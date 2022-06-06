@@ -55,7 +55,6 @@ while {return TOKEN(TWHILE);}
 
 "-"  {return TOKEN(TMINUS);}
 "!"  {return TOKEN(TNOT);}
-"~"  {return TOKEN(TWAVE);}
 
 "+"  {return TOKEN(TPLUS);}
 "/"  {return TOKEN(TDIV);}

@@ -88,7 +88,6 @@ tree_l_or_exp          *l_or_exp;
 %token <string> TIDENTIFIER TINTEGER TFLOATNUM
 %token TSEMICOLOM ";"
 %token TCOMMA   ","
-%token TMAIN    "main"
 %token TINT     "int"
 %token TFLOAT   "float"
 %token TVOID    "void"
@@ -103,7 +102,6 @@ tree_l_or_exp          *l_or_exp;
 %token TRBPAREN "}"
 %token TMINUS   "-"
 %token TNOT     "!"
-%token TWAVE    "~"
 %token TPLUS    "+"
 %token TDIV     "/"
 %token TMOD     "%"
@@ -176,12 +174,14 @@ CompUnit
             root->_line_no = yyline+1;
 		    parser_logger.print
                 ("CompUnit\n");
+            printf("func def is %s\n",$1->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>($1));
         }
     | CompUnit FuncDef
         {
 		    parser_logger.print
                 ("CompUnit\n");
+            printf("func def is %s\n",$2->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>($2));
         }
     | Decl
