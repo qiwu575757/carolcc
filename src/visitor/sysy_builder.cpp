@@ -415,6 +415,7 @@ void SYSYBuilder::visit(tree_var_def_list &node) {
 }
 
 void SYSYBuilder::visit(tree_var_def &node) {
+    TRACE("node name %s",node.id.c_str());
     if (node.array_def != nullptr) {// 数组
         std::vector<int> array_bounds;
         // dim v
@@ -424,7 +425,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
             array_bounds.push_back(dim_v);
         }
         Type *ty_array = Type::getInt32Ty();
-        for (auto i = array_bounds.size() - 1; i >= 0; i--) {
+        for (int i = array_bounds.size() - 1; i >= 0; i--) {
             ty_array = ArrayType::get(ty_array, array_bounds[i]);
         }
         if (scope.in_global_scope()) {

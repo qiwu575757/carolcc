@@ -61,7 +61,10 @@
 
 #ifdef __TRACE
 #define TRACE(format, ...) \
-    printf("\x1b[90m" format "\x1b[0m", ##__VA_ARGS__);
+    do {        \
+        printf("\x1b[90m" format "\x1b[0m", ##__VA_ARGS__); \
+        fflush(stdout); \
+    } while(0)
 #else
 #define TRACE(format, ...)
 #endif
