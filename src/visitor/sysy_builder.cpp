@@ -38,12 +38,13 @@ bool G_in_global_init = false;
 
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
-    MyAssert("no function defined", node.functions.size() != 0);
+    MyAssert("no function defined", node.functions.size() != 0&&node.definitions.size()!=0);
+    // 这种写法会允许 后置全局变量定义出现，这是因为语法设计的问题
+    for (auto defs: node.definitions) {
+        defs->accept(*this);
+    }
     for (auto func: node.functions) {
         func->accept(*this);
-    }
-    for (auto defs: node.functions) {
-        defs->accept(*this);
     }
 }
 
