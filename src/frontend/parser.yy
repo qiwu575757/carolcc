@@ -1,5 +1,4 @@
 %{
-    #include "visitor/syntax_tree_builder.h"
     #include "helpers/type_helper.h"
     #include "syntax_tree.h"
     #include "utils.h"
@@ -49,8 +48,7 @@ tree_var_decl          *var_decl;
 tree_arrray_def        *array_def;
 tree_exp               *exp;
 tree_init_val          *init_val;
-tree_init_val_array    *init_val_array;
-tree_init_val_arraylist *init_val_arraylist;
+tree_init_val_list     *init_val_list;
 tree_func_fparams      *func_fparams;
 tree_func_fparam       *func_fparam;
 tree_func_fparamone    *func_fparamone;
@@ -142,8 +140,7 @@ tree_l_or_exp          *l_or_exp;
 %type <var_def_list>     VarDefList
 %type <array_def>        ArrayDef
 %type <init_val>         InitVal // dyb
-%type <init_val_array>   InitValArray
-%type <init_val_arraylist>InitValArrayList
+%type <init_val_list>    InitValList
 %type <func_def>         FuncDef
 %type<func_fparams>      FuncFParams
 %type<func_fparam>       FuncFParam
@@ -431,7 +428,7 @@ VarDef
             $$->id = *$1;
             $$->array_def = std::shared_ptr<tree_arrray_def>($2);
         }
-    | TIDENTIFIER ArrayDef "=" InitValArray
+    | TIDENTIFIER ArrayDef "=" InitVal
         {
 		    parser_logger.print
                 ("VarDef\n");
@@ -439,7 +436,7 @@ VarDef
             $$->_line_no = yyline+1;
             $$->id = *$1;
             $$->array_def = std::shared_ptr<tree_arrray_def>($2);
-            $$->init_val_array = std::shared_ptr<tree_init_val_array>($4);
+            $$->init_val = std::shared_ptr<tree_init_val>($4);
         }
     ;
 
@@ -471,58 +468,35 @@ InitVal
             $$->_line_no = yyline+1;
             $$->exp=std::shared_ptr<tree_exp>($1);
         }
+    | "{" "}" {
+		    parser_logger.print
+                ("InitVal\n");
+            $$ = new tree_init_val();
+            $$->_line_no = yyline+1;
+    }
+    | "{" InitValList "}" {
+		    parser_logger.print
+                ("InitVal\n");
+            $$ = new tree_init_val();
+            $$->_line_no = yyline+1;
+            $$->init_val_list = std::shared_ptr<tree_init_val_list>($2);
+    }
     ;
 
-InitValArray
-    : "{" "}"
-        {
-		    parser_logger.print
-                ("InitValArray\n");
-            $$ = new tree_init_val_array();
-            $$->_line_no = yyline+1;
-        }
-    | "{" InitValArrayList "}"
-        {
-		    parser_logger.print
-                ("InitValArray\n");
-            $$ = new tree_init_val_array();
-            $$->_line_no = yyline+1;
-            $$->init_val_arraylist = std::shared_ptr<tree_init_val_arraylist>($2);
-        }
-    ;
-
-// InitValArrayList是InitVal(AddExp)和InitValArray的任意组合
-InitValArrayList
-    : InitValArray
-        {
-		    parser_logger.print
-                ("InitValArrayList\n");
-            $$ = new tree_init_val_arraylist();
-            $$->_line_no = yyline+1;
-            $$->init_var_array.push_back(std::shared_ptr<tree_init_val_array>($1));
-        }
-    | InitValArrayList "," InitValArray
-        {
-		    parser_logger.print
-                ("InitValArrayList\n");
-            $1->init_var_array.push_back(std::shared_ptr<tree_init_val_array>($3));
-            $$ = $1;
-        }
-    | InitVal
-        {
-		    parser_logger.print
-                ("InitValArrayList\n");
-            $$ = new tree_init_val_arraylist();
-            $$->_line_no = yyline+1;
-            $$->init_vars.push_back(std::shared_ptr<tree_init_val>($1));
-        }
-    | InitValArrayList "," InitVal
-        {
-		    parser_logger.print
-                ("InitValArrayList\n");
-            $1->init_vars.push_back(std::shared_ptr<tree_init_val>($3));
-            $$ = $1;
-        }
+InitValList
+    : InitVal {
+		parser_logger.print
+            ("InitValList\n");
+        $$ = new tree_init_val_list();
+        $$->_line_no = yyline+1;
+        $$->init_vals.push_back(std::shared_ptr<tree_init_val>($1));
+    }
+    | InitValList "," InitVal {
+		parser_logger.print
+            ("InitValList\n");
+        $1->init_vals.push_back(std::shared_ptr<tree_init_val>($3));
+        $$ = $1;
+    }
     ;
 
 /* 函数相关 */

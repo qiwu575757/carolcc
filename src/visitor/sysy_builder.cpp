@@ -326,14 +326,9 @@ void SYSYBuilder::visit(tree_init_val &node) {
     }
 }
 
-void SYSYBuilder::visit(tree_init_val_array &node) {
+void SYSYBuilder::visit(tree_init_val_list &node) {
     /*dyb TODO 把处理后的数据放在node.instant_init 里方便父节点处理*/
-    ERROR("visit tree_init_val_array error");
-}
-
-void SYSYBuilder::visit(tree_init_val_arraylist &node) {
-    /*TODO*/
-    ERROR("visit tree_init_val_arraylist error");
+    ERROR("visit tree_init_val_list error");
 }
 
 void SYSYBuilder::visit(tree_func_fparams &node) {
@@ -434,10 +429,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
             ty_array = ArrayType::get(ty_array, array_bounds[i]);
         }
         if (scope.in_global_scope()) {
-            if (node.init_val_array != nullptr) {
-                node.init_val_array->bounds.assign(array_bounds.begin(), array_bounds.end());
+            if (node.init_val != nullptr) {
+                node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
                 G_in_global_init = true;
-                node.init_val_array->accept(*this);
+                // node.init_val_array->accept(*this);
                 G_in_global_init = false;
                 auto initializer = ConstantArray::turn(array_bounds, G_array_init);
                 auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, initializer);
@@ -463,13 +458,13 @@ void SYSYBuilder::visit(tree_var_def &node) {
         } else {// local array
             auto array_alloca = builder->createAlloca(ty_array);
             scope.push(node.id, array_alloca);
-            if (node.init_val_array != nullptr) {
+            if (node.init_val != nullptr) {
                 array_alloca->setInit();
-                node.init_val_array->bounds.assign(array_bounds.begin(), array_bounds.end());
-                node.init_val_array->accept(*this);
+                node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
+                // node.init_val_array->accept(*this);
 
                 auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
-                for (int i = 1; i < node.init_val_array->bounds.size(); i++) {
+                for (int i = 1; i < node.init_val->bounds.size(); i++) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
