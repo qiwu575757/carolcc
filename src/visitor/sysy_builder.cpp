@@ -234,7 +234,7 @@ void SYSYBuilder::visit(tree_const_init_val &node) {
                 init_val->accept(*this);
                 init_list.push_back(G_tmp_val);
             } else {
-                auto pos = init_list.size();
+                int pos = init_list.size();
                 for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
                     if (G_tmp_type == Type::getInt32Ty()) {
                         init_list.push_back(CONST_INT(0));

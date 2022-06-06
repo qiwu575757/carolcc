@@ -64,6 +64,7 @@ class tree_l_or_exp;
 class syntax_tree_node {
 public:
     virtual void accept(tree_visitor_base &v);
+    int _line_no=-1;
 };
 
 class tree_comp_unit : public syntax_tree_node {

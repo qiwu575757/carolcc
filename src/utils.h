@@ -46,7 +46,10 @@
 
 #ifdef __WARN
 #define WARNNING(format, ...) \
-    printf("\x1b[93m" format "\x1b[0m", ##__VA_ARGS__);
+    do { \
+        printf("\x1b[93m" format "\x1b[0m", ##__VA_ARGS__); \
+        fflush(stdout); \
+    } while(0)
 #else
 #define WARNNING(format, ...)
 #endif
@@ -54,7 +57,10 @@
 
 #ifdef __INFO
 #define INFO(format, ...) \
-    printf("\x1b[34m" format "\x1b[0m", ##__VA_ARGS__);
+    do {        \
+        printf("\x1b[34m" format "\x1b[0m", ##__VA_ARGS__); \
+        fflush(stdout); \
+    } while(0)
 #else
 #define INFO(format, ...)
 #endif
