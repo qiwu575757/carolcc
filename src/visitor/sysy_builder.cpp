@@ -662,8 +662,8 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
             } else {
                 G_tmp_int = -G_tmp_int;
             }
-        } else if (node.oprt != "+") {// for operation !
-            ERROR("Not operation in visit tree_unary_exp");
+        } else if (node.oprt == "!") {// for operation !
+            ERROR("not oprt in visit tree_unary_exp");
         }
     } else {
         if (node.primary_exp != nullptr) {
