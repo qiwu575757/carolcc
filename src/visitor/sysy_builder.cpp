@@ -39,9 +39,12 @@ bool G_in_global_init = false;
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
     MyAssert("no function defined", node.functions.size() != 0);
+    INFO(" comp_unit functions %d definitions %d 42",node.functions.size(),node.definitions.size());
     // 这种写法会允许 后置全局变量定义出现，这是因为语法设计的问题
     for (auto defs: node.definitions) {
+        G_in_global_init = true;
         defs->accept(*this);
+        G_in_global_init = false;
     }
     for (auto func: node.functions) {
         func->accept(*this);
@@ -259,6 +262,7 @@ void SYSYBuilder::visit(tree_const_init_val &node) {
 }
 
 void SYSYBuilder::visit(tree_const_exp &node) {
+    INFO(" tree_const_exp 264 %d",G_in_global_init);
     if (G_tmp_type == Type::getFloatTy()) {
         G_tmp_computing = true;
     } else if (G_tmp_type == Type::getInt32Ty()) {
@@ -308,11 +312,13 @@ void SYSYBuilder::visit(tree_init_val &node) {
         }
 
         if (G_tmp_type->isIntegerTy()) {
+            INFO("global exp 313");
             node.exp->accept(*this);
             G_tmp_computing = false;
             G_tmp_val = (Value *) (CONST_FLOAT(G_tmp_int));
         } else if (G_tmp_type->isFloatTy()) {
             node.exp->accept(*this);
+            G_tmp_computing = false;
             G_tmp_val = (Value *) (CONST_FLOAT(G_tmp_int));
         } else {
             node.exp->accept(*this);
@@ -362,11 +368,15 @@ void SYSYBuilder::visit(tree_decl &node) {
 }
 
 void SYSYBuilder::visit(tree_const_def &node) {
+    INFO(" const_def 370");
     if (node.const_init_val == nullptr) {
         ERROR("const_def need init value");
     } else {
         if (node.const_exp_list == nullptr) {// 非数组情况
+            G_tmp_computing = true;
+            INFO(" const_def 374");
             node.const_init_val->accept(*this);
+            G_tmp_computing = false;
             MyAssert("error in push scope", scope.push(node.id, G_tmp_val));
         } else if (node.const_exp_list != nullptr) {// arrray
             Type *array_element_ty = G_tmp_type;
@@ -554,6 +564,7 @@ void SYSYBuilder::visit(tree_stmt &node) {
         node.return_null_stmt->accept(*this);
         return;
     } else if (node.return_stmt != nullptr) {
+        INFO("return x");
         node.return_stmt->accept(*this);
         return;
     } else if (node.while_stmt != nullptr) {
@@ -573,9 +584,14 @@ void SYSYBuilder::visit(tree_assign_stmt &node) {
 
 void SYSYBuilder::visit(tree_return_stmt &node) {
     if (node.exp == nullptr) {
+        INFO("return void");
         builder->createVoidRet();
     } else {
+        auto tmp = G_tmp_type;
+        G_tmp_type = G_cur_fun->getResultType();
         node.exp->accept(*this);
+        G_tmp_type = tmp;
+        
         builder->createRet(G_tmp_val);
     }
 }
@@ -611,29 +627,38 @@ void SYSYBuilder::visit(tree_l_val &node) {
 }
 
 void SYSYBuilder::visit(tree_number &node) {
+    INFO(" tree_primary_exp 676");
+
     /*wuqi TODO*/
     if (G_tmp_computing) {
         if (G_tmp_type->isFloatTy()) {
+            INFO("float 622");
             G_tmp_float = node.float_value;
         } else if (G_tmp_type->isInt32()) {
+            INFO("int 625");
             G_tmp_int = node.int_value;
         } else {
             ERROR("ERROR type in tree number");
         }
     } else {
         if (G_tmp_type->isFloatTy()) {
+            INFO("float 632");
             G_tmp_val = CONST_FLOAT(node.float_value);
         } else if (G_tmp_type->isInt32()) {
+            INFO("int 635");
             G_tmp_val = CONST_INT(node.int_value);
         }else {
             ERROR("ERROR type in tree number");
         }
     }
+
 }
 
 void SYSYBuilder::visit(tree_primary_exp &node) {
     /*wuqi TODO*/
     if (G_tmp_computing) {
+        INFO(" tree_primary_exp 657");
+
         if (node.exp != nullptr) {
             node.exp->accept(*this);
         } else if (node.l_val != nullptr) {
@@ -646,19 +671,26 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
                 ERROR("");
             }
         } else if (node.number != nullptr) {
+            INFO("exp");
             node.number->accept(*this);
-        }
+            INFO("exp");
+ }
     } else {
+        INFO(" tree_primary_exp 676");
+
         if (node.exp != nullptr) {
+
             node.exp->accept(*this);
-        } else if (node.l_val != nullptr) {
+        } 
+        else if (node.l_val != nullptr) {
             if (G_require_address) {//若要求传参需要地址
                 G_require_address = false;
                 node.l_val->accept(*this);
                 while (!G_tmp_val->getType()->getPointerElementType()->isFloatTy() && !G_tmp_val->getType()->getPointerElementType()->isIntegerTy()) {
                     G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0)});
                 }
-            } else {//保证返回值 G_tmp_val 是 float/int num
+            } 
+            else {//保证返回值 G_tmp_val 是 float/int num
                 node.l_val->accept(*this);
                 if (G_tmp_val->getType()->isIntegerTy() || G_tmp_val->getType()->isFloatTy()) {
                     return;
@@ -666,16 +698,22 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
                     G_tmp_val = builder->createLoad(G_tmp_val);
                 }
             }
-        } else if (node.number != nullptr) {
+        } 
+        else if (node.number != nullptr) {
+            INFO(" tree_primary_exp 700");
             node.number->accept(*this);
+        }
+        else{
+            ERROR("exp");
         }
     }
 }
 
 void SYSYBuilder::visit(tree_unary_exp &node) {
     /*wuqi TODO*/
-    TRACE("The line num is %d", node._line_no);
+    TRACE("unary exp The line num is %d", node._line_no);
     if (G_tmp_computing) {
+        INFO(" unary exp 698");
         if (node.primary_exp != nullptr) {
             node.primary_exp->accept(*this);
         } else if (node.unary_exp != nullptr) {
@@ -695,7 +733,10 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         } else if (node.oprt == "!") {// for operation !
             ERROR("not oprt in visit tree_unary_exp");
         }
-    } else {
+    }
+    else {
+        INFO(" unary exp 719");
+
         if (node.primary_exp != nullptr) {
             node.primary_exp->accept(*this);
         } else if (node.unary_exp != nullptr) {
@@ -730,6 +771,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
 void SYSYBuilder::visit(tree_mul_exp &node) {
     /*wuqi TODO*/
     if (node.mul_exp == nullptr) {
+        INFO("mul 763 %d",G_tmp_computing);
         node.unary_exp->accept(*this);
     } else {
         if (G_tmp_computing) {
@@ -761,7 +803,8 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
                     ERROR("Invalid oprt Mod for float type");
                 }
             }
-        } else {
+        } 
+        else {
             node.mul_exp->accept(*this);
             auto l_val = G_tmp_val;
             node.unary_exp->accept(*this);
@@ -788,9 +831,11 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
 void SYSYBuilder::visit(tree_add_exp &node) {
     /*wuqi TODO*/
     if (node.add_exp == nullptr) {
+        INFO("add 823 %d",G_tmp_computing);
         node.mul_exp->accept(*this);
     } else {
         if (G_tmp_computing) {
+            INFO("add exp 813");
             node.add_exp->accept(*this);
             auto l_val = (G_tmp_type->getTypeID() == Type::FloatTyID) ? G_tmp_float : G_tmp_int;
             node.mul_exp->accept(*this);
@@ -814,6 +859,7 @@ void SYSYBuilder::visit(tree_add_exp &node) {
                 }
             }
         } else {
+            INFO("add exp 837");
             node.add_exp->accept(*this);
             auto l_val = G_tmp_val;
             node.mul_exp->accept(*this);
