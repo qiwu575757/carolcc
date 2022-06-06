@@ -12,9 +12,14 @@ public:
     explicit Constant(Type *ty, const std::string &name = "", unsigned num_ops = 0)
         : User(ty, name, num_ops) {}
     // virtual void print() override;
+    void accept(IrVisitorBase *v) override;
 };
 
 class ConstantInt : public Constant {
+private:
+public:
+    void accept(IrVisitorBase *v) override;
+
 private:
     int _value;
     ConstantInt(Type *ty, int value) : Constant(ty, "", 0), _value(value) {}
@@ -32,6 +37,9 @@ private:
     ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {}
 
 public:
+    void accept(IrVisitorBase *v) override;
+
+public:
     float getValue() const;
     void setValue(float value);
     static ConstantFloat *create(float val);
@@ -40,6 +48,11 @@ public:
 class ConstantArray : public Constant {
 private:
     std::vector<Constant *> _const_array;
+
+public:
+    void accept(IrVisitorBase *v) override;
+
+private:
     ConstantArray(ArrayType *ty, const std::vector<Constant *> &values);
 
 public:
@@ -60,6 +73,7 @@ public:
 class GlobalValue : public Constant {
 public:
     explicit GlobalValue(Type *ty, const std::string &name = "", unsigned num_ops = 0) : Constant(ty, name, num_ops) {}
+    void accept(IrVisitorBase *v) override;
 };
 
 #endif

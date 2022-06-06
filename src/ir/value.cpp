@@ -1,5 +1,6 @@
 #include "value.h"
 #include "user.h"
+#include "visitor/ir_visitor_base.h"
 void Value::addUse(User *user, unsigned value_num) {
     this->_user_list.push_back(new Use(this, value_num, user));
 }
@@ -11,4 +12,7 @@ Type *Value::getType() const{
 }
 std::string Value::getName() {
     return _name;
+}
+void Value::accept(IrVisitorBase *v) {
+    v->visit(this);
 }

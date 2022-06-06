@@ -14,6 +14,7 @@ public:
 };
 class User : public Value {
 public:
+    void accept(IrVisitorBase *v) override;
     User(Type *type, const std::string &name, unsigned use_number);
     /**
      *  设置User类的参数,同时维护 v的use链

@@ -24,6 +24,7 @@ class BasicBlock;
 extern error_log function_logger;
 class Argument : public Value {
 public:
+    void accept(IrVisitorBase *v) override;
     Argument(Type *type, const std::string &name, Function *parent, unsigned arg_no);
     inline Function *getParent() const { return _parent; }
     unsigned getArgNo() const {
@@ -50,7 +51,7 @@ class Function : public GlobalValue {
 public:
     Function(FunctionType *type, const std::string &name, Module *parent);
     static Function *create(FunctionType *type, const std::string &name, Module *parent);
-
+    void accept(IrVisitorBase *v) override;
     FunctionType *getFunctionType() const;
     Type *getResultType() const;
     Module *getParent() const;

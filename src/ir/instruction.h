@@ -52,14 +52,35 @@ public:
 
     };
 
-bool isAdd(){
-    return _op_id==Instruction::ADD;
-}
+    bool isRet() { return _op_id = Instruction::RET; }
+    bool isBr() { return _op_id = Instruction::BR; }
+    bool isNeg() { return _op_id = Instruction::NEG; }
+    bool isNot() { return _op_id = Instruction::NOT; }
+    bool isAdd() { return _op_id = Instruction::ADD; }
+    bool isSub() { return _op_id = Instruction::SUB; }
+    bool isMul() { return _op_id = Instruction::MUL; }
+    bool isDiv() { return _op_id = Instruction::DIV; }
+    bool isRem() { return _op_id = Instruction::REM; }
+    bool isShl() { return _op_id = Instruction::SHL; }
+    bool isLshr() { return _op_id = Instruction::LSHR; }
+    bool isAshr() { return _op_id = Instruction::ASHR; }
+    bool isAnd() { return _op_id = Instruction::AND; }
+    bool isOr() { return _op_id = Instruction::OR; }
+    bool isXor() { return _op_id = Instruction::XOR; }
+    bool isAlloca() { return _op_id = Instruction::ALLOCA; }
+    bool isLoad() { return _op_id = Instruction::LOAD; }
+    bool isStore() { return _op_id = Instruction::STORE; }
+    bool isCmp() { return _op_id = Instruction::CMP; }
+    bool isPhi() { return _op_id = Instruction::PHI; }
+    bool isGep() { return _op_id = Instruction::GEP; }
+    bool isCall() { return _op_id = Instruction::CALL; }
+    bool isZext() { return _op_id = Instruction::ZEXT; }
+    bool isBreak() { return _op_id = Instruction::BREAK; }
+    bool isContinue() { return _op_id = Instruction::CONTINUE; }
 
-private:
+protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
     Instruction(Type *type, OpKind op_id, unsigned op_nums, BasicBlock *parent);
-
 
 
 private:
@@ -94,6 +115,7 @@ public:
     static BinaryInst *createAnd(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createOr(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createXor(Value *v1, Value *v2, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
 };
 
 class CmpInst : public Instruction {
@@ -113,6 +135,14 @@ public:
     static CmpInst *createGE(Type *type, Value *v1, Value *v2, BasicBlock *parent);
     static CmpInst *createLT(Type *type, Value *v1, Value *v2, BasicBlock *parent);
     static CmpInst *createLE(Type *type, Value *v1, Value *v2, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+
+    bool isEq() { return CmpInst::EQ; }
+    bool isNeq(){ return CmpInst::NEQ; }
+    bool isGt() { return CmpInst::GT; }
+    bool isGe() { return CmpInst::GE; }
+    bool isLt() { return CmpInst::LT; }
+    bool isLe() { return CmpInst::LE; }
 
 private:
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
@@ -128,6 +158,7 @@ private:
 public:
     static ReturnInst *createRet(Value *v, BasicBlock *parent);
     static ReturnInst *createVoidRet(BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
 };
 
 class BranchInst : public Instruction {
@@ -137,6 +168,7 @@ public:
         IF,
         BRANCH,
     };
+    void accept(IrVisitorBase *v) override;
 
 private:
     BrOp _br_kind;
@@ -156,6 +188,7 @@ private:
 
 public:
     static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
 };
 class LoadInst : public Instruction {
 private:
@@ -163,24 +196,29 @@ private:
 
 public:
     static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
 };
 class GetElementPtrInst : public Instruction {
 private:
     GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
     GetElementPtrInst(Type *ty, unsigned num_ops, BasicBlock *parent, Type *elem_ty);
+    Type *_elem_ty;
 
 public:
     static Type *getElementType(Value *ptr, std::vector<Value *> &idxs);
     static GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent);
     Type *getElementType() const;
+    void accept(IrVisitorBase *v) override;
 
 
-    Type *_elem_ty;
 };
 class CallInst : public Instruction {
 private:
     CallInst(Function *func, std::vector<Value *> &args, BasicBlock *parent);
     CallInst(Function *func, BasicBlock *parent);
+
+public:
+    void accept(IrVisitorBase *v) override;
 
 public:
     static CallInst *createCall(Function *func, std::vector<Value *> &args, BasicBlock *parent);
@@ -191,20 +229,21 @@ public:
 class ZExtInst : public Instruction {
 private:
     ZExtInst(Type *ty, Value *val, BasicBlock *parent);
-
+    Type *_dest_ty;
 public:
     static ZExtInst *creatZExtInst(Type *ty, Value *val, BasicBlock *parent);
     Type *getDestType() const;
-    Type *_dest_ty;
+    void accept(IrVisitorBase *v) override;
 };
 class AllocaInst : public Instruction {
 private:
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init ;
+    bool _init;
 
 public:
+    void accept(IrVisitorBase *v) override;
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
     void setInit() { _init = false; }
     bool getInit() { return _init; }
@@ -213,9 +252,10 @@ public:
 class HIR : public Instruction {
 private:
     HIR(Type *type, OpKind op_id, BasicBlock *parent);
-public:
-    static HIR* createBreak(BasicBlock *parent);
-    static HIR* createContinue(BasicBlock *parent);
 
+public:
+    static HIR *createBreak(BasicBlock *parent);
+    static HIR *createContinue(BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
 };
 #endif//COMPILER_INSTRUCTION_H

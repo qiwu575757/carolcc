@@ -14,6 +14,10 @@ private:
     std::list<Instruction*> _instructions; /*指令线性表*/
     BaseBlock *_father; /**/
     Function *_func;
+
+public:
+    void accept(IrVisitorBase *v) override;
+
 public:
     enum class BlockType{
         BASIC,

@@ -6,6 +6,7 @@
 #include "user.h"
 #include "utils.h"
 #include "value.h"
+#include "visitor/ir_visitor_base.h"
 
 
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums, BasicBlock *parent)
@@ -106,6 +107,10 @@ BinaryInst *BinaryInst::createXor(Value *v1, Value *v2, BasicBlock *parent) {
 BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *v2, BasicBlock *parent)
     : Instruction(type, op_id, 1, parent) {
 }
+void BinaryInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
+}
 ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v) : Instruction(type, op_id, 1) {
     setOperand(0, v);
 }
@@ -123,6 +128,9 @@ ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {
     return new ReturnInst(Type::getVoidTy(), parent);
 }
 ReturnInst::ReturnInst(Type *type, BasicBlock *parent) : Instruction(type, Instruction::RET, 0, parent) {
+}
+void ReturnInst::accept(IrVisitorBase *v) {
+    v->visit(this);
 }
 CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent)
     : Instruction(type, Instruction::CMP, 2, parent) {
@@ -173,6 +181,9 @@ CmpInst *CmpInst::createLT(Type *type, Value *v1, Value *v2, BasicBlock *parent)
 CmpInst *CmpInst::createLE(Type *type, Value *v1, Value *v2, BasicBlock *parent) {
     return new CmpInst(type, CmpOp::LE, v1, v2, parent);
 }
+void CmpInst::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, Value *false_block, BasicBlock *parent)
     : Instruction(Type::getInt1Ty(),
                   Instruction::BR, 3, parent),
@@ -201,21 +212,32 @@ BranchInst *BranchInst::createWhile(Value *cond, BasicBlock *block, BasicBlock *
 BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
     return new BranchInst(BranchInst::BRANCH, block, parent);
 }
+void BranchInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
+}
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-    : Instruction(value->getType()->isFloatTy()? Type::getFloatPtrTy():Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
+    : Instruction(value->getType()->isFloatTy() ? Type::getFloatPtrTy() : Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr, BasicBlock *parent) {
     return new StoreInst(value, ptr, parent);
 }
+void StoreInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
+}
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
-    : Instruction(ptr->getType()->getPointerElementType()
-        , Instruction::LOAD, 1, parent) {
+    : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1, parent) {
 }
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);
+}
+void LoadInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
 }
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
@@ -223,12 +245,12 @@ GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock 
 GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent)
     : Instruction(PointerType::get(getElementType(ptr, idxs)), Instruction::GEP,
                   1 + idxs.size(), parent) {
-              setOperand(0,ptr);
-              for(int i=0;i<idxs.size();i++){
-                  setOperand(i+1,idxs[i]);
-              }
-              //ptr[idxs]的类型
-              _elem_ty=getElementType(ptr,idxs);
+    setOperand(0, ptr);
+    for (int i = 0; i < idxs.size(); i++) {
+        setOperand(i + 1, idxs[i]);
+    }
+    //ptr[idxs]的类型
+    _elem_ty = getElementType(ptr, idxs);
 }
 Type *GetElementPtrInst::getElementType(Value *ptr, std::vector<Value *> &idxs) {
     Type *ty = ptr->getType()->getPointerElementType();
@@ -251,57 +273,74 @@ Type *GetElementPtrInst::getElementType() const {
     return _elem_ty;
 }
 GetElementPtrInst *GetElementPtrInst::createGEP(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent) {
-    return new GetElementPtrInst(ptr,idxs,parent);
+    return new GetElementPtrInst(ptr, idxs, parent);
+}
+void GetElementPtrInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
 }
 CallInst::CallInst(Function *func, BasicBlock *parent)
-: Instruction(func->getResultType(),Instruction::CALL,func->getNumArgs()+1,parent){
-    MyAssert("call error args number ",func->getNumArgs()==0);
-    setOperand(0,func);
+    : Instruction(func->getResultType(), Instruction::CALL, func->getNumArgs() + 1, parent) {
+    MyAssert("call error args number ", func->getNumArgs() == 0);
+    setOperand(0, func);
 }
 CallInst::CallInst(Function *func, std::vector<Value *> &args, BasicBlock *parent)
-: Instruction(func->getResultType(),Instruction::CALL,args.size()+1,parent){
-    MyAssert("call error args number ",func->getNumArgs()==args.size());
-    setOperand(0,func);
-    for(int i=0;i<args.size();i++){
-        setOperand(i+1,args[i]);
+    : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1, parent) {
+    MyAssert("call error args number ", func->getNumArgs() == args.size());
+    setOperand(0, func);
+    for (int i = 0; i < args.size(); i++) {
+        setOperand(i + 1, args[i]);
     }
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args, BasicBlock *parent) {
-    return new CallInst(func,args,parent);
+    return new CallInst(func, args, parent);
 }
 FunctionType *CallInst::getFunctionType() const {
-    return static_cast<FunctionType*> (getOperand(0)->getType());
+    return static_cast<FunctionType *>(getOperand(0)->getType());
 }
 Function *CallInst::getFunction() const {
-    return static_cast<Function*> (getOperand(0));
+    return static_cast<Function *>(getOperand(0));
+}
+void CallInst::accept(IrVisitorBase *v) {
+
+    v->visit(this);
 }
 
 ZExtInst::ZExtInst(Type *ty, Value *val, BasicBlock *parent)
-: Instruction(ty,Instruction::ZEXT,1,parent),_dest_ty(ty){
-    setOperand(0,val);
+    : Instruction(ty, Instruction::ZEXT, 1, parent), _dest_ty(ty) {
+    setOperand(0, val);
 }
 ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
-    return new ZExtInst(ty,val,parent);
+    return new ZExtInst(ty, val, parent);
 }
-Type *ZExtInst::getDestType() const{
+Type *ZExtInst::getDestType() const {
     return _dest_ty;
 }
-AllocaInst::AllocaInst(Type *ty, BasicBlock *parent)
-: Instruction(PointerType::get(ty),Instruction::ALLOCA,0,parent),_alloca_ty(ty),_init(false){
+void ZExtInst::accept(IrVisitorBase *v) {
 
+    v->visit(this);
+}
+AllocaInst::AllocaInst(Type *ty, BasicBlock *parent)
+    : Instruction(PointerType::get(ty), Instruction::ALLOCA, 0, parent), _alloca_ty(ty), _init(false) {
 }
 AllocaInst *AllocaInst::createAlloca(Type *ty, BasicBlock *parent) {
-    return new AllocaInst(ty,parent);
+    return new AllocaInst(ty, parent);
 }
 Type *AllocaInst::getAllocaType() const {
     return _alloca_ty;
 }
+void AllocaInst::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
 HIR::HIR(Type *type, OpKind op_id, BasicBlock *parent)
-    : Instruction(type,op_id,0,parent){
+    : Instruction(type, op_id, 0, parent) {
 }
 HIR *HIR::createBreak(BasicBlock *parent) {
-    return new HIR(Type::getVoidTy(),Instruction::BREAK,parent);
+    return new HIR(Type::getVoidTy(), Instruction::BREAK, parent);
 }
 HIR *HIR::createContinue(BasicBlock *parent) {
-    return new HIR(Type::getVoidTy(),Instruction::CONTINUE,parent);
+    return new HIR(Type::getVoidTy(), Instruction::CONTINUE, parent);
+}
+void HIR::accept(IrVisitorBase *v) {
+    v->visit(this);
 }

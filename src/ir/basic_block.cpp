@@ -1,4 +1,5 @@
 #include "basic_block.h"
+#include "visitor/ir_visitor_base.h"
 std::list<Instruction *> &BasicBlock::getInstructions() {
     /*TODO*/
 }
@@ -68,6 +69,9 @@ BasicBlock::BasicBlock(const std::string &name)
 BasicBlock::BasicBlock()
 : BasicBlock("", nullptr){
 }
+void BasicBlock::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
 
 /// IF BLOCK ///
 void IfBlock::addCondBaseBlock(BaseBlock *bb) {
@@ -113,6 +117,11 @@ std::list<BaseBlock *> *IfBlock::getIfBodyBaseBlockList() {
 std::list<BaseBlock *> *IfBlock::getElseBodyBaseBlockList() {
     return &this->_else_body;
 }
+void IfBlock::accept(IrVisitorBase *v) {
+
+    v->visit(this);
+
+}
 /// IF BLOCK END///
 
 
@@ -148,5 +157,10 @@ WhileBlock::WhileBlock(const std::string &name, Function *func)
 }
 WhileBlock::WhileBlock(const std::string &name)
     : BaseBlock(BlockType::WHILE, name, nullptr) {
+}
+void WhileBlock::accept(IrVisitorBase *v) {
+
+    v->visit(this);
+
 }
 /// WHILE BLOCK END///

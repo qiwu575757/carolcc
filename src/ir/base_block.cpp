@@ -24,3 +24,6 @@ void BaseBlock::setFunction(Function *func)
 BaseBlock::BaseBlock(BlockType ty, const std::string &name, Function *func)
     :Value(Type::getLabelTy(),name),_func(func),_block_type(ty),_father(nullptr){
 }
+void BaseBlock::accept(IrVisitorBase *v) {
+    v->visit(this);
+}

@@ -19,6 +19,9 @@ class BasicBlock : public BaseBlock {
     BasicBlock(const std::string &name);
     BasicBlock();
 
+public:
+    void accept(IrVisitorBase *v) override;
+
 
 public:
     std::list<BasicBlock *> _pre_bbs;
@@ -67,6 +70,11 @@ public:
 class IfBlock : public BaseBlock {
 private:
     IfBlock(const std::string &name, Function *func);
+
+public:
+    void accept(IrVisitorBase *v) override;
+
+private:
     IfBlock(const std::string &name);
 
 public:
@@ -99,6 +107,10 @@ private:
 };
 
 class WhileBlock : public BaseBlock {
+private:
+public:
+    void accept(IrVisitorBase *v) override;
+
 private:
     WhileBlock(const std::string &name, Function *func);
     WhileBlock(const std::string &name);

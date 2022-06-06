@@ -1,5 +1,6 @@
 #include "constant.h"
 #include "utils.h"
+#include "visitor/ir_visitor_base.h"
 #include <list>
 #include <vector>
 int ConstantInt::getValue() const {
@@ -11,6 +12,9 @@ void ConstantInt::setValue(int value) {
 ConstantInt *ConstantInt::create(int val) {
     return new ConstantInt(Type::getInt32Ty(), val);
 }
+void ConstantInt::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
 float ConstantFloat::getValue() const {
     return _value;
 }
@@ -19,6 +23,9 @@ void ConstantFloat::setValue(float value) {
 }
 ConstantFloat *ConstantFloat::create(float val) {
     return new ConstantFloat(Type::getFloatTy(), val);
+}
+void ConstantFloat::accept(IrVisitorBase *v) {
+    v->visit(this);
 }
 Constant *ConstantArray::getElement(int index) {
     return this->_const_array.at(index);
@@ -64,4 +71,13 @@ ConstantArray *ConstantArray::turn(std::vector<int> &array_bounds, std::vector<V
         return ConstantArray::create(static_cast<ArrayType*>(init_list[0]->getType()),init_list);
     }
 
+}
+void ConstantArray::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
+void Constant::accept(IrVisitorBase *v) {
+    v->visit(this);
+}
+void GlobalValue::accept(IrVisitorBase *v) {
+    v->visit(this);
 }

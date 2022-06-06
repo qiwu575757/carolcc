@@ -1,10 +1,14 @@
 #include "function.h"
 #include "passes/module.h"
+#include "visitor/ir_visitor_base.h"
 #include "type.h"
 #include "user.h"
 
 Argument::Argument(Type *type, const std::string &name, Function *parent, unsigned int arg_no)
     : Value(name, type), _arg_no(arg_no), _parent(parent) {
+}
+void Argument::accept(IrVisitorBase *v) {
+    v->visit(this);
 }
 
 Function::Function(FunctionType *type, const std::string &name, Module *parent)
@@ -57,4 +61,7 @@ void Function::buildArgs() {
     for ( int i = 0; i < num_args; i++ ) {
         _args.push_back(new Argument(function_type->getArgType(i),"", this, i));
     }
+}
+void Function::accept(IrVisitorBase *v) {
+    v->visit(this);
 }
