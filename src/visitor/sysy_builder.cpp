@@ -60,21 +60,22 @@ void SYSYBuilder::visit(tree_func_def &node) {
     } else {
         ret_type = TyVoid;
     }
-
-    for (auto &param: node.funcfparams->funcfparamlist) {
-        if (param->funcfparamone != nullptr) {
-            if (param->funcfparamone->b_type->type == type_helper::INT) {
-                param_types.push_back(TyInt32);
-            } else if (param->funcfparamone->b_type->type == type_helper::FLOAT) {
-                param_types.push_back(TyFloat);
-            } else {
-                param_types.push_back(TyVoid);
-            }
-        } else if (param->funcfparamarray != nullptr) {
-            if (param->funcfparamarray->b_type->type == type_helper::INT) {
-                param_types.push_back(TyInt32Ptr);
-            } else if (param->funcfparamarray->b_type->type == type_helper::FLOAT) {
-                param_types.push_back(TyFloatPtr);
+    if (node.funcfparams != nullptr) {
+        for (auto &param: node.funcfparams->funcfparamlist) {
+            if (param->funcfparamone != nullptr) {
+                if (param->funcfparamone->b_type->type == type_helper::INT) {
+                    param_types.push_back(TyInt32);
+                } else if (param->funcfparamone->b_type->type == type_helper::FLOAT) {
+                    param_types.push_back(TyFloat);
+                } else {
+                    param_types.push_back(TyVoid);
+                }
+            } else if (param->funcfparamarray != nullptr) {
+                if (param->funcfparamarray->b_type->type == type_helper::INT) {
+                    param_types.push_back(TyInt32Ptr);
+                } else if (param->funcfparamarray->b_type->type == type_helper::FLOAT) {
+                    param_types.push_back(TyFloatPtr);
+                }
             }
         }
     }
@@ -97,45 +98,47 @@ void SYSYBuilder::visit(tree_func_def &node) {
     }
 
     int i = 0;
-    for (auto param: node.funcfparams->funcfparamlist) {
-        if (param->funcfparamarray != nullptr) {
-            if (param->funcfparamarray->b_type->type == type_helper::INT) {
-                auto array_alloc = builder->createAlloca(TyInt32Ptr);
-                builder->createStore(static_cast<Value *>(args[i]), array_alloc);
-                std::vector<Value *> array_params;
-                array_params.push_back(CONST_INT(0));
-                for (auto array_param: param->funcfparamarray->exps) {
-                    array_param->accept(*this);
-                    array_params.push_back(G_tmp_val);
+    if (node.funcfparams != nullptr) {
+        for (auto param: node.funcfparams->funcfparamlist) {
+            if (param->funcfparamarray != nullptr) {
+                if (param->funcfparamarray->b_type->type == type_helper::INT) {
+                    auto array_alloc = builder->createAlloca(TyInt32Ptr);
+                    builder->createStore(static_cast<Value *>(args[i]), array_alloc);
+                    std::vector<Value *> array_params;
+                    array_params.push_back(CONST_INT(0));
+                    for (auto array_param: param->funcfparamarray->exps) {
+                        array_param->accept(*this);
+                        array_params.push_back(G_tmp_val);
+                    }
+                    scope.push(param->funcfparamarray->id, array_alloc);
+                    scope.push(param->funcfparamarray->id, array_alloc, array_params);
+                    args[i]->setArrayBound(array_params);
+                } else {
+                    auto array_alloc = builder->createAlloca(TyFloatPtr);
+                    builder->createStore(static_cast<Value *>(args[i]), array_alloc);
+                    std::vector<Value *> array_params;
+                    array_params.push_back(CONST_FLOAT(0));
+                    for (auto array_param: param->funcfparamarray->exps) {
+                        array_param->accept(*this);
+                        array_params.push_back(G_tmp_val);
+                    }
+                    scope.push(param->funcfparamarray->id, array_alloc);
+                    scope.push(param->funcfparamarray->id, array_alloc, array_params);
+                    args[i]->setArrayBound(array_params);
                 }
-                scope.push(param->funcfparamarray->id, array_alloc);
-                scope.push(param->funcfparamarray->id, array_alloc, array_params);
-                args[i]->setArrayBound(array_params);
-            } else {
-                auto array_alloc = builder->createAlloca(TyFloatPtr);
-                builder->createStore(static_cast<Value *>(args[i]), array_alloc);
-                std::vector<Value *> array_params;
-                array_params.push_back(CONST_FLOAT(0));
-                for (auto array_param: param->funcfparamarray->exps) {
-                    array_param->accept(*this);
-                    array_params.push_back(G_tmp_val);
+            } else {// 单个
+                if (param->funcfparamone->b_type->type == type_helper::INT) {
+                    auto alloc = builder->createAlloca(TyInt32);
+                    builder->createStore(args[i], alloc);
+                    scope.push(param->funcfparamone->id, alloc);
+                } else {
+                    auto alloc = builder->createAlloca(TyFloat);
+                    builder->createStore(args[i], alloc);
+                    scope.push(param->funcfparamone->id, alloc);
                 }
-                scope.push(param->funcfparamarray->id, array_alloc);
-                scope.push(param->funcfparamarray->id, array_alloc, array_params);
-                args[i]->setArrayBound(array_params);
             }
-        } else {// 单个
-            if (param->funcfparamone->b_type->type == type_helper::INT) {
-                auto alloc = builder->createAlloca(TyInt32);
-                builder->createStore(args[i], alloc);
-                scope.push(param->funcfparamone->id, alloc);
-            } else {
-                auto alloc = builder->createAlloca(TyFloat);
-                builder->createStore(args[i], alloc);
-                scope.push(param->funcfparamone->id, alloc);
-            }
+            i++;
         }
-        i++;
     }
     for (auto &b: node.block) {
         b->accept(*this);
@@ -464,10 +467,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 G_in_global_init = false;
                 auto initializer = static_cast<Constant *>(G_tmp_val);
                 auto var = GlobalVariable::create(node.id, &*module, TyInt32, false, initializer);
-                scope.push(node.id,  var);
+                scope.push(node.id, var);
             } else {
                 auto var = GlobalVariable::create(node.id, &*module, TyInt32, false, CONST_INT(0));
-                scope.push(node.id,  var);
+                scope.push(node.id, var);
             }
         } else {
             auto val_alloc = builder->createAlloca(TyInt32);
@@ -562,7 +565,8 @@ void SYSYBuilder::visit(tree_return_null_stmt &node) {
 
 void SYSYBuilder::visit(tree_l_val &node) {
     /*wuqi TODO*/
-    auto var = scope.find(node.id);
+    std::string &name = node.id.empty() ? node.array_ident->id : node.id;
+    auto var = scope.find(name);
     if (var->getType()->isIntegerTy() || var->getType()->isFloatTy()) {
         G_tmp_val = var;
     } else {
