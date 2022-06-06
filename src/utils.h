@@ -47,7 +47,7 @@
 #ifdef __WARN
 #define WARNNING(format, ...) \
     do { \
-        printf("\x1b[93m" format "\x1b[0m", ##__VA_ARGS__); \
+        printf("\x1b[93m" format "\x1b[0m \n", ##__VA_ARGS__); \
         fflush(stdout); \
     } while(0)
 #else
@@ -58,7 +58,7 @@
 #ifdef __INFO
 #define INFO(format, ...) \
     do {        \
-        printf("\x1b[34m" format "\x1b[0m", ##__VA_ARGS__); \
+        printf("\x1b[34m" format "\x1b[0m \n", ##__VA_ARGS__); \
         fflush(stdout); \
     } while(0)
 #else
@@ -68,7 +68,7 @@
 #ifdef __TRACE
 #define TRACE(format, ...) \
     do {        \
-        printf("\x1b[90m" format "\x1b[0m", ##__VA_ARGS__); \
+        printf("\x1b[90m" format "\x1b[0m \n", ##__VA_ARGS__); \
         fflush(stdout); \
     } while(0)
 #else

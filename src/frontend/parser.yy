@@ -136,11 +136,11 @@ tree_l_or_exp          *l_or_exp;
 %type <const_init_val>   ConstInitVal
 %type <const_init_val_list>   ConstInitVallist
 %type <var_decl>         VarDecl
-%type <func_call>        FuncCall 
+%type <func_call>        FuncCall
 %type <func_param_list>  FuncParamList
 %type <var_def>          VarDef
 %type <var_def_list>     VarDefList
-%type <array_def>        ArrayDef 
+%type <array_def>        ArrayDef
 %type <init_val>         InitVal // dyb
 %type <init_val_array>   InitValArray
 %type <init_val_arraylist>InitValArrayList
@@ -155,7 +155,7 @@ tree_l_or_exp          *l_or_exp;
 %type <stmt>             Stmt
 %type <cond>             Cond
 %type <number>           Number // wq
-%type <exp>              Exp  
+%type <exp>              Exp
 %type <l_val>            LVal
 %type <array_ident>      ArrayIdent
 %type <primary_exp>      PrimaryExp
