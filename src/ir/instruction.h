@@ -49,9 +49,15 @@ public:
 
     };
 
+bool isAdd(){
+    return _op_id==Instruction::ADD;
+}
 
+private:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
     Instruction(Type *type, OpKind op_id, unsigned op_nums, BasicBlock *parent);
+
+
 
 private:
     BasicBlock *_parent;
