@@ -10,12 +10,12 @@ class Function;
 class Value;
 class BaseBlock :public Value {
 private:
-
     std::list<Instruction*> _instructions; /*指令线性表*/
     BaseBlock *_father; /**/
     Function *_func;
+
 public:
-    enum class BlockType{
+    enum BlockType{
         BASIC,
         IF,
         WHILE,
@@ -28,11 +28,11 @@ public:
     void clearFather() {
         _father = nullptr;
     }
-    
+
     std::string getName();
 
     BaseBlock(BlockType ty, const std::string &name, Function *func);
-    
+
     BlockType _block_type;
 };
 
