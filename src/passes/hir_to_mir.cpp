@@ -1,5 +1,10 @@
 #include "hir_to_mir.h"
+#include "ir/base_block.h"
 #include "ir/basic_block.h"
+#include "ir/instruction.h"
+
+#define CONST_INT(num) ConstantInt::create(num)
+#define CONST_FLOAT(num) ConstantFloat::create(num)
 
 void HIRToMIR::run() {
     for (auto func : _m->getFunctions()) {
@@ -22,7 +27,112 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
     auto &basic_bbs = func->getBasicBlocks();
 
     if (base_bb->_block_type == BaseBlock::BASIC) {
-        auto this_bb = dynamic_cast<BasicBlock *>(base_bb);
-//        if (this_bb == nullptr && this_bb->getT)
+        BasicBlock *this_bb = dynamic_cast<BasicBlock *>(base_bb);
+        if (this_bb == nullptr && this_bb->getTerminator() && basic_bbs.empty()) {
+            if (func->getResultType()->isInt32()) {
+                auto ret = ReturnInst::createRet(CONST_INT(0), this_bb);
+            } else if (func->getResultType()->isFloatTy()) {
+                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), this_bb);
+            } else {
+                auto ret = ReturnInst::createVoidRet(this_bb);
+            }
+        } else if(this_bb->getTerminator() == nullptr) {
+            auto inst = this_bb->getInstructions().back();
+            BasicBlock *target = next_bb;
+            if (inst != nullptr) {
+                if (inst->isBreak()) {
+                    target = while_exit;
+                    this_bb->deleteInstr(inst);
+                } else if (inst->isContinue()) {
+                    target = while_entry;
+                    this_bb->deleteInstr(inst);
+                }
+            }
+            auto branch = BranchInst::createBranch(target,this_bb);
+        }
+        basic_bbs.push_back(this_bb);
+
+        return this_bb;
+    } else if (base_bb->_block_type == BaseBlock::IF) {
+        auto if_block = dynamic_cast<IfBlock *>(base_bb);
+        BasicBlock *if_true_block = nullptr;
+        BasicBlock *if_false_block = nullptr;
+        auto if_cond = if_block->getCondBaseBlockList();
+        auto then_body = if_block->getIfBodyBaseBlockList();
+        auto else_body = if_block->getElseBodyBaseBlockList();
+
+        if (next_bb == nullptr) { //代表函数结尾，添加ret指令
+            auto bb = BasicBlock::create("");
+            // 维护父子关系
+            bb->setFunction(func);
+            func->addBasicBlock(bb);
+            if (func->getResultType()->isInt32()) {
+                auto ret = ReturnInst::createRet(CONST_INT(0), bb);
+            } else if (func->getResultType()->isFloatTy()) {
+                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), bb);
+            } else {
+                auto ret = ReturnInst::createVoidRet(bb);
+            }
+            next_bb = bb;
+        }
+
+        // 在 then body 和 else body 内部递归生成 mir
+        BasicBlock *cur_next = next_bb;
+        for (auto iter = (*then_body).rbegin(); iter != (*then_body).rend(); iter++) {
+            cur_next = genBasicBlock(*iter, cur_next, while_entry, while_exit, func);
+        }
+        if_true_block = cur_next;
+
+        cur_next = next_bb;
+        for (auto iter = (*else_body).rbegin(); iter != (*else_body).rend(); iter++) {
+            cur_next = genBasicBlock(*iter, cur_next, while_entry, while_exit, func);
+        }
+        if_false_block = cur_next;
+
+        // if_cond 中的list只有一个baseblock
+        auto cond_bb = dynamic_cast<BasicBlock *>((*if_cond).front());
+        // cond_bb 的最后一条指令存储了该cond 的运行结果
+        auto cond = cond_bb->getInstructions().back();
+        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
+        basic_bbs.push_back(cond_bb);
+
+        return cond_bb;
+    } else if (base_bb->_block_type == BasicBlock::WHILE) {
+        auto while_block = dynamic_cast<WhileBlock *>(base_bb);
+        auto while_cond = while_block->getCondBaseBlockList();
+        auto while_body = while_block->getBodyBaseBlockList();
+
+        if (next_bb == nullptr) {
+            auto bb = BasicBlock::create("");
+            bb->setFunction(func);
+            func->addBasicBlock(bb);
+            if (func->getResultType()->isInt32()) {
+                auto ret = ReturnInst::createRet(CONST_INT(0), bb);
+            } else if (func->getResultType()->isFloatTy()) {
+                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), bb);
+            } else {
+                auto ret = ReturnInst::createVoidRet(bb);
+            }
+            next_bb = bb;
+        }
+
+        BasicBlock *if_true_block = nullptr;
+        BasicBlock *if_false_block = next_bb;
+        auto cond_bb = dynamic_cast<BasicBlock *>((*while_cond).front());
+        BasicBlock *cur_next = cond_bb;
+        for ( auto iter = (*while_body).rbegin(); iter != (*while_body).rend(); iter++) {
+            cur_next = genBasicBlock(*iter, cur_next, while_entry, while_exit, func);
+        }
+        if_true_block = cur_next;
+
+        auto cond = cond_bb->getInstructions().back();
+        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
+        basic_bbs.push_back(cond_bb);
+
+        return cond_bb;
+    } else {
+        ERROR("unknown baseblock");
     }
+
+    return nullptr;
 }

@@ -211,6 +211,17 @@ BranchInst *BranchInst::createWhile(Value *cond, BasicBlock *block, BasicBlock *
 BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent) {
     return new BranchInst(BranchInst::BRANCH, block, parent);
 }
+
+BranchInst *BranchInst::createCondBr(Value *cond, BasicBlock *if_true,
+                                     BasicBlock *if_false, BasicBlock *bb) {
+  if_true->addPreBasicBlock(bb);
+  if_false->addPreBasicBlock(bb);
+  bb->addSuccBasicBlock(if_false);
+  bb->addSuccBasicBlock(if_true);
+
+  return new BranchInst(BranchInst::IF, cond, if_true, if_false, bb);
+}
+
 void BranchInst::accept(IrVisitorBase *v) {
 
     v->visit(this);

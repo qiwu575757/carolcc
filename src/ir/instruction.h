@@ -181,6 +181,8 @@ public:
     static BranchInst *createIf(Value *cond, BasicBlock *true_block, BasicBlock *false_block, BasicBlock *parent);
     static BranchInst *createWhile(Value *cond, BasicBlock *block, BasicBlock *parent);
     static BranchInst *createBranch(BasicBlock *block, BasicBlock *parent);
+    static BranchInst *createCondBr(Value *cond, BasicBlock *if_true,
+                                  BasicBlock *if_false, BasicBlock *bb);
 };
 
 class StoreInst : public Instruction {
@@ -260,4 +262,3 @@ public:
     void accept(IrVisitorBase *v) override;
 };
 #endif//COMPILER_INSTRUCTION_H
-
