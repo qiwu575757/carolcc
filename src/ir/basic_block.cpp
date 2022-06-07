@@ -1,7 +1,7 @@
 #include "basic_block.h"
 #include "visitor/ir_visitor_base.h"
 std::list<Instruction *> &BasicBlock::getInstructions() {
-    /*TODO*/
+    return this->_instructions;
 }
 BasicBlock *BasicBlock::create(const std::string &name, Function *func) {
     return new BasicBlock(name,func);
@@ -10,55 +10,63 @@ BasicBlock *BasicBlock::create(const std::string &name) {
     return new BasicBlock(name);
 }
 void BasicBlock::setParentFunc(Function *parent) {
-    /*TODO*/
+    this->setFunction(parent);
 }
-Function *BasicBlock::getParentFunc() {
-    /*TODO*/
+Function *BasicBlock::getParentFunc() const {
+    return this->getFunction();
 }
 Module *BasicBlock::getModule() const {
-    /*TODO*/
+    return this->getParentFunc()->getParent(); 
 }
 const Instruction *BasicBlock::getTerminator() const {
-    /*TODO*/
+    return const_cast<Instruction *>(
+        static_cast<const BasicBlock *>(this)->getTerminator());
 }
 void BasicBlock::addInstr(Instruction *instr) {
-    /*TODO*/
+    this->_instructions.push_back(instr);
 }
 void BasicBlock::addInstrBegin(Instruction *instr) {
-    /*TODO*/
+    this->_instructions.push_front(instr);
 }
 bool BasicBlock::empty() {
-    /*TODO*/
+    return this->_instructions.empty();
 }
 int BasicBlock::getNumOfInstr() {
-    /*TODO*/
+    return this->_instructions.size();
 }
 void BasicBlock::insertInstr(Instruction *pos, Instruction *insertInstr) {
-    /*TODO*/
+    for (auto instr = this->_instructions.begin(); instr != this->_instructions.end(); instr++) {
+        if (*instr == pos) {
+        this->_instructions.insert(instr, insertInstr);
+        return;
+        }
+    }
+    WARNNING("insert instr not find");
 }
 void BasicBlock::deleteInstr(Instruction *instr) {
-    /*TODO*/
+    this->_instructions.remove(instr);
 }
 void BasicBlock::addPreBasicBlock(BasicBlock *bb) {
-    /*TODO*/
+    this->_pre_bbs.push_back(bb);
 }
 void BasicBlock::addSuccBasicBlock(BasicBlock *bb) {
-    /*TODO*/
+    this->_succ_bbs.push_back(bb);
 }
 void BasicBlock::removePreBasicBlock(BasicBlock *bb) {
-    /*TODO*/
+    this->_pre_bbs.remove(bb);
 }
 void BasicBlock::removeSuccBasicBlock(BasicBlock *bb) {
-    /*TODO*/
+    this->_succ_bbs.remove(bb);
 }
 void BasicBlock::clearSuccBasicBlockList() {
-    /*TODO*/
+    this->_succ_bbs.clear();
 }
 bool BasicBlock::hasRet() {
-    /*TODO*/
+    return false;
 }
 bool BasicBlock::isEntry() {
-    /*TODO*/
+    return this->getName() == "entry";
+    
 }
 BasicBlock::BasicBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::BASIC, name, func) {
@@ -75,26 +83,43 @@ void BasicBlock::accept(IrVisitorBase *v) {
 
 /// IF BLOCK ///
 void IfBlock::addCondBaseBlock(BaseBlock *bb) {
+    this->_cond.push_back(bb);
+    bb->setBaseFather(this);
 }
 void IfBlock::addIfBodyBaseBlock(BaseBlock *bb) {
-}
+    this->_if_body.push_back(bb);
+    bb->setBaseFather(this);}
 void IfBlock::addElseBodyBaseBlock(BaseBlock *bb) {
-}
+    this->_else_body.push_back(bb);
+    bb->setBaseFather(this);}
 void IfBlock::removeCondBaseBlock(BaseBlock *bb) {
+    this->_cond.remove(bb);
 }
 void IfBlock::removeIfBodyBaseBlock(BaseBlock *bb) {
+    this->_if_body.remove(bb);
 }
 void IfBlock::removeElseBodyBaseBlock(BaseBlock *bb) {
+    this->_else_body.remove(bb);
 }
 void IfBlock::removeBaseBlock(BaseBlock *bb) {
+    this->removeCondBaseBlock(bb);
+    this->removeIfBodyBaseBlock(bb);
+    this->removeElseBodyBaseBlock(bb);
 }
 void IfBlock::insertCondBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb) {
+    this->_cond.insert(it, bb);
+    bb->setBaseFather(this);
 }
 void IfBlock::insertIfBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb) {
+    this->_if_body.insert(it, bb);
+    bb->setBaseFather(this);
 }
 void IfBlock::insertElseBodyBaseBlock(std::list<BaseBlock *>::iterator it, BaseBlock *bb) {
+    this->_else_body.insert(it, bb);
+    bb->setBaseFather(this);
 }
 void IfBlock::clearCondBaseBlockList() {
+    this->_cond.clear();
 }
 IfBlock::IfBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::IF, name, func) {
@@ -127,18 +152,29 @@ void IfBlock::accept(IrVisitorBase *v) {
 
 /// WHILE BLOCK ///
 void WhileBlock::addCondBaseBlock(BaseBlock *bb) {
+    this->_cond.push_back(bb);
+    bb->setBaseFather(this);
 }
 void WhileBlock::addBodyBaseBlock(BaseBlock *bb) {
-}
+    this->_body.push_back(bb);
+    bb->setBaseFather(this);}
 void WhileBlock::removeCondBaseBlock(BaseBlock *bb) {
+    this->_cond.remove(bb);
 }
 void WhileBlock::removeWhileBodyBaseBlock(BaseBlock *bb) {
+    this->_body.remove(bb);
 }
 void WhileBlock::removeBaseBlock(BaseBlock *bb) {
+    this->removeCondBaseBlock(bb);
+    this->removeWhileBodyBaseBlock(bb);
 }
 void WhileBlock::insertCondBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb) {
+    this->_cond.insert(it,bb);
+    bb->setBaseFather(this);
 }
 void WhileBlock::insertWhileBodyBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb) {
+     this->_body.insert(it,bb);
+    bb->setBaseFather(this);
 }
 WhileBlock *WhileBlock::create(const std::string &name, Function *func) {
     return new WhileBlock(name, func);

@@ -23,8 +23,7 @@ class tree_var_decl;
 class tree_arrray_def;
 class tree_exp;
 class tree_init_val;
-class tree_init_val_array;
-class tree_init_val_arraylist;
+class tree_init_val_list;
 class tree_func_fparams;
 class tree_func_fparam;
 class tree_func_fparamone;
@@ -64,6 +63,7 @@ class tree_l_or_exp;
 class syntax_tree_node {
 public:
     virtual void accept(tree_visitor_base &v);
+    int _line_no=-1;
 };
 
 class tree_comp_unit : public syntax_tree_node {
@@ -156,7 +156,6 @@ public:
 
     std::string id;
     std::shared_ptr<tree_init_val> init_val; // 非数组的初始化
-    std::shared_ptr<tree_init_val_array> init_val_array; // 数组的初始化值
     std::shared_ptr<tree_arrray_def> array_def;
 };
 
@@ -172,22 +171,15 @@ public:
     void accept(tree_visitor_base &v) final;
 
     std::shared_ptr<tree_exp> exp;
-};
-
-class tree_init_val_array : public syntax_tree_node {
-public:
-    void accept(tree_visitor_base &v) final;
-
-    std::shared_ptr<tree_init_val_arraylist> init_val_arraylist;
+    std::shared_ptr<tree_init_val_list> init_val_list;
     std::vector<int> bounds;
 };
 
-class tree_init_val_arraylist : public syntax_tree_node {
+class tree_init_val_list : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
-    std::list<std::shared_ptr<tree_init_val_array>> init_var_array;
-    std::list<std::shared_ptr<tree_init_val>> init_vars;
+    std::list<std::shared_ptr<tree_init_val>> init_vals;
 };
 
 class tree_func_def : public syntax_tree_node {
@@ -365,6 +357,7 @@ class tree_number : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
+    bool is_int;
     int int_value;
     float float_value;
 };

@@ -183,11 +183,11 @@ FunctionType::FunctionType(Type *result, std::vector<Type *> &params)
 }
 
 bool FunctionType::isValidReturnType(Type *ty) {
-    return ty->isIntegerTy() || ty->isVoidTy();
+    return ty->isIntegerTy() || ty->isVoidTy()||ty->isFloatTy();
 }
 
 bool FunctionType::isValidArgumentType(Type *ty) {
-    return ty->isIntegerTy() || ty->isPointerTy();
+    return ty->isIntegerTy() || ty->isPointerTy()||ty->isFloatTy();
 }
 
 unsigned FunctionType::getNumArgs() const { return _args.size(); }
@@ -203,7 +203,7 @@ ArrayType::ArrayType(Type *contained, unsigned num_elements)
 }
 
 bool ArrayType::isValidElementType(Type *ty) {
-    return ty->isIntegerTy() || ty->isArrayTy();
+    return ty->isIntegerTy() || ty->isArrayTy()||ty->isFloatTy();
 }
 
 std::vector<unsigned> ArrayType::getDims() const {

@@ -3,7 +3,7 @@
 void BaseBlock::addInstruction(Instruction *inst) {
     this->_instructions.push_back(inst);
 }
-Function *BaseBlock::getFunction() {
+Function *BaseBlock::getFunction()const {
     return this->_func;
 }
 BaseBlock *BaseBlock::getBaseFather() {

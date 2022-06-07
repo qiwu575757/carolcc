@@ -30,6 +30,7 @@ Value *Scope::find(std::string &name) {
             return iter->second;
         }
     }
+    WARNNING("%s not found", name.c_str());
     return nullptr;
 }
 
@@ -41,6 +42,7 @@ Value *Scope::find(std::string &name, std::vector<Value *> &params) {
             return iter->second[0];
         }
     }
+    WARNNING("%s array not found", name.c_str());
     return nullptr;
 }
 /// SCOPE END DEFINE ///

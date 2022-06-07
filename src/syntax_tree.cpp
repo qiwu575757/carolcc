@@ -43,10 +43,7 @@ void tree_exp::accept(tree_visitor_base &v) {
 void tree_init_val::accept(tree_visitor_base &v) {
     v.visit(*this);
 }
-void tree_init_val_array::accept(tree_visitor_base &v) {
-    v.visit(*this);
-}
-void tree_init_val_arraylist::accept(tree_visitor_base &v) {
+void tree_init_val_list::accept(tree_visitor_base &v) {
     v.visit(*this);
 }
 void tree_func_fparams::accept(tree_visitor_base &v) {

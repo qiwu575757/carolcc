@@ -37,7 +37,7 @@ public:
     static BasicBlock *create(const std::string &name);
     std::list<Instruction *> &getInstructions();
     void setParentFunc(Function *parent);
-    Function *getParentFunc();
+    Function *getParentFunc() const;
     Module *getModule() const;
     const Instruction *getTerminator() const;
     void addInstr(Instruction *instr);

@@ -64,7 +64,7 @@ public:
      * @param array_init  线性内容
      * @return  构造好的存有内容的多维数组
      */
-    static ConstantArray *turn(std::vector<int> &array_bounds,std::vector<Value*> &array_init);
+    static ConstantArray *turn(std::vector<int32_t> &array_bounds,std::vector<Value*> &array_init);
     Constant *getElement(int index);
 
     unsigned getNumElements() const { return _const_array.size(); }

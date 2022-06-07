@@ -5,7 +5,7 @@
 #include <memory>
 #include <string>
 class pass {
-private:
+protected:
     std::string _name;
     Module *_m;
 
@@ -14,9 +14,18 @@ public:
     void set_name(std::string &name) {
         _name = name;
     }
-
     ~pass() = default;
+    virtual void run() = 0;
 };
 
+class Analysis : public pass {
+public:
+    Analysis(std::string &name, Module *m) : pass(name, m) {}
+};
+
+class Transform : public pass {
+public:
+    Transform(std::string &name, Module *m) : pass(name, m) {}
+};
 
 #endif// COMPILER_PASS_H
