@@ -13,13 +13,13 @@ private:
 
     std::list<Instruction*> _instructions; /*指令线性表*/
     BaseBlock *_father; /**/
-    Function *_func;
 public:
     enum class BlockType{
         BASIC,
         IF,
         WHILE,
     };
+    Function *_func;
     void setFunction(Function *func);
     void setBaseFather(BaseBlock *father);
     void addInstruction(Instruction *inst);
