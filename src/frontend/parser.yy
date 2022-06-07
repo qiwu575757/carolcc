@@ -665,7 +665,7 @@ Stmt
     | ";"
         {
 		    parser_logger.print
-                ("Stmt\n");
+                ("empty Stmt\n");
             $$ = new tree_stmt();
             $$->_line_no = yyline+1;
         }

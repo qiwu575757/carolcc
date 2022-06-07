@@ -571,6 +571,10 @@ void SYSYBuilder::visit(tree_stmt &node) {
         node.while_stmt->accept(*this);
         return;
     }
+    else{  // NULL stmt
+    WARNNING("null tree_block_item");
+        return;
+    }
     ERROR("error tree_block_item");
 }
 
