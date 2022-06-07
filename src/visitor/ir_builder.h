@@ -21,7 +21,7 @@ public:
     std::list<BaseBlock *>* GetInsertBaseBlockList();
     //在该基本块中插入指令
     void SetInstrInsertPoint(BasicBlock *bb);
-    //在该基本块表中插入基本块 这个实在设定父基本块时将对应的基本块表设定进来
+    //在该基本块表中插入基本块 这个是在设定父基本块时将对应的基本块表设定进来
     void SetBasicBlockInsertPoint(std::list<BaseBlock *>*);
     //设定父基本块 方便维护父子关系
     void SetBaseBlockFatherBlock(BaseBlock *bb);
