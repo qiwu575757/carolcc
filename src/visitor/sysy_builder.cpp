@@ -294,6 +294,7 @@ void SYSYBuilder::visit(tree_var_decl &node) {
             ERROR("error type");
     }
     node.var_def_list->accept(*this);
+    G_tmp_type=nullptr;
 }
 
 void SYSYBuilder::visit(tree_exp &node) {
@@ -613,6 +614,7 @@ void SYSYBuilder::visit(tree_return_stmt &node) {
     } else {
         G_tmp_type = G_cur_fun->getResultType();
         node.exp->accept(*this);
+        G_tmp_type=nullptr;
         
         builder->createRet(G_tmp_val);
     }

@@ -203,7 +203,7 @@ ArrayType::ArrayType(Type *contained, unsigned num_elements)
 }
 
 bool ArrayType::isValidElementType(Type *ty) {
-    return ty->isIntegerTy() || ty->isArrayTy();
+    return ty->isIntegerTy() || ty->isArrayTy()||ty->isFloatTy();
 }
 
 std::vector<unsigned> ArrayType::getDims() const {
