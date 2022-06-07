@@ -831,6 +831,7 @@ Number
             $$ = new tree_number();
             $$->_line_no = yyline+1;
             $$->int_value = atoi($1->c_str());
+            $$->is_int=true;
         }
     | TFLOATNUM
         {
@@ -839,6 +840,7 @@ Number
             $$ = new tree_number();
             $$->_line_no = yyline+1;
             $$->float_value = (float)atof($1->c_str());
+            $$->is_int=true;
         }
     ;
 

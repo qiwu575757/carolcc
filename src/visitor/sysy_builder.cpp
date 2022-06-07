@@ -47,6 +47,7 @@ void SYSYBuilder::visit(tree_comp_unit &node) {
         G_in_global_init = false;
     }
     for (auto func: node.functions) {
+        INFO("visiting %s",func->id.c_str());
         func->accept(*this);
     }
 }
@@ -648,23 +649,24 @@ void SYSYBuilder::visit(tree_l_val &node) {
 
 void SYSYBuilder::visit(tree_number &node) {
     INFO(" tree_primary_exp 676");
+    
 
     /*wuqi TODO*/
     if (G_tmp_computing) {
-        if (G_tmp_type->isFloatTy()) {
+        if (!node.is_int) {
             INFO("float 622");
             G_tmp_float = node.float_value;
-        } else if (G_tmp_type->isInt32()) {
+        } else if (node.is_int) {
             INFO("int 625");
             G_tmp_int = node.int_value;
         } else {
             ERROR("ERROR type in tree number");
         }
     } else {
-        if (G_tmp_type->isFloatTy()) {
+        if (!node.is_int) {
             INFO("float 632");
             G_tmp_val = CONST_FLOAT(node.float_value);
-        } else if (G_tmp_type->isInt32()) {
+        } else if (node.is_int) {
             INFO("int 635");
             G_tmp_val = CONST_INT(node.int_value);
         }else {
@@ -768,17 +770,17 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         if (node.oprt == "-") {
             // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
             //             ? CONST_FLOAT(0.0) : CONST_INT(0);
-            if (G_tmp_type->isFloatTy()) {
+            if (G_tmp_val->getType()->isFloatTy()) {
                 auto const0 = CONST_FLOAT(0.0);
                 G_tmp_val = builder->createSub(const0, G_tmp_val);
-            } else if (G_tmp_type->isInt32()) {
+            } else if (G_tmp_val->getType()->isIntegerTy()) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, G_tmp_val);
             } else {
                 ERROR("");
             }
         } else if (node.oprt == "!") {
-            if (G_tmp_type->getTypeID() == Type::IntegerTyID) {
+            if (G_tmp_val->getType()->isIntegerTy()) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createEQ(new IntegerType(1), G_tmp_val, const0);
             } else {

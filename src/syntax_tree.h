@@ -357,6 +357,7 @@ class tree_number : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
 
+    bool is_int;
     int int_value;
     float float_value;
 };
