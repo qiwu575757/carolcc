@@ -58,8 +58,8 @@
 #ifdef __INFO
 #define INFO(format, ...) \
     do {        \
-        printf("\x1b[34m" format "\x1b[0m \n", ##__VA_ARGS__); \
-        fflush(stdout); \
+        printf(BLUE "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                               \
     } while(0)
 #else
 #define INFO(format, ...)
@@ -68,8 +68,8 @@
 #ifdef __TRACE
 #define TRACE(format, ...) \
     do {        \
-        printf("\x1b[90m" format "\x1b[0m \n", ##__VA_ARGS__); \
-        fflush(stdout); \
+        printf(GREEN "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                               \
     } while(0)
 #else
 #define TRACE(format, ...)

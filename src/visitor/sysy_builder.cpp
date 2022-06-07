@@ -39,7 +39,7 @@ bool G_in_global_init = false;
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
     MyAssert("no function defined", node.functions.size() != 0);
-    INFO(" comp_unit functions %d definitions %d 42",node.functions.size(),node.definitions.size());
+    INFO(" comp_unit functions %d definitions %d 42", node.functions.size(), node.definitions.size());
     // 这种写法会允许 后置全局变量定义出现，这是因为语法设计的问题
     for (auto defs: node.definitions) {
         G_in_global_init = true;
@@ -47,7 +47,7 @@ void SYSYBuilder::visit(tree_comp_unit &node) {
         G_in_global_init = false;
     }
     for (auto func: node.functions) {
-        INFO("visiting %s",func->id.c_str());
+        INFO("visiting %s", func->id.c_str());
         func->accept(*this);
     }
 }
@@ -160,40 +160,41 @@ void SYSYBuilder::visit(tree_block &node) {
         scope.enter();
     }
 
-    for (auto &blockitem: (node.block_item_list)->block_items) {
-        if (blockitem->decl != nullptr) {
-            if (builder->GetInsertBaseBlockList() == nullptr) {
-                auto allocaBB = BasicBlock::create("", G_cur_fun);
-                builder->SetInstrInsertPoint(allocaBB);
-                blockitem->accept(*this);
-            } else {
-                auto allocaBB = BasicBlock::create("");
-                builder->SetInstrInsertPoint(allocaBB);
-                builder->pushBaseBlock(allocaBB);
-                blockitem->accept(*this);
-            }
-        } else if (blockitem->stmt != nullptr) {
-            if (blockitem->stmt->assigm_stmt || blockitem->stmt->break_stmt ||
-                blockitem->stmt->continue_stmt || blockitem->stmt->exp ||
-                blockitem->stmt->return_stmt || blockitem->stmt->return_null_stmt) {
+    if (node.block_item_list != nullptr) {
+        for (auto &blockitem: (node.block_item_list)->block_items) {
+            if (blockitem->decl != nullptr) {
                 if (builder->GetInsertBaseBlockList() == nullptr) {
-                    if (builder->GetInsertBasicBlock()->getBaseFather() != nullptr) {
-                        auto baseBB = BasicBlock::create("", G_cur_fun);
-                        builder->SetInstrInsertPoint(baseBB);
-                    }
+                    auto allocaBB = BasicBlock::create("", G_cur_fun);
+                    builder->SetInstrInsertPoint(allocaBB);
                     blockitem->accept(*this);
                 } else {
-                    auto baseBB = BasicBlock::create("");
-                    builder->SetInstrInsertPoint(baseBB);
-                    builder->pushBaseBlock(baseBB);
+                    auto allocaBB = BasicBlock::create("");
+                    builder->SetInstrInsertPoint(allocaBB);
+                    builder->pushBaseBlock(allocaBB);
                     blockitem->accept(*this);
                 }
-            } else {
-                blockitem->accept(*this);
+            } else if (blockitem->stmt != nullptr) {
+                if (blockitem->stmt->assigm_stmt || blockitem->stmt->break_stmt ||
+                    blockitem->stmt->continue_stmt || blockitem->stmt->exp ||
+                    blockitem->stmt->return_stmt || blockitem->stmt->return_null_stmt) {
+                    if (builder->GetInsertBaseBlockList() == nullptr) {
+                        if (builder->GetInsertBasicBlock()->getBaseFather() != nullptr) {
+                            auto baseBB = BasicBlock::create("", G_cur_fun);
+                            builder->SetInstrInsertPoint(baseBB);
+                        }
+                        blockitem->accept(*this);
+                    } else {
+                        auto baseBB = BasicBlock::create("");
+                        builder->SetInstrInsertPoint(baseBB);
+                        builder->pushBaseBlock(baseBB);
+                        blockitem->accept(*this);
+                    }
+                } else {
+                    blockitem->accept(*this);
+                }
             }
         }
     }
-
     if (need_exit_scope) {
         scope.exit();
     }
@@ -233,22 +234,25 @@ void SYSYBuilder::visit(tree_const_init_val &node) {
             dim_length *= node.bounds[i];
         }
         std::vector<Value *> init_list;
-        for (auto &init_val: node.const_val_list->const_init_vals) {
-            if (init_val->const_exp != nullptr) {
-                init_val->accept(*this);
-                init_list.push_back(G_tmp_val);
-            } else {
-                int pos = init_list.size();
-                for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
-                    if (G_tmp_type == Type::getInt32Ty()) {
-                        init_list.push_back(CONST_INT(0));
-                    } else if (G_tmp_type == Type::getFloatTy()) {
-                        init_list.push_back(CONST_FLOAT(0));
+        if (node.const_val_list != nullptr) {
+
+            for (auto &init_val: node.const_val_list->const_init_vals) {
+                if (init_val->const_exp != nullptr) {
+                    init_val->accept(*this);
+                    init_list.push_back(G_tmp_val);
+                } else {
+                    int pos = init_list.size();
+                    for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
+                        if (G_tmp_type == Type::getInt32Ty()) {
+                            init_list.push_back(CONST_INT(0));
+                        } else if (G_tmp_type == Type::getFloatTy()) {
+                            init_list.push_back(CONST_FLOAT(0));
+                        }
                     }
+                    init_val->bounds.assign(node.bounds.begin() + 1, node.bounds.end());
+                    init_val->accept(*this);
+                    init_list.insert(init_list.end(), G_array_init.begin(), G_array_init.end());
                 }
-                init_val->bounds.assign(node.bounds.begin() + 1, node.bounds.end());
-                init_val->accept(*this);
-                init_list.insert(init_list.end(), G_array_init.begin(), G_array_init.end());
             }
         }
         for (int i = init_list.size(); i < dim_length * cur_bnd; i++) {
@@ -263,7 +267,7 @@ void SYSYBuilder::visit(tree_const_init_val &node) {
 }
 
 void SYSYBuilder::visit(tree_const_exp &node) {
-    INFO(" tree_const_exp 264 %d",G_in_global_init);
+    INFO(" tree_const_exp 264 %d", G_in_global_init);
     if (G_tmp_type == Type::getFloatTy()) {
         G_tmp_computing = true;
     } else if (G_tmp_type == Type::getInt32Ty()) {
@@ -294,7 +298,7 @@ void SYSYBuilder::visit(tree_var_decl &node) {
             ERROR("error type");
     }
     node.var_def_list->accept(*this);
-    G_tmp_type=nullptr;
+    G_tmp_type = nullptr;
 }
 
 void SYSYBuilder::visit(tree_exp &node) {
@@ -329,31 +333,31 @@ void SYSYBuilder::visit(tree_init_val &node) {
         if (G_in_global_init) {
             G_tmp_computing = false;
         }
-    } else { //array
-    if(node.init_val_list!=nullptr){
+    } else {//array
         auto cur_bnd = node.bounds[0];
-        auto dim_length=1;
+        auto dim_length = 1;
         for (int i = 1; i < node.bounds.size(); ++i) {
-            dim_length*=node.bounds[i];
+            dim_length *= node.bounds[i];
         }
-        std::vector<Value*> init_list;
-        for(auto& init_val :node.init_val_list->init_vals){
-            if(init_val->exp != nullptr){
-                init_val->accept(*this);
-                init_list.push_back(G_tmp_val);
-            }
-            else{
-                auto pos = init_list.size();
-                for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
-                    if (G_tmp_type == Type::getInt32Ty()) {
-                        init_list.push_back(CONST_INT(0));
-                    } else if (G_tmp_type == Type::getFloatTy()) {
-                        init_list.push_back(CONST_FLOAT(0));
+        std::vector<Value *> init_list;
+        if (node.init_val_list != nullptr) {
+            for (auto &init_val: node.init_val_list->init_vals) {
+                if (init_val->exp != nullptr) {
+                    init_val->accept(*this);
+                    init_list.push_back(G_tmp_val);
+                } else {
+                    auto pos = init_list.size();
+                    for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
+                        if (G_tmp_type == Type::getInt32Ty()) {
+                            init_list.push_back(CONST_INT(0));
+                        } else if (G_tmp_type == Type::getFloatTy()) {
+                            init_list.push_back(CONST_FLOAT(0));
+                        }
                     }
+                    init_val->bounds.assign(node.bounds.begin() + 1, node.bounds.end());
+                    init_val->accept(*this);
+                    init_list.insert(init_list.end(), G_array_init.begin(), G_array_init.end());
                 }
-                init_val->bounds.assign(node.bounds.begin() + 1, node.bounds.end());
-                init_val->accept(*this);
-                init_list.insert(init_list.end(), G_array_init.begin(), G_array_init.end());
             }
         }
         for (int i = init_list.size(); i < dim_length * cur_bnd; i++) {
@@ -364,8 +368,6 @@ void SYSYBuilder::visit(tree_init_val &node) {
             }
         }
         G_array_init.assign(init_list.begin(), init_list.end());
-
-    }
     }
 }
 
@@ -462,7 +464,7 @@ void SYSYBuilder::visit(tree_var_def_list &node) {
 }
 
 void SYSYBuilder::visit(tree_var_def &node) {
-    INFO("node name %s",node.id.c_str());
+    INFO("node name %s", node.id.c_str());
     if (node.array_def != nullptr) {// 数组
         std::vector<int> array_bounds;
         // dim v
@@ -479,13 +481,12 @@ void SYSYBuilder::visit(tree_var_def &node) {
             if (node.init_val != nullptr) {
                 node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
                 G_in_global_init = true;
-                 node.init_val->accept(*this);
+                node.init_val->accept(*this);
                 G_in_global_init = false;
                 auto initializer = ConstantArray::turn(array_bounds, G_array_init);
                 auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, initializer);
                 scope.push(node.id, var);
-            }
-            else {
+            } else {
                 auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, nullptr);
                 scope.push(node.id, var);
             }
@@ -495,7 +496,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
             if (node.init_val != nullptr) {
                 array_alloca->setInit();
                 node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
-                 node.init_val->accept(*this);
+                node.init_val->accept(*this);
 
                 auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
                 for (int i = 1; i < node.init_val->bounds.size(); i++) {
@@ -591,9 +592,8 @@ void SYSYBuilder::visit(tree_stmt &node) {
     } else if (node.while_stmt != nullptr) {
         node.while_stmt->accept(*this);
         return;
-    }
-    else{  // NULL stmt
-    WARNNING("null tree_block_item");
+    } else {// NULL stmt
+        WARNNING("null tree_block_item");
         return;
     }
     ERROR("error tree_block_item");
@@ -614,8 +614,8 @@ void SYSYBuilder::visit(tree_return_stmt &node) {
     } else {
         G_tmp_type = G_cur_fun->getResultType();
         node.exp->accept(*this);
-        G_tmp_type=nullptr;
-        
+        G_tmp_type = nullptr;
+
         builder->createRet(G_tmp_val);
     }
 }
@@ -628,6 +628,7 @@ void SYSYBuilder::visit(tree_return_null_stmt &node) {
 void SYSYBuilder::visit(tree_l_val &node) {
     /*wuqi TODO*/
     std::string &name = node.id.empty() ? node.array_ident->id : node.id;
+    INFO("l_val %s", name.c_str());
     auto var = scope.find(name);
     if (var->getType()->isIntegerTy() || var->getType()->isFloatTy()) {
         G_tmp_val = var;
@@ -651,38 +652,36 @@ void SYSYBuilder::visit(tree_l_val &node) {
 }
 
 void SYSYBuilder::visit(tree_number &node) {
-    INFO(" tree_primary_exp 676");
-    
+
 
     /*wuqi TODO*/
     if (G_tmp_computing) {
         if (!node.is_int) {
-            INFO("float 622");
+            INFO("visiting float %f", node.float_value);
             G_tmp_float = node.float_value;
         } else if (node.is_int) {
-            INFO("int 625");
+            INFO("visiting int %d", node.int_value);
             G_tmp_int = node.int_value;
         } else {
             ERROR("ERROR type in tree number");
         }
     } else {
         if (!node.is_int) {
-            INFO("float 632");
+            INFO("visiting float %f", node.float_value);
             G_tmp_val = CONST_FLOAT(node.float_value);
         } else if (node.is_int) {
-            INFO("int 635");
+            INFO("visiting int %d", node.int_value);
             G_tmp_val = CONST_INT(node.int_value);
-        }else {
+        } else {
             ERROR("ERROR type in tree number");
         }
     }
-
 }
 
 void SYSYBuilder::visit(tree_primary_exp &node) {
     /*wuqi TODO*/
     if (G_tmp_computing) {
-        INFO(" tree_primary_exp 657");
+        INFO("tree_primary_exp 657");
 
         if (node.exp != nullptr) {
             node.exp->accept(*this);
@@ -699,23 +698,21 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             INFO("exp");
             node.number->accept(*this);
             INFO("exp");
- }
+        }
     } else {
         INFO(" tree_primary_exp 676");
 
         if (node.exp != nullptr) {
 
             node.exp->accept(*this);
-        } 
-        else if (node.l_val != nullptr) {
+        } else if (node.l_val != nullptr) {
             if (G_require_address) {//若要求传参需要地址
                 G_require_address = false;
                 node.l_val->accept(*this);
                 while (!G_tmp_val->getType()->getPointerElementType()->isFloatTy() && !G_tmp_val->getType()->getPointerElementType()->isIntegerTy()) {
                     G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0)});
                 }
-            } 
-            else {//保证返回值 G_tmp_val 是 float/int num
+            } else {//保证返回值 G_tmp_val 是 float/int num
                 node.l_val->accept(*this);
                 if (G_tmp_val->getType()->isIntegerTy() || G_tmp_val->getType()->isFloatTy()) {
                     return;
@@ -723,12 +720,10 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
                     G_tmp_val = builder->createLoad(G_tmp_val);
                 }
             }
-        } 
-        else if (node.number != nullptr) {
+        } else if (node.number != nullptr) {
             INFO(" tree_primary_exp 700");
             node.number->accept(*this);
-        }
-        else{
+        } else {
             ERROR("exp");
         }
     }
@@ -758,8 +753,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         } else if (node.oprt == "!") {// for operation !
             ERROR("not oprt in visit tree_unary_exp");
         }
-    }
-    else {
+    } else {
         INFO(" unary exp 719");
 
         if (node.primary_exp != nullptr) {
@@ -796,7 +790,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
 void SYSYBuilder::visit(tree_mul_exp &node) {
     /*wuqi TODO*/
     if (node.mul_exp == nullptr) {
-        INFO("mul 763 %d",G_tmp_computing);
+        INFO("mul 763 %d", G_tmp_computing);
         node.unary_exp->accept(*this);
     } else {
         if (G_tmp_computing) {
@@ -828,8 +822,7 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
                     ERROR("Invalid oprt Mod for float type");
                 }
             }
-        } 
-        else {
+        } else {
             node.mul_exp->accept(*this);
             auto l_val = G_tmp_val;
             node.unary_exp->accept(*this);
@@ -856,7 +849,7 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
 void SYSYBuilder::visit(tree_add_exp &node) {
     /*wuqi TODO*/
     if (node.add_exp == nullptr) {
-        INFO("add 823 %d",G_tmp_computing);
+        INFO("add 823 %d", G_tmp_computing);
         node.mul_exp->accept(*this);
     } else {
         if (G_tmp_computing) {
