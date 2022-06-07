@@ -328,7 +328,8 @@ void SYSYBuilder::visit(tree_init_val &node) {
         if (G_in_global_init) {
             G_tmp_computing = false;
         }
-    } else {
+    } else { //array
+    if(node.init_val_list!=nullptr){
         auto cur_bnd = node.bounds[0];
         auto dim_length=1;
         for (int i = 1; i < node.bounds.size(); ++i) {
@@ -362,6 +363,8 @@ void SYSYBuilder::visit(tree_init_val &node) {
             }
         }
         G_array_init.assign(init_list.begin(), init_list.end());
+
+    }
     }
 }
 
@@ -608,10 +611,8 @@ void SYSYBuilder::visit(tree_return_stmt &node) {
         INFO("return void");
         builder->createVoidRet();
     } else {
-        auto tmp = G_tmp_type;
         G_tmp_type = G_cur_fun->getResultType();
         node.exp->accept(*this);
-        G_tmp_type = tmp;
         
         builder->createRet(G_tmp_val);
     }
