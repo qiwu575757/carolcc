@@ -33,9 +33,9 @@ ConstantArray::ConstantArray(ArrayType *ty, const std::vector<Constant *> &value
 ConstantArray *ConstantArray::create(ArrayType *ty, const std::vector<Constant *> &values) {
     return new ConstantArray(ty, values);
 }
-ConstantArray *ConstantArray::turn(std::vector<int> &array_bounds, std::vector<Value *> &array_init) {
+ConstantArray *ConstantArray::turn(std::vector<int32_t> &array_bounds, std::vector<Value *> &array_init) {
     auto cur_bound = array_bounds[0];
-    std::vector<int> bounds;
+    std::vector<int32_t> bounds;
     bounds.assign(array_bounds.begin() + 1, array_bounds.end());
     std::vector<Constant *> init_list;
     int dim_length = array_init.size() / cur_bound;
@@ -55,10 +55,10 @@ ConstantArray *ConstantArray::turn(std::vector<int> &array_bounds, std::vector<V
         return ConstantArray::create(array_type,init_list);
     }
     else{
-        for (int i = 0; i < bounds[0]; i++) {
+        for (int i = 0; i < array_bounds[0]; i++) {
             std::vector<Value *> array_init_temp;
             array_init_temp.assign(array_init.begin() + i * dim_length, array_init.begin() + (i + 1) * dim_length);
-            auto array = turn(array_bounds, array_init_temp);
+            auto array = turn(bounds, array_init_temp);
             init_list.push_back(array);
         }
         return ConstantArray::create(static_cast<ArrayType*>(init_list[0]->getType()),init_list);
