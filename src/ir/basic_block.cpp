@@ -15,10 +15,10 @@ BasicBlock *BasicBlock::create(const std::string &name) {
     return new BasicBlock(name);
 }
 void BasicBlock::setParentFunc(Function *parent) {
-    this->_func = parent;
+    this->setFunction(parent);
 }
 Function *BasicBlock::getParentFunc() const {
-    return this->_func;
+    return this->getFunction();
 }
 Module *BasicBlock::getModule() const {
     return this->getParentFunc()->getParent(); 

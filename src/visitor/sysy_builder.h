@@ -24,6 +24,7 @@ public:
 
     auto TyVoid = Type::getVoidTy(); // 改
     auto TyInt32 = Type::getInt32Ty(); // 改
+    auto TyFloat = Type::getFloatTy(); // 改
     auto TyIntPtr = Type::getInt32PtrTy(); // 改
     auto TyFloatPtr = Type::getFloatPtrTy(); // 改
 
@@ -37,9 +38,6 @@ public:
 
     std::vector<Type *> putint_params;
     putint_params.push_back(TyInt32);
-    std::vector<Type *> putfloat_params;
-    putfloat_params.push_back(TyFloat);
-    auto putfloat_type = FunctionType::get(TyVoid, putfloat_params);
     auto putint_type = FunctionType::get(TyVoid, putint_params);
 
     auto putint_fun = Function::create(putint_type, "putint", module.get());
