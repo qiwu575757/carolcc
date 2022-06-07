@@ -20,6 +20,7 @@ public:
         IF,
         WHILE,
     };
+    Function *_func;
     void setFunction(Function *func);
     void setBaseFather(BaseBlock *father);
     void addInstruction(Instruction *inst);
