@@ -52,10 +52,10 @@ public:
 
     };
 
-    bool isRet() { return _op_id = Instruction::RET; }
-    bool isBr() { return _op_id = Instruction::BR; }
-    bool isNeg() { return _op_id = Instruction::NEG; }
-    bool isNot() { return _op_id = Instruction::NOT; }
+    bool isRet() { return _op_id == Instruction::RET; }
+    bool isBr() { return _op_id == Instruction::BR; }
+    bool isNeg() { return _op_id == Instruction::NEG; }
+    bool isNot() { return _op_id == Instruction::NOT; }
     bool isAdd() { return _op_id = Instruction::ADD; }
     bool isSub() { return _op_id = Instruction::SUB; }
     bool isMul() { return _op_id = Instruction::MUL; }
@@ -74,7 +74,7 @@ public:
     bool isPhi() { return _op_id = Instruction::PHI; }
     bool isGep() { return _op_id = Instruction::GEP; }
     bool isCall() { return _op_id = Instruction::CALL; }
-    bool isZext() { return _op_id = Instruction::ZEXT; }
+    bool isZext() { return _op_id == Instruction::ZEXT; }
     bool isBreak() { return _op_id = Instruction::BREAK; }
     bool isContinue() { return _op_id = Instruction::CONTINUE; }
 

@@ -1,7 +1,12 @@
 #include "utils.h"
 #include "ir_to_c.h"
 #include "ir/instruction.h"
-int var_no=0;
+#include "string.h"
+int var_no=1;
+std::string head="%";
+std::string getname(){
+    return "%" + std::to_string(var_no++);
+}
 void IrToC::visit(UnaryInst &node) {
     if (node._op_id == Instruction::NEG) {
         printf("");
@@ -10,10 +15,10 @@ void IrToC::visit(UnaryInst &node) {
     }
 }
 void IrToC::visit(BinaryInst &node) {
-    node.getOperand(0);
-    node.getOperand(1);
-    if (node.isAdd() == Instruction::ADD) {
-        printf("int ");
+    std::string name = getname();
+    
+    if (node.isAdd()) {
+        printf("%s = add %s %s,%s", name, node.getType(), node.getOperand(0)->getName(), node.getOperand(1)->getName());
     }else if (node._op_id == Instruction::SUB) {
         printf("");
     }else if (node._op_id == Instruction::MUL) {
