@@ -328,7 +328,39 @@ void SYSYBuilder::visit(tree_init_val &node) {
             G_tmp_computing = false;
         }
     } else {
-        ERROR("tree_init_val has null exp");
+        auto cur_bnd = node.bounds[0];
+        auto dim_length=1;
+        for (int i = 1; i < node.bounds.size(); ++i) {
+            dim_length*=node.bounds[i];
+        }
+        std::vector<Value*> init_list;
+        for(auto& init_val :node.init_val_list->init_vals){
+            if(init_val->exp != nullptr){
+                init_val->accept(*this);
+                init_list.push_back(G_tmp_val);
+            }
+            else{
+                auto pos = init_list.size();
+                for (int i = 0; i < (dim_length - (pos % dim_length)) % dim_length; i++) {
+                    if (G_tmp_type == Type::getInt32Ty()) {
+                        init_list.push_back(CONST_INT(0));
+                    } else if (G_tmp_type == Type::getFloatTy()) {
+                        init_list.push_back(CONST_FLOAT(0));
+                    }
+                }
+                init_val->bounds.assign(node.bounds.begin() + 1, node.bounds.end());
+                init_val->accept(*this);
+                init_list.insert(init_list.end(), G_array_init.begin(), G_array_init.end());
+            }
+        }
+        for (int i = init_list.size(); i < dim_length * cur_bnd; i++) {
+            if (G_tmp_type == Type::getInt32Ty()) {
+                init_list.push_back(CONST_INT(0));
+            } else if (G_tmp_type == Type::getFloatTy()) {
+                init_list.push_back(CONST_FLOAT(0));
+            }
+        }
+        G_array_init.assign(init_list.begin(), init_list.end());
     }
 }
 
@@ -442,26 +474,13 @@ void SYSYBuilder::visit(tree_var_def &node) {
             if (node.init_val != nullptr) {
                 node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
                 G_in_global_init = true;
-                // node.init_val_array->accept(*this);
+                 node.init_val->accept(*this);
                 G_in_global_init = false;
                 auto initializer = ConstantArray::turn(array_bounds, G_array_init);
                 auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, initializer);
                 scope.push(node.id, var);
             }
             else {
-                // int length = 1;
-                // for (auto i : array_bounds) {
-                //     length *= i;
-                // }
-                // std::vector<Value *> array_init;
-                // if (G_tmp_type == TyInt32) {
-                //     array_init.assign(length,CONST_INT(0));
-                // } else if (G_tmp_type == TyFloat) {
-                //     array_init.assign(length,CONST_FLOAT(0.0));
-                // } else {
-                //     ERROR("");
-                // }
-                // auto initializer = ConstantArray::turn(array_bounds, nullptr);
                 auto var = GlobalVariable::create(node.id, module.get(), ty_array, false, nullptr);
                 scope.push(node.id, var);
             }
@@ -471,7 +490,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
             if (node.init_val != nullptr) {
                 array_alloca->setInit();
                 node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
-                // node.init_val_array->accept(*this);
+                 node.init_val->accept(*this);
 
                 auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
                 for (int i = 1; i < node.init_val->bounds.size(); i++) {
@@ -485,9 +504,6 @@ void SYSYBuilder::visit(tree_var_def &node) {
                         builder->createStore(G_array_init[i], ptr);
                     }
                 }
-            }
-            else {
-                // TODO
             }
         }
 
