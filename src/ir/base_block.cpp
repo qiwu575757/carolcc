@@ -1,4 +1,4 @@
-
+#include "visitor/ir_visitor_base.h"
 #include "base_block.h"
 void BaseBlock::addInstruction(Instruction *inst) {
     this->_instructions.push_back(inst);

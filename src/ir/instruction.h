@@ -137,16 +137,17 @@ public:
     static CmpInst *createLE(Type *type, Value *v1, Value *v2, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 
-    bool isEq() { return CmpInst::EQ; }
-    bool isNeq(){ return CmpInst::NEQ; }
-    bool isGt() { return CmpInst::GT; }
-    bool isGe() { return CmpInst::GE; }
-    bool isLt() { return CmpInst::LT; }
-    bool isLe() { return CmpInst::LE; }
+    bool isEq() { return _cmp_op==CmpInst::EQ; }
+    bool isNeq(){ return _cmp_op==CmpInst::NEQ; }
+    bool isGt() { return _cmp_op==CmpInst::GT; }
+    bool isGe() { return _cmp_op==CmpInst::GE; }
+    bool isLt() { return _cmp_op==CmpInst::LT; }
+    bool isLe() { return _cmp_op==CmpInst::LE; }
 
 private:
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
+    CmpOp _cmp_op;
 };
 class ReturnInst : public Instruction {
 private:
@@ -259,3 +260,4 @@ public:
     void accept(IrVisitorBase *v) override;
 };
 #endif//COMPILER_INSTRUCTION_H
+

@@ -1,4 +1,5 @@
 #include "basic_block.h"
+#include "function.h"
 #include "visitor/ir_visitor_base.h"
 std::list<Instruction *> &BasicBlock::getInstructions() {
     return this->_instructions;
@@ -23,8 +24,7 @@ const Instruction *BasicBlock::getTerminator() const {
         static_cast<const BasicBlock *>(this)->getTerminator());
 }
 void BasicBlock::addInstr(Instruction *instr) {
-    this->_instructions.push_back(instr);
-}
+    this->_instructions.push_back(instr); }
 void BasicBlock::addInstrBegin(Instruction *instr) {
     this->_instructions.push_front(instr);
 }

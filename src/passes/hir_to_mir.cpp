@@ -1,6 +1,5 @@
 #include "hir_to_mir.h"
-#include "base_block.h"
-#include "basic_block.h"
+#include "ir/basic_block.h"
 
 void HIRToMIR::run() {
     for (auto func : _m->getFunctions()) {
@@ -24,6 +23,6 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
 
     if (base_bb->_block_type == BaseBlock::BASIC) {
         auto this_bb = dynamic_cast<BasicBlock *>(base_bb);
-        if (this_bb == nullptr && this_bb->getT)
+//        if (this_bb == nullptr && this_bb->getT)
     }
 }

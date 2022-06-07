@@ -1,4 +1,3 @@
-
 #include "instruction.h"
 #include "function.h"
 #include "passes/module.h"
@@ -133,12 +132,12 @@ void ReturnInst::accept(IrVisitorBase *v) {
     v->visit(this);
 }
 CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent)
-    : Instruction(type, Instruction::CMP, 2, parent) {
+    : Instruction(type, Instruction::CMP, 2, parent) ,_cmp_op(op_id){
     setOperand(0, v1);
     setOperand(1, v2);
 }
 CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2)
-    : Instruction(type, Instruction::CMP, 2) {
+    : Instruction(type, Instruction::CMP, 2),_cmp_op(op_id) {
     setOperand(0, v1);
     setOperand(1, v2);
 }
