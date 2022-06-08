@@ -45,8 +45,8 @@ public:
     bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
-    bool isBool();
-    bool isInt32();
+    bool isBool() ;//Bool 还没加
+    bool isInt32();//int32和integer有什么区别
     
     static Type *getVoidTy();
     static Type *getLabelTy();
