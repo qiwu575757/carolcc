@@ -7,9 +7,15 @@ std::string getname(){
     return "%" + std::to_string(var_no++);
 }
 void LLVMIrPrinter::visit(UnaryInst*node) {
-    
-    if(node->isNeg()){//将目的操作数的所以数据位取反加
 
+    if(node->isNeg()){//将目的操作数的所以数据位取反加
+        if(node->getType()->isIntegerTy()){
+            
+        }else if(node->getType()->isFloatTy()){
+
+        }else{
+            WARNNING("wrong Type");
+        }
     }else if(node->isNot()){//直接加负号
 
     }else{
