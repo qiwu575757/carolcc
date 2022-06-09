@@ -1,6 +1,7 @@
 
 #include "module.h"
 #include "ir/type.h"
+#include "visitor/llvm_ir_printer.h"
 /// SCOPE DEFINE ///
 void Scope::enter() {
     this->_inner_value.push_back({});
@@ -56,5 +57,11 @@ void Module::addGlobalVariable(GlobalVariable *g) {
     this->_global_variable_list.push_back(g);
 }
 void Module::HighIRprint() {
-    ERROR("TODO");
+    LLVMIrPrinter printer;
+    for(auto global_var:_global_variable_list){
+        global_var->accept(&printer);
+    }
+    for(auto func:_function_list){
+        func->accept(&printer);
+    }
 }

@@ -114,3 +114,4 @@ void LLVMIrPrinter::visit(StoreInst*node) {
         WARNNING("null StoreInst");
     }
 }
+}
