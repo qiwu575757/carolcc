@@ -151,14 +151,31 @@ std::string getname( int n ){
 //}
 void LLVMIrPrinter::visit(AllocaInst*node) {
     if(node->isAlloca()){
-        
+        if(node->getType()->isIntegerTy()){// %1 = alloca i32, align 4
+            printf("%s = alloca i32, align 4", node->getOperand(0)->getName());
+        }else if(node->getType()->isFloatTy()){ // %2 = alloca float, align 4
+            printf("%s = alloca float, align 4", node->getOperand(0)->getName());
+        }else if(node->getType()->isBool()){//%2 = alloca i8, align 1
+            printf("%s = alloca i8, align 1", node->getOperand(0)->getName());
+        }else{
+            WARNNING("wrong Type");
+        }
     }else{
         WARNNING("null AllocaInst");
     }
 }
 void LLVMIrPrinter::visit(StoreInst*node) {
     if(node->isStore()){
-        
+        if(node->getType()->isIntegerTy()){// store i32 0, i32* %1, align 4
+        //不太确定
+            printf("store i32 %d, i32* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+        }else if(node->getType()->isFloatTy()){ // store float 1.300000e+01, float* %2, align 4
+            printf("store float %f, float* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+        }else if(node->getType()->isBool()){//store i8 1, i8* %2, align 1
+            printf("store i8 %d, i8* %s, align 1", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+        }else{
+            WARNNING("wrong Type");
+        }
     }else{
         WARNNING("null StoreInst");
     }
