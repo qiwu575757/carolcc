@@ -11,7 +11,7 @@
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums, BasicBlock *parent)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
     MyAssert("null parent", _parent != nullptr);
-    _parent->addInstruction(this);
+    _parent->addInstr(this);
 }
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums)
     : Instruction(type, op_id, op_nums, nullptr) {

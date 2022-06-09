@@ -25,7 +25,6 @@ public:
     };
     void setFunction(Function *func);
     void setBaseFather(BaseBlock *father);
-    void addInstruction(Instruction *inst);
     BaseBlock *getBaseFather();
     Function* getFunction()const;
     void clearFather() {

@@ -18,6 +18,7 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
     NameValue(base_block);
     if (base_block->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(base_block);
+        INFO("HIR printer : basic block has %d instructions",basic_block->getNumOfInstr());
         for (auto &instr: basic_block->getInstructions()) {
             NameInstr(instr);
         }
@@ -298,10 +299,19 @@ void LLVMIrPrinter::visit(LoadInst *node) {
     }
 }
 void LLVMIrPrinter::visit(ReturnInst *node) {
+    INFO("HIR printer visiting return stmt");
     output_file << "ret ";
     node->getType()->print(output_file);
     if(!node->getType()->isVoidTy()){
-        output_file<<" "<<node->getOperand(0)->getName()<<" ";
+        if(node->getType()->isIntegerTy()){
+            output_file<<static_cast<ConstantInt*>(node->getOperand(0))->getValue();
+        }
+        else if (node->getType()->isFloatTy()) {
+            output_file<<static_cast<ConstantFloat*>(node->getOperand(0))->getValue();
+        }
+        else {
+            ERROR("error type");
+        }
     }
     output_file<<std::endl;
 }

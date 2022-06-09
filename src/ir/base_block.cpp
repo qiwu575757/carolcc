@@ -1,8 +1,5 @@
 #include "base_block.h"
 #include "visitor/ir_visitor_base.h"
-void BaseBlock::addInstruction(Instruction *inst) {
-    this->_instructions.push_back(inst);
-}
 Function *BaseBlock::getFunction() const {
     return this->_func;
 }

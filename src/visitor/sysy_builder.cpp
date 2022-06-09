@@ -180,12 +180,15 @@ void SYSYBuilder::visit(tree_block &node) {
                     blockitem->stmt->continue_stmt || blockitem->stmt->exp ||
                     blockitem->stmt->return_stmt || blockitem->stmt->return_null_stmt) {
                     if (builder->GetInsertBaseBlockList() == nullptr) {
+                        INFO("block 2");
                         if (builder->GetInsertBasicBlock()->getBaseFather() != nullptr) {
+                        INFO("block 3");
                             auto baseBB = BasicBlock::create("", G_cur_fun);
                             builder->SetInstrInsertPoint(baseBB);
                         }
                         blockitem->accept(*this);
                     } else {
+                        INFO("block 4");
                         auto baseBB = BasicBlock::create("");
                         builder->SetInstrInsertPoint(baseBB);
                         builder->pushBaseBlock(baseBB);
@@ -645,7 +648,7 @@ void SYSYBuilder::visit(tree_return_stmt &node) {
 
 
 void SYSYBuilder::visit(tree_return_null_stmt &node) {
-    INFO("line:%d",node._line_no);
+    INFO("return null stmt line:%d",node._line_no);
     builder->createVoidRet();
 }
 
