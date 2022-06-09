@@ -56,12 +56,14 @@ void Module::AddFunction(Function *function) {
 void Module::addGlobalVariable(GlobalVariable *g) {
     this->_global_variable_list.push_back(g);
 }
-void Module::HighIRprint() {
-    LLVMIrPrinter printer;
-    for(auto global_var:_global_variable_list){
+void Module::HighIRprint(const std::string &file_name) {
+    LLVMIrPrinter printer(file_name);
+    INFO("visiting global_var");
+    for (auto global_var: _global_variable_list) {
         global_var->accept(&printer);
     }
-    for(auto func:_function_list){
+    INFO("visiting func");
+    for (auto func: _function_list) {
         func->accept(&printer);
     }
 }

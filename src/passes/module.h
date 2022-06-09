@@ -44,7 +44,7 @@ public:
         return _module_name;
     }
     void addGlobalVariable(GlobalVariable *g);
-    void HighIRprint();
+    void HighIRprint(const std::string &file_name);
 
     void setIRLevel(IRLevel ir_level) {
         _ir_level = ir_level;

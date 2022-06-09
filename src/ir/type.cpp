@@ -46,6 +46,7 @@ void Type::print(std::ofstream& output_file) {
     if (!output_file.is_open()) {
         ERROR("output file is not open");
     }
+    INFO("visiting type::print");
     switch (_id) {
         case LabelTyID:
             output_file << "<label> ";

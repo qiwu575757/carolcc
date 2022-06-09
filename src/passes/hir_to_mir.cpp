@@ -135,4 +135,3 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
     }
 
     return nullptr;
-}
