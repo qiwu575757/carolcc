@@ -1,62 +1,58 @@
 #include "llvm_ir_printer.h"
-#include "ir/instruction.h"
 #include "ir/function.h"
+#include "ir/instruction.h"
 #include "utils.h"
-int var_no=1;
-const std::string head="%";
+#include <unordered_map>
+int var_no = 1;
+const std::string head = "%";
 void LLVMIrPrinter::NameValue(Value *val) {
-    if(seq.find(val) == seq.end() && val->getName().empty()){
-        auto seq_num = seq.size() ;
+    if (seq.find(val) == seq.end() && val->getName().empty()) {
+        auto seq_num = seq.size();
         val->setName(std::to_string(seq_num));
-        seq.insert({val,seq_num});
+        seq.insert({val, seq_num});
     }
 }
 void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
-    NameValue(base_block);
-    if(base_block->isBaiscBlock()){
-        auto basic_block = dynamic_cast<BasicBlock*> (base_block);
-        for(auto& instr : basic_block->getInstructions()){
+    if (base_block->isBaiscBlock()) {
+        auto basic_block = dynamic_cast<BasicBlock *>(base_block);
+        for (auto &instr: basic_block->getInstructions()) {
             NameInstr(instr);
         }
-    }
-    else if(base_block->isIfBlock()){
-        auto if_block = dynamic_cast<IfBlock*> (base_block);
-        for(auto& cond_base_block : *(if_block->getCondBaseBlockList())){
+    } else if (base_block->isIfBlock()) {
+        auto if_block = dynamic_cast<IfBlock *>(base_block);
+        for (auto &cond_base_block: *(if_block->getCondBaseBlockList())) {
             NameBaseBlock(cond_base_block);
         }
-        for(auto & then_block : *(if_block->getIfBodyBaseBlockList())){
+        for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
             NameBaseBlock(then_block);
         }
-        for(auto & else_block : *(if_block->getElseBodyBaseBlockList())){
+        for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
             NameBaseBlock(else_block);
         }
-    }
-    else if (base_block->isWhileBlock()){
-        auto while_block = dynamic_cast<WhileBlock*> (base_block);
-        for(auto & cond_block : *(while_block->getCondBaseBlockList())){
+    } else if (base_block->isWhileBlock()) {
+        auto while_block = dynamic_cast<WhileBlock *>(base_block);
+        for (auto &cond_block: *(while_block->getCondBaseBlockList())) {
             NameBaseBlock(cond_block);
         }
-        for(auto & body_block : *(while_block->getBodyBaseBlockList())){
+        for (auto &body_block: *(while_block->getBodyBaseBlockList())) {
             NameBaseBlock(body_block);
         }
-    }
-    else {
+    } else {
         ERROR("error base block type");
     }
-
 }
 void LLVMIrPrinter::NameInstr(Instruction *instr) {
-    if(seq.find(instr) == seq.end() && instr->getName().empty() && !instr->getType()->isVoidTy()){
-        auto seq_num = seq.size() ;
+    if (seq.find(instr) == seq.end() && instr->getName().empty() && !instr->getType()->isVoidTy()) {
+        auto seq_num = seq.size();
         instr->setName(std::to_string(seq_num));
-        seq.insert({instr,seq_num});
+        seq.insert({instr, seq_num});
     }
 }
-std::string getname( int n ){
-    if(!n){
+std::string getname(int n) {
+    if (!n) {
         return "%" + std::to_string(var_no++);
-    }else{
-        return "%" + std::to_string( n + var_no);
+    } else {
+        return "%" + std::to_string(n + var_no);
     }
 }
 //void LLVMIrPrinter::visit(UnaryInst*node) {
@@ -149,66 +145,164 @@ std::string getname( int n ){
 //        WARNNING("null BinaryInst");
 //    }
 //}
-void LLVMIrPrinter::visit(AllocaInst*node) {
-    if(node->isAlloca()){
-        if(node->getType()->isIntegerTy()){// %1 = alloca i32, align 4
-            printf("%s = alloca i32, align 4", node->getOperand(0)->getName());
-        }else if(node->getType()->isFloatTy()){ // %2 = alloca float, align 4
-            printf("%s = alloca float, align 4", node->getOperand(0)->getName());
-        }else if(node->getType()->isBool()){//%2 = alloca i8, align 1
-            printf("%s = alloca i8, align 1", node->getOperand(0)->getName());
-        }else{
-            WARNNING("wrong Type");
-        }
-    }else{
-        WARNNING("null AllocaInst");
-    }
-}
-void LLVMIrPrinter::visit(StoreInst*node) {
-    if(node->isStore()){
-        if(node->getType()->isIntegerTy()){// store i32 0, i32* %1, align 4
-        //不太确定
-            printf("store i32 %d, i32* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-        }else if(node->getType()->isFloatTy()){ // store float 1.300000e+01, float* %2, align 4
-            printf("store float %f, float* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-        }else if(node->getType()->isBool()){//store i8 1, i8* %2, align 1
-            printf("store i8 %d, i8* %s, align 1", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-        }else{
-            WARNNING("wrong Type");
-        }
-    }else{
-        WARNNING("null StoreInst");
-    }
-}
+//void LLVMIrPrinter::visit(AllocaInst*node) {
+//    if(node->isAlloca()){
+//        if(node->getType()->isIntegerTy()){// %1 = alloca i32, align 4
+//            printf("%s = alloca i32, align 4", node->getOperand(0)->getName());
+//        }else if(node->getType()->isFloatTy()){ // %2 = alloca float, align 4
+//            printf("%s = alloca float, align 4", node->getOperand(0)->getName());
+//        }else if(node->getType()->isBool()){//%2 = alloca i8, align 1
+//            printf("%s = alloca i8, align 1", node->getOperand(0)->getName());
+//        }else{
+//            WARNNING("wrong Type");
+//        }
+//    }else{
+//        WARNNING("null AllocaInst");
+//    }
+//}
+//void LLVMIrPrinter::visit(StoreInst*node) {
+//    if(node->isStore()){
+//        if(node->getType()->isIntegerTy()){// store i32 0, i32* %1, align 4
+//        //不太确定
+//            printf("store i32 %d, i32* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+//        }else if(node->getType()->isFloatTy()){ // store float 1.300000e+01, float* %2, align 4
+//            printf("store float %f, float* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+//        }else if(node->getType()->isBool()){//store i8 1, i8* %2, align 1
+//            printf("store i8 %d, i8* %s, align 1", node->getOperand(0)->getName(), node->getOperand(1)->getName());
+//        }else{
+//            WARNNING("wrong Type");
+//        }
+//    }else{
+//        WARNNING("null StoreInst");
+//    }
+//}
 void LLVMIrPrinter::visit(Function *node) {
-    for(auto &bb : node->getBaseBlocks()){
-        NameBaseBlock(bb);
-    }
 
-    output_file<< "define  dso_local ";
+    output_file << "define  dso_local ";
     node->getResultType()->print(output_file);
-    output_file<<"@"<<node->getName()<<"(";
-    for(auto & arg : node->getArgs()){
+    output_file << "@" << node->getName() << "(";
+    for (int i = 0; i <= node->getNumArgs(); i++) {
+        auto &arg = node->getArgs().at(i);
+        if (i != 0) {
+            output_file << ",";
+        }
         arg->accept(this);
     }
-
+    for (auto &base_block: node->getBaseBlocks()) {
+        base_block->accept(this);
+    }
 }
 void LLVMIrPrinter::visit(Argument *node) {
     NameValue(node);
-    if(node->getType()->isPointerTy()){
-        for(int i=1;i<node->getArrayBound().size();i++){
-            output_file<<"[ ";
-            auto bound =  static_cast<ConstantInt*> (node->getArrayBound().at(i));
-            output_file<<bound->getValue()<<" x ";
+    if (node->getType()->isPointerTy()) {
+        for (int i = 1; i < node->getArrayBound().size(); i++) {
+            output_file << "[ ";
+            auto bound = static_cast<ConstantInt *>(node->getArrayBound().at(i));
+            output_file << bound->getValue() << " x ";
         }
         node->getType()->getPointerElementType()->print(output_file);
-        for(int i=1;i<node->getArrayBound().size();i++){
-            output_file<<"]";
+        for (int i = 1; i < node->getArrayBound().size(); i++) {
+            output_file << "]";
         }
-        output_file<<"* ";
+        output_file << "* ";
+    } else {
+        output_file << node->getType() << " " << node->getName();
     }
-    else {
-        output_file<<node->getType()<<" "<<node->getName();
-    }
-    output_file<<node->getName();
+    output_file << node->getName();
 }
+void LLVMIrPrinter::visit(BaseBlock *node) {
+    NameValue(node);
+    if (node->isBaiscBlock()) {
+        auto basic_block = dynamic_cast<BasicBlock *>(node);
+        for (auto &instr: basic_block->getInstructions()) {
+            instr->accept(this);
+        }
+    } else if (node->isIfBlock()) {
+        auto if_block = dynamic_cast<IfBlock *>(node);
+        for (auto &cond_base_block: *(if_block->getCondBaseBlockList())) {
+            cond_base_block->accept(this);
+        }
+        for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
+            then_block->accept(this);
+        }
+        for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
+            else_block->accept(this);
+        }
+    } else if (node->isWhileBlock()) {
+        auto while_block = dynamic_cast<WhileBlock *>(node);
+        for (auto &cond_block: *(while_block->getCondBaseBlockList())) {
+            cond_block->accept(this);
+        }
+        for (auto &body_block: *(while_block->getBodyBaseBlockList())) {
+            body_block->accept(this);
+        }
+    } else {
+        ERROR("error base block type");
+    }
+}
+//void LLVMIrPrinter::visit(CmpInst*node) {
+//    if(node->isEq()){
+//        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
+//        //不太确定
+//            printf("%s = load i32, i32* %s, align 4", getname(0), node->getOperand(0)->getName());
+//        }else if(node->getType()->isFloatTy()){ // %5 = load float, float* %2, align 4
+//            printf("%s = load float, float* %s, align 4", getname(0), node->getOperand(0)->getName());
+//        }else if(node->getType()->isBool()){//%8 = load i8, i8* %3, align 1
+//            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
+//        }else{
+//            WARNNING("wrong Type");
+//        }
+//    }else if(node->isNeq()){
+//    }else if(node->isGt()){
+//    }else if(node->isGe()){
+//    }else if(node->isLt()){
+//
+//    }else if(node->isLe()){
+//    }else{
+//        WARNNING("null CmpInst");
+//    }
+//}
+void LLVMIrPrinter::visit(LoadInst *node) {
+    NameInstr(node);
+
+    if (node->isLoad()) {
+        //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
+        //        //不太确定
+        //            printf("%s = load i32, i32* %s, align 4", getname(0), node->getOperand(0)->getName());
+        //        }else if(node->getType()->isFloatTy()){ // %5 = load float, float* %2, align 4
+        //            printf("%s = load float, float* %s, align 4", getname(0), node->getOperand(0)->getName());
+        //        }else if(node->getType()->isBool()){//%8 = load i8, i8* %3, align 1
+        //            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
+        //        }else{
+        //            WARNNING("wrong Type");
+        //        }
+        // 输出自己
+        output_file << "%" << node->getName() << " = "
+                    << "load ";
+        // 输出自己的类型
+        node->getType()->print(output_file);
+        output_file << ", ";
+        // 输出第一个操作数
+        node->getOperand(0)->getType()->print(output_file);
+        output_file << "%" << node->getOperand(0)->getName() << ", "<<"align 4";
+    } else {
+        ERROR("null LoadInst");
+    }
+}
+//void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
+//    if(node->isWhile()){
+//        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
+//        //不太确定
+//            printf("%s = load i32, i32* %s, align 4", getname(0), node->getOperand(0)->getName());
+//        }else if(node->getType()->isFloatTy()){ // %5 = load float, float* %2, align 4
+//            printf("%s = load float, float* %s, align 4", getname(0), node->getOperand(0)->getName());
+//        }else if(node->getType()->isBool()){//%8 = load i8, i8* %3, align 1
+//            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
+//        }else{
+//            WARNNING("wrong Type");
+//        }
+//    }else if(node->isIf()){
+//    }else if(node->isBranch()){
+//        WARNNING("null BranchInst");
+//    }
+//}

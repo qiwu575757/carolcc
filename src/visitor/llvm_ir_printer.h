@@ -2,6 +2,7 @@
 #define COMPILER_LLVM_IR_PRINTER_H
 #include "ir_visitor_base.h"
 #include <fstream>
+#include <unordered_map>
 class LLVMIrPrinter : public IrVisitorBase {
 public:
     explicit LLVMIrPrinter(std::string &name) {
@@ -25,6 +26,7 @@ private:
     void visit(HIR *node) final;
     void visit(Function *node) final;
     void visit(Argument *node) final;
+    void visit(BaseBlock *node) final;
     void visit(GlobalValue *node) final;
     void visit(ConstantInt *node) final;
     void visit(ConstantFloat *node) final;

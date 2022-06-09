@@ -22,7 +22,8 @@ public:
     // ---------
     virtual void visit(Function *node) = 0;
     virtual void visit(Argument *node) = 0;
-    virtual void visit(GlobalVAlue *node) = 0;
+    virtual void visit(BaseBlock *node) = 0;
+    virtual void visit(GlobalValue *node) = 0;
     virtual void visit(ConstantInt *node) = 0;
     virtual void visit(ConstantFloat *node) = 0;
     virtual void visit(ConstantArray *node) = 0;
