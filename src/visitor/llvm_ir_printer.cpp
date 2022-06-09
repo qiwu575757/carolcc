@@ -13,6 +13,7 @@ void LLVMIrPrinter::NameValue(Value *val) {
     }
 }
 void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
+    NameValue(base_block);
     if (base_block->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(base_block);
         for (auto &instr: basic_block->getInstructions()) {
@@ -145,38 +146,23 @@ std::string getname(int n) {
 //        WARNNING("null BinaryInst");
 //    }
 //}
-//void LLVMIrPrinter::visit(AllocaInst*node) {
-//    if(node->isAlloca()){
-//        if(node->getType()->isIntegerTy()){// %1 = alloca i32, align 4
-//            printf("%s = alloca i32, align 4", node->getOperand(0)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %2 = alloca float, align 4
-//            printf("%s = alloca float, align 4", node->getOperand(0)->getName());
-//        }else if(node->getType()->isBool()){//%2 = alloca i8, align 1
-//            printf("%s = alloca i8, align 1", node->getOperand(0)->getName());
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else{
-//        WARNNING("null AllocaInst");
-//    }
-//}
-//void LLVMIrPrinter::visit(StoreInst*node) {
-//    if(node->isStore()){
-//        if(node->getType()->isIntegerTy()){// store i32 0, i32* %1, align 4
-//        //不太确定
-//            printf("store i32 %d, i32* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-//        }else if(node->getType()->isFloatTy()){ // store float 1.300000e+01, float* %2, align 4
-//            printf("store float %f, float* %s, align 4", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-//        }else if(node->getType()->isBool()){//store i8 1, i8* %2, align 1
-//            printf("store i8 %d, i8* %s, align 1", node->getOperand(0)->getName(), node->getOperand(1)->getName());
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else{
-//        WARNNING("null StoreInst");
-//    }
-//}
+void LLVMIrPrinter::visit(AllocaInst*node) {
+    if(node->isAlloca()){
+        output_file<<
+    }else{
+        ERROR("null AllocaInst");
+    }
+}
 void LLVMIrPrinter::visit(Function *node) {
+
+
+    // 先给变量编号
+    for(auto &arg : node->getArgs()){
+        NameValue(arg);
+    }
+    for(auto &bb : node->getBaseBlocks()){
+        NameBaseBlock(bb);
+    }
 
     output_file << "define  dso_local ";
     node->getResultType()->print(output_file);
@@ -193,7 +179,6 @@ void LLVMIrPrinter::visit(Function *node) {
     }
 }
 void LLVMIrPrinter::visit(Argument *node) {
-    NameValue(node);
     if (node->getType()->isPointerTy()) {
         for (int i = 1; i < node->getArrayBound().size(); i++) {
             output_file << "[ ";
@@ -211,7 +196,6 @@ void LLVMIrPrinter::visit(Argument *node) {
     output_file << node->getName();
 }
 void LLVMIrPrinter::visit(BaseBlock *node) {
-    NameValue(node);
     if (node->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(node);
         for (auto &instr: basic_block->getInstructions()) {
@@ -263,7 +247,6 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
 //    }
 //}
 void LLVMIrPrinter::visit(LoadInst *node) {
-    NameInstr(node);
 
     if (node->isLoad()) {
         //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
