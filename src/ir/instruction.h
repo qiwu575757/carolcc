@@ -171,6 +171,10 @@ public:
     };
     void accept(IrVisitorBase *v) override;
 
+    bool isWhile() { return _br_kind==BranchInst::WHILE; }
+    bool isIf()    { return _br_kind==BranchInst::IF;    }
+    bool isBranch(){ return _br_kind==BranchInst::BRANCH;}
+
 private:
     BrOp _br_kind;
     BranchInst(BrOp br_op, Value *cond, Value *true_block, Value *false_block, BasicBlock *parent);
