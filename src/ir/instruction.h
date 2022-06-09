@@ -52,31 +52,31 @@ public:
 
     };
 
-    bool isRet() { return _op_id == Instruction::RET; }
-    bool isBr() { return _op_id == Instruction::BR; }
+    bool isRet() { return _op_id      == Instruction::RET; }
+    bool isBr() { return _op_id       == Instruction::BR; }
 //    bool isNeg() { return _op_id == Instruction::NEG; }
-    bool isNot() { return _op_id == Instruction::NOT; }
-    bool isAdd() { return _op_id = Instruction::ADD; }
-    bool isSub() { return _op_id = Instruction::SUB; }
-    bool isMul() { return _op_id = Instruction::MUL; }
-    bool isDiv() { return _op_id = Instruction::DIV; }
-    bool isRem() { return _op_id = Instruction::REM; }
-    bool isShl() { return _op_id = Instruction::SHL; }
-    bool isLshr() { return _op_id = Instruction::LSHR; }
-    bool isAshr() { return _op_id = Instruction::ASHR; }
-    bool isAnd() { return _op_id = Instruction::AND; }
-    bool isOr() { return _op_id = Instruction::OR; }
-    bool isXor() { return _op_id = Instruction::XOR; }
-    bool isAlloca() { return _op_id = Instruction::ALLOCA; }
-    bool isLoad() { return _op_id = Instruction::LOAD; }
-    bool isStore() { return _op_id = Instruction::STORE; }
-    bool isCmp() { return _op_id = Instruction::CMP; }
-    bool isPhi() { return _op_id = Instruction::PHI; }
-    bool isGep() { return _op_id = Instruction::GEP; }
-    bool isCall() { return _op_id = Instruction::CALL; }
-    bool isZext() { return _op_id == Instruction::ZEXT; }
-    bool isBreak() { return _op_id = Instruction::BREAK; }
-    bool isContinue() { return _op_id = Instruction::CONTINUE; }
+    bool isNot() { return _op_id      == Instruction::NOT; }
+    bool isAdd() { return _op_id      == Instruction::ADD; }
+    bool isSub() { return _op_id      == Instruction::SUB; }
+    bool isMul() { return _op_id      == Instruction::MUL; }
+    bool isDiv() { return _op_id      == Instruction::DIV; }
+    bool isRem() { return _op_id      == Instruction::REM; }
+    bool isShl() { return _op_id      == Instruction::SHL; }
+    bool isLshr() { return _op_id     == Instruction::LSHR; }
+    bool isAshr() { return _op_id     == Instruction::ASHR; }
+    bool isAnd() { return _op_id      == Instruction::AND; }
+    bool isOr() { return _op_id       == Instruction::OR; }
+    bool isXor() { return _op_id      == Instruction::XOR; }
+    bool isAlloca() { return _op_id   == Instruction::ALLOCA; }
+    bool isLoad() { return _op_id     == Instruction::LOAD; }
+    bool isStore() { return _op_id    == Instruction::STORE; }
+    bool isCmp() { return _op_id      == Instruction::CMP; }
+    bool isPhi() { return _op_id      == Instruction::PHI; }
+    bool isGep() { return _op_id      == Instruction::GEP; }
+    bool isCall() { return _op_id     == Instruction::CALL; }
+    bool isZext() { return _op_id     == Instruction::ZEXT; }
+    bool isBreak() { return _op_id    == Instruction::BREAK; }
+    bool isContinue() { return _op_id == Instruction::CONTINUE; }
 
 protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
