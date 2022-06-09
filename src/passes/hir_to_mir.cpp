@@ -26,7 +26,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                            Function *func) {
     auto &basic_bbs = func->getBasicBlocks();
 
-    if (base_bb->_block_type == BaseBlock::BASIC) {
+    if (base_bb->isBaiscBlock()) {
         BasicBlock *this_bb = dynamic_cast<BasicBlock *>(base_bb);
         if (this_bb == nullptr && this_bb->getTerminator() && basic_bbs.empty()) {
             if (func->getResultType()->isInt32()) {
@@ -36,7 +36,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             } else {
                 auto ret = ReturnInst::createVoidRet(this_bb);
             }
-        } else if(this_bb->getTerminator() == nullptr) {
+        } else if (this_bb->getTerminator() == nullptr) {
             auto inst = this_bb->getInstructions().back();
             BasicBlock *target = next_bb;
             if (inst != nullptr) {
@@ -48,12 +48,12 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                     this_bb->deleteInstr(inst);
                 }
             }
-            auto branch = BranchInst::createBranch(target,this_bb);
+            auto branch = BranchInst::createBranch(target, this_bb);
         }
         basic_bbs.push_back(this_bb);
 
         return this_bb;
-    } else if (base_bb->_block_type == BaseBlock::IF) {
+    } else if (base_bb->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(base_bb);
         BasicBlock *if_true_block = nullptr;
         BasicBlock *if_false_block = nullptr;
@@ -61,7 +61,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         auto then_body = if_block->getIfBodyBaseBlockList();
         auto else_body = if_block->getElseBodyBaseBlockList();
 
-        if (next_bb == nullptr) { //代表函数结尾，添加ret指令
+        if (next_bb == nullptr) {//代表函数结尾，添加ret指令
             auto bb = BasicBlock::create("");
             // 维护父子关系
             bb->setFunction(func);
@@ -97,7 +97,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         basic_bbs.push_back(cond_bb);
 
         return cond_bb;
-    } else if (base_bb->_block_type == BasicBlock::WHILE) {
+    } else if (base_bb->isWhileBlock()) {
         auto while_block = dynamic_cast<WhileBlock *>(base_bb);
         auto while_cond = while_block->getCondBaseBlockList();
         auto while_body = while_block->getBodyBaseBlockList();
@@ -120,7 +120,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         BasicBlock *if_false_block = next_bb;
         auto cond_bb = dynamic_cast<BasicBlock *>((*while_cond).front());
         BasicBlock *cur_next = cond_bb;
-        for ( auto iter = (*while_body).rbegin(); iter != (*while_body).rend(); iter++) {
+        for (auto iter = (*while_body).rbegin(); iter != (*while_body).rend(); iter++) {
             cur_next = genBasicBlock(*iter, cur_next, while_entry, while_exit, func);
         }
         if_true_block = cur_next;
@@ -135,3 +135,4 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
     }
 
     return nullptr;
+}
