@@ -435,7 +435,8 @@ void SYSYBuilder::visit(tree_const_def &node) {
             INFO(" const_def 374");
             node.const_init_val->accept(*this);
             G_tmp_computing = false;
-            MyAssert("error in push scope", scope.push(node.id, G_tmp_val));
+            auto global_var = GlobalVariable::create(node.id,&*module,G_tmp_val->getType(),true,static_cast<Constant*>(G_tmp_val));
+            MyAssert("error in push scope", scope.push(node.id, global_var));
         } else if (node.const_exp_list != nullptr) {// arrray
             Type *array_element_ty = G_tmp_type;
             std::vector<int32_t> bounds;

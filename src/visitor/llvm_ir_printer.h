@@ -1,6 +1,7 @@
 #ifndef COMPILER_LLVM_IR_PRINTER_H
 #define COMPILER_LLVM_IR_PRINTER_H
 #include "ir_visitor_base.h"
+#include "ir/global_variable.h"
 #include <fstream>
 #include <unordered_map>
 class LLVMIrPrinter : public IrVisitorBase {
@@ -30,7 +31,7 @@ private:
     void visit(Function *node) final;
     void visit(Argument *node) final;
     void visit(BaseBlock *node) final;
-    void visit(GlobalValue *node) final;
+    void visit(GlobalVariable *node) final;
     void visit(ConstantInt *node) final;
     void visit(ConstantFloat *node) final;
     void visit(ConstantArray *node) final;

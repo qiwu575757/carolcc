@@ -18,7 +18,7 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
     NameValue(base_block);
     if (base_block->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(base_block);
-        INFO("HIR printer : basic block has %d instructions",basic_block->getNumOfInstr());
+        INFO("HIR printer : basic block has %d instructions", basic_block->getNumOfInstr());
         for (auto &instr: basic_block->getInstructions()) {
             NameInstr(instr);
         }
@@ -160,7 +160,8 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
     }
 }
 void LLVMIrPrinter::visit(Function *node) {
-
+    seq.clear();
+    depth = 0;
 
     // 先给变量编号
     INFO("naming args");
@@ -178,7 +179,7 @@ void LLVMIrPrinter::visit(Function *node) {
     node->getResultType()->print(output_file);
     INFO("print func name");
     output_file << "@" << node->getName() << "(";
-    INFO("func arg number is %d",node->getNumArgs());
+    INFO("func arg number is %d", node->getNumArgs());
     for (int i = 0; i < node->getNumArgs(); i++) {
         auto &arg = node->getArgs().at(i);
         if (i != 0) {
@@ -187,7 +188,7 @@ void LLVMIrPrinter::visit(Function *node) {
         arg->accept(this);
     }
     output_file << ") {" << std::endl;
-    INFO("base block size is %zu",node->getBaseBlocks().size());
+    INFO("base block size is %zu", node->getBaseBlocks().size());
     for (auto &base_block: node->getBaseBlocks()) {
         base_block->accept(this);
     }
@@ -208,7 +209,7 @@ void LLVMIrPrinter::visit(Argument *node) {
     } else {
         output_file << node->getType() << " " << node->getName();
     }
-    output_file << node->getName();
+    output_file << "%" << node->getName();
 }
 void LLVMIrPrinter::visit(BaseBlock *node) {
     INFO(" HIR printer visiting baseblock");
@@ -302,18 +303,16 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
     INFO("HIR printer visiting return stmt");
     output_file << "ret ";
     node->getType()->print(output_file);
-    if(!node->getType()->isVoidTy()){
-        if(node->getType()->isIntegerTy()){
-            output_file<<static_cast<ConstantInt*>(node->getOperand(0))->getValue();
-        }
-        else if (node->getType()->isFloatTy()) {
-            output_file<<static_cast<ConstantFloat*>(node->getOperand(0))->getValue();
-        }
-        else {
+    if (!node->getType()->isVoidTy()) {
+        if (node->getType()->isIntegerTy()) {
+            output_file << static_cast<ConstantInt *>(node->getOperand(0))->getValue();
+        } else if (node->getType()->isFloatTy()) {
+            output_file << static_cast<ConstantFloat *>(node->getOperand(0))->getValue();
+        } else {
             ERROR("error type");
         }
     }
-    output_file<<std::endl;
+    output_file << std::endl;
 }
 void LLVMIrPrinter::visit(UnaryInst *node) {
 }
@@ -335,13 +334,38 @@ void LLVMIrPrinter::visit(ZExtInst *node) {
 }
 void LLVMIrPrinter::visit(HIR *node) {
 }
-void LLVMIrPrinter::visit(GlobalValue *node) {
-}
 void LLVMIrPrinter::visit(ConstantInt *node) {
 }
 void LLVMIrPrinter::visit(ConstantFloat *node) {
 }
 void LLVMIrPrinter::visit(ConstantArray *node) {
+}
+void LLVMIrPrinter::visit(GlobalVariable *node) {
+    output_file << "@" << node->getName() << "= dso_local ";
+    if (node->isConstant()) {
+        output_file << "constant ";
+    } else {
+        output_file << "global ";
+    }
+    node->getType()->getPointerElementType()->print(output_file);
+    if (node->getInit() != nullptr) {
+        if (node->getType()->getPointerElementType()->isFloatTy()) {
+            output_file << static_cast<ConstantFloat *>(node->getInit())->getValue();
+        } else if (node->getType()->getPointerElementType()->isIntegerTy()) {
+            output_file << static_cast<ConstantInt *>(node->getInit())->getValue();
+        } else if (node->getType()->isArrayTy() || node->getType()->isPointerTy()) {
+            ERROR("todo");
+        } else {
+            ERROR("ERROR type");
+        }
+    } else {
+        if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
+            output_file << "0";
+        } else {
+            ERROR("TODO");
+        }
+    }
+    output_file << ", align 4" << std::endl;
 }
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
