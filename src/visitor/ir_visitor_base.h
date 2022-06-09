@@ -2,6 +2,7 @@
 #define COMPILER_IR_VISITOR_BASE_H
 #include "ir/constant.h"
 #include "ir/instruction.h"
+#include "ir/function.h"
 class IrVisitorBase {
 public:
     virtual void visit(UnaryInst *node) = 0;
@@ -20,7 +21,8 @@ public:
     virtual void visit(HIR *node) = 0;
     // ---------
     virtual void visit(Function *node) = 0;
-    virtual void visit(GlobalValue *node) = 0;
+    virtual void visit(Argument *node) = 0;
+    virtual void visit(GlobalVAlue *node) = 0;
     virtual void visit(ConstantInt *node) = 0;
     virtual void visit(ConstantFloat *node) = 0;
     virtual void visit(ConstantArray *node) = 0;

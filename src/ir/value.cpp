@@ -1,5 +1,6 @@
 #include "value.h"
 #include "user.h"
+#include "utils.h"
 #include "visitor/ir_visitor_base.h"
 void Value::addUse(User *user, unsigned value_num) {
     this->_user_list.push_back(new Use(this, value_num, user));
@@ -15,4 +16,10 @@ std::string Value::getName() {
 }
 void Value::accept(IrVisitorBase *v) {
     v->visit(this);
+}
+void Value::setName(std::string name) {
+    if(!_name.empty()){
+        WARNNING("rename the value:\"%s\" -> \"%s\"",_name.c_str(),name.c_str());
+    }
+    _name= name;
 }

@@ -37,17 +37,17 @@ public:
 
 public:
     TypeID getTypeID() const { return _id; }
-
     bool isVoidTy() const { return getTypeID() == VoidTyID; }
     bool isLabelTy() const { return getTypeID() == LabelTyID; }
     bool isIntegerTy() const { return getTypeID() == IntegerTyID; }
     bool isFloatTy() const { return getTypeID() == FloatTyID; }
+
     bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
     bool isBool() ;//Bool 还没加
     bool isInt32();//int32和integer有什么区别
-    
+
     static Type *getVoidTy();
     static Type *getLabelTy();
     static IntegerType *getInt1Ty();
@@ -60,7 +60,7 @@ public:
 
     int getSize(bool extended = true);
 
-    void print();
+    void print(std::ofstream &output_file);
 
     std::string CommentPrint();
 

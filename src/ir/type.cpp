@@ -1,6 +1,8 @@
 #include "type.h"
 #include "passes/module.h"
 #include <cassert>
+#include <fstream>
+#include <iostream>
 
 IntegerType *int1_type = IntegerType::get(1);
 IntegerType *int32_type = IntegerType::get(32);
@@ -40,30 +42,33 @@ int Type::getSize(bool extended) {
     return 0;
 }
 
-void Type::print() {
+void Type::print(std::ofstream& output_file) {
+    if (!output_file.is_open()) {
+        ERROR("output file is not open");
+    }
     switch (_id) {
         case LabelTyID:
-            std::cerr << "<label>";
+            output_file << "<label> ";
             break;
 
         case IntegerTyID:
             if (static_cast<IntegerType *>(this)->getNumBits() == 1) {
-                std::cerr << "i1";
+                output_file << "i1 ";
             } else {
-                std::cerr << "i32";
+                output_file << "i32 ";
             }
             break;
 
         case ArrayTyID:
-            std::cerr << "[ " << static_cast<ArrayType *>(this)->getNumOfElements()
-                      << " x ";
-            static_cast<ArrayType *>(this)->getElementType()->print();
-            std::cerr << "]";
+            output_file << "[ " << static_cast<ArrayType *>(this)->getNumOfElements()
+                        << " x ";
+            static_cast<ArrayType *>(this)->getElementType()->print(output_file);
+            output_file << "] ";
             break;
 
         case PointerTyID:
-            getPointerElementType()->print();
-            std::cerr << "*";
+            getPointerElementType()->print(output_file);
+            output_file << "* ";
             break;
 
         default:
@@ -120,24 +125,24 @@ bool Type::eq(Type rhs) {
 
 bool Type::isBool() {
     if (getTypeID() == IntegerTyID) {
-      if (static_cast<IntegerType *>(this)->getNumBits() == 1) {
-        return true;
-      } else {
-        return false;
-      }
+        if (static_cast<IntegerType *>(this)->getNumBits() == 1) {
+            return true;
+        } else {
+            return false;
+        }
     } else {
-      return false;
+        return false;
     }
 }
 bool Type::isInt32() {
     if (getTypeID() == IntegerTyID) {
-      if (static_cast<IntegerType *>(this)->getNumBits() == 32) {
-        return true;
-      } else {
-        return false;
-      }
+        if (static_cast<IntegerType *>(this)->getNumBits() == 32) {
+            return true;
+        } else {
+            return false;
+        }
     } else {
-      return false;
+        return false;
     }
 }
 Type *Type::getVoidTy() { return void_type; }
@@ -146,7 +151,7 @@ IntegerType *Type::getInt1Ty() { return int1_type; }
 IntegerType *Type::getInt32Ty() { return int32_type; }
 FloatType *Type::getFloatTy() { return float_type; }
 PointerType *Type::getInt32PtrTy() { return int32ptr_type; }
-PointerType *Type::getFloatPtrTy() {return floatptr_type;}
+PointerType *Type::getFloatPtrTy() { return floatptr_type; }
 // IntegerType
 IntegerType::IntegerType(unsigned num_bits)
     : Type(Type::IntegerTyID), _num_bits(num_bits) {}
@@ -183,11 +188,11 @@ FunctionType::FunctionType(Type *result, std::vector<Type *> &params)
 }
 
 bool FunctionType::isValidReturnType(Type *ty) {
-    return ty->isIntegerTy() || ty->isVoidTy()||ty->isFloatTy();
+    return ty->isIntegerTy() || ty->isVoidTy() || ty->isFloatTy();
 }
 
 bool FunctionType::isValidArgumentType(Type *ty) {
-    return ty->isIntegerTy() || ty->isPointerTy()||ty->isFloatTy();
+    return ty->isIntegerTy() || ty->isPointerTy() || ty->isFloatTy();
 }
 
 unsigned FunctionType::getNumArgs() const { return _args.size(); }
@@ -203,7 +208,7 @@ ArrayType::ArrayType(Type *contained, unsigned num_elements)
 }
 
 bool ArrayType::isValidElementType(Type *ty) {
-    return ty->isIntegerTy() || ty->isArrayTy()||ty->isFloatTy();
+    return ty->isIntegerTy() || ty->isArrayTy() || ty->isFloatTy();
 }
 
 std::vector<unsigned> ArrayType::getDims() const {

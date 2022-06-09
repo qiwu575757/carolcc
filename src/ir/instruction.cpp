@@ -23,9 +23,9 @@ UnaryInst::UnaryInst(Type *type, Instruction::OpKind op_id, Value *v1, BasicBloc
     : Instruction(type, op_id, 1, parent) {
     setOperand(0, v1);
 }
-UnaryInst *UnaryInst::createNeg(Value *v1, BasicBlock *parent) {
-    return new UnaryInst(v1->getType(), Instruction::NEG, v1, parent);
-}
+//UnaryInst *UnaryInst::createNeg(Value *v1, BasicBlock *parent) {
+//    return new UnaryInst(v1->getType(), Instruction::NEG, v1, parent);
+//}
 UnaryInst *UnaryInst::createNot(Value *v1, BasicBlock *parent) {
     return new UnaryInst(v1->getType(), Instruction::NOT, v1, parent);
 }

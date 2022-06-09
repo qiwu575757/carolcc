@@ -32,10 +32,12 @@ public:
         _father = nullptr;
     }
 
-    std::string getName();
+    bool isBaiscBlock();
+    bool isIfBlock();
+    bool isWhileBlock();
 
     BaseBlock(BlockType ty, const std::string &name, Function *func);
-
+private:
     BlockType _block_type;
 };
 

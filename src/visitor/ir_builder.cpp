@@ -35,10 +35,10 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
     this->_basic_block = bb;
 } //
 
-  UnaryInst * IRBuilder::createNeg(Value *v1)
-  {
-      return UnaryInst::createNeg(v1, this->_basic_block);
-  }
+//  UnaryInst * IRBuilder::createNeg(Value *v1)
+//  {
+//      return UnaryInst::createNeg(v1, this->_basic_block);
+//  }
   UnaryInst * IRBuilder::createNot(Value *v1)
   {
       return UnaryInst::createNot(v1, this->_basic_block);

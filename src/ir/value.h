@@ -21,6 +21,7 @@ public:
     Type* getType() const;
     void addUse(User * user,unsigned value_num);
     std::string getName();
+    void setName(std::string name);
     virtual void accept(IrVisitorBase *v);
 };
 

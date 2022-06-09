@@ -28,7 +28,7 @@ public:
     //将baseblock插入基本块列表，并同时维护父子块关系
     void pushBaseBlock(BaseBlock *bb);
 
-    UnaryInst *createNeg(Value *v1);
+//    UnaryInst *createNeg(Value *v1);
     UnaryInst *createNot(Value *v1);
     BinaryInst *createAdd(Value *v1, Value *v2);
     BinaryInst *createSub(Value *v1, Value *v2);

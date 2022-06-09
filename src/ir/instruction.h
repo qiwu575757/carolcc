@@ -14,7 +14,7 @@ public:
         BR,
 
         // unary instructions
-        NEG,
+//        NEG,
         NOT,
         // binary instructions
         ADD,
@@ -54,7 +54,7 @@ public:
 
     bool isRet() { return _op_id == Instruction::RET; }
     bool isBr() { return _op_id == Instruction::BR; }
-    bool isNeg() { return _op_id == Instruction::NEG; }
+//    bool isNeg() { return _op_id == Instruction::NEG; }
     bool isNot() { return _op_id == Instruction::NOT; }
     bool isAdd() { return _op_id = Instruction::ADD; }
     bool isSub() { return _op_id = Instruction::SUB; }
@@ -94,7 +94,7 @@ private:
     UnaryInst(Type *type, OpKind op_id, Value *v1, BasicBlock *parent);
 
 public:
-    static UnaryInst *createNeg(Value *v1, BasicBlock *parent);
+//    static UnaryInst *createNeg(Value *v1, BasicBlock *parent);
     static UnaryInst *createNot(Value *v1, BasicBlock *parent);
 };
 
