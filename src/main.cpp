@@ -54,5 +54,7 @@ int main(int argc, char *argv[]) {
     // md_detail_shower->visit(*root);
     auto *builder = new SYSYBuilder();
     builder->build(root);
+    INFO("printing llvm ir");
+    builder->getModule()->HighIRprint("test.ll");
     return 0;
 }

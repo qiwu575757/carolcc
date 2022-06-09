@@ -5,8 +5,11 @@
 #include <unordered_map>
 class LLVMIrPrinter : public IrVisitorBase {
 public:
-    explicit LLVMIrPrinter(std::string &name) {
+    explicit LLVMIrPrinter(const std::string &name):depth(0) {
         output_file.open(name);
+    }
+    ~LLVMIrPrinter(){
+        output_file.close();
     }
 
 private:
@@ -35,7 +38,20 @@ private:
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);
     void NameInstr(Instruction *instr);
+    void print_tabs(){
+        output_file<<std::string(depth,' ')  ;
+    }
+    void add_tab(){
+        depth+=4;
+    }
+    void delete_tab(){
+        if(depth>=4)
+            depth-=4;
+        else
+            WARNNING("too many right shift tabs");
+    }
 
+    int depth;
     std::ofstream output_file;
     std::unordered_map<Value *, int> seq;
 };
