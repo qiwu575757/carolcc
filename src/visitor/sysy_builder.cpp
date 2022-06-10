@@ -1190,6 +1190,7 @@ void SYSYBuilder::visit(tree_array_ident &node) {
                 val = builder->createMul(val, array_params[j]);
             }
             tmp_ptr = builder->createGEP(tmp_ptr, {val});
+            i++;
         }
     } else {
         tmp_ptr = var;

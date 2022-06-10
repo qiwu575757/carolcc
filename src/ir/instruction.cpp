@@ -272,6 +272,7 @@ void LoadInst::accept(IrVisitorBase *v) {
 }
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops, BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
+    ERROR("depreciated");
 }
 GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs, BasicBlock *parent)
     : Instruction(PointerType::get(getElementType(ptr, idxs)), Instruction::GEP,

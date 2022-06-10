@@ -178,6 +178,7 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
     output_file << std::endl;
 }
 void LLVMIrPrinter::visit(UnaryInst *node) {
+    ERROR("todo");
 }
 void LLVMIrPrinter::visit(BinaryInst *node) {
     output_file<<node->getPrintName()<<" = "<<node->getOperatorString()<<" ";
@@ -201,6 +202,18 @@ void LLVMIrPrinter::visit(CmpInst *node) {
 void LLVMIrPrinter::visit(BranchInst *node) {
 }
 void LLVMIrPrinter::visit(GetElementPtrInst *node) {
+    output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
+    node->getElementType()->print(output_file);
+    output_file<<", ";
+    for(int i=0;i<node->getOperandNumber();i++){
+        auto oprt = node->getOperand(i);
+        if(i!=0){
+            output_file<<", ";
+        }
+        oprt->getType()->print(output_file);
+        output_file<<" "<<oprt->getPrintName();
+    }
+    output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(CallInst *node) {
 }
