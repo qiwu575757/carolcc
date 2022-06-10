@@ -151,9 +151,15 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   AllocaInst *IRBuilder::createAlloca(Type *ty) {
       return AllocaInst::createAlloca(ty,this->_basic_block);
   }
+AllocaInst *IRBuilder::createAllocaAtEntry(Type *ty) {
+    return AllocaInst::createAlloca(ty,this->_entry_block);
+}
   HIR *IRBuilder::createBreak() {
       return HIR::createBreak(this->_basic_block);
   }
   HIR *IRBuilder::createContinue() {
       return HIR::createContinue(this->_basic_block);
+  }
+  void IRBuilder::SetEntryBlock(BasicBlock *bb) {
+      _entry_block=bb;
   }

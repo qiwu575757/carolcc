@@ -78,11 +78,17 @@ void SYSYBuilder::visit(tree_func_def &node) {
                     param_types.push_back(TyVoid);
                 }
             } else if (param->funcfparamarray != nullptr) {
+                Type *array_type;
                 if (param->funcfparamarray->b_type->type == type_helper::INT) {
-                    param_types.push_back(TyInt32Ptr);
+                    array_type = Type::getInt32Ty();
                 } else if (param->funcfparamarray->b_type->type == type_helper::FLOAT) {
-                    param_types.push_back(TyFloatPtr);
+                    array_type = Type::getFloatTy();
                 }
+                for (auto array_param: param->funcfparamarray->exps) {
+                    auto bnd = static_cast<ConstantInt *>(G_tmp_val)->getValue();
+                    array_type = ArrayType::get(array_type, bnd);
+                }
+                param_types.push_back(PointerType::get(array_type));
             }
         }
     }
@@ -93,7 +99,8 @@ void SYSYBuilder::visit(tree_func_def &node) {
 
     G_cur_fun = fun;
 
-    auto funBB = BasicBlock::create("entry", fun);
+    auto funBB = BasicBlock::create("", fun);// entry
+    builder->SetEntryBlock(funBB);
     builder->SetInstrInsertPoint(funBB);
     scope.enter();
 
@@ -108,50 +115,32 @@ void SYSYBuilder::visit(tree_func_def &node) {
     if (node.funcfparams != nullptr) {
         for (auto param: node.funcfparams->funcfparamlist) {
             if (param->funcfparamarray != nullptr) {
-                if (param->funcfparamarray->b_type->type == type_helper::INT) {
-                    auto array_alloc = builder->createAlloca(TyInt32Ptr);
-                    builder->createStore(static_cast<Value *>(args[i]), array_alloc);
-                    std::vector<Value *> array_params;
-                    array_params.push_back(CONST_INT(0));
-                    for (auto array_param: param->funcfparamarray->exps) {
-                        array_param->accept(*this);
-                        array_params.push_back(G_tmp_val);
-                    }
-                    scope.push(param->funcfparamarray->id, array_alloc);
-                    scope.push(param->funcfparamarray->id, array_alloc, array_params);
-                    args[i]->setArrayBound(array_params);
-                } else {
-                    auto array_alloc = builder->createAlloca(TyFloatPtr);
-                    builder->createStore(static_cast<Value *>(args[i]), array_alloc);
-                    std::vector<Value *> array_params;
-                    array_params.push_back(CONST_FLOAT(0));
-                    for (auto array_param: param->funcfparamarray->exps) {
-                        array_param->accept(*this);
-                        array_params.push_back(G_tmp_val);
-                    }
-                    scope.push(param->funcfparamarray->id, array_alloc);
-                    scope.push(param->funcfparamarray->id, array_alloc, array_params);
-                    args[i]->setArrayBound(array_params);
+                auto array_alloc = builder->createAllocaAtEntry(args[i]->getType());
+                builder->createStore(static_cast<Value *>(args[i]), array_alloc);
+                std::vector<Value *> array_params;
+                array_params.push_back(CONST_INT(0));
+                for (auto array_param: param->funcfparamarray->exps) {
+                    array_param->accept(*this);
+                    array_params.push_back(G_tmp_val);
                 }
+                scope.push(param->funcfparamarray->id, array_alloc);
+                scope.push(param->funcfparamarray->id, array_alloc, array_params);
+                args[i]->setArrayBound(array_params);
             } else {// 单个
-                if (param->funcfparamone->b_type->type == type_helper::INT) {
-                    auto alloc = builder->createAlloca(TyInt32);
-                    builder->createStore(args[i], alloc);
-                    scope.push(param->funcfparamone->id, alloc);
-                } else {
-                    auto alloc = builder->createAlloca(TyFloat);
-                    builder->createStore(args[i], alloc);
-                    scope.push(param->funcfparamone->id, alloc);
-                }
+                auto alloc = builder->createAllocaAtEntry(TyInt32);
+                builder->createStore(args[i], alloc);
+                scope.push(param->funcfparamone->id, alloc);
             }
             i++;
         }
     }
+
     for (auto &b: node.block) {
         b->accept(*this);
     }
     scope.exit();
 }
+
 
 void SYSYBuilder::visit(tree_block &node) {
     /*dyb TODO*/
@@ -334,8 +323,7 @@ void SYSYBuilder::visit(tree_init_val &node) {
             } else if (G_tmp_type->isFloatTy()) {
                 node.exp->accept(*this);
                 G_tmp_val = (Value *) (CONST_FLOAT(G_tmp_float));
-            }
-            else {
+            } else {
                 ERROR("ERROR TYPE");
             }
             G_tmp_computing = false;
@@ -431,12 +419,11 @@ void SYSYBuilder::visit(tree_const_def &node) {
         ERROR("const_def need init value");
     } else {
         if (node.const_exp_list == nullptr) {// 非数组情况
-            G_tmp_computing = true;
+                                             //            G_tmp_computing = true;
             INFO(" const_def 374");
             node.const_init_val->accept(*this);
-            G_tmp_computing = false;
-            auto global_var = GlobalVariable::create(node.id, &*module, G_tmp_val->getType(), true, static_cast<Constant *>(G_tmp_val));
-            MyAssert("error in push scope", scope.push(node.id, global_var));
+            //            G_tmp_computing = false;
+            scope.push(node.id, G_tmp_val);
         } else if (node.const_exp_list != nullptr) {// arrray
             Type *array_element_ty = G_tmp_type;
             std::vector<int32_t> bounds;
@@ -457,7 +444,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
                 scope.push(node.id, var);
             } else {// local var array
                 //  todo 感觉这里可以跟全局做相同的处理。
-                auto array_alloca = builder->createAlloca(array_element_ty);
+                auto array_alloca = builder->createAllocaAtEntry(array_element_ty);
                 scope.push(node.id, array_alloca);
                 array_alloca->setInit();
                 auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
@@ -513,7 +500,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 scope.push(node.id, var);
             }
         } else {// local array
-            auto array_alloca = builder->createAlloca(ty_array);
+            auto array_alloca = builder->createAllocaAtEntry(ty_array);
             scope.push(node.id, array_alloca);
             if (node.init_val != nullptr) {
                 array_alloca->setInit();
@@ -549,7 +536,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 scope.push(node.id, var);
             }
         } else {
-            auto val_alloc = builder->createAlloca(TyInt32);
+            auto val_alloc = builder->createAllocaAtEntry(TyInt32);
             scope.push(node.id, val_alloc);
             if (node.init_val != nullptr) {// 变量赋值
                 node.init_val->accept(*this);

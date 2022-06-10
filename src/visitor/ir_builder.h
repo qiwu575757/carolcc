@@ -8,6 +8,7 @@
 class IRBuilder {
 private:
     BasicBlock *_basic_block; //注意这个块和父基本块不是父子关系 只是用于插入指令
+    BasicBlock *_entry_block;
     BaseBlock *_father_block;
     std::list<BaseBlock *>* _base_block_list;
 public:
@@ -21,6 +22,7 @@ public:
     std::list<BaseBlock *>* GetInsertBaseBlockList();
     //在该基本块中插入指令
     void SetInstrInsertPoint(BasicBlock *bb);
+    void SetEntryBlock(BasicBlock *bb);
     //在该基本块表中插入基本块 这个是在设定父基本块时将对应的基本块表设定进来
     void SetBasicBlockInsertPoint(std::list<BaseBlock *>*);
     //设定父基本块 方便维护父子关系
@@ -35,12 +37,12 @@ public:
     BinaryInst *createMul(Value *v1, Value *v2);
     BinaryInst *createDiv(Value *v1, Value *v2);
     BinaryInst *createRem(Value *v1, Value *v2);
-    BinaryInst *createShl(Value *v1, Value *v2);
-    BinaryInst *createLshr(Value *v1, Value *v2);
-    BinaryInst *createAshr(Value *v1, Value *v2);
+//    BinaryInst *createShl(Value *v1, Value *v2);
+//    BinaryInst *createLshr(Value *v1, Value *v2);
+//    BinaryInst *createAshr(Value *v1, Value *v2);
     BinaryInst *createAnd(Value *v1, Value *v2);
     BinaryInst *createOr(Value *v1, Value *v2);
-    BinaryInst *createXor(Value *v1, Value *v2);
+//    BinaryInst *createXor(Value *v1, Value *v2);
     CmpInst *createEQ(Type *type, Value *v1, Value *v2);
     CmpInst *createNEQ(Type *type, Value *v1, Value *v2);
     CmpInst *createGT(Type *type, Value *v1, Value *v2);
@@ -58,6 +60,7 @@ public:
     CallInst *createCall(Function *func, std::vector<Value *> &args);
     ZExtInst *creatZExtInst(Type *ty, Value *val);
     AllocaInst *createAlloca(Type *ty);
+    AllocaInst *createAllocaAtEntry(Type *ty);
     HIR* createBreak();
     HIR* createContinue();
 };

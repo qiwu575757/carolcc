@@ -63,7 +63,7 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
     if (node->isAlloca()) {
         output_file << "%" << node->getName() << " = "
                     << "alloca ";
-        node->getType()->print(output_file);
+        node->getType()->getPointerElementType()->print(output_file);
         output_file << ", align 4" << std::endl;
     } else {
         ERROR("null AllocaInst");
@@ -105,21 +105,8 @@ void LLVMIrPrinter::visit(Function *node) {
     output_file << "}" << std::endl;
 }
 void LLVMIrPrinter::visit(Argument *node) {
-    if (node->getType()->isPointerTy()) {
-        for (int i = 1; i < node->getArrayBound().size(); i++) {
-            output_file << "[ ";
-            auto bound = static_cast<ConstantInt *>(node->getArrayBound().at(i));
-            output_file << bound->getValue() << " x ";
-        }
-        node->getType()->getPointerElementType()->print(output_file);
-        for (int i = 1; i < node->getArrayBound().size(); i++) {
-            output_file << "]";
-        }
-        output_file << "* ";
-    } else {
-        output_file << node->getType() << " " << node->getName();
-    }
-    output_file << "%" << node->getName();
+    node->getType()->print(output_file);
+    output_file << node->getPrintName();
 }
 void LLVMIrPrinter::visit(BaseBlock *node) {
     INFO(" HIR printer visiting baseblock");
