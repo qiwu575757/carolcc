@@ -59,96 +59,6 @@ std::string getname(int n) {
         return "%" + std::to_string(n + var_no);
     }
 }
-//void LLVMIrPrinter::visit(UnaryInst*node) {
-//    if(node->isNot()){//直接加负号
-//        if(node->getType()->isIntegerTy()){//%6 = sub i32 0, %5
-//            printf("%s = sub i32 0, %s", getname(0), node->getOperand(0)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %5 = fsub float -0.000000e+00, %4
-//            printf("%s = fsub float -0.000000e+00, %s", getname(0), node->getOperand(0)->getName());
-//        }else if(node->getType()->isBool()){   //%4 = load i8, i8* %2, align 1
-//                                               //%5 = trunc i8 %4 to i1
-//                                               //%6 = zext i1 %5 to i32
-//                                               //%7 = sub nsw i32 0, %6
-//            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
-//            printf("%s = trunc i8 %s to i1", getname(0), getname(-1));
-//            printf("%s = zext i1 %s to i32", getname(0), getname(-1));
-//            printf("%s = sub nsw i32 0, %s", getname(0), getname(-1));
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isNeg()){//!a
-//        if(node->getType()->isIntegerTy()){//%5 = icmp ne i32 %4, 0
-//                                           //%6 = xor i1 %5, true
-//                                           //%7 = zext i1 %6 to i32
-//            printf("%s = icmp ne i32 %s, 0", getname(0), node->getOperand(0)->getName());
-//            printf("%s = xor i1 %s, true", getname(0), getname(-1));
-//            printf("%s = zext i1 %s to i32", getname(0), getname(-1));
-//        }else if(node->getType()->isFloatTy()){ // %5 = fcmp une float %4, 0.000000e+00
-//                                                // %6 = xor i1 %5, true
-//                                                // %7 = zext i1 %6 to i32
-//                                                // %8 = sitofp i32 %7 to float
-//            printf("%s = fcmp une float %s, 0.000000e+00", getname(0), node->getOperand(0)->getName());
-//            printf("%s = xor i1 %s, true", getname(0), getname(-1));
-//            printf("%s = zext i1 %s to i32", getname(0), getname(-1));
-//            printf("%s = sitofp i32 %s to float", getname(0), getname(-1));
-//        }else if(node->getType()->isBool()){   //%4 = load i8, i8* %2, align 1
-//                                               //%5 = trunc i8 %4 to i1
-//                                               //%6 = xor i1 %5, true
-//                                               //%7 = zext i1 %6 to i8
-//            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
-//            printf("%s = trunc i8 %s to i1", getname(0), getname(-1));
-//            printf("%s = xor i1 %s, true", getname(0), getname(-1));
-//            printf("%s = zext i1 %s to i8", getname(0), getname(-1));
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else{
-//        WARNNING("null UnaryInst");
-//    }
-//}
-//void LLVMIrPrinter::visit(BinaryInst*node) {
-//    if(node->isAdd()){
-//        if(node->getType()->isIntegerTy()){//%7 = add nsw i32 %5, %6
-//            printf("%s = add nsw i32 %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %7 = fadd float %5, %6
-//            printf("%s = fadd float %s, %s", getname(0),  node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isBool()){   //bool 加法会出现吗？我看llvm里是全部转成int然后加
-//
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isSub()){
-//        if(node->getType()->isIntegerTy()){//%7 = sub nsw i32 %5, %6
-//            printf("%s = sub nsw i32 %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %7 = fsub float %5, %6
-//            printf("%s = fsub float %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isBool()){//同上
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isMul()){
-//        if(node->getType()->isIntegerTy()){//%7 = mul nsw i32 %5, %6
-//            printf("%s = mul nsw i32 %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %7 = fmul float %5, %6
-//            printf("%s = fmul float %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isBool()){//同上
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isDiv()){
-//        if(node->getType()->isIntegerTy()){//%7 = sdiv i32 %5, %6
-//            printf("%s = sdiv i32 %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %7 = fdiv float %5, %6
-//            printf("%s = fdiv float %s, %s", getname(0), node->getOperand(0)->getName(),node->getOperand(1)->getName());
-//        }else if(node->getType()->isBool()){//同上
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isRem()){
-//    }else{
-//        WARNNING("null BinaryInst");
-//    }
-//}
 void LLVMIrPrinter::visit(AllocaInst *node) {
     if (node->isAlloca()) {
         output_file << "%" << node->getName() << " = "
@@ -178,7 +88,7 @@ void LLVMIrPrinter::visit(Function *node) {
     INFO("printing func type");
     node->getResultType()->print(output_file);
     INFO("print func name");
-    output_file << "@" << node->getName() << "(";
+    output_file << node->getPrintName() << "(";
     INFO("func arg number is %d", node->getNumArgs());
     for (int i = 0; i < node->getNumArgs(); i++) {
         auto &arg = node->getArgs().at(i);
@@ -250,42 +160,9 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
     }
     delete_tab();
 }
-//void LLVMIrPrinter::visit(CmpInst*node) {
-//    if(node->isEq()){
-//        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
-//        //不太确定
-//            printf("%s = load i32, i32* %s, align 4", getname(0), node->getOperand(0)->getName());
-//        }else if(node->getType()->isFloatTy()){ // %5 = load float, float* %2, align 4
-//            printf("%s = load float, float* %s, align 4", getname(0), node->getOperand(0)->getName());
-//        }else if(node->getType()->isBool()){//%8 = load i8, i8* %3, align 1
-//            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
-//        }else{
-//            WARNNING("wrong Type");
-//        }
-//    }else if(node->isNeq()){
-//    }else if(node->isGt()){
-//    }else if(node->isGe()){
-//    }else if(node->isLt()){
-//
-//    }else if(node->isLe()){
-//    }else{
-//        WARNNING("null CmpInst");
-//    }
-//}
 void LLVMIrPrinter::visit(LoadInst *node) {
 
     if (node->isLoad()) {
-        //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4
-        //        //不太确定
-        //            printf("%s = load i32, i32* %s, align 4", getname(0), node->getOperand(0)->getName());
-        //        }else if(node->getType()->isFloatTy()){ // %5 = load float, float* %2, align 4
-        //            printf("%s = load float, float* %s, align 4", getname(0), node->getOperand(0)->getName());
-        //        }else if(node->getType()->isBool()){//%8 = load i8, i8* %3, align 1
-        //            printf("%s = load i8, i8* %s, align 1", getname(0), node->getOperand(0)->getName());
-        //        }else{
-        //            WARNNING("wrong Type");
-        //        }
-        // 输出自己
         output_file << "%" << node->getName() << " = "
                     << "load ";
         // 输出自己的类型
@@ -293,7 +170,7 @@ void LLVMIrPrinter::visit(LoadInst *node) {
         output_file << ", ";
         // 输出第一个操作数
         node->getOperand(0)->getType()->print(output_file);
-        output_file << "%" << node->getOperand(0)->getName() << ", "
+        output_file << node->getOperand(0)->getPrintName() << ", "
                     << "align 4" << std::endl;
     } else {
         ERROR("null LoadInst");
@@ -303,11 +180,10 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
     INFO("HIR printer visiting return stmt");
     output_file << "ret ";
     node->getType()->print(output_file);
-    if (!node->getType()->isVoidTy()) {
-        if (node->getType()->isIntegerTy()) {
-            output_file << static_cast<ConstantInt *>(node->getOperand(0))->getValue();
-        } else if (node->getType()->isFloatTy()) {
-            output_file << static_cast<ConstantFloat *>(node->getOperand(0))->getValue();
+    if (node->getOperandNumber()!=0) {
+        node->getOperand(0)->getType()->print(output_file);
+        if (node->getOperand(0)->getType()->isIntegerTy() || node->getOperand(0)->getType()->isFloatTy()) {
+            output_file << node->getOperand(0)->getPrintName();
         } else {
             ERROR("error type");
         }
@@ -317,8 +193,16 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
 void LLVMIrPrinter::visit(UnaryInst *node) {
 }
 void LLVMIrPrinter::visit(BinaryInst *node) {
+    output_file<<node->getPrintName()<<" = ";
+
 }
 void LLVMIrPrinter::visit(StoreInst *node) {
+    output_file << "store ";
+    node->getOperand(0)->getType()->print(output_file);
+    output_file << node->getOperand(0)->getPrintName() << ", ";
+    node->getOperand(1)->getType()->print(output_file);
+    output_file << node->getOperand(1)->getPrintName() << ", "
+                << "align 4" << std::endl;
 }
 void LLVMIrPrinter::visit(Value *node) {
 }
@@ -341,7 +225,7 @@ void LLVMIrPrinter::visit(ConstantFloat *node) {
 void LLVMIrPrinter::visit(ConstantArray *node) {
 }
 void LLVMIrPrinter::visit(GlobalVariable *node) {
-    output_file << "@" << node->getName() << "= dso_local ";
+    output_file << node->getPrintName() << "= dso_local ";
     if (node->isConstant()) {
         output_file << "constant ";
     } else {
@@ -349,10 +233,8 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
     }
     node->getType()->getPointerElementType()->print(output_file);
     if (node->getInit() != nullptr) {
-        if (node->getType()->getPointerElementType()->isFloatTy()) {
-            output_file << static_cast<ConstantFloat *>(node->getInit())->getValue();
-        } else if (node->getType()->getPointerElementType()->isIntegerTy()) {
-            output_file << static_cast<ConstantInt *>(node->getInit())->getValue();
+        if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
+            output_file << node->getInit()->getPrintName();
         } else if (node->getType()->isArrayTy() || node->getType()->isPointerTy()) {
             ERROR("todo");
         } else {

@@ -29,6 +29,9 @@ public:
     int getValue() const;
     void setValue(int value);
     static ConstantInt *create(int val);
+    std::string getPrintName()override{
+        return std::to_string(_value);
+    }
 };
 
 class ConstantFloat : public Constant {
@@ -38,6 +41,9 @@ private:
 
 public:
     void accept(IrVisitorBase *v) override;
+    std::string getPrintName()override{
+        return std::to_string(_value);
+    }
 
 public:
     float getValue() const;
@@ -74,6 +80,9 @@ class GlobalValue : public Constant {
 public:
     explicit GlobalValue(Type *ty, const std::string &name = "", unsigned num_ops = 0) : Constant(ty, name, num_ops) {}
     void accept(IrVisitorBase *v) override;
+    std::string getPrintName()override{
+        return "@"+getName();
+    }
 };
 
 #endif

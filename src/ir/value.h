@@ -23,6 +23,9 @@ public:
     std::string getName();
     void setName(std::string name);
     virtual void accept(IrVisitorBase *v);
+    virtual std::string getPrintName(){
+        return "%"+getName();
+    }
 };
 
 

@@ -110,6 +110,10 @@ void BinaryInst::accept(IrVisitorBase *v) {
 
     v->visit(this);
 }
+std::string BinaryInst::getOperatorString() const {
+
+
+}
 ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v) : Instruction(type, op_id, 1) {
     setOperand(0, v);
 }
@@ -117,10 +121,10 @@ ReturnInst::ReturnInst(Type *type, Value *v) : Instruction(type, Instruction::RE
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createRet(Value *v, BasicBlock *parent) {
-    return new ReturnInst(v->getType(), v, parent);
+    return new ReturnInst(Type::getVoidTy(), v, parent);
 }
 ReturnInst::ReturnInst(Type *type, Value *v, BasicBlock *parent)
-    : Instruction(type, OpKind::RET, 1, parent) {
+    : Instruction(Type::getVoidTy(), OpKind::RET, 1, parent) {
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {
@@ -184,7 +188,7 @@ void CmpInst::accept(IrVisitorBase *v) {
     v->visit(this);
 }
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, Value *false_block, BasicBlock *parent)
-    : Instruction(Type::getInt1Ty(),
+    : Instruction(Type::getVoidTy(),
                   Instruction::BR, 3, parent),
       _br_kind(br_op) {
     setOperand(0, cond);
@@ -192,7 +196,7 @@ BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *true_block, V
     setOperand(2, false_block);
 }
 BranchInst::BranchInst(BranchInst::BrOp br_op, Value *cond, Value *block, BasicBlock *parent)
-    : Instruction(Type::getInt1Ty(),
+    : Instruction(Type::getVoidTy(),
                   Instruction::BR, 2, parent),
       _br_kind(br_op) {
     setOperand(0, cond);
@@ -228,7 +232,7 @@ void BranchInst::accept(IrVisitorBase *v) {
 }
 
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
-    : Instruction(value->getType()->isFloatTy() ? Type::getFloatPtrTy() : Type::getInt32PtrTy(), Instruction::STORE, 2, parent) {
+    : Instruction(Type::getVoidTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
 }
@@ -241,6 +245,7 @@ void StoreInst::accept(IrVisitorBase *v) {
 }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1, parent) {
+        setOperand(0,ptr);
 }
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);

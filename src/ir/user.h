@@ -23,6 +23,7 @@ public:
      */
     void setOperand(unsigned no, Value *v);
     Value* getOperand(unsigned no)const;
+    unsigned getOperandNumber() const{return _use_number;};
 
 private:
     std::vector<Value *> _operands_list;
