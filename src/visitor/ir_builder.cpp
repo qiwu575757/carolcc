@@ -63,18 +63,18 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   {
       return BinaryInst::createRem(v1, v2, this->_basic_block);
   }
-  BinaryInst * IRBuilder::createShl(Value *v1, Value *v2)
-  {
-      return BinaryInst::createShl(v1, v2, this->_basic_block);
-  }
-  BinaryInst * IRBuilder::createLshr(Value *v1, Value *v2)
-  {
-      return BinaryInst::createLshr(v1, v2, this->_basic_block);
-  }
-  BinaryInst * IRBuilder::createAshr(Value *v1, Value *v2)
-  {
-      return BinaryInst::createAshr(v1, v2, this->_basic_block);
-  }
+//  BinaryInst * IRBuilder::createShl(Value *v1, Value *v2)
+//  {
+//      return BinaryInst::createShl(v1, v2, this->_basic_block);
+//  }
+//  BinaryInst * IRBuilder::createLshr(Value *v1, Value *v2)
+//  {
+//      return BinaryInst::createLshr(v1, v2, this->_basic_block);
+//  }
+//  BinaryInst * IRBuilder::createAshr(Value *v1, Value *v2)
+//  {
+//      return BinaryInst::createAshr(v1, v2, this->_basic_block);
+//  }
   BinaryInst * IRBuilder::createAnd(Value *v1, Value *v2)
   {
       return BinaryInst::createAnd(v1, v2, this->_basic_block);
@@ -83,10 +83,10 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
   {
       return BinaryInst::createOr(v1, v2, this->_basic_block);
   }
-  BinaryInst * IRBuilder::createXor(Value *v1, Value *v2)
-  {
-      return BinaryInst::createXor(v1, v2, this->_basic_block);
-  }
+//  BinaryInst * IRBuilder::createXor(Value *v1, Value *v2)
+//  {
+//      return BinaryInst::createXor(v1, v2, this->_basic_block);
+//  }
   CmpInst * IRBuilder::createEQ(Type *type, Value *v1, Value *v2)
   {
       return CmpInst::createEQ(type, v1, v2, this->_basic_block);

@@ -34,10 +34,10 @@
 #endif
 
 #ifdef __ERROR
-#define ERROR(format, ...)                                                     \
-    do {                                                                       \
-        printf(RED "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-        exit(3);                                                               \
+#define ERROR(format, ...)                                                          \
+    do {                                                                            \
+        printf(RED "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        exit(3);                                                                    \
     } while (0)
 #else
 #define ERROR(format, ...)
@@ -45,32 +45,32 @@
 
 
 #ifdef __WARN
-#define WARNNING(format, ...) \
-    do { \
+#define WARNNING(format, ...)                                  \
+    do {                                                       \
         printf("\x1b[93m" format "\x1b[0m \n", ##__VA_ARGS__); \
-        fflush(stdout); \
-    } while(0)
+        fflush(stdout);                                        \
+    } while (0)
 #else
 #define WARNNING(format, ...)
 #endif
 
 
 #ifdef __INFO
-#define INFO(format, ...) \
-    do {        \
-        printf(BLUE "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-        fflush(stdout);                                                               \
-    } while(0)
+#define INFO(format, ...)                                                            \
+    do {                                                                             \
+        printf(BLUE "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
 #else
 #define INFO(format, ...)
 #endif
 
 #ifdef __TRACE
-#define TRACE(format, ...) \
-    do {        \
-        printf(GREEN "[%s:%d]" format RESET"\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+#define TRACE(format, ...)                                                            \
+    do {                                                                              \
+        printf(GREEN "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
         fflush(stdout);                                                               \
-    } while(0)
+    } while (0)
 #else
 #define TRACE(format, ...)
 #endif
@@ -127,7 +127,7 @@ private:
 
 public:
     explicit logger(const std::string &file_name, LOG_TYPE type, bool to_screen, bool to_file)
-        : log_file_name(file_name), log_type(type), to_screen(to_screen), to_file(to_file), print_file_position(false) {
+        : log_type(type), log_file_name(file_name), to_file(to_file), to_screen(to_screen), print_file_position(false) {
         std::string name = file_name + ".log";
         f = fopen(name.c_str(), "w+");
     }

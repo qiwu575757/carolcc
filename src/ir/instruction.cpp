@@ -85,34 +85,50 @@ BinaryInst *BinaryInst::createDiv(Value *v1, Value *v2, BasicBlock *parent) {
 BinaryInst *BinaryInst::createRem(Value *v1, Value *v2, BasicBlock *parent) {
     return new BinaryInst(v1->getType(), Instruction::REM, v1, v2, parent);
 }
-BinaryInst *BinaryInst::createShl(Value *v1, Value *v2, BasicBlock *parent) {
-    return new BinaryInst(v1->getType(), Instruction::SHL, v1, v2, parent);
-}
-BinaryInst *BinaryInst::createLshr(Value *v1, Value *v2, BasicBlock *parent) {
-    return new BinaryInst(v1->getType(), Instruction::LSHR, v1, v2, parent);
-}
-BinaryInst *BinaryInst::createAshr(Value *v1, Value *v2, BasicBlock *parent) {
-    return new BinaryInst(v1->getType(), Instruction::ASHR, v1, v2, parent);
-}
+//BinaryInst *BinaryInst::createShl(Value *v1, Value *v2, BasicBlock *parent) {
+//    return new BinaryInst(v1->getType(), Instruction::SHL, v1, v2, parent);
+//}
+//BinaryInst *BinaryInst::createLshr(Value *v1, Value *v2, BasicBlock *parent) {
+//    return new BinaryInst(v1->getType(), Instruction::LSHR, v1, v2, parent);
+//}
+//BinaryInst *BinaryInst::createAshr(Value *v1, Value *v2, BasicBlock *parent) {
+//    return new BinaryInst(v1->getType(), Instruction::ASHR, v1, v2, parent);
+//}
 BinaryInst *BinaryInst::createAnd(Value *v1, Value *v2, BasicBlock *parent) {
     return new BinaryInst(v1->getType(), Instruction::AND, v1, v2, parent);
 }
 BinaryInst *BinaryInst::createOr(Value *v1, Value *v2, BasicBlock *parent) {
     return new BinaryInst(v1->getType(), Instruction::OR, v1, v2, parent);
 }
-BinaryInst *BinaryInst::createXor(Value *v1, Value *v2, BasicBlock *parent) {
-    return new BinaryInst(v1->getType(), Instruction::XOR, v1, v2, parent);
-}
+//BinaryInst *BinaryInst::createXor(Value *v1, Value *v2, BasicBlock *parent) {
+//    return new BinaryInst(v1->getType(), Instruction::XOR, v1, v2, parent);
+//}
 BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *v2, BasicBlock *parent)
-    : Instruction(type, op_id, 1, parent) {
+    : Instruction(type, op_id, 2, parent) {
+    setOperand(0,v1);
+    setOperand(1,v2);
 }
 void BinaryInst::accept(IrVisitorBase *v) {
 
     v->visit(this);
 }
 std::string BinaryInst::getOperatorString() const {
-
-
+    auto op_kind = getInstructionKind();
+    switch (op_kind) {
+        case Instruction::ADD:return "add";
+        case Instruction::SUB:return "sub";
+        case Instruction::MUL:return "mul";
+        case Instruction::DIV:return "div";
+        case Instruction::REM:return "rem";
+//        case Instruction::SHL:return "shl";
+//        case Instruction::LSHR:return "lshr";
+//        case Instruction::ASHR:return "ashr";
+        case Instruction::AND:return "and";
+        case Instruction::OR:return "or";
+//        case Instruction::XOR:return "xor";
+        default:
+            ERROR("error binary op kind");
+    }
 }
 ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v) : Instruction(type, op_id, 1) {
     setOperand(0, v);

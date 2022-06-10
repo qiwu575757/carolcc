@@ -193,7 +193,10 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
 void LLVMIrPrinter::visit(UnaryInst *node) {
 }
 void LLVMIrPrinter::visit(BinaryInst *node) {
-    output_file<<node->getPrintName()<<" = ";
+    output_file<<node->getPrintName()<<" = "<<node->getOperatorString()<<" ";
+                node->getType()->print(output_file);
+    output_file<< node->getOperand(0)->getPrintName()<<", "
+    << node->getOperand(1)->getPrintName()<<std::endl;
 
 }
 void LLVMIrPrinter::visit(StoreInst *node) {

@@ -52,10 +52,10 @@ public:
 
     };
 
-    OpKind getInstrKind() { return _op_id; }
+    OpKind getInstructionKind() const{ return _op_id; }
     bool isRet() { return _op_id == Instruction::RET; }
     bool isBr() { return _op_id == Instruction::BR; }
-    //    bool isNeg() { return _op_id == Instruction::NEG; }
+//    bool isNeg() { return _op_id == Instruction::NEG; }
     bool isNot() { return _op_id == Instruction::NOT; }
     bool isAdd() { return _op_id == Instruction::ADD; }
     bool isSub() { return _op_id == Instruction::SUB; }
@@ -110,12 +110,12 @@ public:
     static BinaryInst *createMul(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createDiv(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createRem(Value *v1, Value *v2, BasicBlock *parent);
-    static BinaryInst *createShl(Value *v1, Value *v2, BasicBlock *parent);
-    static BinaryInst *createLshr(Value *v1, Value *v2, BasicBlock *parent);
-    static BinaryInst *createAshr(Value *v1, Value *v2, BasicBlock *parent);
+//    static BinaryInst *createShl(Value *v1, Value *v2, BasicBlock *parent);
+//    static BinaryInst *createLshr(Value *v1, Value *v2, BasicBlock *parent);
+//    static BinaryInst *createAshr(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createAnd(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createOr(Value *v1, Value *v2, BasicBlock *parent);
-    static BinaryInst *createXor(Value *v1, Value *v2, BasicBlock *parent);
+//    static BinaryInst *createXor(Value *v1, Value *v2, BasicBlock *parent);
     std::string getOperatorString() const;
     void accept(IrVisitorBase *v) override;
 };
