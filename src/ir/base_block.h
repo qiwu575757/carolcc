@@ -36,6 +36,7 @@ public:
     bool isWhileBlock();
 
     BaseBlock(BlockType ty, const std::string &name, Function *func);
+    BaseBlock(BlockType ty, const std::string &name);
 private:
     BlockType _block_type;
 };

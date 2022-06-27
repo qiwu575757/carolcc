@@ -72,7 +72,7 @@ BasicBlock::BasicBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::BASIC, name, func) {
 }
 BasicBlock::BasicBlock(const std::string &name)
-    : BaseBlock(BlockType::BASIC, name, nullptr) {
+    : BaseBlock(BlockType::BASIC, name) {
 }
 BasicBlock::BasicBlock()
 : BasicBlock("", nullptr){
@@ -125,7 +125,7 @@ IfBlock::IfBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::IF, name, func) {
 }
 IfBlock::IfBlock(const std::string &name)
-    : BaseBlock(BlockType::IF, name, nullptr) {
+    : BaseBlock(BlockType::IF, name) {
 }
 IfBlock *IfBlock::create(const std::string &name, Function *func) {
     return new IfBlock(name, func);
@@ -192,7 +192,7 @@ WhileBlock::WhileBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::WHILE, name, func) {
 }
 WhileBlock::WhileBlock(const std::string &name)
-    : BaseBlock(BlockType::WHILE, name, nullptr) {
+    : BaseBlock(BlockType::WHILE, name) {
 }
 void WhileBlock::accept(IrVisitorBase *v) {
 

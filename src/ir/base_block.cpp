@@ -17,6 +17,9 @@ BaseBlock::BaseBlock(BlockType ty, const std::string &name, Function *func)
     : Value(Type::getLabelTy(), name), _father(nullptr), _func(func), _block_type(ty) {
     func->addBaseBlock(this);
 }
+BaseBlock::BaseBlock(BlockType ty, const std::string &name)
+    : Value(Type::getLabelTy(), name), _father(nullptr), _func(nullptr), _block_type(ty) {
+}
 void BaseBlock::accept(IrVisitorBase *v) {
     v->visit(this);
 }
