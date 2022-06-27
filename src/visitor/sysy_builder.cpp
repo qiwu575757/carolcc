@@ -85,6 +85,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                     array_type = Type::getFloatTy();
                 }
                 for (auto array_param: param->funcfparamarray->exps) {
+                    array_param->accept(*this);
                     auto bnd = static_cast<ConstantInt *>(G_tmp_val)->getValue();
                     array_type = ArrayType::get(array_type, bnd);
                 }
