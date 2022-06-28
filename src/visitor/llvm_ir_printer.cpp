@@ -227,27 +227,87 @@ void LLVMIrPrinter::visit(ConstantFloat *node) {
 }
 void LLVMIrPrinter::visit(ConstantArray *node) {
 }
+void LLVMIrPrinter::print_array_init(ConstantArray *array){
+    INFO("printing array init");
+    MyAssert("array is null", array != nullptr);
+    array->getType()->print(output_file);
+    auto array_type = static_cast<ArrayType *>(array->getType());
+    if(array_type->getElementType()->isInt32()||array_type->getElementType()->isFloatTy()){
+        bool isZeroInitializer=true;
+        for (size_t i = 0; i < array->getNumElements(); i++)
+        {
+            if(array_type->getElementType()->isInt32()){
+                auto constant_int = static_cast<ConstantInt*>(array->getElement(i));
+                if(constant_int->getValue()!=0){
+                    isZeroInitializer=false;
+                }
+            }
+            else if (array_type->getElementType()->isFloatTy()) {
+                auto constant_float = static_cast<ConstantFloat*>(array->getElement(i));
+                if(constant_float->getValue()!=0.0){
+                    isZeroInitializer=false;
+                }
+            }
+            else {
+                ERROR("error type");
+            }
+        }
+        if(isZeroInitializer){
+            output_file<<"zeroinitializer";
+        }
+        else {
+            output_file<<"[";
+            for (size_t i = 0; i < array->getNumElements(); i++)
+            {
+                array_type->getElementType()->print(output_file);
+                output_file<<" "<<array->getElement(i)->getPrintName();
+                if(i != array->getNumElements()){
+                    output_file<<", ";
+                }
+            }
+            output_file<<"]";
+        }
+    }
+    else if(array_type->getElementType()->isArrayTy()){ // element type is a
+        for (size_t i = 0; i < array->getNumElements(); i++)
+        {
+            print_array_init(dynamic_cast<ConstantArray*>(array->getElement(i)));
+        }
+    }
+
+
+}
 void LLVMIrPrinter::visit(GlobalVariable *node) {
+    INFO("printing global var");
     output_file << node->getPrintName() << "= dso_local ";
     if (node->isConstant()) {
         output_file << "constant ";
     } else {
         output_file << "global ";
     }
-    node->getType()->getPointerElementType()->print(output_file);
+    if(!node->getType()->getPointerElementType()->isArrayTy()){
+        node->getType()->getPointerElementType()->print(output_file);
+    }
     if (node->getInit() != nullptr) {
+        INFO("get init ");
         if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
             output_file << node->getInit()->getPrintName();
-        } else if (node->getType()->isArrayTy() || node->getType()->isPointerTy()) {
-            ERROR("todo");
+        } else if (node->getType()->getPointerElementType()->isArrayTy() ) {
+            print_array_init(static_cast<ConstantArray *>(node->getInit()));
         } else {
             ERROR("ERROR type");
         }
     } else {
+        INFO("null init ");
         if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
-            output_file << "0";
-        } else {
-            ERROR("TODO");
+            output_file << " 0";
+        } else if(node->getType()->getPointerElementType()->isArrayTy() ) {
+            
+            node->getType()->getPointerElementType()->print(output_file);
+            output_file<<"zeroinitializer";
+        }
+        else {
+            ERROR("ERROR type");    
         }
     }
     output_file << ", align 4" << std::endl;

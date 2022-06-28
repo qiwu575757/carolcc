@@ -39,6 +39,7 @@ private:
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);
     void NameInstr(Instruction *instr);
+    void print_array_init(ConstantArray *array);
     void print_tabs(){
         output_file<<std::string(depth,' ')  ;
     }

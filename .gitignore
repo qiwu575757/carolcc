@@ -17,3 +17,7 @@ Makefile
 *.log
 */*.log
 */core
+core
+
+*/*.ll
+*.ll

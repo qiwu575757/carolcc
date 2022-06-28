@@ -57,9 +57,8 @@ void SYSYBuilder::visit(tree_func_def &node) {
     INFO("line:%d", node._line_no);
     /*dyb TODO*/
     FunctionType *fun_type;
-    Type *ret_type;
-    std::vector<Type *> param_types;
 
+    Type *ret_type;
     if (node.type->type == type_helper::INT) {
         ret_type = TyInt32;
     } else if (node.type->type == type_helper::FLOAT) {
@@ -67,6 +66,8 @@ void SYSYBuilder::visit(tree_func_def &node) {
     } else {
         ret_type = TyVoid;
     }
+
+    std::vector<Type *> param_types;
     if (node.funcfparams != nullptr) {
         for (auto &param: node.funcfparams->funcfparamlist) {
             if (param->funcfparamone != nullptr) {
@@ -75,7 +76,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                 } else if (param->funcfparamone->b_type->type == type_helper::FLOAT) {
                     param_types.push_back(TyFloat);
                 } else {
-                    param_types.push_back(TyVoid);
+                    ERROR("illegal parameter type");
                 }
             } else if (param->funcfparamarray != nullptr) {
                 Type *array_type;

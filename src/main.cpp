@@ -37,6 +37,8 @@ int main(int argc, char *argv[]) {
         }
     }
     input_file = argv[argc - 1];
+    
+    
     yyin = fopen(input_file, "r");
     if (output_file != nullptr) {
         output = fopen(output_file, "w");
