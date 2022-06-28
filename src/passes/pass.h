@@ -10,7 +10,7 @@ protected:
     Module *_m;
 
 public:
-    pass(std::string &name, Module *m) : _name(name), _m(m){};
+    pass(std::string &name) : _name(name){};
     void set_name(std::string &name) {
         _name = name;
     }
@@ -20,12 +20,12 @@ public:
 
 class Analysis : public pass {
 public:
-    Analysis(std::string &name, Module *m) : pass(name, m) {}
+    Analysis(std::string &name) : pass(name) {}
 };
 
 class Transform : public pass {
 public:
-    Transform(std::string &name, Module *m) : pass(name, m) {}
+    Transform(std::string &name) : pass(name) {}
 };
 
 #endif// COMPILER_PASS_H

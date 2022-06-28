@@ -3,6 +3,8 @@
 #include "visitor/sysy_builder.h"
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/tree_visitor_base.h"
+#include "passes/pass_manager.h"
+#include "passes/hir_to_mir.h"
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
@@ -58,7 +60,12 @@ int main(int argc, char *argv[]) {
     auto *builder = new SYSYBuilder();
     builder->build(root);
     INFO("printing llvm ir");
-    builder->getModule()->HighIRprint("test.ll");
+    builder->getModule()->HighIRprint("test_Hir.ll");
     
+
+    pass_manager PM(builder->getModule().get());
+    PM.add_pass<HIRToMIR>("HIRToMIR");
+    builder->getModule()->MIRMEMprint("test_Mir.ll");
+
     return 0;
 }

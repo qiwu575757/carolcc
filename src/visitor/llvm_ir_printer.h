@@ -4,6 +4,8 @@
 #include "ir/global_variable.h"
 #include <fstream>
 #include <unordered_map>
+#include "passes/module.h"
+
 class LLVMIrPrinter : public IrVisitorBase {
 public:
     explicit LLVMIrPrinter(const std::string &name):depth(0) {
@@ -12,6 +14,7 @@ public:
     ~LLVMIrPrinter(){
         output_file.close();
     }
+    Module::IRLevel ir_level;
 
 private:
     void visit(UnaryInst *node) final;

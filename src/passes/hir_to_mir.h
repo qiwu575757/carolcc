@@ -5,7 +5,7 @@
 
 class HIRToMIR : public Transform {
 public:
-    HIRToMIR(std::string &name, Module *m) : Transform(name,m) {}
+    HIRToMIR(std::string &name) : Transform(name) {}
     void run() override;
     BasicBlock *genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                            BasicBlock *while_entry, BasicBlock *while_exit,

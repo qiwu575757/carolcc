@@ -58,6 +58,19 @@ void Module::addGlobalVariable(GlobalVariable *g) {
 }
 void Module::HighIRprint(const std::string &file_name) {
     LLVMIrPrinter printer(file_name);
+    printer.ir_level = HIR;
+    INFO("visiting global_var");
+    for (auto global_var: _global_variable_list) {
+        global_var->accept(&printer);
+    }
+    INFO("visiting func");
+    for (auto func: _function_list) {
+        func->accept(&printer);
+    }
+}
+void Module::MIRMEMprint(const std::string &file_name) {
+    LLVMIrPrinter printer(file_name);
+    printer.ir_level = MIR_MEM;
     INFO("visiting global_var");
     for (auto global_var: _global_variable_list) {
         global_var->accept(&printer);

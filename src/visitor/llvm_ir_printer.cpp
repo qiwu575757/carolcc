@@ -3,7 +3,7 @@
 #include "ir/instruction.h"
 #include "utils.h"
 #include <unordered_map>
-
+#include "passes/module.h"
 
 int var_no = 1;
 const std::string head = "%";
@@ -70,55 +70,109 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
     }
 }
 void LLVMIrPrinter::visit(Function *node) {
-    seq.clear();
-    depth = 0;
+    if(this->ir_level == Module::IRLevel::HIR){
+        seq.clear();
+        depth = 0;
 
-    // 先给变量编号
-    INFO("naming args");
-    for (auto &arg: node->getArgs()) {
-        NameValue(arg);
-    }
-    INFO("naming base blocks");
-    for (auto &bb: node->getBaseBlocks()) {
-        NameBaseBlock(bb);
-    }
-
-    INFO("printing func type");
-    if(node->getBaseBlocks().size() == 0 || node->getBaseBlocks().size()==0){
-        // declare
-        output_file<<"declare ";
-        node->getResultType()->print(output_file);
-        output_file << node->getPrintName() << "(";
-        for (int i = 0; i < node->getNumArgs(); i++) {
-            auto &arg = node->getArgs().at(i);
-            if (i != 0) {
-                output_file << ",";
-            }
-            arg->getType()->print(output_file);
+        // 先给变量编号
+        INFO("naming args");
+        for (auto &arg: node->getArgs()) {
+            NameValue(arg);
         }
-        output_file << ")" << std::endl;
-    }
-    else {
-        output_file << "define  dso_local ";
+        INFO("naming base blocks");
+        for (auto &bb: node->getBaseBlocks()) {
+            NameBaseBlock(bb);
+        }
+
         INFO("printing func type");
-        node->getResultType()->print(output_file);
-        INFO("print func name");
-        output_file << node->getPrintName() << "(";
-        INFO("func arg number is %d", node->getNumArgs());
-        for (int i = 0; i < node->getNumArgs(); i++) {
-            auto &arg = node->getArgs().at(i);
-            if (i != 0) {
-                output_file << ",";
+        if(node->getBaseBlocks().size() == 0 || node->getBaseBlocks().size()==0){
+            // declare
+            output_file<<"declare ";
+            node->getResultType()->print(output_file);
+            output_file << node->getPrintName() << "(";
+            for (int i = 0; i < node->getNumArgs(); i++) {
+                auto &arg = node->getArgs().at(i);
+                if (i != 0) {
+                    output_file << ",";
+                }
+                arg->getType()->print(output_file);
             }
-            arg->accept(this);
+            output_file << ")" << std::endl;
         }
-        output_file << ") {" << std::endl;
-        INFO("base block size is %zu", node->getBaseBlocks().size());
-        for (auto &base_block: node->getBaseBlocks()) {
-            base_block->accept(this);
+        else {
+            output_file << "define  dso_local ";
+            INFO("printing func type");
+            node->getResultType()->print(output_file);
+            INFO("print func name");
+            output_file << node->getPrintName() << "(";
+            INFO("func arg number is %d", node->getNumArgs());
+            for (int i = 0; i < node->getNumArgs(); i++) {
+                auto &arg = node->getArgs().at(i);
+                if (i != 0) {
+                    output_file << ",";
+                }
+                arg->accept(this);
+            }
+            output_file << ") {" << std::endl;
+            INFO("base block size is %zu", node->getBaseBlocks().size());
+            for (auto &base_block: node->getBaseBlocks()) {
+                base_block->accept(this);
+            }
+            output_file << "}" << std::endl;
         }
-        output_file << "}" << std::endl;
     }
+    else if(this->ir_level == Module::IRLevel::MIR_MEM){
+        seq.clear();
+        depth = 0;
+
+        // 先给变量编号
+        INFO("naming args");
+        for (auto &arg: node->getArgs()) {
+            NameValue(arg);
+        }
+        INFO("naming base blocks");
+        for (auto &bb: node->getBasicBlocks()) {
+            NameBaseBlock(bb);
+        }
+
+        INFO("printing func type");
+        if(node->getBasicBlocks().size() == 0 || node->getBasicBlocks().size()==0){
+            // declare
+            output_file<<"declare ";
+            node->getResultType()->print(output_file);
+            output_file << node->getPrintName() << "(";
+            for (int i = 0; i < node->getNumArgs(); i++) {
+                auto &arg = node->getArgs().at(i);
+                if (i != 0) {
+                    output_file << ",";
+                }
+                arg->getType()->print(output_file);
+            }
+            output_file << ")" << std::endl;
+        }
+        else {
+            output_file << "define  dso_local ";
+            INFO("printing func type");
+            node->getResultType()->print(output_file);
+            INFO("print func name");
+            output_file << node->getPrintName() << "(";
+            INFO("func arg number is %d", node->getNumArgs());
+            for (int i = 0; i < node->getNumArgs(); i++) {
+                auto &arg = node->getArgs().at(i);
+                if (i != 0) {
+                    output_file << ",";
+                }
+                arg->accept(this);
+            }
+            output_file << ") {" << std::endl;
+            INFO("base block size is %zu", node->getBasicBlocks().size());
+            for (auto &base_block: node->getBasicBlocks()) {
+                base_block->accept(this);
+            }
+            output_file << "}" << std::endl;
+        }  
+    }
+    
 }
 void LLVMIrPrinter::visit(Argument *node) {
     node->getType()->print(output_file);
