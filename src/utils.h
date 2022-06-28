@@ -16,6 +16,7 @@
 
 #define __ERROR
 #define __ASSERT
+
 #define __DEBUG
 #define __WARN
 #define __TRACE

@@ -141,6 +141,7 @@ ReturnInst *ReturnInst::createRet(Value *v, BasicBlock *parent) {
 }
 ReturnInst::ReturnInst(Type *type, Value *v, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), OpKind::RET, 1, parent) {
+    MyAssert("error return type",v->getType()->isIntegerTy()||v->getType()->isFloatTy());
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {

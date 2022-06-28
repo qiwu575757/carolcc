@@ -628,7 +628,7 @@ void SYSYBuilder::visit(tree_assign_stmt &node) {
 }
 
 void SYSYBuilder::visit(tree_return_stmt &node) {
-    INFO("line:%d", node._line_no);
+    INFO("return line:%d", node._line_no);
     if (node.exp == nullptr) {
         INFO("return void");
         builder->createVoidRet();
@@ -654,21 +654,28 @@ void SYSYBuilder::visit(tree_l_val &node) {
     INFO("l_val %s", name.c_str());
     auto var = scope.find(name);
     if (var->getType()->isIntegerTy() || var->getType()->isFloatTy()) {
+        INFO("l val is basic type");
         G_tmp_val = var;
     } else {
+        INFO("l val is not basic type");
         auto is_int = var->getType()->getPointerElementType()->isIntegerTy();
         auto is_float = var->getType()->getPointerElementType()->isFloatTy();
         auto is_ptr = var->getType()->getPointerElementType()->isPointerTy();
 
         if (node.array_ident == nullptr) {// like f(a)
+            INFO("arg is not arrray");
             if (is_int || is_float) {
+                INFO("l val 1");
                 G_tmp_val = var;
             } else if (is_ptr) {
+                INFO("l val 2");
                 G_tmp_val = builder->createLoad(var);
             } else {
+                INFO("l val 3");
                 G_tmp_val = builder->createGEP(var, {CONST_INT(0)});
             }
         } else {
+            INFO("arg is not arrray");
             node.array_ident->accept(*this);
         }
     }
@@ -732,12 +739,16 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             node.exp->accept(*this);
         } else if (node.l_val != nullptr) {
             if (G_require_address) {//若要求传参需要地址
+            INFO("arg need addr");
                 G_require_address = false;
                 node.l_val->accept(*this);
+                INFO("finish");
                 while (!G_tmp_val->getType()->getPointerElementType()->isFloatTy() && !G_tmp_val->getType()->getPointerElementType()->isIntegerTy()) {
+                    INFO("generating gep");
                     G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0)});
                 }
             } else {//保证返回值 G_tmp_val 是 float/int num
+            INFO("arg needn't addr");
                 node.l_val->accept(*this);
                 if (G_tmp_val->getType()->isIntegerTy() || G_tmp_val->getType()->isFloatTy()) {
                     return;
@@ -783,10 +794,13 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         INFO(" unary exp 719");
 
         if (node.primary_exp != nullptr) {
+            INFO("primary");
             node.primary_exp->accept(*this);
         } else if (node.unary_exp != nullptr) {
+            INFO("unary");
             node.unary_exp->accept(*this);
         } else {
+            INFO("func call");
             node.func_call->accept(*this);
         }
 
@@ -1217,11 +1231,12 @@ void SYSYBuilder::visit(tree_array_ident &node) {
 }
 
 void SYSYBuilder::visit(tree_func_call &node) {
-    INFO("line:%d", node._line_no);
+    INFO("func_call (%s) line:%d",node.id.c_str(), node._line_no);
     auto func = module->getFunction(node.id);
     MyAssert("func not found", func != nullptr);
     std::vector<Value *> args;
     if (node.func_param_list != nullptr) {
+        INFO("node exp size is %d ",node.func_param_list->exps.size());
         for (int i = 0; i < node.func_param_list->exps.size(); i++) {
             auto arg = node.func_param_list->exps[i];
             auto arg_type = func->getFunctionType()->getArgType(i);
@@ -1235,7 +1250,7 @@ void SYSYBuilder::visit(tree_func_call &node) {
             args.push_back(G_tmp_val);
         }
     }
-    builder->createCall(func, args);
+    G_tmp_val =  builder->createCall(func, args);
 }
 
 void SYSYBuilder::visit(tree_func_paramlist &node) {

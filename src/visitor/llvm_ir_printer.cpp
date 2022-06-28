@@ -245,6 +245,7 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
         if (node->getOperand(0)->getType()->isIntegerTy() || node->getOperand(0)->getType()->isFloatTy()) {
             output_file << node->getOperand(0)->getPrintName();
         } else {
+            
             ERROR("error type");
         }
     }
