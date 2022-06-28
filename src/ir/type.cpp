@@ -71,7 +71,13 @@ void Type::print(std::ofstream& output_file) {
             getPointerElementType()->print(output_file);
             output_file << "* ";
             break;
+        case VoidTyID:
+            output_file<<"void ";
+            break;
 
+        case FloatTyID:
+            output_file<<"float ";
+            break;
         default:
             break;
     }

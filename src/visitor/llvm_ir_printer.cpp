@@ -84,25 +84,41 @@ void LLVMIrPrinter::visit(Function *node) {
     }
 
     INFO("printing func type");
-    output_file << "define  dso_local ";
-    INFO("printing func type");
-    node->getResultType()->print(output_file);
-    INFO("print func name");
-    output_file << node->getPrintName() << "(";
-    INFO("func arg number is %d", node->getNumArgs());
-    for (int i = 0; i < node->getNumArgs(); i++) {
-        auto &arg = node->getArgs().at(i);
-        if (i != 0) {
-            output_file << ",";
+    if(node->getBaseBlocks().size() == 0 || node->getBaseBlocks().size()==0){
+        // declare
+        output_file<<"declare ";
+        node->getResultType()->print(output_file);
+        output_file << node->getPrintName() << "(";
+        for (int i = 0; i < node->getNumArgs(); i++) {
+            auto &arg = node->getArgs().at(i);
+            if (i != 0) {
+                output_file << ",";
+            }
+            arg->getType()->print(output_file);
         }
-        arg->accept(this);
+        output_file << ")" << std::endl;
     }
-    output_file << ") {" << std::endl;
-    INFO("base block size is %zu", node->getBaseBlocks().size());
-    for (auto &base_block: node->getBaseBlocks()) {
-        base_block->accept(this);
+    else {
+        output_file << "define  dso_local ";
+        INFO("printing func type");
+        node->getResultType()->print(output_file);
+        INFO("print func name");
+        output_file << node->getPrintName() << "(";
+        INFO("func arg number is %d", node->getNumArgs());
+        for (int i = 0; i < node->getNumArgs(); i++) {
+            auto &arg = node->getArgs().at(i);
+            if (i != 0) {
+                output_file << ",";
+            }
+            arg->accept(this);
+        }
+        output_file << ") {" << std::endl;
+        INFO("base block size is %zu", node->getBaseBlocks().size());
+        for (auto &base_block: node->getBaseBlocks()) {
+            base_block->accept(this);
+        }
+        output_file << "}" << std::endl;
     }
-    output_file << "}" << std::endl;
 }
 void LLVMIrPrinter::visit(Argument *node) {
     node->getType()->print(output_file);
@@ -166,7 +182,7 @@ void LLVMIrPrinter::visit(LoadInst *node) {
 void LLVMIrPrinter::visit(ReturnInst *node) {
     INFO("HIR printer visiting return stmt");
     output_file << "ret ";
-    node->getType()->print(output_file);
+    // node->getType()->print(output_file);
     if (node->getOperandNumber()!=0) {
         node->getOperand(0)->getType()->print(output_file);
         if (node->getOperand(0)->getType()->isIntegerTy() || node->getOperand(0)->getType()->isFloatTy()) {
@@ -230,8 +246,11 @@ void LLVMIrPrinter::visit(ConstantArray *node) {
 void LLVMIrPrinter::print_array_init(ConstantArray *array){
     INFO("printing array init");
     MyAssert("array is null", array != nullptr);
+    //type
     array->getType()->print(output_file);
     auto array_type = static_cast<ArrayType *>(array->getType());
+
+    // init val
     if(array_type->getElementType()->isInt32()||array_type->getElementType()->isFloatTy()){
         bool isZeroInitializer=true;
         for (size_t i = 0; i < array->getNumElements(); i++)
@@ -269,15 +288,15 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
         }
     }
     else if(array_type->getElementType()->isArrayTy()){ // element type is a
+        output_file<<"[ ";
         for (size_t i = 0; i < array->getNumElements(); i++)
         {
-            output_file<<"[ ";
             print_array_init(dynamic_cast<ConstantArray*>(array->getElement(i)));
-            output_file<<"] ";
             if(i!= array->getNumElements()-1){
                 output_file<<", ";
             }
         }
+        output_file<<"] ";
         
     }
 
