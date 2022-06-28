@@ -37,13 +37,13 @@ void Function::addBasicBlock(BasicBlock *basicblock) {
     _basic_block_list.push_back(basicblock);
 }
 
-void Function::addBasicBlockAfter(std::vector<BasicBlock *>::iterator after_pos, BasicBlock *bb) {
+void Function::addBasicBlockAfter(std::_List_iterator<BasicBlock *> after_pos, BasicBlock *bb) {
     after_pos++;
     _basic_block_list.insert(after_pos,bb);//insert 默认在 after_pos之前插入
 }
 
 void Function::removeBasicBlock(BasicBlock *basicblock) {
-    std::vector<BasicBlock *>::iterator pos = find(_basic_block_list.begin(),_basic_block_list.end(), basicblock);
+    std::list<BasicBlock *>::iterator pos = find(_basic_block_list.begin(),_basic_block_list.end(), basicblock);
     _basic_block_list.erase(pos);
 }
 
@@ -65,3 +65,14 @@ void Function::buildArgs() {
 void Function::accept(IrVisitorBase *v) {
     v->visit(this);
 }
+void Function::addAlloca(AllocaInst* alloca) {
+    auto entry_it = _base_block_list.begin();
+    auto entry = static_cast<BasicBlock*>(*entry_it);
+    // entry->insertAfterInstr(_alloca_end,alloca);
+    _alloca_end=alloca;
+
+}
+void Function::setAllocaEnd(AllocaInst*alloca){
+    _alloca_end = alloca;
+}
+

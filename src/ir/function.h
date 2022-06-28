@@ -20,6 +20,7 @@ class Type;
 class Module;
 class BaseBlock;
 class BasicBlock;
+class AllocaInst;
 
 extern error_log function_logger;
 class Argument : public Value {
@@ -49,6 +50,8 @@ private:
 
 class Function : public GlobalValue {
 public:
+    void addAlloca(AllocaInst*);
+    void setAllocaEnd(AllocaInst*);
     Function(FunctionType *type, const std::string &name, Module *parent);
     static Function *create(FunctionType *type, const std::string &name, Module *parent);
     void accept(IrVisitorBase *v) override;
@@ -58,12 +61,12 @@ public:
 
     // Method about basicblock
     void addBasicBlock(BasicBlock *basicblock);
-    void addBasicBlockAfter(std::vector<BasicBlock *>::iterator after_pos,
+    void addBasicBlockAfter(std::_List_iterator<BasicBlock *> after_pos,
                             BasicBlock *bb);
     unsigned getNumBasicBlocks() const {
         return _basic_block_list.size();
     }
-    std::vector<BasicBlock *> &getBasicBlocks() {
+    std::list<BasicBlock *> &getBasicBlocks() {
         return _basic_block_list;
     }
     BasicBlock *getEntryBlock() {
@@ -85,24 +88,27 @@ public:
 
     // Method about baseblocklist
     void removeBaseBlock(BaseBlock *baseblock) {
-        std::vector<BaseBlock *>::iterator pos = find(_base_block_list.begin(), _base_block_list.end(), baseblock);
+        std::list<BaseBlock *>::iterator pos = find(_base_block_list.begin(), _base_block_list.end(), baseblock);
         _base_block_list.erase(pos);
     }
     void addBaseBlock(BaseBlock *baseblock);
-    void insertBaseBlock(std::vector<BaseBlock *>::iterator iter,
+    void insertBaseBlock(std::list<BaseBlock *>::iterator iter,
                          BaseBlock *baseblock) {
         _base_block_list.insert(iter, baseblock);
         baseblock->clearFather();
     }
-    std::vector<BaseBlock *> &getBaseBlocks() {
+    std::list<BaseBlock *> &getBaseBlocks() {
         return _base_block_list;
     }
 
+
+
 private:
+    Instruction* _alloca_end;
     std::vector<Argument *> _args;
-    std::vector<BaseBlock *> _base_block_list;
+    std::list<BaseBlock *> _base_block_list;
     Module *_parent;
-    std::vector<BasicBlock *> _basic_block_list;
+    std::list<BasicBlock *> _basic_block_list;
 
 private:
     void buildArgs();
