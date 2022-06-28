@@ -253,7 +253,7 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
             }
         }
         if(isZeroInitializer){
-            output_file<<"zeroinitializer";
+            output_file<<"zeroinitializer ";
         }
         else {
             output_file<<"[";
@@ -261,7 +261,7 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
             {
                 array_type->getElementType()->print(output_file);
                 output_file<<" "<<array->getElement(i)->getPrintName();
-                if(i != array->getNumElements()){
+                if(i != array->getNumElements()-1){
                     output_file<<", ";
                 }
             }
@@ -271,8 +271,14 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
     else if(array_type->getElementType()->isArrayTy()){ // element type is a
         for (size_t i = 0; i < array->getNumElements(); i++)
         {
+            output_file<<"[ ";
             print_array_init(dynamic_cast<ConstantArray*>(array->getElement(i)));
+            output_file<<"] ";
+            if(i!= array->getNumElements()-1){
+                output_file<<", ";
+            }
         }
+        
     }
 
 
