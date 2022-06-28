@@ -65,6 +65,7 @@ public:
             std::unordered_set<Value *> *,
             std::unordered_map<BasicBlock *, std::unordered_set<Value *>> *);
     void initDefinedVals(std::unordered_set<Value *> *);
+    void insertAfterInstr(Instruction *pos, Instruction *insertInstr);
 };
 
 class IfBlock : public BaseBlock {

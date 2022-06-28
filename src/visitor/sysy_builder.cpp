@@ -121,7 +121,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
     if (node.funcfparams != nullptr) {
         for (auto param: node.funcfparams->funcfparamlist) {
             if (param->funcfparamarray != nullptr) {
-                auto array_alloc = builder->createAllocaAtEntry(args[i]->getType());
+                auto array_alloc = builder->createAlloca(args[i]->getType());
                 builder->createStore(static_cast<Value *>(args[i]), array_alloc);
                 std::vector<Value *> array_params;
                 array_params.push_back(CONST_INT(0));
@@ -133,7 +133,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                 scope.push(param->funcfparamarray->id, array_alloc, array_params);
                 args[i]->setArrayBound(array_params);
             } else {// 单个
-                auto alloc = builder->createAllocaAtEntry(TyInt32);
+                auto alloc = builder->createAlloca(TyInt32);
                 builder->createStore(args[i], alloc);
                 scope.push(param->funcfparamone->id, alloc);
             }

@@ -68,11 +68,14 @@ void Function::accept(IrVisitorBase *v) {
 void Function::addAlloca(AllocaInst* alloca) {
     auto entry_it = _base_block_list.begin();
     auto entry = static_cast<BasicBlock*>(*entry_it);
-    // entry->insertAfterInstr(_alloca_end,alloca);
+    INFO("delelting alloca");
+    entry->deleteInstr(alloca);
+    entry->insertAfterInstr(_alloca_end,alloca);
     _alloca_end=alloca;
 
 }
 void Function::setAllocaEnd(AllocaInst*alloca){
+    INFO("setting alloca");
     _alloca_end = alloca;
 }
 
