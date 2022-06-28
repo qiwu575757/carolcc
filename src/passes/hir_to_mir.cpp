@@ -1,7 +1,9 @@
+#include "ir/function.h"
 #include "hir_to_mir.h"
 #include "ir/base_block.h"
 #include "ir/basic_block.h"
 #include "ir/instruction.h"
+#include "module.h"
 
 #define CONST_INT(num) ConstantInt::create(num)
 #define CONST_FLOAT(num) ConstantFloat::create(num)
@@ -18,7 +20,7 @@ void HIRToMIR::run() {
         }
         // mir 不在需要 baseblocks
         func->getBaseBlocks().clear();
-        WARNNING("func BasicBlocks num:%d",func->getBasicBlocks());
+        WARNNING("func BasicBlocks num:%d",func->getNumBasicBlocks());
     }
     
     _m->setIRLevel(Module::MIR_MEM);

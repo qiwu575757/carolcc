@@ -2,6 +2,9 @@
 #define COMPILER_HIRTOMIR_H
 
 #include "pass.h"
+class BasicBlock;
+class BaseBlock;
+class Function;
 
 class HIRToMIR : public Transform {
 public:

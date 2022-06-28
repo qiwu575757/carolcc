@@ -1,9 +1,10 @@
 #ifndef COMPILER_PASS_H
 #define COMPILER_PASS_H
 
-#include "module.h"
+//#include "module.h"
 #include <memory>
 #include <string>
+class Module ;
 class pass {
 protected:
     std::string _name;
