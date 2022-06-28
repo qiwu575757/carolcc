@@ -47,11 +47,13 @@ void BasicBlock::insertAfterInstr(Instruction *pos, Instruction *insertInstr) {
     for (auto instr = this->_instructions.begin(); instr != this->_instructions.end(); instr++) {
         if (*instr == pos) {
             instr++;
+            INFO("inserting after instr");
             this->_instructions.insert(instr, insertInstr);
             return;
         }
     }
-    WARNNING("insert instr not find");
+    WARNNING("insert instr not find, inserting to head");
+    this->_instructions.push_back(insertInstr);
 }
 void BasicBlock::deleteInstr(Instruction *instr) {
     this->_instructions.remove(instr);
