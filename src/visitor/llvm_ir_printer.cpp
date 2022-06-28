@@ -126,7 +126,10 @@ void LLVMIrPrinter::visit(Argument *node) {
 }
 void LLVMIrPrinter::visit(BaseBlock *node) {
     INFO(" HIR printer visiting baseblock");
+    if(stoi(node->getName())!=0){
     output_file << node->getName() << ":" << std::endl;
+
+    }
     add_tab();
     if (node->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(node);

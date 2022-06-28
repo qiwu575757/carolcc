@@ -21,3 +21,4 @@ core
 
 */*.ll
 *.ll
+run_test_one.sh

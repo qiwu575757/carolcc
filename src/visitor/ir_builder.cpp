@@ -1,5 +1,5 @@
 #include "ir_builder.h"
-
+#include "utils.h"
 IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb)
 {
     this->_basic_block = basicb;
@@ -11,6 +11,7 @@ std::list<BaseBlock *>* IRBuilder::GetInsertBaseBlockList()
     return this->_base_block_list;
 }
 void IRBuilder::pushBaseBlock(BaseBlock *bb){
+    MyAssert("null ptr",this->_base_block_list!=nullptr);
     this->_base_block_list->push_back(bb);
     bb->setBaseFather(this->_father_block);
 }
@@ -24,6 +25,7 @@ BasicBlock *IRBuilder::GetInsertBasicBlock()
 }
 void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> *bbl)
 {
+    MyAssert("null ptr",bbl!=nullptr);
     this->_base_block_list = bbl;
 }
 void IRBuilder::SetBaseBlockFatherBlock(BaseBlock *bb)
