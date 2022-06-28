@@ -1,3 +1,4 @@
+#include "function.h"
 #include "base_block.h"
 #include "visitor/ir_visitor_base.h"
 Function *BaseBlock::getFunction() const {

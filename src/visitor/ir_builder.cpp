@@ -1,3 +1,4 @@
+#include "ir/function.h"
 #include "ir_builder.h"
 #include "utils.h"
 IRBuilder::IRBuilder(BasicBlock *basicb,BaseBlock *baseb)
@@ -151,10 +152,15 @@ void IRBuilder::SetInstrInsertPoint(BasicBlock *bb)
       return ZExtInst::creatZExtInst(ty,val,this->_basic_block);
   }
   AllocaInst *IRBuilder::createAlloca(Type *ty) {
-      return AllocaInst::createAlloca(ty,this->_basic_block);
+      auto alloca = AllocaInst::createAlloca(ty,this->_basic_block);
+      this->_basic_block->getFunction()->setAllocaEnd(alloca);
+      return alloca;
   }
 AllocaInst *IRBuilder::createAllocaAtEntry(Type *ty) {
-    return AllocaInst::createAlloca(ty,this->_entry_block);
+    auto alloca =  AllocaInst::createAlloca(ty,this->_entry_block);
+    this->_entry_block->getFunction()->addAlloca(alloca);
+    return alloca;
+
 }
   HIR *IRBuilder::createBreak() {
       return HIR::createBreak(this->_basic_block);
