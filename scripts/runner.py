@@ -14,10 +14,10 @@ class Runner:
         self.runner_log = f"build/log/run_log/{{testcase}}/{scheme}_{{kase}}.out"
 
         for testcase in testcases:
-            self.__generate_path(testcase)
+            self.generate_path(testcase)
 
 
-    def __generate_path(self, testcase):
+    def generate_path(self, testcase):
         myout_path = f"build/output/{testcase}/"
         runner_log_path = f"build/log/run_log/{testcase}/"
 
