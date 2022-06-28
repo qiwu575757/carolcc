@@ -68,7 +68,8 @@ ConstantArray *ConstantArray::turn(std::vector<int32_t> &array_bounds, std::vect
             auto array = turn(bounds, array_init_temp);
             init_list.push_back(array);
         }
-        return ConstantArray::create(static_cast<ArrayType*>(init_list[0]->getType()),init_list);
+        auto ty = ArrayType::get(static_cast<ArrayType*>(init_list[0]->getType()),init_list.size());
+        return ConstantArray::create(ty,init_list);
     }
 
 }
