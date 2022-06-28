@@ -290,6 +290,19 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(CallInst *node) {
+    output_file<<"call ";
+    node->getType()->print(output_file);
+    output_file<<node->getOperand(0)->getPrintName()<<"(";
+    for(int i=1;i<node->getOperandNumber();i++){
+        auto oprt = node->getOperand(i);
+        if(i!=node->getOperandNumber()-1){
+            output_file<<", ";
+        }
+        oprt->getType()->print(output_file);
+        output_file<<" "<<oprt->getPrintName();
+    }
+    output_file<<")"<<std::endl;
+
 }
 void LLVMIrPrinter::visit(ZExtInst *node) {
 }
