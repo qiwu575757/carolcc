@@ -484,7 +484,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
             int dim_v = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             array_bounds.push_back(dim_v);
         }
-        Type *ty_array = Type::getInt32Ty();
+        Type *ty_array = G_tmp_type;
         for (int i = array_bounds.size() - 1; i >= 0; i--) {
             ty_array = ArrayType::get(ty_array, array_bounds[i]);
         }
