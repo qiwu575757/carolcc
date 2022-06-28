@@ -85,7 +85,7 @@ void LLVMIrPrinter::visit(Function *node) {
         }
 
         INFO("printing func type");
-        if(node->getBaseBlocks().size() == 0 || node->getBaseBlocks().size()==0){
+        if(node->getBaseBlocks().size() == 0){
             // declare
             output_file<<"declare ";
             node->getResultType()->print(output_file);
@@ -136,7 +136,7 @@ void LLVMIrPrinter::visit(Function *node) {
         }
 
         INFO("printing func type");
-        if(node->getBasicBlocks().size() == 0 || node->getBasicBlocks().size()==0){
+        if( node->getNumBasicBlocks()==0){
             // declare
             output_file<<"declare ";
             node->getResultType()->print(output_file);

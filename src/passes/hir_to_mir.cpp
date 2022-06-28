@@ -7,6 +7,8 @@
 #define CONST_FLOAT(num) ConstantFloat::create(num)
 
 void HIRToMIR::run() {
+    printf("***********");
+    WARNNING("func num:%d",_m->getFunctions().size());
     for (auto func : _m->getFunctions()) {
         auto base_bbs = func->getBaseBlocks();
         BasicBlock *next_bb = nullptr;
@@ -16,8 +18,9 @@ void HIRToMIR::run() {
         }
         // mir 不在需要 baseblocks
         func->getBaseBlocks().clear();
+        WARNNING("func BasicBlocks num:%d",func->getBasicBlocks());
     }
-
+    
     _m->setIRLevel(Module::MIR_MEM);
 }
 

@@ -5,8 +5,8 @@
 
 class HIRToMIR : public Transform {
 public:
-    HIRToMIR(std::string &name) : Transform(name) {}
-    void run() override;
+    HIRToMIR(const std::string &name) : Transform(name) {}
+    void run();
     BasicBlock *genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                            BasicBlock *while_entry, BasicBlock *while_exit,
                            Function *func);

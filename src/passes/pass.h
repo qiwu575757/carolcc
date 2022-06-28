@@ -10,22 +10,25 @@ protected:
     Module *_m;
 
 public:
-    pass(std::string &name) : _name(name){};
+    pass(const std::string &name) : _name(name){};
     void set_name(std::string &name) {
         _name = name;
     }
     ~pass() = default;
     virtual void run() = 0;
+    std::string getName(){
+        return _name;
+    }
 };
 
 class Analysis : public pass {
 public:
-    Analysis(std::string &name) : pass(name) {}
+    Analysis(const std::string &name) : pass(name) {}
 };
 
 class Transform : public pass {
 public:
-    Transform(std::string &name) : pass(name) {}
+    Transform(const std::string &name) : pass(name) {}
 };
 
 #endif// COMPILER_PASS_H
