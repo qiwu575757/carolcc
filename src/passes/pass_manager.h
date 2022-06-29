@@ -14,7 +14,7 @@ public:
     explicit pass_manager(Module* m):_m(m){};
     ~pass_manager() = default;
     template <typename pass_type> void add_pass(const std::string &name){
-        passes.push_back(new pass_type(name));
+        passes.push_back(new pass_type(_m, name));
     }
 
     void run();

@@ -12,17 +12,13 @@ void pass_manager::run() {
     for (pass* ps : passes) {
         i++;
         MyAssert("passes is nullptr",ps != nullptr);
-        WARNNING("running 0pass  %s ..." , ps->getName().c_str());
         try {
-            WARNNING("running 1pass  %s ..." , ps->getName().c_str());
             ps->run();
-            WARNNING("running 2pass  %s ..." , ps->getName().c_str());
-            
         }
         catch (...) {
             std::cerr << "IRCheck ERROR after pass " << ps->getName()
                     << std::endl;
             exit(i * 2);
         }
-    } 
+    }
 }

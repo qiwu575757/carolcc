@@ -61,15 +61,15 @@ int main(int argc, char *argv[]) {
     auto *builder = new SYSYBuilder();
     builder->build(root);
 
-    // INFO("printing llvm ir");
-    // builder->getModule()->HighIRprint("test_Hir.ll");
+    INFO("printing llvm ir");
+    builder->getModule()->HighIRprint("test_Hir.ll");
 
 
     pass_manager PM(builder->getModule().get());
     const std::string name = "HIRToMIR";
     PM.add_pass<HIRToMIR>(name);
     PM.run();
-//    builder->getModule()->MIRMEMprint("test_Mir.ll");
+    builder->getModule()->MIRMEMprint("test_Mir.ll");
 
     return 0;
 }
