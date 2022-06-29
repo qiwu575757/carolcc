@@ -830,7 +830,7 @@ Number
                 ("Number INTEGER\n");
             $$ = new tree_number();
             $$->_line_no = yyline+1;
-            $$->int_value = atoi($1->c_str());
+            $$->int_value = std::stoi($1->c_str(), nullptr, 0);
             $$->is_int=true;
         }
     | TFLOATNUM
