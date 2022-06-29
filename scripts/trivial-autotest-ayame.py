@@ -1,27 +1,32 @@
 import subprocess
 from tester import Tester
-from trivial_presenter import TrivialPresenter
+from scripts.trival_presenter import TrivialPresenter
 from tester import get_sy_testcases
 from pretty_print import Print_C
+'''
+check by dyb not work now
+'''
+clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
+                     "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "emit_llvm_ir": True}
 
-ayame_compiler = "java -classpath src:lib/antlr4-runtime-4.8.jar:lib/argparse4j-0.9.0.jar Compiler "
+clang_llvm_scheme = {"scheme": "clang_llvm",
+                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "emit_llvm_ir": True}
+npu_llvm_scheme = {"scheme": "npu_llvm",
+                   "frontend_instr": "../build/compiler" + " -l {ir} {sy}",
+                   "emit_llvm_ir": True}
 
-ayame_ayame_scheme = {"scheme": "ayame_ayame",
-                "frontend_instr": ayame_compiler + "-S {sy} -o {asm}",
-                "emit_llvm_ir": False}
-
-ayame_llvm_scheme = {"scheme": "ayame_llvm",
-                "frontend_instr": ayame_compiler + "-S {sy} --emit",
-                "emit_llvm_ir": True}
+npu_npu_scheme = {"scheme": "npu_npu",
+                  "frontend_instr": "../build/compiler" + "-o {asm} {sy}",
+                  "emit_llvm_ir": False}
 
 Print_C.print_header("[Removing old data...]\n\n")
-subprocess.run("rm -rf build/test_results/".split())
-subprocess.run("rm -rf build/output/".split())
-subprocess.run("rm -rf build/log/compile_log".split())
-subprocess.run("rm -rf build/log/run_log".split())
-subprocess.run("rm -rf build/log/test_result.log".split())
+subprocess.run("rm -rf ../build/test_results/".split())
+subprocess.run("rm -rf ../build/output/".split())
+subprocess.run("rm -rf ../build/log/".split())
 
-all_schemes = [ayame_ayame_scheme]#, ayame_llvm_scheme]
+all_schemes = [clang_llvm_scheme]#, ayame_llvm_scheme]
 testers = []
 
 for scheme in all_schemes:
