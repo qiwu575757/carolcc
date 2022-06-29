@@ -15,8 +15,8 @@ runner_log_path = "../build/log/run_log/" # ../build/log/run_log/00_name/test_me
  fixed dyb much powerful than before
 '''
 
-lib = "../stdlib/include/libsysy.a"
-header = "../stdlib/include/sylib.h"
+lib = "../stdlib/libsysy_x86.a"
+header = "../stdlib/sylib.h"
 compiler_obj_path = "../build/compiler"
 # clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include ../src/stdlib/include/sylib.h ../test/02_var_defn3.sy -o ../test/02_var_defn3.ir
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
@@ -145,9 +145,9 @@ class Runner():
 
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.on_chip:
-            subprocess.run("clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} ../stdlib/libsysy.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} ../stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("clang -Ofast {obj} ../stdlib/libsysy.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("clang -Ofast {obj} ../stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         log_file.close()
 
 
@@ -209,6 +209,11 @@ class Runner():
         stdin = "test/"+testcase[:-3]+".in"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         our_out = runner_log_path+str(testcase)+"/"+self.scheme+"_our.log"
+        if os.path.exists(bin):
+                _ = open(bin, "a+")
+        else:
+            _ = open(bin, "w+")
+        _.close()
         if os.path.exists(runner_log_index_path):
             log_file = open(runner_log_index_path, "a+")
         else:
