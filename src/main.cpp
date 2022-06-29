@@ -1,5 +1,5 @@
-#include "passes/pass_manager.h"
 #include "passes/hir_to_mir.h"
+#include "passes/pass_manager.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
@@ -7,69 +7,89 @@
 #include "visitor/tree_visitor_base.h"
 #include <cstdio>
 #include <cstring>
-#include <string>
 #include <getopt.h>
 #include <iostream>
+#include <string>
 extern int yyparse();
 extern int yyrestart(FILE *);
 extern FILE *yyin;
 debug_log parser_logger("parser_logger");
 int yyline;
 tree_comp_unit *root;
-//std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
+// std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
 
 FILE *output;
-int main(int argc, char *argv[]) {
-    //     处理input_file
-    if (argc < 2) {
-        yyparse();
-        return 0;
-    }
-    char *input_file = nullptr, *output_file = nullptr;
-    for (int ch; (ch = getopt(argc, argv, "O:So:")) != -1;) {
-        switch (ch) {
-            case 'S':
-                break;// 啥也不干，为了测评机
-            case 'o':
-                output_file = strdup(optarg);
-                break;
-            case 'O':
-                break;
-            default:
-                break;
-        }
-    }
-    input_file = argv[argc - 1];
-
-
-    yyin = fopen(input_file, "r");
-    if (output_file != nullptr) {
-        output = fopen(output_file, "w");
+void print_help(char *exec_name) {
+  printf("Usage : %s [-o <target-file-name>] [-emit-hir] [-emit-mir] [-h | "
+         "--help]\n",
+         exec_name);
+  printf("-h  --help print this message\n");
+  printf("-emit-hir  emit hir\n");
+  printf("-emit-mir  emit llvm ir\n");
+};
+int main(int argc, char **argv) {
+  //     处理input_file
+  //    if (argc < 2) {
+  //        yyparse();
+  //        return 0;
+  //    }
+  bool is_emit_hir = false;
+  bool is_emit_mir = false;
+  std::string input_file, asm_out_file;
+  for (int i = 1; i < argc; i++) {
+    if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+      asm_out_file = std::string(argv[i + 1]);
+      i++;
+    } else if (strcmp(argv[i], "-emit-hir") == 0) {
+      is_emit_hir = true;
+    } else if (strcmp(argv[i], "-emit-mir") == 0) {
+      is_emit_mir = true;
+    } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
+      print_help(argv[0]);
+      return 0;
     } else {
-        output = stdout;
+      input_file = std::string(argv[i]);
     }
-    if (!yyin)
-        perror(input_file);
-    parser_logger.set_screen(false);
-    yyparse();
-    // auto *md_shower = new syntax_tree_shower();
-    // auto *md_detail_shower = new syntax_detail_shower();
-    // md_shower->visit(*root);
+  }
 
-    // md_detail_shower->visit(*root);
+  yyin = fopen(input_file.c_str(), "r");
+  if (asm_out_file.empty()) {
+    asm_out_file = input_file;
+    asm_out_file.replace(asm_out_file.end() - 2, asm_out_file.end(), "s");
+  }
+  output = fopen(asm_out_file.c_str(), "w");
+  if (!yyin)
+    perror(input_file.c_str());
+  parser_logger.set_screen(false);
+  yyparse();
+  // auto *md_shower = new syntax_tree_shower();
+  // auto *md_detail_shower = new syntax_detail_shower();
+  // md_shower->visit(*root);
 
-    auto *builder = new SYSYBuilder();
-    builder->build(root);
+  // md_detail_shower->visit(*root);
 
+  auto *builder = new SYSYBuilder();
+  builder->build(root);
+
+  if (is_emit_hir) {
+    INFO("printing hir ir");
+    auto hir_output_file = input_file;
+    hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
+                            "hir");
+    builder->getModule()->HighIRprint(std::string(hir_output_file));
+  }
+
+  pass_manager PM(builder->getModule().get());
+  PM.add_pass<HIRToMIR>("HIRToMir");
+  PM.run();
+
+  if (is_emit_mir) {
     INFO("printing llvm ir");
-    builder->getModule()->HighIRprint("test_Hir.ll");
+    auto mir_output_file = input_file;
+    mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
+                            "ll");
+    builder->getModule()->MIRMEMprint(mir_output_file);
+  }
 
-
-    pass_manager PM(builder->getModule().get());
-    const std::string name = "HIRToMIR";
-    PM.add_pass<HIRToMIR>(name);
-    PM.run();
-    builder->getModule()->MIRMEMprint("test_Mir.ll");
-
-    return 0;
+  return 0;
 }
