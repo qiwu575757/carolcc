@@ -12,6 +12,9 @@ void ConstantInt::setValue(int value) {
 ConstantInt *ConstantInt::create(int val) {
     return new ConstantInt(Type::getInt32Ty(), val);
 }
+ConstantInt *ConstantInt::get(int val) {
+  return new ConstantInt(Type::getInt32Ty(), val);
+}
 void ConstantInt::accept(IrVisitorBase *v) {
     v->visit(this);
 }

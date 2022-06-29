@@ -32,6 +32,7 @@ public:
     std::string getPrintName()override{
         return std::to_string(_value);
     }
+    static ConstantInt *get(int val);
 };
 
 class ConstantFloat : public Constant {
