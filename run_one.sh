@@ -4,6 +4,6 @@ cd build
 make clean
 make -j20
 cd ..
-python ./scripts/runner.py
+./build/compiler -debug -emit-hir -emit-mir $1
 # cd ../test
 # ./test.sh

@@ -194,25 +194,25 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
     } else if (node->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(node);
         for (auto &cond_base_block: *(if_block->getCondBaseBlockList())) {
-            print_tabs();
+            // print_tabs();
             cond_base_block->accept(this);
         }
         for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
-            print_tabs();
+            // print_tabs();
             then_block->accept(this);
         }
         for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
-            print_tabs();
+            // print_tabs();
             else_block->accept(this);
         }
     } else if (node->isWhileBlock()) {
         auto while_block = dynamic_cast<WhileBlock *>(node);
         for (auto &cond_block: *(while_block->getCondBaseBlockList())) {
-            print_tabs();
+            // print_tabs();
             cond_block->accept(this);
         }
         for (auto &body_block: *(while_block->getBodyBaseBlockList())) {
-            print_tabs();
+            // print_tabs();
             body_block->accept(this);
         }
     } else {
@@ -272,6 +272,31 @@ void LLVMIrPrinter::visit(StoreInst *node) {
 void LLVMIrPrinter::visit(Value *node) {
 }
 void LLVMIrPrinter::visit(CmpInst *node) {
+    WARNNING("icmp print float type");
+    output_file << node->getPrintName() << " = "
+                << "icmp ";
+    if(node->isEq()){
+        output_file<<"eq";
+    }
+    else if(node->isNeq()){
+        output_file<<"ne";
+    }
+    else if(node->isGe()){
+        output_file<<"sge";
+    }
+    else if(node->isGt()){
+        output_file<<"sgt";
+    }
+    else if(node->isLt()){
+        output_file<<"slt";
+    }
+    else if(node->isLe()){
+        output_file<<"sle";
+    }
+    output_file<<" ";
+    MyAssert("icmp has no oprt",node->getOperandNumber()==2);
+    node->getOperand(0)->getType()->print(output_file);
+    output_file<<node->getOperand(0)->getPrintName()<<", "<<node->getOperand(1)->getPrintName()<<std::endl;
 }
 void LLVMIrPrinter::visit(BranchInst *node) {
 }
@@ -290,6 +315,10 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(CallInst *node) {
+    if(!node->getType()->isVoidTy()){
+        WARNNING("printing call number");
+        output_file<<node->getPrintName()<<" = ";
+    }
     output_file<<"call ";
     node->getType()->print(output_file);
     output_file<<node->getOperand(0)->getPrintName()<<"(";
@@ -307,7 +336,18 @@ void LLVMIrPrinter::visit(CallInst *node) {
 void LLVMIrPrinter::visit(ZExtInst *node) {
 }
 void LLVMIrPrinter::visit(HIR *node) {
+    if(node->isBreak()){
+        output_file<<"break" <<std::endl;
+    }
+    else if(node->isContinue()){
+        output_file<<"continue" <<std::endl;
+    }
+    else {
+        ERROR("error  type");
+    }
+
 }
+
 void LLVMIrPrinter::visit(ConstantInt *node) {
 }
 void LLVMIrPrinter::visit(ConstantFloat *node) {

@@ -8,8 +8,9 @@
 
 class LLVMIrPrinter : public IrVisitorBase {
 public:
-    explicit LLVMIrPrinter(const std::string &name):depth(0) {
+    explicit LLVMIrPrinter(const std::string &name,const std::string &module_name):depth(0) {
         output_file.open(name);
+        output_file<<"; ModuleID = \'"<<module_name<<"\'\n";
     }
     ~LLVMIrPrinter(){
         output_file.close();
@@ -44,6 +45,7 @@ private:
     void NameInstr(Instruction *instr);
     void print_array_init(ConstantArray *array);
     void print_tabs(){
+//      if(ir_level ==Module::HIR)
         output_file<<std::string(depth,' ')  ;
     }
     void add_tab(){

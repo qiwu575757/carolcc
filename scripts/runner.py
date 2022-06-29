@@ -22,11 +22,11 @@ header = "stdlib/sylib.h"
 compiler_obj_path = "build/compiler"
 # clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include src/stdlib/include/sylib.h test/02_var_defn3.sy -o test/02_var_defn3.ir
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
-                             "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
+                             "frontend_instr": "clang -x c -c -O0 -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
                              "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
+                     "frontend_instr": "clang -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
                    "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
@@ -115,11 +115,11 @@ class Runner():
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
         if self.on_chip:
             subprocess.run(
-                "llc -O3 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(asm=asm,
+                "llc -O0 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(asm=asm,
                                                                                                          ir=ir).split(),
                 stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("llc -O3  -filetype=asm {ir} -o {asm} ".format(asm=asm, ir=ir).split(), stdout=log_file,
+            subprocess.run("llc -O0  -filetype=asm {ir} -o {asm} ".format(asm=asm, ir=ir).split(), stdout=log_file,
                            stderr=log_file, bufsize=1)
 
         log_file.close()
@@ -155,10 +155,10 @@ class Runner():
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.on_chip:
             subprocess.run(
-                "clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
+                "clang -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
                     bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("clang -Ofast {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(),
+            subprocess.run("clang -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(),
                            stdout=log_file, stderr=log_file, bufsize=1)
         log_file.close()
 
@@ -205,20 +205,12 @@ class Runner():
         max_time = 0
         max_case = None
         for testcase in self.testcases:
-            if not has_error:
-                start = time.perf_counter()
-                ######## 实际程序开始 ##########
-                self.compile_one_test(frontend_instr, emit_llvm_ir, testcase)
-                ######## 实际程序结束 ##########
-                end = time.perf_counter()
-                Print_C().print_header("运行时间为" + "{:03f}".format(end - start) + 'seconds')
-                sum_time += end - start
-                time_list.append((testcase, end - start))
-                if max_time < end - start:
-                    max_time = end - start
-                    max_case = testcase
-            else:
-                Print_C().print_error("passed testcase number is {}".format(len(time_list)-1))
+            start = time.perf_counter()
+            ######## 实际程序开始 ##########
+            self.compile_one_test(frontend_instr, emit_llvm_ir, testcase)
+            ######## 实际程序结束 ##########
+            if has_error:
+                Print_C().print_error("passed testcase number is {}".format(len(time_list)))
                 std_runner = Runner(clang_llvm_scheme['scheme'])
                 std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], testcase)
                 self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
@@ -227,6 +219,13 @@ class Runner():
                 Print_C().print_error("std ir path is {}".format(std_ir_path))
                 Print_C().print_error("error ir path is {}".format(error_ir_path))
                 break
+            end = time.perf_counter()
+            Print_C().print_header("运行时间为" + "{:03f}".format(end - start) + 'seconds')
+            sum_time += end - start
+            time_list.append((testcase, end - start))
+            if max_time < end - start:
+                max_time = end - start
+                max_case = testcase
         return time_list, sum_time, max_time, max_case
 
     def run_single_test(self, testcase):

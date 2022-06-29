@@ -35,6 +35,7 @@ int main(int argc, char **argv) {
   //    }
   bool is_emit_hir = false;
   bool is_emit_mir = false;
+  bool is_debug = false;
   std::string input_file, output_file;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
@@ -44,6 +45,8 @@ int main(int argc, char **argv) {
       is_emit_hir = true;
     } else if (strcmp(argv[i], "-emit-mir") == 0) {
       is_emit_mir = true;
+    } else if (strcmp(argv[i], "-debug") == 0) {
+      is_debug=true;
     } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       print_help(argv[0]);
       return 0;
@@ -68,15 +71,18 @@ int main(int argc, char **argv) {
 
   // md_detail_shower->visit(*root);
 
-  auto *builder = new SYSYBuilder();
+  auto *builder = new SYSYBuilder(input_file);
   builder->build(root);
 
   if (is_emit_hir) {
-    INFO("printing hir ir");
-//    auto hir_output_file = input_file;
-//    hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
-//                            "hir");
-    builder->getModule()->HighIRprint(std::string(output_file));
+    WARNNING("emitting  hir");
+   auto hir_output_file = input_file;
+   hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
+                           "hir");
+   if (is_debug)
+     builder->getModule()->HighIRprint(std::string(hir_output_file));
+   else
+     builder->getModule()->HighIRprint(std::string(output_file));
   }
 
   pass_manager PM(builder->getModule().get());
@@ -84,10 +90,13 @@ int main(int argc, char **argv) {
   PM.run();
 
   if (is_emit_mir) {
-    INFO("printing llvm ir");
-//    auto mir_output_file = input_file;
-//    mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
-//                            "ll");
+    WARNNING("emitting  mir");
+    auto mir_output_file = input_file;
+    mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
+                            "ir");
+    if(is_debug)
+    builder->getModule()->MIRMEMprint(mir_output_file);
+    else
     builder->getModule()->MIRMEMprint(output_file);
   }
 

@@ -18,8 +18,8 @@
 
 class SYSYBuilder : public tree_visitor_base {
 public:
-  SYSYBuilder() {
-    module = std::shared_ptr<Module>(new Module("SysY code"));
+  SYSYBuilder(const std::string &name){
+    module = std::shared_ptr<Module>(new Module(name));
     builder = std::unique_ptr<IRBuilder>(new IRBuilder(nullptr,nullptr));
 
     auto TyVoid = Type::getVoidTy(); // 改
