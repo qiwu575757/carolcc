@@ -35,10 +35,10 @@ int main(int argc, char **argv) {
   //    }
   bool is_emit_hir = false;
   bool is_emit_mir = false;
-  std::string input_file, asm_out_file;
+  std::string input_file, output_file;
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
-      asm_out_file = std::string(argv[i + 1]);
+      output_file = std::string(argv[i + 1]);
       i++;
     } else if (strcmp(argv[i], "-emit-hir") == 0) {
       is_emit_hir = true;
@@ -53,11 +53,11 @@ int main(int argc, char **argv) {
   }
 
   yyin = fopen(input_file.c_str(), "r");
-  if (asm_out_file.empty()) {
-    asm_out_file = input_file;
-    asm_out_file.replace(asm_out_file.end() - 2, asm_out_file.end(), "s");
+  if (output_file.empty()) {
+    output_file = input_file;
+    output_file.replace(output_file.end() - 2, output_file.end(), "s");
   }
-  output = fopen(asm_out_file.c_str(), "w");
+  output = fopen(output_file.c_str(), "w");
   if (!yyin)
     perror(input_file.c_str());
   parser_logger.set_screen(false);
@@ -73,10 +73,10 @@ int main(int argc, char **argv) {
 
   if (is_emit_hir) {
     INFO("printing hir ir");
-    auto hir_output_file = input_file;
-    hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
-                            "hir");
-    builder->getModule()->HighIRprint(std::string(hir_output_file));
+//    auto hir_output_file = input_file;
+//    hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
+//                            "hir");
+    builder->getModule()->HighIRprint(std::string(output_file));
   }
 
   pass_manager PM(builder->getModule().get());
@@ -85,10 +85,10 @@ int main(int argc, char **argv) {
 
   if (is_emit_mir) {
     INFO("printing llvm ir");
-    auto mir_output_file = input_file;
-    mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
-                            "ll");
-    builder->getModule()->MIRMEMprint(mir_output_file);
+//    auto mir_output_file = input_file;
+//    mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
+//                            "ll");
+    builder->getModule()->MIRMEMprint(output_file);
   }
 
   return 0;

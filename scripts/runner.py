@@ -4,34 +4,34 @@ import os
 import subprocess
 from pretty_print import Print_C
 
-build_file = "../build"
-test_results = "../build/test_results/"
-output = "../build/output/"
-log = "../build/log/"
-bin_file_path = "../build/test_results/" # ../build/test_results/00_name/bin/test_method.out
-out_file_path = "../build/output/" # ../build/output/00_name/test_method.out
-runner_log_path = "../build/log/run_log/" # ../build/log/run_log/00_name/test_method.out
+build_file = "build"
+test_results = "build/test_results/"
+output = "build/output/"
+log = "build/log/"
+bin_file_path = "build/test_results/" # build/test_results/00_name/bin/test_method.out
+out_file_path = "build/output/" # build/output/00_name/test_method.out
+runner_log_path = "build/log/run_log/" # build/log/run_log/00_name/test_method.out
 '''
  fixed dyb much powerful than before
 '''
 
-lib = "../stdlib/libsysy_x86.a"
-header = "../stdlib/sylib.h"
-compiler_obj_path = "../build/compiler"
-# clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include ../src/stdlib/include/sylib.h ../test/02_var_defn3.sy -o ../test/02_var_defn3.ir
+lib = "stdlib/libsysy_x86.a"
+header = "stdlib/sylib.h"
+compiler_obj_path = "build/compiler"
+# clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include src/stdlib/include/sylib.h test/02_var_defn3.sy -o test/02_var_defn3.ir
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
                      "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/lib.h {sy} -o {ir} ",
+                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
-                   "frontend_instr": "../build/compiler" + " -l {ir} {sy}",
+                   "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "../build/compiler" + "-o {asm} {sy}",
+                  "frontend_instr": "build/compiler" + "-o {asm} {sy}",
                   "emit_llvm_ir": False}
 class Runner():
 
@@ -86,8 +86,8 @@ class Runner():
                 os.mkdir(bin_file_index_path+"/bin/")
     def sy_to_ir(self, frontend_instr,testcase):
 
-        sy_path = "../test/"+str(testcase)
-        ir = "../build/test_results/"+str(testcase)+"/ir/"+self.scheme+".ir"
+        sy_path = "test/"+str(testcase)
+        ir = "build/test_results/"+str(testcase)+"/ir/"+self.scheme+".ir"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         if os.path.exists(runner_log_index_path):
             log_file = open(runner_log_index_path, "a+")
@@ -100,8 +100,8 @@ class Runner():
 
 
     def ir_to_asm(self, testcase):
-        ir = "../build/test_results/"+str(testcase)+"/ir/"+self.scheme+".ir"
-        asm = "../build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
+        ir = "build/test_results/"+str(testcase)+"/ir/"+self.scheme+".ir"
+        asm = "build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         if os.path.exists(runner_log_index_path):
             log_file = open(runner_log_index_path, "a+")
@@ -118,8 +118,8 @@ class Runner():
 
 
     def asm_to_obj(self, testcase):
-        asm = "../build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
-        obj = "../build/test_results/"+str(testcase)+"/obj/"+self.scheme+".obj"
+        asm = "build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
+        obj = "build/test_results/"+str(testcase)+"/obj/"+self.scheme+".obj"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         if os.path.exists(runner_log_index_path):
             log_file = open(runner_log_index_path, "a+")
@@ -135,8 +135,8 @@ class Runner():
         log_file.close()
 
     def obj_to_bin(self, testcase):
-        obj = "../build/test_results/"+str(testcase)+"/obj/"+self.scheme+".obj"
-        bin = "../build/test_results/"+str(testcase)+"/bin/"+self.scheme+".bin"
+        obj = "build/test_results/"+str(testcase)+"/obj/"+self.scheme+".obj"
+        bin = "build/test_results/"+str(testcase)+"/bin/"+self.scheme+".bin"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         if os.path.exists(runner_log_index_path):
             log_file = open(runner_log_index_path, "a+")
@@ -145,15 +145,15 @@ class Runner():
 
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.on_chip:
-            subprocess.run("clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} ../stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("clang -Ofast {obj} ../stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("clang -Ofast {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         log_file.close()
 
 
     def sy_to_asm(self, frontend_instr, testcase):
-        asm = "../build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
-        sy_path = "../test/"+str(testcase)
+        asm = "build/test_results/"+str(testcase)+"/asm/"+self.scheme+".asm"
+        sy_path = "test/"+str(testcase)
 
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         if os.path.exists(runner_log_index_path):
@@ -205,8 +205,8 @@ class Runner():
         return time_list,sum_time,max_time,max_case
 
     def run_single_test(self, testcase):
-        bin = "../build/test_results/"+str(testcase)+"/bin/"+self.scheme+".bin"
-        stdin = "../test/"+testcase[:-3]+".in"
+        bin = "build/test_results/"+str(testcase)+"/bin/"+self.scheme+".bin"
+        stdin = "test/"+testcase[:-3]+".in"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         our_out = runner_log_path+str(testcase)+"/"+self.scheme+"_our.log"
         if os.path.exists(bin):
@@ -240,9 +240,9 @@ class Runner():
         return p.returncode
 
 
-    def get_sy_test_cases(test_path="../test"):
+    def get_sy_test_cases(test_path="test"):
         test_file_list = []
-        for path_name, dir, files_name in os.walk("../test"):
+        for path_name, dir, files_name in os.walk("test"):
             for file in files_name:
                 #如果是目录
                 if file[-3:] == ".sy":
@@ -252,4 +252,5 @@ class Runner():
 
 if __name__ == '__main__':
     r = Runner()
-    r.compile_all_tests(clang_llvm_scheme["frontend_instr"],clang_llvm_scheme["emit_llvm_ir"])
+    r.compile_all_tests(npu_llvm_scheme["frontend_instr"],npu_llvm_scheme["emit_llvm_ir"])
+    # r.compile_all_tests(clang_llvm_scheme["frontend_instr"],clang_llvm_scheme["emit_llvm_ir"])

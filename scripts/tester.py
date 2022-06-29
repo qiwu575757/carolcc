@@ -9,21 +9,21 @@ fixed dyb much powerful than before
 '''
 
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "frontend_instr": "clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
                      "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/lib.h {sy} -o {ir} ",
+                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
-                   "frontend_instr": "../build/compiler" + " -l {ir} {sy}",
+                   "frontend_instr": "build/compiler" + " -l {ir} {sy}",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "../build/compiler" + "-o {asm} {sy}",
+                  "frontend_instr": "build/compiler" + "-o {asm} {sy}",
                   "emit_llvm_ir": False}
 
-def get_sy_test_cases(test_path="../test"):
+def get_sy_test_cases(test_path="test"):
     file_list = os.listdir(test_path)
     test_file_list = []
     #遍历当前文件名列表
@@ -40,7 +40,7 @@ def get_sy_test_cases(test_path="../test"):
 
 
 class Tester():
-    def __init__(self, a_scheme,test_path="../test"):
+    def __init__(self, a_scheme,test_path="test"):
         self.scheme = a_scheme["scheme"]
         self.frontend_instr = a_scheme["frontend_instr"]
         self.emit_llvm_ir = a_scheme["emit_llvm_ir"]
