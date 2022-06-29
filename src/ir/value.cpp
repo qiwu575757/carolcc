@@ -11,6 +11,29 @@ Value::Value(Type *type, const std::string &name):_type(type),_name(name) {
 Type *Value::getType() const{
     return _type;
 }
+
+void Value::replaceAllUse(Value *new_val) {
+    for (auto use : _user_list) {
+        auto old_val = dynamic_cast<User *>(use->_value);
+        old_val->setOperand(use->_value_no, new_val);
+    }
+}
+
+void Value::removeUse(Value *val, unsigned value_no) {
+    Use *remove_use;
+    for (auto use : _user_list) {
+        // 这里需要检查
+        if (use->_value_no == value_no)
+        {
+            remove_use = use;
+            break;
+        }
+    }
+    auto iter = std::find(_user_list.begin(), _user_list.end(), remove_use);
+
+    _user_list.erase(iter);
+}
+
 std::string Value::getName() {
     return _name;
 }

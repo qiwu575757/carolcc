@@ -26,6 +26,9 @@ int Type::getSize(bool extended) {
         auto bits = static_cast<IntegerType *>(this)->getNumBits() / 8;
         return bits > 0 ? bits : 1;
     }
+    if (this->isFloatTy()) {
+        return 4;
+    }
     if (this->isArrayTy()) {
         auto element_size =
                 static_cast<ArrayType *>(this)->getElementType()->getSize();
