@@ -76,6 +76,7 @@ void Module::MIRMEMprint(const std::string &file_name) {
         global_var->accept(&printer);
     }
     INFO("visiting func");
+    WARNNING("_function_list num: %d\n",_function_list.size());
     for (auto func: _function_list) {
         func->accept(&printer);
     }

@@ -1,7 +1,9 @@
+#include "ir/function.h"
 #include "hir_to_mir.h"
 #include "ir/base_block.h"
 #include "ir/basic_block.h"
 #include "ir/instruction.h"
+#include "module.h"
 
 #define CONST_INT(num) ConstantInt::create(num)
 #define CONST_FLOAT(num) ConstantFloat::create(num)
@@ -16,6 +18,7 @@ void HIRToMIR::run() {
         }
         // mir 不在需要 baseblocks
         func->getBaseBlocks().clear();
+        // WARNNING("func BasicBlocks num:%d",func->getNumBasicBlocks());
     }
 
     _m->setIRLevel(Module::MIR_MEM);
@@ -28,7 +31,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
 
     if (base_bb->isBaiscBlock()) {
         BasicBlock *this_bb = dynamic_cast<BasicBlock *>(base_bb);
-        if (this_bb == nullptr && this_bb->getTerminator() && basic_bbs.empty()) {
+        if (next_bb == nullptr && this_bb->getTerminator()==nullptr && basic_bbs.empty()) {
             if (func->getResultType()->isInt32()) {
                 auto ret = ReturnInst::createRet(CONST_INT(0), this_bb);
             } else if (func->getResultType()->isFloatTy()) {
@@ -51,7 +54,6 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             auto branch = BranchInst::createBranch(target, this_bb);
         }
         basic_bbs.push_back(this_bb);
-
         return this_bb;
     } else if (base_bb->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(base_bb);

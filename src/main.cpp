@@ -1,12 +1,13 @@
-#include "utils.h"
-#include "visitor/syntax_detail_shower.h"
-#include "visitor/sysy_builder.h"
-#include "visitor/syntax_tree_shower.h"
-#include "visitor/tree_visitor_base.h"
 #include "passes/pass_manager.h"
 #include "passes/hir_to_mir.h"
+#include "utils.h"
+#include "visitor/syntax_detail_shower.h"
+#include "visitor/syntax_tree_shower.h"
+#include "visitor/sysy_builder.h"
+#include "visitor/tree_visitor_base.h"
 #include <cstdio>
 #include <cstring>
+#include <string>
 #include <getopt.h>
 #include <iostream>
 extern int yyparse();
@@ -39,8 +40,8 @@ int main(int argc, char *argv[]) {
         }
     }
     input_file = argv[argc - 1];
-    
-    
+
+
     yyin = fopen(input_file, "r");
     if (output_file != nullptr) {
         output = fopen(output_file, "w");
@@ -56,15 +57,18 @@ int main(int argc, char *argv[]) {
     // md_shower->visit(*root);
 
     // md_detail_shower->visit(*root);
-    
+
     auto *builder = new SYSYBuilder();
     builder->build(root);
+
     INFO("printing llvm ir");
     builder->getModule()->HighIRprint("test_Hir.ll");
-    
+
 
     pass_manager PM(builder->getModule().get());
-    PM.add_pass<HIRToMIR>("HIRToMIR");
+    const std::string name = "HIRToMIR";
+    PM.add_pass<HIRToMIR>(name);
+    PM.run();
     builder->getModule()->MIRMEMprint("test_Mir.ll");
 
     return 0;

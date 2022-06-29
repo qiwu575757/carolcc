@@ -17,11 +17,26 @@ Function *BasicBlock::getParentFunc() const {
     return this->getFunction();
 }
 Module *BasicBlock::getModule() const {
-    return this->getParentFunc()->getParent(); 
+    return this->getParentFunc()->getParent();
 }
 const Instruction *BasicBlock::getTerminator() const {
-    return const_cast<Instruction *>(
-        static_cast<const BasicBlock *>(this)->getTerminator());
+  if (_instructions.empty()) {
+    return nullptr;
+  }
+  switch (_instructions.back()->getInstructionKind()) {
+  case Instruction::RET:
+    return _instructions.back();
+    break;
+
+  case Instruction::BR:
+    return _instructions.back();
+    break;
+
+  default:
+    return nullptr;
+    break;
+  }
+  return nullptr;
 }
 void BasicBlock::addInstr(Instruction *instr) {
     this->_instructions.push_back(instr); }
@@ -78,7 +93,7 @@ bool BasicBlock::hasRet() {
 }
 bool BasicBlock::isEntry() {
     return this->getName() == "entry";
-    
+
 }
 BasicBlock::BasicBlock(const std::string &name, Function *func)
     : BaseBlock(BlockType::BASIC, name, func) {

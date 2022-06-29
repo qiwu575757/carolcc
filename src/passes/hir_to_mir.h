@@ -2,10 +2,13 @@
 #define COMPILER_HIRTOMIR_H
 
 #include "pass.h"
+class BasicBlock;
+class BaseBlock;
+class Function;
 
 class HIRToMIR : public Transform {
 public:
-    HIRToMIR(std::string &name) : Transform(name) {}
+    HIRToMIR(Module *m, const std::string &name) : Transform(m,name) {}
     void run() override;
     BasicBlock *genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                            BasicBlock *while_entry, BasicBlock *while_exit,
