@@ -170,9 +170,9 @@ void LLVMIrPrinter::visit(Function *node) {
                 base_block->accept(this);
             }
             output_file << "}" << std::endl;
-        }  
+        }
     }
-    
+
 }
 void LLVMIrPrinter::visit(Argument *node) {
     node->getType()->print(output_file);
@@ -245,7 +245,7 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
         if (node->getOperand(0)->getType()->isIntegerTy() || node->getOperand(0)->getType()->isFloatTy()) {
             output_file << node->getOperand(0)->getPrintName();
         } else {
-            
+
             ERROR("error type");
         }
     }
@@ -299,6 +299,22 @@ void LLVMIrPrinter::visit(CmpInst *node) {
     output_file<<node->getOperand(0)->getPrintName()<<", "<<node->getOperand(1)->getPrintName()<<std::endl;
 }
 void LLVMIrPrinter::visit(BranchInst *node) {
+    output_file<<"br ";
+    if(node->getOperandNumber()==1){
+        output_file<<" label "<<node->getOperand(0)->getPrintName()<<std::endl;
+    }
+    else if(node->getOperandNumber()==2){
+        output_file<<"i1 "<<node->getOperand(0)->getPrintName()<<", "
+        <<"label "<<node->getOperand(1)->getPrintName()<<std::endl;
+    }
+    else if(node->getOperandNumber()==3){
+        output_file<<"i1 "<<node->getOperand(0)->getPrintName()<<", "
+        <<"label "<<node->getOperand(1)->getPrintName()<<","
+        <<"label "<<node->getOperand(2)->getPrintName()<<std::endl;
+    }
+    else {
+        ERROR("error branch oprt number");
+    }
 }
 void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
@@ -408,7 +424,7 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
             }
         }
         output_file<<"] ";
-        
+
     }
 
 
@@ -438,12 +454,12 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
         if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
             output_file << " 0";
         } else if(node->getType()->getPointerElementType()->isArrayTy() ) {
-            
+
             node->getType()->getPointerElementType()->print(output_file);
             output_file<<"zeroinitializer";
         }
         else {
-            ERROR("ERROR type");    
+            ERROR("ERROR type");
         }
     }
     output_file << ", align 4" << std::endl;

@@ -53,7 +53,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             }
             auto branch = BranchInst::createBranch(target, this_bb);
         }
-        basic_bbs.push_back(this_bb);
+        basic_bbs.push_front(this_bb);
         return this_bb;
     } else if (base_bb->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(base_bb);
@@ -96,7 +96,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         // cond_bb 的最后一条指令存储了该cond 的运行结果
         auto cond = cond_bb->getInstructions().back();
         auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
-        basic_bbs.push_back(cond_bb);
+        basic_bbs.push_front(cond_bb);
 
         return cond_bb;
     } else if (base_bb->isWhileBlock()) {
@@ -129,7 +129,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
 
         auto cond = cond_bb->getInstructions().back();
         auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
-        basic_bbs.push_back(cond_bb);
+        basic_bbs.push_front(cond_bb);
 
         return cond_bb;
     } else {
