@@ -23,3 +23,7 @@ core
 */*.ll
 *.ll
 run_test_one.sh
+
+scripts/__pycache__
+test
+test_file/functional/.gitkeep

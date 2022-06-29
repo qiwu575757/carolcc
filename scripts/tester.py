@@ -13,7 +13,7 @@ clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
                      "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
                    "frontend_instr": "../build/compiler" + " -l {ir} {sy}",

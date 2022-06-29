@@ -24,7 +24,7 @@ clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
                      "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/sylib.h {sy} -o {ir}",
+                     "frontend_instr": "clang -x c -c -Ofast -S -emit-llvm -include ../stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
                    "frontend_instr": "../build/compiler" + " -l {ir} {sy}",
@@ -112,7 +112,7 @@ class Runner():
         if self.on_chip:
             subprocess.run("llc -O3 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(asm=asm, ir=ir).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("llc -O3  -filetype=asm {ir} -o {asm}".format(asm=asm, ir=ir).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("llc -O3  -filetype=asm {ir} -o {asm} ".format(asm=asm, ir=ir).split(), stdout=log_file, stderr=log_file, bufsize=1)
 
         log_file.close()
 
@@ -130,7 +130,7 @@ class Runner():
         if self.on_chip:
             subprocess.run("as -march=armv7-a -mfloat-abi=hard {asm} -o {obj}".format(asm=asm, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("as {asm} -o {obj}".format(asm=asm, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("as {asm} -o {obj} ".format(asm=asm, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
 
         log_file.close()
 
@@ -147,7 +147,7 @@ class Runner():
         if self.on_chip:
             subprocess.run("clang -Ofast -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} ../stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         else:
-            subprocess.run("clang -Ofast {obj} ../stdlib/libsysy_x86.a -o {bin}".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
+            subprocess.run("clang -Ofast {obj} ../stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(), stdout=log_file, stderr=log_file, bufsize=1)
         log_file.close()
 
 
@@ -206,7 +206,7 @@ class Runner():
 
     def run_single_test(self, testcase):
         bin = "../build/test_results/"+str(testcase)+"/bin/"+self.scheme+".bin"
-        stdin = "test/"+testcase[:-3]+".in"
+        stdin = "../test/"+testcase[:-3]+".in"
         runner_log_index_path = runner_log_path+str(testcase)+"/"+self.scheme+".log"
         our_out = runner_log_path+str(testcase)+"/"+self.scheme+"_our.log"
         if os.path.exists(bin):
@@ -225,7 +225,7 @@ class Runner():
 
         Print_C().print_procedure("Running {}_{}".format(self.scheme,testcase))
         if os.path.exists(stdin):
-            stdin_file = open(stdin, "w+")
+            stdin_file = open(stdin, "r+")
             p = subprocess.run(bin.split(), stdin=stdin_file, stdout=our_out_file, stderr=log_file, bufsize=1)
         else:
             p = subprocess.run(bin.split(), stdout=our_out_file, stderr=log_file, bufsize=1)
