@@ -319,7 +319,7 @@ void LLVMIrPrinter::visit(BranchInst *node) {
 }
 void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
-    node->getElementType()->print(output_file);
+    node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
