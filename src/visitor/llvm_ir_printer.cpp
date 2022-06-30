@@ -193,7 +193,7 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
         }
     } else if (node->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(node);
-        for (auto &cond_base_block: *(if_block->getCondBaseBlockList())) {
+        for (auto &cond_base_block:* (if_block->getCondBaseBlockList())) {
             // print_tabs();
             cond_base_block->accept(this);
         }
