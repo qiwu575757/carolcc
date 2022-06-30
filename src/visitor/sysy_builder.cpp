@@ -1079,7 +1079,7 @@ void SYSYBuilder::visit(tree_if_stmt &node) {
     node.cond->accept(*this);
     if ( node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt || node.stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
-        builder->SetBasicBlockInsertPoint(&(if_block->getIfBodyBaseBlockList()));
+        builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
         node.stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
     } else if (node.stmt->block || node.stmt->break_stmt || node.stmt->continue_stmt || node.stmt->return_stmt ||
@@ -1113,7 +1113,7 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
     node.cond->accept(*this);
     if (node.then_stmt->if_stmt || node.then_stmt->if_stmt || node.then_stmt->if_else_stmt || node.then_stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
-        builder->SetBasicBlockInsertPoint(&(if_block->getIfBodyBaseBlockList()));
+        builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
         node.then_stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
     } else if (node.then_stmt->block || node.then_stmt->break_stmt || node.then_stmt->continue_stmt || node.then_stmt->return_stmt ||
@@ -1126,7 +1126,7 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
     }
     if (node.else_stmt->if_stmt || node.else_stmt->if_stmt || node.else_stmt->if_else_stmt || node.else_stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
-        builder->SetBasicBlockInsertPoint(&(if_block->getIfBodyBaseBlockList()));
+        builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
         node.else_stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
     } else if (node.else_stmt->block || node.else_stmt->break_stmt || node.else_stmt->continue_stmt || node.else_stmt->return_stmt ||

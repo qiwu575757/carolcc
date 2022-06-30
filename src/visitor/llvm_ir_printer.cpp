@@ -24,13 +24,13 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
         }
     } else if (base_block->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(base_block);
-        for (auto &cond_base_block: (if_block->getCondBaseBlockList())) {
+        for (auto &cond_base_block: *(if_block->getCondBaseBlockList())) {
             NameBaseBlock(cond_base_block);
         }
-        for (auto &then_block: (if_block->getIfBodyBaseBlockList())) {
+        for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
             NameBaseBlock(then_block);
         }
-        for (auto &else_block: (if_block->getElseBodyBaseBlockList())) {
+        for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
             NameBaseBlock(else_block);
         }
     } else if (base_block->isWhileBlock()) {
@@ -193,15 +193,15 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
         }
     } else if (node->isIfBlock()) {
         auto if_block = dynamic_cast<IfBlock *>(node);
-        for (auto &cond_base_block: (if_block->getCondBaseBlockList())) {
+        for (auto &cond_base_block:* (if_block->getCondBaseBlockList())) {
             // print_tabs();
             cond_base_block->accept(this);
         }
-        for (auto &then_block: (if_block->getIfBodyBaseBlockList())) {
+        for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
             // print_tabs();
             then_block->accept(this);
         }
-        for (auto &else_block: (if_block->getElseBodyBaseBlockList())) {
+        for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
             // print_tabs();
             else_block->accept(this);
         }
