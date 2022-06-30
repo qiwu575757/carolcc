@@ -93,7 +93,10 @@ void graph::LeiTu_add(std::string s_1,std::string s_2){
     writeLineToTxt(graph::dotPath,"\t"+s_2+"[style = ""filled"", color = ""gray"", fillcolor = ""pink""]");
 }
 void graph::LeiTu_add_attr(std::string s,std::string attr){
-    writeLineToTxt(graph::filePath,"\t"+s+" : "+attr+"");
+    writeLineToTxt(graph::filePath,"\t"+s+" : attr_"+attr+"");
+    writeLineToTxt(graph::dotPath,"\t"+s+"_"+attr+" [style = ""filled"", color = ""gray"", fillcolor = ""gray""]");
+    writeLineToTxt(graph::dotPath,"\t"+s+"->"+s+"_"+attr+" [style = ""filled"", color = ""gray"", fillcolor = ""gray""]");
+
 }
 void graph::ZhuangTaiTu_add(std::string s_1,std::string s_2){
     writeLineToTxt(graph::filePath,"\t"+s_1+" --> "+s_2+"");

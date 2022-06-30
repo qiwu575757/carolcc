@@ -8,7 +8,7 @@
 
 class syntax_tree_shower : public tree_visitor_base {
 public:
-        void visit(syntax_tree_node &node) final;
+    void visit(syntax_tree_node &node) final;
      void visit(tree_comp_unit &node) final;
      void visit(tree_func_def &node) final;
      void visit(tree_block &node) final;

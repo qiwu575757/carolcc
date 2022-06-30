@@ -67,10 +67,10 @@ int main(int argc, char **argv) {
   parser_logger.set_screen(false);
   yyparse();
   auto *md_shower = new syntax_tree_shower();
-  // auto *md_detail_shower = new syntax_detail_shower();
+  auto *md_detail_shower = new syntax_detail_shower();
   md_shower->visit(*root);
 
-  // md_detail_shower->visit(*root);
+  md_detail_shower->visit(*root);
 
   auto *builder = new SYSYBuilder(input_file);
   builder->build(root);
