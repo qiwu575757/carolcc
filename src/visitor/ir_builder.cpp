@@ -14,7 +14,9 @@ std::list<BaseBlock *>* IRBuilder::GetInsertBaseBlockList()
 void IRBuilder::pushBaseBlock(BaseBlock *bb){
     MyAssert("null ptr",this->_base_block_list!=nullptr);
     this->_base_block_list->push_back(bb);
-    bb->setBaseFather(this->_father_block);
+    if(this->_father_block!=nullptr){
+      bb->setBaseFather(this->_father_block);
+    }
 }
 BaseBlock *IRBuilder::GetBaseBlockFatherBlock()
 {
