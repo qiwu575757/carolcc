@@ -80,10 +80,15 @@ int main(int argc, char **argv) {
    auto hir_output_file = input_file;
    hir_output_file.replace(hir_output_file.end() - 2, hir_output_file.end(),
                            "hir");
-   if (is_debug)
-     builder->getModule()->HighIRprint(std::string(hir_output_file));
-   else
-     builder->getModule()->HighIRprint(std::string(output_file));
+  if (is_debug)
+  {
+    builder->getModule()->HighIRprint(std::string(hir_output_file));
+    builder->getModule()->HIRSHOW(std::string(hir_output_file));
+  }
+  else{
+    builder->getModule()->HighIRprint(std::string(output_file));
+    builder->getModule()->HIRSHOW(std::string(output_file));
+  }
   }
 
   pass_manager PM(builder->getModule().get());

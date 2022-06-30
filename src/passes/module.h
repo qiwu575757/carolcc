@@ -45,6 +45,7 @@ public:
     }
     void addGlobalVariable(GlobalVariable *g);
     void HighIRprint(const std::string &file_name);
+    void HIRSHOW(const std::string &file_name);
     void MIRMEMprint(const std::string &file_name);
     void setIRLevel(IRLevel ir_level) {
         _ir_level = ir_level;
