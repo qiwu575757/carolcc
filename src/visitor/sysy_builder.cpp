@@ -105,7 +105,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
 
     WARNNING("create BasicBlock 105\n");
     builder->SetBasicBlockInsertPoint(&fun->getBaseBlocks());
-    builder->SetBaseBlockFatherBlock(funBB);
+    builder->SetBaseBlockFatherBlock(nullptr);
     builder->SetEntryBlock(funBB);
     builder->SetInstrInsertPoint(funBB);
     scope.enter();
@@ -159,41 +159,24 @@ void SYSYBuilder::visit(tree_block &node) {
 
     if (node.block_item_list != nullptr) {
         for (auto &blockitem: (node.block_item_list)->block_items) {
-            if (blockitem->decl != nullptr) {
-
-                // auto allocaBB = BasicBlock::create("");
-                // WARNNING("create BasicBlock 168\n");
-                // builder->SetInstrInsertPoint(allocaBB);
-
-                // builder->pushBaseBlock(allocaBB);
-                blockitem->accept(*this);
-
-            } else if (blockitem->stmt != nullptr) {
-                // if (blockitem->stmt->break_stmt ||
-                //     blockitem->stmt->continue_stmt ||
-                //     blockitem->stmt->return_stmt || blockitem->stmt->return_null_stmt) {
-                //     if (builder->GetInsertBaseBlockList() == nullptr) {
-                //         ERROR("WARNNING: null baseBlockList in line 179");
-                //         INFO("block 2");
-                //         if (builder->GetInsertBasicBlock()->getBaseFather() != nullptr) {
-                //             INFO("block 3");
-                //             auto baseBB = BasicBlock::create("", G_cur_fun);
-                //             WARNNING("create BasicBlock 182\n");
-                //             builder->SetInstrInsertPoint(baseBB);
-                //         }
-                //         blockitem->accept(*this);
-                //     } else {
-                //         INFO("block 4");
-                //         auto baseBB = BasicBlock::create("");
-                //         WARNNING("create BasicBlock 190\n");
-                //         builder->SetInstrInsertPoint(baseBB);
-                //         builder->pushBaseBlock(baseBB);
-                //         blockitem->accept(*this);
-                //     }
-                // } else {
-                blockitem->accept(*this);
-
-            }
+          if(blockitem->stmt!=nullptr
+              &&(blockitem->stmt->if_stmt||blockitem->stmt->while_stmt||blockitem->stmt->if_else_stmt)) {
+            blockitem->accept(*this);
+          }
+            else {
+                if(builder->GetInsertBasicBlock()->getBaseFather()!=builder->GetBaseBlockFatherBlock()){
+                    BasicBlock* bb;
+                    if(builder->GetBaseBlockFatherBlock()== nullptr){
+                        bb= BasicBlock::create("",G_cur_fun);
+                    }
+                    else {
+                      bb = BasicBlock::create("");
+                      builder->pushBaseBlock(bb);
+                    }
+                  builder->SetInstrInsertPoint(bb);
+                }
+              blockitem->accept(*this);
+          }
         }
     }
     if (need_exit_scope) {

@@ -1,5 +1,5 @@
 #include "passes/hir_to_mir.h"
-#include "passes/lowerir.h""
+#include "passes/lowerir.h"
 #include "passes/pass_manager.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
@@ -66,11 +66,11 @@ int main(int argc, char **argv) {
     perror(input_file.c_str());
   parser_logger.set_screen(false);
   yyparse();
-  auto *md_shower = new syntax_tree_shower();
-  auto *md_detail_shower = new syntax_detail_shower();
-  md_shower->visit(*root);
-
-  md_detail_shower->visit(*root);
+//  auto *md_shower = new syntax_tree_shower();
+//  auto *md_detail_shower = new syntax_detail_shower();
+//  md_shower->visit(*root);
+//
+//  md_detail_shower->visit(*root);
 
   auto *builder = new SYSYBuilder(input_file);
   builder->build(root);
