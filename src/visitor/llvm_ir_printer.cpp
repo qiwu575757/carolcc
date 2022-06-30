@@ -351,7 +351,12 @@ void LLVMIrPrinter::visit(CallInst *node) {
 
 }
 void LLVMIrPrinter::visit(ZExtInst *node) {
-    ERROR("TODO");
+    output_file << node->getPrintName() << " = "
+                << "zext ";
+    node->getOperand(0)->getType()->print(output_file);
+    output_file << node->getOperand(0)->getPrintName() << " to ";
+    node->getType()->print(output_file);
+    output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(HIR *node) {
     if(node->isBreak()){
