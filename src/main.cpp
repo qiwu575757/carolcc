@@ -1,4 +1,5 @@
 #include "passes/hir_to_mir.h"
+#include "passes/lowerir.h""
 #include "passes/pass_manager.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
@@ -65,9 +66,9 @@ int main(int argc, char **argv) {
     perror(input_file.c_str());
   parser_logger.set_screen(false);
   yyparse();
-  // auto *md_shower = new syntax_tree_shower();
+  auto *md_shower = new syntax_tree_shower();
   // auto *md_detail_shower = new syntax_detail_shower();
-  // md_shower->visit(*root);
+  md_shower->visit(*root);
 
   // md_detail_shower->visit(*root);
 
@@ -86,7 +87,8 @@ int main(int argc, char **argv) {
   }
 
   pass_manager PM(builder->getModule().get());
-  PM.add_pass<HIRToMIR>("HIRToMir");
+  PM.add_pass<HIRToMIR>("HIRToMIR");
+  PM.add_pass<LowerIR>("LowerIR");
   PM.run();
 
   if (is_emit_mir) {
@@ -99,6 +101,8 @@ int main(int argc, char **argv) {
     else
     builder->getModule()->MIRMEMprint(output_file);
   }
+
+  
 
   return 0;
 }
