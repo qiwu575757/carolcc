@@ -78,7 +78,7 @@ public:
     bool isZext() { return _op_id == Instruction::ZEXT; }
     bool isBreak() { return _op_id == Instruction::BREAK; }
     bool isContinue() { return _op_id == Instruction::CONTINUE; }
-
+    inline BasicBlock *getParent() { return _parent; }
 protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
     Instruction(Type *type, OpKind op_id, unsigned op_nums, BasicBlock *parent);
@@ -130,6 +130,7 @@ public:
         LT,
         LE
     };
+    CmpOp _cmp_op;
     //    static CmpInst *createCmp(Type *type,CmpOp op_id,Value *v1,Value *v2);
     static CmpInst *createEQ(Type *type, Value *v1, Value *v2, BasicBlock *parent);
     static CmpInst *createNEQ(Type *type, Value *v1, Value *v2, BasicBlock *parent);
@@ -149,7 +150,6 @@ public:
 private:
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
-    CmpOp _cmp_op;
 };
 class ReturnInst : public Instruction {
 private:

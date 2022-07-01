@@ -6,6 +6,7 @@
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/sysy_builder.h"
 #include "visitor/tree_visitor_base.h"
+#include "asm/asm_builder.h"
 #include <cstdio>
 #include <cstring>
 #include <getopt.h>
@@ -17,6 +18,7 @@ extern FILE *yyin;
 debug_log parser_logger("parser_logger");
 int yyline;
 tree_comp_unit *root;
+bool debug = true;
 // std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
 
 FILE *output;
@@ -96,18 +98,22 @@ int main(int argc, char **argv) {
   PM.add_pass<LowerIR>("LowerIR");
   PM.run();
 
+  // AsmBuilder asm_builder(builder->getModule(), debug);
+  // std::string asm_code = asm_builder.generate_asm();
+  // printf("%s\n", asm_code);
+
   if (is_emit_mir) {
     WARNNING("emitting  mir");
     auto mir_output_file = input_file;
     mir_output_file.replace(mir_output_file.end() - 2, mir_output_file.end(),
                             "ir");
     if(is_debug)
-    builder->getModule()->MIRMEMprint(mir_output_file);
+      builder->getModule()->MIRMEMprint(mir_output_file);
     else
-    builder->getModule()->MIRMEMprint(output_file);
+      builder->getModule()->MIRMEMprint(output_file);
   }
 
-  
+
 
   return 0;
 }

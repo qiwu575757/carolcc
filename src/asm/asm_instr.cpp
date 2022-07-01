@@ -524,6 +524,18 @@ std::string cmp(const Reg &lhs, const Value &rhs) {
   return asm_instr;
 }
 
+std::string cmp(const Reg &lhs, const Reg &rhs) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "cmp";
+  asm_instr += " ";
+  asm_instr += lhs.getName();
+  asm_instr += ", ";
+  asm_instr += rhs.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string b(const Label &dst, const CmpOp &cond) {
   std::string asm_instr;
   asm_instr += spaces;
@@ -691,5 +703,23 @@ std::string divConst(const Reg &dst, const Reg &src,
   }
   return asm_instr;
 }
+
+std::string ret(const Reg &src) {
+  const InstGen::Reg target_reg = InstGen::Reg(0);
+  std::string asm_instr;
+  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
+  asm_instr += mov(target_reg,src, cmpop);
+  asm_instr += "bx  lr";
+
+  return asm_instr;
+}
+
+std::string br(const Reg &target) {
+  std::string asm_instr;
+  asm_instr += "b ";
+
+  return asm_instr;
+}
+
 
 }; // namespace InstGen

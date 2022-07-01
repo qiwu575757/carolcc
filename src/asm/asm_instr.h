@@ -43,12 +43,7 @@ class Reg : public Value {
   int id;
 
 public:
-  explicit Reg(int id) : id(id) {
-    if (id < 0 || id > max_reg_id) {
-      std::cerr << "Invalid Reg ID!" << std::endl;
-      abort();
-    }
-  }
+  explicit Reg(int id) : id(id){};
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }
@@ -213,7 +208,7 @@ std::string vvmul(const Reg &sum, const Reg &v1, const Reg &v2, const int len);
 std::tuple<int, int, int> choose_multiplier(int d, int N);
 std::string divConst(const Reg &dst, const Reg &src,
                      const Constant &divisor);
-
+std::string ret(const Reg &src);
 }; // namespace InstGen
 
 const InstGen::Reg vinst_temp_reg = InstGen::Reg(11);
