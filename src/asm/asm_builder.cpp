@@ -16,16 +16,6 @@ std::string AsmBuilder::generate_asm(){
 }
 
 /*
-
-if (inst->getInstructionKind() == Instruction::CALL) {
-        std::string func_name = ops.at(0)->getName();
-        std::vector<Value *> args(ops.begin() + 1, ops.end());
-        int offset = 0;
-        for(auto arg:args){
-            asm_code += InstGen::str(InstGen::sp,InstGen::Addr(InstGen::sp,offset));
-            offset+=4;
-        }
-        asm_code += InstGen::bl(func_name);
 */
 
 std::string AsmBuilder::generate_module_header(){
@@ -440,10 +430,15 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                                       InstGen::NOP));
       }
     } else if (inst->isCall()) {
-      //TODO
+        std::string func_name = operands.at(0)->getName();
+        std::vector<Value *> args(operands.begin() + 1, operands.end());
+        int offset = 0;
+        for(auto arg:args){
+            inst_asm += InstGen::str(InstGen::sp,InstGen::Addr(InstGen::sp,offset));
+            offset+=4;
+        }
+        inst_asm += InstGen::bl(func_name);
     }
-
-
 
     return inst_asm;
   }

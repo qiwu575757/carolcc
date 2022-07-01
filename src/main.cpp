@@ -98,9 +98,9 @@ int main(int argc, char **argv) {
   PM.add_pass<LowerIR>("LowerIR");
   PM.run();
 
-  AsmBuilder asm_builder(builder->getModule(), debug);
-  std::string asm_code = asm_builder.generate_asm();
-  printf("%s\n", asm_code);
+  // AsmBuilder asm_builder(builder->getModule(), debug);
+  // std::string asm_code = asm_builder.generate_asm();
+  // printf("%s\n", asm_code);
 
   if (is_emit_mir) {
     WARNNING("emitting  mir");
