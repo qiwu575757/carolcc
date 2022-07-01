@@ -709,14 +709,14 @@ std::string ret(const Reg &src) {
   std::string asm_instr;
   InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
   asm_instr += mov(target_reg,src, cmpop);
-  asm_instr += "bx  lr";
+  asm_instr += spaces+"bx  lr "+newline;
 
   return asm_instr;
 }
 
 std::string br(const Reg &target) {
   std::string asm_instr;
-  asm_instr += "b ";
+  asm_instr += spaces+"b "+newline;
 
   return asm_instr;
 }

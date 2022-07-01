@@ -22,7 +22,7 @@ const std::string reg_name[] = {"r0",  "r1", "r2", "r3", "r4",  "r5",
 const int max_reg_id = 15;
 
 enum CmpOp {
-  EQ, // ==
+  EQ, // ==bx
   NE, // !=
   GT, // >
   GE, // >=
