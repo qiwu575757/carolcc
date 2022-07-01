@@ -1,10 +1,10 @@
 #ifndef HIR_PRINTER_H
 #define HIR_PRINTER_H
 #include "ir_visitor_base.h"
-#include "ir/global_variable.h"
+#include "passes/module.h"
 #include <fstream>
 #include <unordered_map>
-#include "passes/module.h"
+
 
 class HIrPrinter : public IrVisitorBase {
 public:

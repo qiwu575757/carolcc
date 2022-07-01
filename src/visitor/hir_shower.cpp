@@ -41,12 +41,15 @@ void HIrPrinter::visit(BaseBlock *node) {
         print_left("IfBlock","");
         add_tab();
         auto if_block = dynamic_cast<IfBlock *>(node);
+        print_left("IfBlock(cond)","");
         for (auto &cond_base_block:* (if_block->getCondBaseBlockList())) {
             cond_base_block->accept(this);
         }
+      print_left("IfBlock(then)","");
         for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
             then_block->accept(this);
         }
+      print_left("IfBlock(else)","");
         for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
             else_block->accept(this);
         }
@@ -56,9 +59,11 @@ void HIrPrinter::visit(BaseBlock *node) {
         print_left("WhileBlock","");
         add_tab();
         auto while_block = dynamic_cast<WhileBlock *>(node);
+        print_left("WhileBlock(cond)","");
         for (auto &cond_block: *(while_block->getCondBaseBlockList())) {
             cond_block->accept(this);
         }
+        print_left("WhileBlock(body)","");
         for (auto &body_block: *(while_block->getBodyBaseBlockList())) {
             body_block->accept(this);
         }
