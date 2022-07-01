@@ -79,10 +79,11 @@ public:
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code();
   std::string generate_function_exit_code();
-  std::string update_value_mapping(std::list<Value>);
-  std::string generateBasicBlockCode(BasicBlock *bb);
+  //LRU list update interval by function code; insert ldr str instr
+  std::string update_value_mapping(std::list<Value*> update_v);
   std::string getLabelName(BasicBlock *bb);
-  /*LRU list update interval by function code; insert ldr str instr*/
+  std::string generateBasicBlockCode(BasicBlock *bb);
+  std::string generateInstructionCode(Instruction *inst);
 };
 
 #endif // SRC_ASM_BUILDER_H
