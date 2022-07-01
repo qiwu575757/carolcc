@@ -123,7 +123,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         auto cond_bb = dynamic_cast<BasicBlock *>((*while_cond).front());
         BasicBlock *cur_next = cond_bb;
         for (auto iter = (*while_body).rbegin(); iter != (*while_body).rend(); iter++) {
-            cur_next = genBasicBlock(*iter, cur_next, while_entry, while_exit, func);
+            cur_next = genBasicBlock(*iter, cur_next, cond_bb, next_bb, func);
         }
         if_true_block = cur_next;
 
