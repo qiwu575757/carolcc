@@ -84,6 +84,9 @@ public:
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
+  std::string generate_global_vars();
+  std::string generate_initializer(Constant *init);
+  std::pair<int, bool> get_const_int_val(Value *val);
   /*LRU list update interval by function code; insert ldr str instr*/
 };
 

@@ -30,12 +30,121 @@ std::string AsmBuilder::generate_module_header(){
     module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
     return module_header_code;
 }
-// std::string AsmBuilder::generate_module_tail(){
-//     std::string module_tail_code;
-//     module_tail_code += InstGen::spaces + ".data" + InstGen::newline;
-//     module_tail_code += CodeGen::generateGlobalVarsCode();
-//     return module_tail_code;
-// }
+std::string AsmBuilder::generate_module_tail(){
+    std::string module_tail_code;
+    module_tail_code += InstGen::spaces + ".data" + InstGen::newline;
+    module_tail_code += AsmBuilder::generate_global_vars();
+    return module_tail_code;
+}
+
+std::string AsmBuilder::generate_global_vars() {
+  std::string asm_code;
+  for (auto &global_var : this->module->getGlobalVariables()) {
+    asm_code += global_var->getName() + ":" + InstGen::newline;
+    if (!global_var->getType()->getPointerElementType()->eq(
+            *global_var->getOperandList().at(0)->getType())) {
+      asm_code += InstGen::spaces + ".zero" + " " +
+                  std::to_string(global_var->getType()->getSize()) +
+                  InstGen::newline;
+    } else {
+      asm_code += AsmBuilder::generate_initializer(
+          static_cast<Constant *>(global_var->getOperandList().at(0)));
+    }
+  }
+  return asm_code;
+}
+
+std::string AsmBuilder::generate_initializer(Constant *init) {
+  std::string asm_code;
+  auto array_init = dynamic_cast<ConstantArray *>(init);
+  if (array_init) {
+    auto length =
+        static_cast<ArrayType *>(array_init->getType())->getNumOfElements();
+    for (int i = 0; i < length; i++) {
+      asm_code +=
+          AsmBuilder::generate_initializer(array_init->getElement(i));
+    }
+    ERROR("UNDO array init in asm!");
+  } else {
+    auto val = AsmBuilder::get_const_int_val(init);
+    if (!val.second) {
+      std::cerr << "Function generateInitializerCode exception!" << std::endl;
+      abort();
+    }
+    asm_code += InstGen::spaces + ".long" + " " + std::to_string(val.first) +
+                InstGen::newline;
+  }
+  return asm_code;
+}
+
+std::pair<int, bool> AsmBuilder::get_const_int_val(Value *val) { // disabled
+  auto const_val = dynamic_cast<ConstantInt *>(val);
+  auto inst_val = dynamic_cast<Instruction *>(val);
+  if (const_val) {
+    return std::make_pair(const_val->getValue(), true);
+  } else if (inst_val && false) {
+    auto op_list = inst_val->getOperandList();
+    if (dynamic_cast<BinaryInst *>(val)) {
+      auto val_0 = AsmBuilder::get_const_int_val(op_list.at(0));
+      auto val_1 = AsmBuilder::get_const_int_val(op_list.at(1));
+      if (val_0.second && val_1.second) {
+        int ret = 0;
+        bool flag = true;
+        switch (inst_val->getInstructionKind()) {
+        case Instruction::ADD:
+          ret = val_0.first + val_1.first;
+          break;
+        case Instruction::SUB:
+          ret = val_0.first - val_1.first;
+          break;
+        case Instruction::AND:
+          ret = val_0.first & val_1.first;
+          break;
+        case Instruction::OR :
+          ret = val_0.first | val_1.first;
+          break;
+        case Instruction::MUL:
+          ret = val_0.first * val_1.first;
+          break;
+        case Instruction::DIV:
+          ret = val_0.first / val_1.first;
+          break;
+        case Instruction::REM:
+          ret = val_0.first % val_1.first;
+          break;
+        default:
+          flag = false;
+          break;
+        }
+        return std::make_pair(ret, flag);
+      } else {
+        return std::make_pair(0, false);
+      }
+    }
+    if (dynamic_cast<UnaryInst *>(val)) {
+      auto val_0 = AsmBuilder::get_const_int_val(op_list.at(0));
+      if (val_0.second) {
+        int ret = 0;
+        bool flag = true;
+        switch (inst_val->getInstructionKind()) {
+        case Instruction::NOT:
+          ret = !val_0.first;
+          break;
+        default:
+          flag = false;
+          break;
+        }
+        return std::make_pair(ret, flag);
+      } else {
+        return std::make_pair(0, false);
+      }
+    }
+  }
+  std::cerr << "Function getConstIntVal exception!" << std::endl;
+  abort();
+}
+
+
 std::string AsmBuilder::generate_function_code(Function *func){
     std::string func_asm;
     func_asm += generate_function_entry_code(func);
