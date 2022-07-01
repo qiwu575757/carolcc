@@ -38,6 +38,7 @@ int main(int argc, char **argv) {
   //    }
   bool is_emit_hir = false;
   bool is_emit_mir = false;
+  bool is_show_hir_pad_graph = false;
   bool is_debug = false;
   std::string input_file, output_file;
   for (int i = 1; i < argc; i++) {
@@ -50,6 +51,8 @@ int main(int argc, char **argv) {
       is_emit_mir = true;
     } else if (strcmp(argv[i], "-debug") == 0) {
       is_debug=true;
+    } else if (strcmp(argv[i], "-pad") == 0) {
+      is_show_hir_pad_graph=true;
     } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
       print_help(argv[0]);
       return 0;
@@ -68,11 +71,7 @@ int main(int argc, char **argv) {
     perror(input_file.c_str());
   parser_logger.set_screen(false);
   yyparse();
-//  auto *md_shower = new syntax_tree_shower();
-//  auto *md_detail_shower = new syntax_detail_shower();
-//  md_shower->visit(*root);
-//
-//  md_detail_shower->visit(*root);
+
 
   auto *builder = new SYSYBuilder(input_file);
   builder->build(root);
@@ -85,17 +84,18 @@ int main(int argc, char **argv) {
   if (is_debug)
   {
     builder->getModule()->HighIRprint(std::string(hir_output_file));
-    builder->getModule()->HIRSHOW(std::string(hir_output_file));
+    if(is_show_hir_pad_graph)
+      builder->getModule()->HIRSHOW(std::string(hir_output_file));
   }
   else{
     builder->getModule()->HighIRprint(std::string(output_file));
-    builder->getModule()->HIRSHOW(std::string(output_file));
+//    builder->getModule()->HIRSHOW(std::string(output_file));
   }
   }
 
   pass_manager PM(builder->getModule().get());
   PM.add_pass<HIRToMIR>("HIRToMIR");
-  PM.add_pass<LowerIR>("LowerIR");
+//  PM.add_pass<LowerIR>("LowerIR");
   PM.run();
 
   // AsmBuilder asm_builder(builder->getModule(), debug);
