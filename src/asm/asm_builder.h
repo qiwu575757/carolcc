@@ -21,7 +21,7 @@
 #include "ir/user.h"
 #include "ir/value.h"
 #include "passes/module.h"
-
+const int reg_num = 10;
 const std::string global_vars_label = ".global_vars";
 const int arch_version = 8;
 const bool enlarge_stack = true;
@@ -59,10 +59,11 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<Value *, int> register_mapping;
-  std::map<Value *, int> stack_mapping;
+  // std::map<Value *, int> stack_mapping;
+  std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size;
+  int stack_size=1024;
   bool debug;
   std::string asm_code;
 
@@ -77,13 +78,16 @@ public:
   std::string generate_module_header();
   std::string generate_module_tail();
   std::string generate_function_code(Function *func);
-  std::string generate_function_entry_code();
-  std::string generate_function_exit_code();
-  //LRU list update interval by function code; insert ldr str instr
-  std::string update_value_mapping(std::list<Value*> update_v);
-  std::string getLabelName(BasicBlock *bb);
+  std::string generate_function_entry_code(Function *func);
+  std::string generate_function_exit_code(Function *func);
+  std::string update_value_mapping(std::list<Value *>update_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
-  std::string generateInstructionCode(Instruction *inst);
+  std::string getLabelName(BasicBlock *bb);
+  std::string getLabelName(Function *func, int type);
+  std::string generate_global_vars();
+  std::string generate_initializer(Constant *init);
+  std::pair<int, bool> get_const_int_val(Value *val);
+  /*LRU list update interval by function code; insert ldr str instr*/
 };
 
 #endif // SRC_ASM_BUILDER_H
