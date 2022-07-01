@@ -21,7 +21,7 @@
 #include "ir/user.h"
 #include "ir/value.h"
 #include "passes/module.h"
-
+const int reg_num = 10;
 const std::string global_vars_label = ".global_vars";
 const int arch_version = 8;
 const bool enlarge_stack = true;
@@ -59,7 +59,8 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<Value *, int> register_mapping;
-  std::map<Value *, int> stack_mapping;
+  // std::map<Value *, int> stack_mapping;
+  std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   int stack_size;
@@ -79,7 +80,7 @@ public:
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code();
   std::string generate_function_exit_code();
-  std::string update_value_mapping(std::list<Value>);
+  std::string update_value_mapping(std::list<Value *>update_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   /*LRU list update interval by function code; insert ldr str instr*/
