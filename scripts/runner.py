@@ -53,6 +53,7 @@ class Runner():
         parser.add_argument('-asm', action='store_true', default=False, help='-asm 测试汇编')
         parser.add_argument('-v', type=int, default=-1, help='制定工具链版本是clang-v')
         parser.add_argument('-single', type=str, default="all", help='-single test.sy 测试单个文件 ')
+        parser.add_argument('-all_test', type=str, default="all", help='全部测试(default)')
         parser.add_argument('-remake', action='store_true', default=False, help='重新编译')
         parser.add_argument('-clean', action='store_true', default=False, help='-clean 清除生成物 : build/log build/test_result build/output test 保留 test/**.sy test/**.out')
         self.args = parser.parse_args()
