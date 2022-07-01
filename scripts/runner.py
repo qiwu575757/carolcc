@@ -6,6 +6,8 @@ import subprocess
 from pretty_print import BOLD, Print_C
 from file_diff import is_two_file_same
 import time
+import argparse
+import shutil
 
 has_error = False
 build_file = "build"
@@ -25,11 +27,11 @@ compiler_obj_path = "build/compiler"
 error_log = "build/log/"
 # clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include src/stdlib/include/sylib.h test/02_var_defn3.sy -o test/02_var_defn3.ir
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
-                             "frontend_instr": "clang -x c -c -O0 -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
+                             "frontend_instr": "clang{v} -x c -c -O0 -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
                              "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
+                     "frontend_instr": "clang{v} -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
                    "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
@@ -46,13 +48,69 @@ class Runner():
         '''
         
         '''
+        parser = argparse.ArgumentParser(description='compiler runner parser')
+        parser.add_argument('-ir', action='store_true', default=False, help='-ir 测试ir')
+        parser.add_argument('-asm', action='store_true', default=False, help='-asm 测试汇编')
+        parser.add_argument('-v', type=int, default=-1, help='制定工具链版本是clang-v')
+        parser.add_argument('-single', type=str, default="all", help='-single test.sy 测试单个文件 ')
+        parser.add_argument('-remake', action='store_true', default=False, help='重新编译')
+        parser.add_argument('-clean', action='store_true', default=False, help='-clean 清除生成物 : build/log build/test_result build/output test 保留 test/**.sy test/**.out')
+        self.args = parser.parse_args()
+
+        if self.args.v > 0:
+            self.v = "-{}".format(self.args.v)
+        else:
+            self.v = ""
         self.on_chip = on_chip
         self.run_cases = run_cases
         self.scheme = scheme
         self.testcases = testcases
         if len(self.testcases) == 0:
             self.testcases = self.get_sy_test_cases()
+        self.single_test_case = []
+        for  test in self.testcases:
+            if self.args.single in test:
+                self.single_test_case.append(test)
+        if self.args.single:
+            self.testcases = self.single_test_case
+
+        
+
+        if self.args.clean: self.clean()
+        if self.args.remake: 
+            self.clean()
+            self.remake()
+        
         self.generate_path()
+
+    def remake(self):
+        os.chdir('build')
+        os.system('cmake ..')
+        os.system('make -j8')
+        os.chdir('..')
+
+    def clean(self):
+        if os.path.exists(test_results):
+            if os.path.isfile(test_results):
+                os.remove(test_results)
+            else:
+                shutil.rmtree(test_results)
+
+        if os.path.exists(output):
+            if os.path.isfile(output):
+                os.remove(output)
+            else:
+                shutil.rmtree(output)
+        if os.path.exists(log):
+            if os.path.isfile(log):
+                os.remove(log)
+            else:
+                shutil.rmtree(log)
+        for path_name, dir, files_name in os.walk("test/"):
+            for file in files_name:
+                # 如果是目录
+                if file[-3:] != ".sy" and file[-4:] != '.out':
+                    os.remove(path_name+file)
 
     def check(self,file="",case=""):
         self.detector = open(error_log+"error.log", "r")
@@ -80,12 +138,7 @@ class Runner():
 
 
     def generate_path(self):
-        if os.path.exists(error_log):
-            self.error_log_file = open(error_log+"error.log", "w+")
-            self.error_log_file.write("-"*10+str(time.strftime('%Y-%m-%d %H:%M:%S'))+"-"*10)
-        else:
-            self.error_log_file = open(error_log+"error.log", "w+")
-            self.error_log_file.write("-"*10+str(time.strftime('%Y-%m-%d %H:%M:%S'))+"-"*10)
+        
 
         if not os.path.exists(build_file):
             os.mkdir(build_file)
@@ -121,8 +174,13 @@ class Runner():
             if not os.path.exists(bin_file_index_path + "/obj/"):
                 os.mkdir(bin_file_index_path + "/obj/")
 
-            if not os.path.exists(bin_file_index_path + "/bin/"):
-                os.mkdir(bin_file_index_path + "/bin/")
+
+        if os.path.exists(error_log):
+            self.error_log_file = open(error_log+"error.log", "w+")
+            self.error_log_file.write("-"*10+str(time.strftime('%Y-%m-%d %H:%M:%S'))+"-"*10)
+        else:
+            self.error_log_file = open(error_log+"error.log", "w+")
+            self.error_log_file.write("-"*10+str(time.strftime('%Y-%m-%d %H:%M:%S'))+"-"*10)
 
     def sy_to_ir(self, frontend_instr, testcase):
         self.check("",testcase)
@@ -137,7 +195,7 @@ class Runner():
         else:
             log_file = open(runner_log_index_path, "w+")
         Print_C().print_procedure("Generating {}/{}.ir".format(testcase, self.scheme))
-        subprocess.run(frontend_instr.format(sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
+        subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
 
 
@@ -156,11 +214,11 @@ class Runner():
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
         if self.on_chip:
             subprocess.run(
-                "llc -O0 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(asm=asm,
+                "llc{v} -O0 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(v=self.v,asm=asm,
                                                                                                          ir=ir).split(),
                 stdout=log_file, stderr=self.error_log_file, bufsize=1)
         else:
-            subprocess.run("llc -O0  -filetype=asm {ir} -o {asm} ".format(asm=asm, ir=ir).split(), stdout=log_file,
+            subprocess.run("llc{v} -O0  -filetype=asm {ir} -o {asm} ".format(v=self.v,asm=asm, ir=ir).split(), stdout=log_file,
                            stderr=self.error_log_file, bufsize=1)
 
         log_file.close()
@@ -202,10 +260,10 @@ class Runner():
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.on_chip:
             subprocess.run(
-                "clang -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
-                    bin=bin, obj=obj).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
+                "clang{v} -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
+                  v=self.v,  bin=bin, obj=obj).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         else:
-            subprocess.run("clang -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(),
+            subprocess.run("clang{v} -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(v=self.v,bin=bin, obj=obj).split(),
                            stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
         self.check("",testcase)
@@ -224,10 +282,10 @@ class Runner():
 
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
         if self.on_chip:
-            subprocess.run(frontend_instr.format(header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
+            subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
                            stderr=self.error_log_file, bufsize=1)
         else:
-            subprocess.run(frontend_instr.format(header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
+            subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
                            stderr=self.error_log_file, bufsize=1)
 
         log_file.close()
@@ -237,13 +295,16 @@ class Runner():
         if emit_llvm_ir:
             Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
             self.sy_to_ir(frontend_instr=frontend_instr, testcase=testcase)
+            if self.args.ir: return 0
             self.ir_to_asm(testcase=testcase)
+            if self.args.asm: return 0
             self.asm_to_obj(testcase=testcase)
             self.obj_to_bin(testcase=testcase)
             return self.run_single_test(testcase=testcase)
         else:
             Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
             self.sy_to_asm(frontend_instr=frontend_instr, testcase=testcase)
+            if self.args.asm: return 0
             self.asm_to_obj(testcase=testcase)
             self.obj_to_bin(testcase=testcase)
             return self.run_single_test(testcase=testcase)
