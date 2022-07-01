@@ -89,6 +89,7 @@ public:
   std::string generate_initializer(Constant *init);
   std::pair<int, bool> get_const_int_val(Value *val);
   std::string generateInstructionCode(Instruction *inst);
+  void show_mapping();
 };
 
 #endif // SRC_ASM_BUILDER_H

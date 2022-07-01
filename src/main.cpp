@@ -109,11 +109,11 @@ int main(int argc, char **argv) {
         else
             builder->getModule()->MIRMEMprint(output_file);
     }
-
-    std::cout<<"################-asm_code-#################"<<std::endl;
-    std::fflush(0);
+    
     AsmBuilder asm_builder(builder->getModule(), debug);
     std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+    std::cout<<"################-asm_code-#################"<<std::endl;
+    std::fflush(0);
     std::cout<<asm_code;
     std::cout<<"################-asm_code-#################"<<std::endl;
 

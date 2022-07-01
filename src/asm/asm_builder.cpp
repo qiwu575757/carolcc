@@ -200,26 +200,33 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
     func_tail_code += InstGen::pop(caller_reg_list);
     return func_tail_code;
 }
+void AsmBuilder::show_mapping(){
+  for(auto v = lru_list.begin(); v != lru_list.end();){
+
+  }
+}
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
     /****/
     for(auto upd_v : update_v){
-
+        printf("update list: %s\n",upd_v->getPrintName().c_str());
         // check if value is in list
         bool hit_v = false;
         int lru_index = 0;
         Value *be_replaced_v;
-
+        if(upd_v->getName() == "" || upd_v->getName() == "%"){
+          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getName().c_str());
+        } 
         for(auto v = lru_list.begin(); v != lru_list.end();){
-            lru_index+=1;
+          printf("\tlru list: %s\n",(*v)->getName().c_str());
             if(lru_index==reg_num){
                 be_replaced_v = *v;
             }
-            if(upd_v->getName() == (*v)->getName()){
+            if(upd_v == (*v)){
                 hit_v = true;
                 if(lru_index<=reg_num){ // don't need to split
                     lru_list.emplace_front(*v);
-                    lru_list.erase(v++);
+                    // lru_list.erase(v++);
                 }
                 else{ // split
                     int be_replaced_v_src = register_mapping[be_replaced_v];// reg
@@ -235,11 +242,12 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                     //map update
                     register_mapping.erase(be_replaced_v);
                     register_mapping[(*v)]=be_replaced_v_src;
-                    lru_list.erase(v++);
+                    // lru_list.erase(v++);
                 }
 
                 break;
             }
+            v++;
         }
 
         if(! hit_v){ //first time
@@ -270,6 +278,7 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     std::string bb_asm;
     for (auto &inst : bb->getInstructions()) {
         bb_asm += AsmBuilder::generateInstructionCode(inst);
+    // WARNNING("coding blocks %s ...",bb_asm.c_str());
     }
 
     return bb_asm;
@@ -285,7 +294,6 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
 
 
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
-    INFO("coding instr %s type is %d ...",inst->getPrintName().c_str(),inst->getInstructionKind());
     std::string inst_asm;
     auto &operands = inst->getOperandList();
     std::list<Value *> variable_list;
@@ -358,21 +366,21 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
     } else if (inst->isLoad()) {
-      auto src_op1 = operands.at(0);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
+      // auto src_op1 = operands.at(0);
+      // variable_list.push_back(src_op1);
+      // variable_list.push_back(inst);
+      // inst_asm += update_value_mapping(variable_list);
+      // const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      // inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
     } else if (inst->isStore()) {
-            // auto src_op1 = operands.at(0);
-            // variable_list.push_back(src_op1);
-            // variable_list.push_back(inst);
-            // inst_asm += update_value_mapping(variable_list);
-            // const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-            // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-            // inst_asm += InstGen::store(target_reg, InstGen::Addr(src_reg1,0));
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::store(target_reg, InstGen::Addr(src_reg1,0));
     } else if (inst->isRet()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
@@ -406,6 +414,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                 default:
                     break;
             }
+        } 
+    WARNNING("unrealized CMP");
     } else if (inst->isBr()) {
       if (operands.size() == 1){
           auto src_op1 = operands.at(0);
@@ -445,7 +455,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
-
+    WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;
-  }
 }
