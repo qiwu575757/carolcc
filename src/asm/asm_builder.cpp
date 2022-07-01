@@ -14,6 +14,20 @@ std::string AsmBuilder::generate_asm(){
     asm_code += generate_module_tail();
     return asm_code;
 }
+
+/*
+
+if (inst->getInstructionKind() == Instruction::CALL) {
+        std::string func_name = ops.at(0)->getName();
+        std::vector<Value *> args(ops.begin() + 1, ops.end());
+        int offset = 0;
+        for(auto arg:args){
+            asm_code += InstGen::str(InstGen::sp,InstGen::Addr(InstGen::sp,offset));
+            offset+=4;
+        }
+        asm_code += InstGen::bl(func_name);
+*/
+
 std::string AsmBuilder::generate_module_header(){
     std::string module_header_code;
     module_header_code += InstGen::spaces + ".arch armv" + std::to_string(arch_version) +
