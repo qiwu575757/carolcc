@@ -69,8 +69,10 @@ void Function::addAlloca(AllocaInst* alloca) {
     auto entry_it = _base_block_list.begin();
     auto entry = static_cast<BasicBlock*>(*entry_it);
     INFO("delelting alloca");
-    entry->deleteInstr(alloca);
-    entry->insertAfterInstr(_alloca_end,alloca);
+    if(_alloca_end != nullptr){
+      entry->deleteInstr(alloca);
+      entry->insertAfterInstr(_alloca_end,alloca);
+    }
     _alloca_end=alloca;
 
 }

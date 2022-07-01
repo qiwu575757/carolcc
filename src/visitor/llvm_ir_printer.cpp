@@ -8,7 +8,10 @@
 int var_no = 1;
 const std::string head = "%";
 void LLVMIrPrinter::NameValue(Value *val) {
-    if (seq.find(val) == seq.end() && val->getName().empty()) {
+    if (seq.find(val) == seq.end() ) {
+      if(!val->getName().empty()){
+        WARNNING("renaming %s",val->getName().c_str());
+      }
         auto seq_num = seq.size();
         val->setName(std::to_string(seq_num));
         seq.insert({val, seq_num});
@@ -46,7 +49,10 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
     }
 }
 void LLVMIrPrinter::NameInstr(Instruction *instr) {
-    if (seq.find(instr) == seq.end() && instr->getName().empty() && !instr->getType()->isVoidTy()) {
+    if (seq.find(instr) == seq.end()  && !instr->getType()->isVoidTy()) {
+      if(!instr->getName().empty()){
+        WARNNING("renaming instr %s",instr->getName().c_str());
+      }
         auto seq_num = seq.size();
         instr->setName(std::to_string(seq_num));
         seq.insert({instr, seq_num});
@@ -180,13 +186,15 @@ void LLVMIrPrinter::visit(Argument *node) {
 }
 void LLVMIrPrinter::visit(BaseBlock *node) {
     INFO(" HIR printer visiting baseblock");
-    if(stoi(node->getName())!=0){
-    output_file << node->getName() << ":" << std::endl;
-
-    }
     add_tab();
     if (node->isBaiscBlock()) {
         auto basic_block = dynamic_cast<BasicBlock *>(node);
+        if(!node->getFunction()->getBaseBlocks().empty() && *(node->getFunction()->getBaseBlocks().cbegin())!=node){
+          output_file << node->getName() << ":" << std::endl;
+        }
+        else if(node->getFunction()->getBaseBlocks().empty()&&*(node->getFunction()->getBasicBlocks().cbegin())!=node ){
+          output_file << node->getName() << ":" << std::endl;
+        }
         for (auto &instr: basic_block->getInstructions()) {
             print_tabs();
             instr->accept(this);
@@ -340,12 +348,12 @@ void LLVMIrPrinter::visit(CallInst *node) {
     node->getType()->print(output_file);
     output_file<<node->getOperand(0)->getPrintName()<<"(";
     for(int i=1;i<node->getOperandNumber();i++){
-        auto oprt = node->getOperand(i);
-        if(i!=node->getOperandNumber()-1){
-            output_file<<", ";
-        }
-        oprt->getType()->print(output_file);
-        output_file<<" "<<oprt->getPrintName();
+      auto oprt = node->getOperand(i);
+      oprt->getType()->print(output_file);
+      output_file<<" "<<oprt->getPrintName();
+      if(i!=node->getOperandNumber()-1){
+        output_file<<", ";
+      }
     }
     output_file<<")"<<std::endl;
 

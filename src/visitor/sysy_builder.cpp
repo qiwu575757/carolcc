@@ -121,7 +121,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
     if (node.funcfparams != nullptr) {
         for (auto param: node.funcfparams->funcfparamlist) {
             if (param->funcfparamarray != nullptr) {
-                auto array_alloc = builder->createAlloca(args[i]->getType());
+                auto array_alloc = builder->createAllocaAtEntry(args[i]->getType());
                 builder->createStore(static_cast<Value *>(args[i]), array_alloc);
                 std::vector<Value *> array_params;
                 array_params.push_back(CONST_INT(0));
@@ -133,7 +133,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                 scope.push(param->funcfparamarray->id, array_alloc, array_params);
                 args[i]->setArrayBound(array_params);
             } else {// 单个
-                auto alloc = builder->createAlloca(TyInt32);
+                auto alloc = builder->createAllocaAtEntry(TyInt32);
                 builder->createStore(args[i], alloc);
                 scope.push(param->funcfparamone->id, alloc);
             }
@@ -1064,18 +1064,28 @@ void SYSYBuilder::visit(tree_if_stmt &node) {
     builder->SetInstrInsertPoint(cond_basic_block);
     if_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
-    if ( node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt || node.stmt->while_stmt) {
+    if (  node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt || node.stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
         builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
         node.stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
-    } else if (node.stmt->block || node.stmt->break_stmt || node.stmt->continue_stmt || node.stmt->return_stmt ||
+    } else if (node.stmt->break_stmt || node.stmt->continue_stmt || node.stmt->return_stmt ||
                node.stmt->assigm_stmt || node.stmt->exp) {
         auto then_block = BasicBlock::create("");
         WARNNING("create BasicBlock 1076\n");
         builder->SetInstrInsertPoint(then_block);
         if_block->addIfBodyBaseBlock(then_block);
         node.stmt->accept(*this);
+    }
+    else if(node.stmt->block){
+      auto father_list = builder->GetInsertBaseBlockList();
+      auto then_block = BasicBlock::create("");
+      builder->SetInstrInsertPoint(then_block);
+      if_block->addIfBodyBaseBlock(then_block);
+      builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
+      node.stmt->accept(*this);
+      builder->SetBasicBlockInsertPoint(father_list);
+
     }
 
     builder->SetBaseBlockFatherBlock(father_block);
@@ -1098,12 +1108,12 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
     builder->SetInstrInsertPoint(cond_basic_block);
     if_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
-    if (node.then_stmt->if_stmt || node.then_stmt->if_stmt || node.then_stmt->if_else_stmt || node.then_stmt->while_stmt) {
+    if (node.then_stmt->if_stmt ||  node.then_stmt->if_else_stmt || node.then_stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
         builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
         node.then_stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
-    } else if (node.then_stmt->block || node.then_stmt->break_stmt || node.then_stmt->continue_stmt || node.then_stmt->return_stmt ||
+    } else if ( node.then_stmt->break_stmt || node.then_stmt->continue_stmt || node.then_stmt->return_stmt ||
                node.then_stmt->assigm_stmt || node.then_stmt->exp) {
         auto then_block = BasicBlock::create("");
         WARNNING("create BasicBlock 1110\n");
@@ -1111,18 +1121,39 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
         if_block->addIfBodyBaseBlock(then_block);
         node.then_stmt->accept(*this);
     }
-    if (node.else_stmt->if_stmt || node.else_stmt->if_stmt || node.else_stmt->if_else_stmt || node.else_stmt->while_stmt) {
+    else if(node.then_stmt->block){
+      auto father_list = builder->GetInsertBaseBlockList();
+      auto then_block = BasicBlock::create("");
+      builder->SetInstrInsertPoint(then_block);
+      if_block->addIfBodyBaseBlock(then_block);
+      builder->SetBasicBlockInsertPoint((if_block->getIfBodyBaseBlockList()));
+      node.then_stmt->accept(*this);
+      builder->SetBasicBlockInsertPoint(father_list);
+
+    }
+
+
+    if ( node.else_stmt->if_stmt || node.else_stmt->if_else_stmt || node.else_stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
         builder->SetBasicBlockInsertPoint((if_block->getElseBodyBaseBlockList()));
         node.else_stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
-    } else if (node.else_stmt->block || node.else_stmt->break_stmt || node.else_stmt->continue_stmt || node.else_stmt->return_stmt ||
+    } else if ( node.else_stmt->break_stmt || node.else_stmt->continue_stmt || node.else_stmt->return_stmt ||
                node.else_stmt->assigm_stmt || node.else_stmt->exp) {
         auto else_stmt = BasicBlock::create("");
         WARNNING("create BasicBlock 1123\n");
         builder->SetInstrInsertPoint(else_stmt);
         if_block->addElseBodyBaseBlock(else_stmt);
         node.else_stmt->accept(*this);
+    }else if (node.else_stmt->block ){
+      auto father_list = builder->GetInsertBaseBlockList();
+      auto else_stmt = BasicBlock::create("");
+      builder->SetInstrInsertPoint(else_stmt);
+      if_block->addElseBodyBaseBlock(else_stmt);
+      builder->SetBasicBlockInsertPoint((if_block->getElseBodyBaseBlockList()));
+      node.else_stmt->accept(*this);
+      builder->SetBasicBlockInsertPoint(father_list);
+
     }
 
     builder->SetBaseBlockFatherBlock(father_block);
@@ -1145,18 +1176,27 @@ void SYSYBuilder::visit(tree_while_stmt &node) {
     builder->SetInstrInsertPoint(cond_basic_block);
     while_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
-    if (node.stmt->block || node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt || node.stmt->while_stmt) {
+    if (node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt || node.stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
         builder->SetBasicBlockInsertPoint(while_block->getBodyBaseBlockList());
         node.stmt->accept(*this);
         builder->SetBasicBlockInsertPoint(father_list);
-    } else if (node.stmt->break_stmt || node.stmt->continue_stmt || node.stmt->return_stmt ||
+    } else if ( node.stmt->break_stmt || node.stmt->continue_stmt || node.stmt->return_stmt ||
                node.stmt->assigm_stmt || node.stmt->exp) {
         auto then_block = BasicBlock::create("");
         WARNNING("create BasicBlock 1157\n");
         builder->SetInstrInsertPoint(then_block);
         while_block->addBodyBaseBlock(then_block);
         node.stmt->accept(*this);
+    }else if(node.stmt->block) {
+      auto father_list = builder->GetInsertBaseBlockList();
+      auto then_block = BasicBlock::create("");
+      builder->SetInstrInsertPoint(then_block);
+      while_block->addBodyBaseBlock(then_block);
+      builder->SetBasicBlockInsertPoint(while_block->getBodyBaseBlockList());
+      node.stmt->accept(*this);
+      builder->SetBasicBlockInsertPoint(father_list);
+
     }
 
     builder->SetBaseBlockFatherBlock(father_block);
