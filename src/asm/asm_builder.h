@@ -9,6 +9,7 @@
 #include <set>
 #include <string>
 #include <vector>
+#include <list>
 
 #include "ir/base_block.h"
 #include "ir/basic_block.h"
@@ -19,6 +20,7 @@
 #include "asm/asm_instr.h"
 #include "ir/user.h"
 #include "ir/value.h"
+#include "passes/module.h"
 
 const std::string global_vars_label = ".global_vars";
 const int arch_version = 8;
@@ -62,6 +64,7 @@ private:
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   int stack_size;
   bool debug;
+  std::string asm;
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -71,6 +74,13 @@ public:
   ~AsmBuilder() {}
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm();
+  std::string generate_module_header();
+  std::string generate_module_tail();
+  std::string generate_function_code();
+  std::string generate_function_entry_code();
+  std::string generate_function_exit_code();
+  std::string update_value_mapping(std::list<Value>);
+  /*LRU list update interval by function code; insert ldr str instr*/
 };
 
 #endif // SRC_ASM_BUILDER_H
