@@ -64,7 +64,7 @@ private:
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   int stack_size;
   bool debug;
-  std::string asm;
+  std::string asm_code;
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -76,10 +76,12 @@ public:
   std::string generate_asm();
   std::string generate_module_header();
   std::string generate_module_tail();
-  std::string generate_function_code();
+  std::string generate_function_code(Function *func);
   std::string generate_function_entry_code();
   std::string generate_function_exit_code();
   std::string update_value_mapping(std::list<Value>);
+  std::string generateBasicBlockCode(BasicBlock *bb);
+  std::string getLabelName(BasicBlock *bb);
   /*LRU list update interval by function code; insert ldr str instr*/
 };
 
