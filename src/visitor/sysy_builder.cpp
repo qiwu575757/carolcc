@@ -403,6 +403,7 @@ void SYSYBuilder::visit(tree_decl &node) {
 }
 
 void SYSYBuilder::visit(tree_const_def &node) {
+
     INFO("line:%d", node._line_no);
     INFO(" const_def 370");
     if (node.const_init_val == nullptr) {
@@ -430,16 +431,19 @@ void SYSYBuilder::visit(tree_const_def &node) {
             node.const_init_val->accept(*this);
             auto initializer = ConstantArray::turn(bounds, G_array_init);
             if (scope.in_global_scope()) {
+                WARNNING("global array");
                 auto var = GlobalVariable::create(node.id, module.get(), initializer->getType(), true, initializer);
                 scope.push(node.id, var);
             } else {// local var array
+                WARNNING("local array");
                 //  todo 感觉这里可以跟全局做相同的处理。
                 auto array_alloca = builder->createAllocaAtEntry(array_element_ty);
                 scope.push(node.id, array_alloca);
                 array_alloca->setInit();
-                auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
+                auto ptr = builder->createGEP(array_alloca, {CONST_INT(0),CONST_INT(0)});
+                WARNNING("bound size is ",node.const_init_val->bounds.size());
                 for (int i = 1; i < node.const_init_val->bounds.size(); i++) {
-                    ptr = builder->createGEP(ptr, {CONST_INT(0)});
+                    ptr = builder->createGEP(ptr, {CONST_INT(0),CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
                     if (i != 0) {
@@ -497,9 +501,9 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 node.init_val->bounds.assign(array_bounds.begin(), array_bounds.end());
                 node.init_val->accept(*this);
 
-                auto ptr = builder->createGEP(array_alloca, {CONST_INT(0)});
+                auto ptr = builder->createGEP(array_alloca, {CONST_INT(0),CONST_INT(0)});
                 for (int i = 1; i < node.init_val->bounds.size(); i++) {
-                    ptr = builder->createGEP(ptr, {CONST_INT(0)});
+                    ptr = builder->createGEP(ptr, {CONST_INT(0),CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
                     if (i != 0) {
@@ -728,7 +732,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
                 INFO("finish");
                 while (!G_tmp_val->getType()->getPointerElementType()->isFloatTy() && !G_tmp_val->getType()->getPointerElementType()->isIntegerTy()) {
                     INFO("generating gep");
-                    G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0)});
+                    G_tmp_val = builder->createGEP(G_tmp_val, {CONST_INT(0),CONST_INT(0)});
                 }
             } else {//保证返回值 G_tmp_val 是 float/int num
             INFO("arg needn't addr");
@@ -1197,17 +1201,17 @@ void SYSYBuilder::visit(tree_array_ident &node) {
         for (auto exp: node.exps) {
             exp->accept(*this);
             auto val = G_tmp_val;
-            for (int j = i + 1; j < array_params.size(); j++) {// 获取偏移地址
-                val = builder->createMul(val, array_params[j]);
-            }
-            tmp_ptr = builder->createGEP(tmp_ptr, {val});
+            // for (int j = i + 1; j < array_params.size(); j++) {// 获取偏移地址
+            //     val = builder->createMul(val, array_params[j]);
+            // }
+            tmp_ptr = builder->createGEP(tmp_ptr, {CONST_INT(0), val});
             i++;
         }
     } else {
         tmp_ptr = var;
         for (auto exp: node.exps) {
             exp->accept(*this);
-            tmp_ptr = builder->createGEP(tmp_ptr, {G_tmp_val});
+            tmp_ptr = builder->createGEP(tmp_ptr, {CONST_INT(0), G_tmp_val});
         }
     }
     G_tmp_val = tmp_ptr;
