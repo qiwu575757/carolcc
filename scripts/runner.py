@@ -72,7 +72,7 @@ class Runner():
         for  test in self.testcases:
             if self.args.single in test:
                 self.single_test_case.append(test)
-        if self.args.single:
+        if self.args.single != 'all':
             self.testcases = self.single_test_case
 
         
