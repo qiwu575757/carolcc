@@ -1,5 +1,5 @@
-#include "asm/asm_builder.h"
-#include "asm/asm_instr.h"
+#include "asm_builder.h"
+#include "asm_instr.h"
 #include "utils.h"
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
@@ -37,7 +37,7 @@ std::string AsmBuilder::generate_module_header(){
     module_header_code += InstGen::spaces + ".text" + InstGen::newline;
     for (auto &func : this->module->getFunctions()) {
         if (func->getBasicBlocks().size()) {
-            module_header_code += InstGen::spaces + ".global" + " " 
+            module_header_code += InstGen::spaces + ".global" + " "
             + func->getName() + InstGen::newline;
         }
     }
@@ -190,7 +190,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     //     bool extended = false;
     //     auto sizeof_val = arg->getType()->getSize(extended);
     //     sizeof_val = ((sizeof_val + 3) / 4) * 4;
-        
+
     //     this->stack_mapping.erase(dummy);
     //     source.push_back(dummy);
     //     target.push_back(arg);
@@ -250,7 +250,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
             }
         }
 
-        if(! hit_v){ //first time 
+        if(! hit_v){ //first time
             if(lru_list.size()<=reg_num){
                 lru_list.emplace_front(upd_v);
             }
@@ -275,7 +275,12 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
 }
 
 std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
-    return "";
+    std::string bb_asm;
+    for (auto &inst : bb->getInstructions()) {
+        bb_asm += AsmBuilder::generateInstructionCode(inst);
+    }
+
+    return bb_asm;
 }
 std::string  AsmBuilder::getLabelName(BasicBlock *bb){
     return "." + bb->getParentFunc()->getName() + "_" + bb->getName();
@@ -284,4 +289,162 @@ std::string  AsmBuilder::getLabelName(BasicBlock *bb){
 std::string AsmBuilder::getLabelName(Function *func, int type) {
   const std::vector<std::string> name_list = {"pre", "post"};
   return "." + func->getName() + "_" + name_list.at(type);
+}
+
+
+std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
+    std::string inst_asm;
+    auto &operands = inst->getOperandList();
+    std::list<Value *> variable_list;
+    BasicBlock *bb_cur = inst->getParent();
+
+    if (inst->isAdd()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::add(target_reg,src_reg1,src_reg2);
+    } else if (inst->isSub()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::sub(target_reg,src_reg1,src_reg2);
+    } else if (inst->isMul()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::mul(target_reg,src_reg1,src_reg2);
+    } else if (inst->isDiv()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
+    } else if (inst->isAnd()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::and_(target_reg,src_reg1,src_reg2);
+    } else if (inst->isOr()) {
+      auto src_op1 = operands.at(0);
+      auto src_op2 = operands.at(1);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(src_op2);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
+    } else if (inst->isLoad()) {
+      auto src_op1 = operands.at(0);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
+    } else if (inst->isStore()) {
+            // auto src_op1 = operands.at(0);
+            // variable_list.push_back(src_op1);
+            // variable_list.push_back(inst);
+            // inst_asm += update_value_mapping(variable_list);
+            // const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+            // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+            // inst_asm += InstGen::store(target_reg, InstGen::Addr(src_reg1,0));
+    } else if (inst->isRet()) {
+      auto src_op1 = operands.at(0);
+      variable_list.push_back(src_op1);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      inst_asm += InstGen::ret(src_reg1);
+    } else if (inst->isCmp()) {
+            if (operands.size() == 1){
+                auto src_op1 = operands.at(0);
+                switch (dynamic_cast<CmpInst *>(inst)->_cmp_op)
+                {
+                    case CmpInst::EQ:
+                        /* code */
+                        break;
+                    case CmpInst::NEQ:
+                        /* code */
+                        break;
+                    case CmpInst::GT:
+                        /* code */
+                        break;
+                    case CmpInst::LE:
+                        /* code */
+                        break;
+                    case CmpInst::GE:
+                        /* code */
+                        break;
+                    case CmpInst::LT:
+                        /* code */
+                        break;
+
+                    default:
+                        break;
+                }
+    } else if (inst->isBr()) {
+      if (operands.size() == 1){
+          auto src_op1 = operands.at(0);
+          variable_list.push_back(src_op1);
+          inst_asm += update_value_mapping(variable_list);
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
+                                    "_branch_" + std::to_string(register_mapping[src_op1]),
+                                0),
+                 InstGen::NOP);
+      } else if (operands.size() == 2) {
+          auto src_op1 = operands.at(0);
+          variable_list.push_back(src_op1);
+          auto src_op2 = operands.at(1);
+          variable_list.push_back(src_op2);
+          variable_list.push_back(inst);
+          inst_asm += update_value_mapping(variable_list);
+          const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+          const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+          const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+          inst_asm += "cmp    "+ target_reg.getName() + ", " + "#0";
+          inst_asm += "beq    " + InstGen::Label(getLabelName(bb_cur)).getName() +
+                                    "_branch_" + std::to_string(register_mapping[src_op1]);
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
+                                    "_branch_" + std::to_string(register_mapping[src_op2]),
+                                      InstGen::NOP));
+      }
+    } else if (inst->isCall()) {
+      //TODO
+    }
+
+
+
+    return inst_asm;
+  }
 }

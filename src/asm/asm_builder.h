@@ -80,6 +80,7 @@ public:
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code(Function *func);
   std::string generate_function_exit_code(Function *func);
+  /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *>update_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
@@ -87,7 +88,7 @@ public:
   std::string generate_global_vars();
   std::string generate_initializer(Constant *init);
   std::pair<int, bool> get_const_int_val(Value *val);
-  /*LRU list update interval by function code; insert ldr str instr*/
+  std::string generateInstructionCode(Instruction *inst);
 };
 
 #endif // SRC_ASM_BUILDER_H
