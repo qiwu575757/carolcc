@@ -5,7 +5,7 @@ from re import T
 import subprocess
 from pretty_print import BOLD, Print_C
 from file_diff import is_two_file_same
-import time 
+import time
 
 has_error = False
 build_file = "build"
@@ -23,13 +23,13 @@ lib = "stdlib/libsysy_x86.a"
 header = "stdlib/sylib.h"
 compiler_obj_path = "build/compiler"
 error_log = "build/log/"
-# clang-8 -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include src/stdlib/include/sylib.h test/02_var_defn3.sy -o test/02_var_defn3.ir
+# clang -x c -c -Ofast -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include src/stdlib/include/sylib.h test/02_var_defn3.sy -o test/02_var_defn3.ir
 clang_llvm_on_chip_scheme = {"scheme": "clang_llvm",
-                             "frontend_instr": "clang-8 -x c -c -O0 -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
+                             "frontend_instr": "clang -x c -c -O0 -mcpu=cortex-a72 -mfpu=neon -mfloat-abi=hard -S -emit-llvm -include stdlib/sylib.h {sy} -o {ir}",
                              "emit_llvm_ir": True}
 
 clang_llvm_scheme = {"scheme": "clang_llvm",
-                     "frontend_instr": "clang-8 -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
+                     "frontend_instr": "clang -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
                    "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
@@ -65,10 +65,17 @@ class Runner():
             Print_C().print_line("X",color=BOLD)
             Print_C().print_error("#[CRASH] not generated: in test "+ case)
             Print_C().print_line("X",color=BOLD)
+
+
             for l in self.detector.readlines():
                 Print_C().print_error(l[:-1])
+            std_runner = Runner(clang_llvm_scheme['scheme'])
+            std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], case)
+            std_ir_path = "build/test_results/" + str(case) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
+            Print_C().print_error("std ir path is {}".format(std_ir_path))
+            exit(1)
         self.detector.close()
-        
+
 
     def generate_path(self):
         if os.path.exists(error_log):
@@ -193,10 +200,10 @@ class Runner():
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.on_chip:
             subprocess.run(
-                "clang-8 -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
+                "clang -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
                     bin=bin, obj=obj).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         else:
-            subprocess.run("clang-8 -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(),
+            subprocess.run("clang -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(bin=bin, obj=obj).split(),
                            stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
         self.check("",testcase)
@@ -223,7 +230,7 @@ class Runner():
 
         log_file.close()
         self.check("",testcase)
-        
+
     def compile_one_test(self, frontend_instr, emit_llvm_ir, testcase):
         if emit_llvm_ir:
             Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
@@ -253,11 +260,11 @@ class Runner():
             ######## 实际程序结束 ##########
             if has_error:
                 Print_C().print_error("passed testcase number is {}".format(len(time_list)))
+                self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
+                error_ir_path = "build/test_results/" + str(testcase) + "/ir/" + self.scheme + ".ir"
                 std_runner = Runner(clang_llvm_scheme['scheme'])
                 std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], testcase)
-                self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
                 std_ir_path = "build/test_results/" + str(testcase) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
-                error_ir_path = "build/test_results/" + str(testcase) + "/ir/" + self.scheme + ".ir"
                 Print_C().print_error("std ir path is {}".format(std_ir_path))
                 Print_C().print_error("error ir path is {}".format(error_ir_path))
 
@@ -300,7 +307,8 @@ class Runner():
             p = subprocess.run(bin.split(), stdin=stdin_file, stdout=our_out_file, stderr=self.error_log_file, bufsize=1)
         else:
             p = subprocess.run(bin.split(), stdout=our_out_file, stderr=self.error_log_file, bufsize=1)
-        # subprocess.run("echo".split(), stdout=our_out_file, bufsize=1)
+
+        subprocess.run("echo".split(), stdout=our_out_file, bufsize=1)
         subprocess.run(("echo " + str(p.returncode)).split(), stdout=our_out_file, bufsize=1)
         Print_C().print_procedure("Return {}".format(p.returncode))
         Print_C().print_pass(pass_file=testcase)
@@ -331,6 +339,6 @@ class Runner():
 
 
 if __name__ == '__main__':
-    r = Runner()
+    r = Runner(npu_llvm_scheme["scheme"])
     r.compile_all_tests(npu_llvm_scheme["frontend_instr"], npu_llvm_scheme["emit_llvm_ir"])
     # r.compile_all_tests(clang_llvm_scheme["frontend_instr"],clang_llvm_scheme["emit_llvm_ir"])
