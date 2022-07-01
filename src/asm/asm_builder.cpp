@@ -4,11 +4,14 @@
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
 }
-std::string AsmBuilder::generate_asm(){
-    asm_code += generate_module_header();
+std::string AsmBuilder::generate_asm(std::string file_name){
+    asm_code += generate_module_header(file_name);
+    WARNNING("module header:\n%s",asm_code.c_str());
     for(auto &func: this->module->getFunctions()){
         if(func->getBasicBlocks().size() != 0){
+            WARNNING("coding func %s ...",func->getName().c_str());
             asm_code += generate_function_code(func);
+            WARNNING("func %s:\n%s",func->getName().c_str(),asm_code.c_str());
         }
     }
     asm_code += generate_module_tail();
@@ -18,12 +21,12 @@ std::string AsmBuilder::generate_asm(){
 /*
 */
 
-std::string AsmBuilder::generate_module_header(){
+std::string AsmBuilder::generate_module_header(std::string file_name){
     std::string module_header_code;
     module_header_code += InstGen::spaces + ".arch armv" + std::to_string(arch_version) +
               "-a" + InstGen::newline;
     module_header_code += InstGen::spaces + ".file" + " " + "\"" +
-                "_FILE_NAME_\"" + InstGen::newline;
+                file_name+"\"" + InstGen::newline;
     module_header_code += InstGen::spaces + ".text" + InstGen::newline;
     for (auto &func : this->module->getFunctions()) {
         if (func->getBasicBlocks().size()) {
@@ -152,12 +155,11 @@ std::pair<int, bool> AsmBuilder::get_const_int_val(Value *val) { // disabled
 std::string AsmBuilder::generate_function_code(Function *func){
     std::string func_asm;
     func_asm += generate_function_entry_code(func);
-
+    WARNNING("func entry %s:\n%s",func->getName().c_str(),func_asm.c_str());
     for (auto &bb : func->getBasicBlocks()) {
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
-
     func_asm += generate_function_exit_code(func);
 
     return func_asm;
@@ -283,6 +285,7 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
 
 
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
+    INFO("coding instr %s type is %d ...",inst->getPrintName().c_str(),inst->getInstructionKind());
     std::string inst_asm;
     auto &operands = inst->getOperandList();
     std::list<Value *> variable_list;
@@ -377,32 +380,32 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
       inst_asm += InstGen::ret(src_reg1);
     } else if (inst->isCmp()) {
-            if (operands.size() == 1){
-                auto src_op1 = operands.at(0);
-                switch (dynamic_cast<CmpInst *>(inst)->_cmp_op)
-                {
-                    case CmpInst::EQ:
-                        /* code */
-                        break;
-                    case CmpInst::NEQ:
-                        /* code */
-                        break;
-                    case CmpInst::GT:
-                        /* code */
-                        break;
-                    case CmpInst::LE:
-                        /* code */
-                        break;
-                    case CmpInst::GE:
-                        /* code */
-                        break;
-                    case CmpInst::LT:
-                        /* code */
-                        break;
+        if (operands.size() == 1){
+            auto src_op1 = operands.at(0);
+            switch (dynamic_cast<CmpInst *>(inst)->_cmp_op)
+            {
+                case CmpInst::EQ:
+                    /* code */
+                    break;
+                case CmpInst::NEQ:
+                    /* code */
+                    break;
+                case CmpInst::GT:
+                    /* code */
+                    break;
+                case CmpInst::LE:
+                    /* code */
+                    break;
+                case CmpInst::GE:
+                    /* code */
+                    break;
+                case CmpInst::LT:
+                    /* code */
+                    break;
 
-                    default:
-                        break;
-                }
+                default:
+                    break;
+            }
     } else if (inst->isBr()) {
       if (operands.size() == 1){
           auto src_op1 = operands.at(0);
@@ -438,6 +441,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             offset+=4;
         }
         inst_asm += InstGen::bl(func_name);
+    }
+    else {
+      WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
 
     return inst_asm;

@@ -74,8 +74,8 @@ public:
   }
   ~AsmBuilder() {}
   std::string generate_asm(std::map<Value *, int> register_mapping);
-  std::string generate_asm();
-  std::string generate_module_header();
+  std::string generate_asm(std::string file_name);
+  std::string generate_module_header(std::string file_name);
   std::string generate_module_tail();
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code(Function *func);

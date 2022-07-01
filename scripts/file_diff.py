@@ -14,7 +14,8 @@ def is_two_file_same(std_out_file_path, our_out_path):
         std_out_file.close()
         our_out_file.close()
         return False
-
+    if len(our_out_lines) == len(std_out_lines) and len(std_out_lines)== 0:
+        return True
     j = 0
     if our_out_lines[0] == "\n":
         j +=1
