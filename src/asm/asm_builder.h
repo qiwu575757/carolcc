@@ -63,7 +63,7 @@ private:
   std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size;
+  int stack_size=1024;
   bool debug;
   std::string asm_code;
 
@@ -78,11 +78,12 @@ public:
   std::string generate_module_header();
   std::string generate_module_tail();
   std::string generate_function_code(Function *func);
-  std::string generate_function_entry_code();
-  std::string generate_function_exit_code();
+  std::string generate_function_entry_code(Function *func);
+  std::string generate_function_exit_code(Function *func);
   std::string update_value_mapping(std::list<Value *>update_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
+  std::string getLabelName(Function *func, int type);
   /*LRU list update interval by function code; insert ldr str instr*/
 };
 

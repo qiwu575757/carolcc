@@ -15,29 +15,75 @@ std::string AsmBuilder::generate_asm(){
     return asm_code;
 }
 std::string AsmBuilder::generate_module_header(){
-    return "";
+    std::string module_header_code;
+    module_header_code += InstGen::spaces + ".arch armv" + std::to_string(arch_version) +
+              "-a" + InstGen::newline;
+    module_header_code += InstGen::spaces + ".file" + " " + "\"" +
+                "_FILE_NAME_\"" + InstGen::newline;
+    module_header_code += InstGen::spaces + ".text" + InstGen::newline;
+    for (auto &func : this->module->getFunctions()) {
+        if (func->getBasicBlocks().size()) {
+            module_header_code += InstGen::spaces + ".global" + " " 
+            + func->getName() + InstGen::newline;
+        }
+    }
+    module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
+    return module_header_code;
 }
-std::string AsmBuilder::generate_module_tail(){
-    return "";
-}
+// std::string AsmBuilder::generate_module_tail(){
+//     std::string module_tail_code;
+//     module_tail_code += InstGen::spaces + ".data" + InstGen::newline;
+//     module_tail_code += CodeGen::generateGlobalVarsCode();
+//     return module_tail_code;
+// }
 std::string AsmBuilder::generate_function_code(Function *func){
     std::string func_asm;
-    func_asm += generate_function_entry_code();
+    func_asm += generate_function_entry_code(func);
 
     for (auto &bb : func->getBasicBlocks()) {
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
 
-    func_asm += generate_function_exit_code();
+    func_asm += generate_function_exit_code(func);
 
     return func_asm;
 }
-std::string AsmBuilder::generate_function_entry_code(){
-    return "";
+std::string AsmBuilder::generate_function_entry_code(Function *func){
+    std::string func_head_code;
+    //func name
+    func_head_code+=getLabelName(func,0) + ":" + InstGen::newline;
+    //get callee save registers
+    // callee_save_regs
+    std::vector<InstGen::Reg> callee_reg_list;
+    for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
+    //push (save register and lr)
+    func_head_code += InstGen::push(callee_reg_list);
+    //sp sub
+    func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
+                                 InstGen::Constant(this->stack_size));
+    //arg in reg or stack
+    // for (auto &arg : func->getArgs()) {
+    //     bool extended = false;
+    //     auto sizeof_val = arg->getType()->getSize(extended);
+    //     sizeof_val = ((sizeof_val + 3) / 4) * 4;
+        
+    //     this->stack_mapping.erase(dummy);
+    //     source.push_back(dummy);
+    //     target.push_back(arg);
+    // }
+    return func_head_code;
 }
-std::string AsmBuilder::generate_function_exit_code(){
-    return "";
+std::string AsmBuilder::generate_function_exit_code(Function *func){
+    std::string func_tail_code;
+    // sp add
+    func_tail_code += InstGen::instConst(InstGen::add, InstGen::sp, InstGen::sp,
+                                 InstGen::Constant(this->stack_size));
+    // pop (save register and pc)
+    std::vector<InstGen::Reg> caller_reg_list;
+    for(auto reg : caller_save_regs) caller_reg_list.push_back(reg);
+    func_tail_code += InstGen::pop(caller_reg_list);
+    return func_tail_code;
 }
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
@@ -109,5 +155,10 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     return "";
 }
 std::string  AsmBuilder::getLabelName(BasicBlock *bb){
-    return "";
+    return "." + bb->getParentFunc()->getName() + "_" + bb->getName();
+}
+
+std::string AsmBuilder::getLabelName(Function *func, int type) {
+  const std::vector<std::string> name_list = {"pre", "post"};
+  return "." + func->getName() + "_" + name_list.at(type);
 }
