@@ -16,6 +16,9 @@ Makefile
 .cache/clangd/index
 .cache/*
 *.log
+*.pyc
+*.dot
+scripts/*.pyc
 */*.log
 */core
 core
