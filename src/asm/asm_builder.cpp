@@ -456,7 +456,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
           // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
           InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
-          inst_asm += InstGen::mov(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())),cmpop);
+          inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
         } else{ // 需要存储的值是寄存器
           auto src_op1 = operands.at(0);
@@ -555,8 +555,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
       stack_cur_size += type_size;
-    }
-    else {
+    } else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
