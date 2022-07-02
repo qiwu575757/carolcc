@@ -77,7 +77,8 @@ int main(int argc, char **argv) {
 
     auto *builder = new SYSYBuilder(input_file);
     builder->build(root);
-
+    // auto *shower = new syntax_detail_shower();
+    // shower->visit(*root);
     if (is_emit_hir) {
         WARNNING("emitting  hir");
         auto hir_output_file = input_file;
@@ -89,10 +90,10 @@ int main(int argc, char **argv) {
                 builder->getModule()->HIRSHOW(std::string(hir_output_file));
         } else {
             builder->getModule()->HighIRprint(std::string(output_file));
-            //    builder->getModule()->HIRSHOW(std::string(output_file));
+            // builder->getModule()->HIRSHOW(std::string(output_file));
         }
     }
-
+    
     pass_manager PM(builder->getModule().get());
     PM.add_pass<HIRToMIR>("HIRToMIR");
     //  PM.add_pass<LowerIR>("LowerIR");
