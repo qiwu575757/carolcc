@@ -173,6 +173,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     std::vector<InstGen::Reg> callee_reg_list;
     for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
     //push (save register and lr)
+    callee_reg_list.push_back(InstGen::lr);
     func_head_code += InstGen::push(callee_reg_list);
     //sp sub
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
@@ -195,9 +196,10 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
     func_tail_code += InstGen::instConst(InstGen::add, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(this->stack_size));
     // pop (save register and pc)
-    std::vector<InstGen::Reg> caller_reg_list;
-    for(auto reg : caller_save_regs) caller_reg_list.push_back(reg);
-    func_tail_code += InstGen::pop(caller_reg_list);
+    std::vector<InstGen::Reg> callee_reg_list;
+    for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
+    callee_reg_list.push_back(InstGen::pc);
+    func_tail_code += InstGen::pop(callee_reg_list);
     return func_tail_code;
 }
 void AsmBuilder::show_mapping(){
@@ -443,6 +445,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                                       InstGen::NOP));
       }
     } else if (inst->isCall()) {
+        std::vector<InstGen::Reg> caller_reg_list;
+        for(auto reg : caller_save_regs) caller_reg_list.push_back(reg);
+        inst_asm += InstGen::push(caller_reg_list);
         std::string func_name = operands.at(0)->getName();
         std::vector<Value *> args(operands.begin() + 1, operands.end());
         int offset = 0;
@@ -451,6 +456,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             offset+=4;
         }
         inst_asm += InstGen::bl(func_name);
+        inst_asm += InstGen::pop(caller_reg_list);
     }
     else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
