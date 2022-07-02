@@ -220,67 +220,71 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
     /****/
     for(auto upd_v : update_v){
-        printf("update list: %s\n",upd_v->getPrintName().c_str());
         // check if value is in list
         bool hit_v = false;
         int lru_index = 0;
         Value *be_replaced_v;
-        if(upd_v->getName() == "" || upd_v->getName() == "%"){
+        
+        if(upd_v->getPrintName().size() > 1 && upd_v->getPrintName()[0] == '%'){
+          printf("update list: %s\n",upd_v->getPrintName().c_str());
+          for(auto v = lru_list.begin(); v != lru_list.end();){
+              if(lru_index==reg_num){
+                  be_replaced_v = *v;
+              }
+              if(upd_v == (*v)){
+                  hit_v = true;
+                  if(lru_index<=reg_num){ // don't need to split
+                      lru_list.emplace_front(*v);
+                      v=lru_list.erase(v++);
+                  }
+                  else{ // split
+                      int be_replaced_v_src = register_mapping[be_replaced_v];// reg
+                      int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
+                      int used_v_src = stoi((*v)->getName());//stack
+                      int used_v_dst = be_replaced_v_src;//reg
+
+                      lru_list.emplace_front(*v);
+
+                      // data update
+                      alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
+                      alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_src<<2));
+                      //map update
+                      register_mapping.erase(be_replaced_v);
+                      register_mapping[(*v)]=be_replaced_v_src;
+                      lru_list.erase(v++);
+                  }
+
+                  break;
+              }
+              else{
+                v++;
+              }
+          }
+
+          if(! hit_v){ //first time
+              if(lru_list.size()<=reg_num){
+                  register_mapping[upd_v]=lru_list.size();
+                  lru_list.emplace_front(upd_v);
+              }
+              else{
+                  int be_replaced_v_src = register_mapping[be_replaced_v];// reg
+                  int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
+
+                  lru_list.emplace_front(upd_v);
+
+                  // data update
+                  alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
+                  //map update
+                  register_mapping.erase(be_replaced_v);
+                  register_mapping[upd_v]=be_replaced_v_src;
+              }
+          }
+          show_mapping();
+        }
+        else{
           WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
         }
-        for(auto v = lru_list.begin(); v != lru_list.end();){
-            if(lru_index==reg_num){
-                be_replaced_v = *v;
-            }
-            if(upd_v == (*v)){
-                hit_v = true;
-                if(lru_index<=reg_num){ // don't need to split
-                    lru_list.emplace_front(*v);
-                    v=lru_list.erase(v++);
-                }
-                else{ // split
-                    int be_replaced_v_src = register_mapping[be_replaced_v];// reg
-                    int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
-                    int used_v_src = stoi((*v)->getName());//stack
-                    int used_v_dst = be_replaced_v_src;//reg
-
-                    lru_list.emplace_front(*v);
-
-                    // data update
-                    alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
-                    alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_src<<2));
-                    //map update
-                    register_mapping.erase(be_replaced_v);
-                    register_mapping[(*v)]=be_replaced_v_src;
-                    lru_list.erase(v++);
-                }
-
-                break;
-            }
-            else{
-              v++;
-            }
-        }
-
-        if(! hit_v){ //first time
-            if(lru_list.size()<=reg_num){
-                register_mapping[upd_v]=lru_list.size();
-                lru_list.emplace_front(upd_v);
-            }
-            else{
-                int be_replaced_v_src = register_mapping[be_replaced_v];// reg
-                int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
-
-                lru_list.emplace_front(upd_v);
-
-                // data update
-                alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
-                //map update
-                register_mapping.erase(be_replaced_v);
-                register_mapping[upd_v]=be_replaced_v_src;
-            }
-        }
-        show_mapping();
+        
 
 
     }
