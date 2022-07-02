@@ -140,19 +140,19 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         }
         if_true_block = cur_next;
 
+        auto last_cond_bb = dynamic_cast<BasicBlock *>((*while_cond).back());
+        auto cond = last_cond_bb->getInstructions().back();
+        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
+        basic_bbs.push_front(last_cond_bb);
         if(while_cond->size()==1){
-            auto cond = cond_bb->getInstructions().back();
-            auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
-            basic_bbs.push_front(cond_bb);
-
-            return cond_bb;
+            return last_cond_bb;
         }
         else if(while_cond->size()>1) {
             auto iter =  while_cond->rbegin() ;
             for(auto &i : *while_cond){
                 MyAssert("error type", i->isBaiscBlock());
             }
-            cur_next = cond_bb;
+            cur_next = last_cond_bb;
             iter ++;
             for(;iter!=while_cond->rend();iter++){
                 cur_next = genBasicBlock(*iter, cur_next , while_entry, while_exit, func);
