@@ -205,8 +205,15 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
     return func_tail_code;
 }
 void AsmBuilder::show_mapping(){
-  for(auto v = lru_list.begin(); v != lru_list.end();){
-
+  int index = 0;
+  for(auto v = lru_list.begin(); v != lru_list.end();v++){
+    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());  
+  }
+  std::map<Value*, int>::iterator iter;
+  iter = register_mapping.begin();
+  while(iter != register_mapping.end()) {
+      std::cout << "R " << iter->second << " : " << iter->first->getPrintName() << std::endl;
+      iter++;
   }
 }
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
@@ -219,10 +226,14 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         int lru_index = 0;
         Value *be_replaced_v;
         if(upd_v->getName() == "" || upd_v->getName() == "%"){
+<<<<<<< HEAD
           WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getName().c_str());
         }
+=======
+          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
+        } 
+>>>>>>> 671fa460557e9c3debcded926d8684db7852b0b4
         for(auto v = lru_list.begin(); v != lru_list.end();){
-          printf("\tlru list: %s\n",(*v)->getName().c_str());
             if(lru_index==reg_num){
                 be_replaced_v = *v;
             }
@@ -230,7 +241,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                 hit_v = true;
                 if(lru_index<=reg_num){ // don't need to split
                     lru_list.emplace_front(*v);
-                    // lru_list.erase(v++);
+                    v=lru_list.erase(v++);
                 }
                 else{ // split
                     int be_replaced_v_src = register_mapping[be_replaced_v];// reg
@@ -246,16 +257,19 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                     //map update
                     register_mapping.erase(be_replaced_v);
                     register_mapping[(*v)]=be_replaced_v_src;
-                    // lru_list.erase(v++);
+                    lru_list.erase(v++);
                 }
 
                 break;
             }
-            v++;
+            else{
+              v++;
+            }
         }
 
         if(! hit_v){ //first time
             if(lru_list.size()<=reg_num){
+                register_mapping[upd_v]=lru_list.size();
                 lru_list.emplace_front(upd_v);
             }
             else{
@@ -271,7 +285,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                 register_mapping[upd_v]=be_replaced_v_src;
             }
         }
-
+        show_mapping();
 
 
     }
