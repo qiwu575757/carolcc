@@ -92,13 +92,26 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         if_false_block = cur_next;
 
         // if_cond 中的list只有一个baseblock
-        auto cond_bb = dynamic_cast<BasicBlock *>((*if_cond).front());
-        // cond_bb 的最后一条指令存储了该cond 的运行结果
+        auto cond_bb = dynamic_cast<BasicBlock *>((*if_cond).back());
         auto cond = cond_bb->getInstructions().back();
         auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
         basic_bbs.push_front(cond_bb);
-
-        return cond_bb;
+        if(if_cond->size()==1){
+            return cond_bb;
+        }
+        else if(if_cond->size()>1) {
+            auto iter =  if_cond->rbegin() ;
+            for(auto &i : *if_cond){
+                MyAssert("error type", i->isBaiscBlock());
+            }
+            cur_next = cond_bb;
+            iter ++;
+            for(;iter!=if_cond->rend();iter++){
+                cur_next = genBasicBlock(*iter, cur_next , while_entry, while_exit, func);
+            }
+            return cur_next;
+        }
+        // cond_bb 的最后一条指令存储了该cond 的运行结果
     } else if (base_bb->isWhileBlock()) {
         auto while_block = dynamic_cast<WhileBlock *>(base_bb);
         auto while_cond = while_block->getCondBaseBlockList();
@@ -127,11 +140,25 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         }
         if_true_block = cur_next;
 
-        auto cond = cond_bb->getInstructions().back();
-        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
-        basic_bbs.push_front(cond_bb);
+        if(while_cond->size()==1){
+            auto cond = cond_bb->getInstructions().back();
+            auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
+            basic_bbs.push_front(cond_bb);
 
-        return cond_bb;
+            return cond_bb;
+        }
+        else if(while_cond->size()>1) {
+            auto iter =  while_cond->rbegin() ;
+            for(auto &i : *while_cond){
+                MyAssert("error type", i->isBaiscBlock());
+            }
+            cur_next = cond_bb;
+            iter ++;
+            for(;iter!=while_cond->rend();iter++){
+                cur_next = genBasicBlock(*iter, cur_next , while_entry, while_exit, func);
+            }
+            return cur_next;
+        }
     } else {
         ERROR("unknown baseblock");
     }

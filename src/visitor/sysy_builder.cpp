@@ -31,7 +31,7 @@ std::vector<Value *> G_array_init;
 // 用于计算数值与val转换
 int G_tmp_int = 0;
 float G_tmp_float = 0.0;
-
+BaseBlock* cond_end;
 // 标记当前为计算数值状态 并且使用到 G_tmp_int/G_tmp_float
 bool G_tmp_computing = false;
 // 标记当前为全局初始化状态 说明全局变量必须计算初值
@@ -840,7 +840,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
             if (G_tmp_val->getType()->isIntegerTy()) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val =
-                    builder->createEQ(new IntegerType(1), G_tmp_val, const0);
+                    builder->createEQ(Type::getInt1Ty(), G_tmp_val, const0);
             } else {
                 ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
             }
@@ -1019,9 +1019,9 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
         }
 
         if (node.oprt == "==") {
-            G_tmp_val = builder->createEQ(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createEQ(Type::getInt1Ty(), l_val, r_val);
         } else if (node.oprt == "!=") {
-            G_tmp_val = builder->createNEQ(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createNEQ(Type::getInt1Ty(), l_val, r_val);
         }
     }
 }
@@ -1029,52 +1029,68 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
 void SYSYBuilder::visit(tree_l_and_exp &node) {
     INFO("line:%d", node._line_no);
     /*wuqi TODO*/
+    auto end_block = BasicBlock::create("");
+    auto res = builder->createAllocaAtEntry(Type::getInt32Ty());
     if (node.l_and_exp == nullptr) {
         node.eq_exp->accept(*this);
     } else {
+        auto second_block = BasicBlock::create("");
+
         node.l_and_exp->accept(*this);
         auto l_val = G_tmp_val;
+        builder->createStore(l_val,res);
+        builder->createCondBranch(l_val,second_block,end_block);
+
+        builder->pushBaseBlock(second_block);
+        builder->SetInstrInsertPoint(second_block);
         node.eq_exp->accept(*this);
         auto r_val = G_tmp_val;
+        builder->createStore(r_val,res);
 
-        if (l_val->getType()->isBool()) {
-            l_val = builder->creatZExtInst(TyInt32, l_val);
-        }
-        if (r_val->getType()->isBool()) {
-            r_val = builder->creatZExtInst(TyInt32, r_val);
-        }
+        builder->pushBaseBlock(end_block);
+        builder->SetInstrInsertPoint(end_block);
+        G_tmp_val = builder->createLoad(res);
 
-        G_tmp_val = builder->createAnd(l_val, r_val);
     }
 }
 
 void SYSYBuilder::visit(tree_l_or_exp &node) {
+    auto res = builder->createAllocaAtEntry(Type::getInt32Ty());
+    // todo 维护 en_block 的父子关系
+    auto end_block = BasicBlock::create("");
     INFO("line:%d", node._line_no);
     /*wuqi TODO*/
     if (node.l_or_exp == nullptr) {
         node.l_and_exp->accept(*this);
     } else {
+        auto second_block = BasicBlock::create("");
+
         node.l_or_exp->accept(*this);
         auto l_val = G_tmp_val;
+        builder->createStore(l_val,res);
+        builder->createCondBranch(l_val,end_block,second_block);
+
+        builder->pushBaseBlock(second_block);
+        builder->SetInstrInsertPoint(second_block);
         node.l_and_exp->accept(*this);
         auto r_val = G_tmp_val;
+        builder->createStore(r_val,res);
 
-        if (l_val->getType()->isBool()) {
-            l_val = builder->creatZExtInst(TyInt32, l_val);
-        }
-        if (r_val->getType()->isBool()) {
-            r_val = builder->creatZExtInst(TyInt32, r_val);
-        }
 
-        G_tmp_val = builder->createOr(l_val, r_val);
+        builder->pushBaseBlock(end_block);
+        builder->SetInstrInsertPoint(end_block);
+        G_tmp_val = builder->createLoad(res);
+
+
     }
+    //end_block
     /*保证 G_tmp_val 为 bool 型*/
     if (G_tmp_val->getType()->isInt32()) {
         G_tmp_val =
-            builder->createNEQ(new IntegerType(1), G_tmp_val, CONST_INT(0));
+            builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_INT(0));
     } else if (G_tmp_val->getType()->isFloatTy()) {
         G_tmp_val =
-            builder->createNEQ(new IntegerType(1), G_tmp_val, CONST_FLOAT(0.0));
+            builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_FLOAT(0.0));
     }
 }
 
@@ -1101,9 +1117,13 @@ void SYSYBuilder::visit(tree_if_stmt &node) {
 
     auto cond_basic_block = BasicBlock::create("");
     WARNNING("create BasicBlock 1064\n");
+    auto up_level_list = builder->GetInsertBaseBlockList();
+    builder->SetBasicBlockInsertPoint(if_block->getCondBaseBlockList());
+    builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
-    if_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
+    builder->SetBasicBlockInsertPoint(up_level_list);
+
     if (node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt ||
         node.stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
@@ -1145,9 +1165,12 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
 
     auto cond_basic_block = BasicBlock::create("");
     WARNNING("create BasicBlock 1098\n");
+    auto up_level_list = builder->GetInsertBaseBlockList();
+    builder->SetBasicBlockInsertPoint(if_block->getCondBaseBlockList());
+    builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
-    if_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
+    builder->SetBasicBlockInsertPoint(up_level_list);
     if (node.then_stmt->if_stmt || node.then_stmt->if_else_stmt ||
         node.then_stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
@@ -1215,9 +1238,12 @@ void SYSYBuilder::visit(tree_while_stmt &node) {
 
     auto cond_basic_block = BasicBlock::create("");
     WARNNING("create BasicBlock 1145\n");
+    auto up_level_list = builder->GetInsertBaseBlockList();
+    builder->SetBasicBlockInsertPoint(while_block->getCondBaseBlockList());
+    builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
-    while_block->addCondBaseBlock(cond_basic_block);
     node.cond->accept(*this);
+    builder->SetBasicBlockInsertPoint(up_level_list);
     if (node.stmt->if_stmt || node.stmt->if_stmt || node.stmt->if_else_stmt ||
         node.stmt->while_stmt) {
         auto father_list = builder->GetInsertBaseBlockList();
@@ -1259,6 +1285,7 @@ void SYSYBuilder::visit(tree_cond &node) {
     INFO("line:%d", node._line_no);
     /*TODO*/
     node.l_or_exp->accept(*this);
+    builder->createNEQ(Type::getInt1Ty(),G_tmp_val,CONST_INT(0));
 }
 
 void SYSYBuilder::visit(tree_array_ident &node) {
