@@ -59,7 +59,8 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<Value *, int> register_mapping;
-  // std::map<Value *, int> stack_mapping;
+  std::map<Value *, int> stack_mapping; // value - offset
+  int stack_cur_size=0;
   std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;

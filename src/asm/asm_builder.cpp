@@ -240,15 +240,15 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   }
                   else{ // split
                       int be_replaced_v_src = register_mapping[be_replaced_v];// reg
-                      int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
-                      int used_v_src = stoi((*v)->getName());//stack
+                      int be_replaced_v_offset = stack_mapping[be_replaced_v];
+                      int used_v_offset = stack_mapping[(*v)];
                       int used_v_dst = be_replaced_v_src;//reg
 
                       lru_list.emplace_front(*v);
 
                       // data update
-                      alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
-                      alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_src<<2));
+                      alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
+                      alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
                       //map update
                       register_mapping.erase(be_replaced_v);
                       register_mapping[(*v)]=be_replaced_v_src;
