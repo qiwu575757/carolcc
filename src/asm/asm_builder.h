@@ -23,7 +23,7 @@
 #include "passes/module.h"
 const int reg_num = 10;
 const std::string global_vars_label = ".global_vars";
-const int arch_version = 8;
+const int arch_version = 7;
 const bool enlarge_stack = true;
 const int enlarge_stack_size = 256 * (1 << 20); // 256MB
 

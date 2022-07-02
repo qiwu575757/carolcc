@@ -118,7 +118,10 @@ int main(int argc, char **argv) {
     std::cout<<asm_code;
     std::cout<<"################-asm_code-#################"<<std::endl;
 
-    
+    std::string strFileName = "test.s";
+    FILE* fs = fopen(strFileName.c_str(), "w+");
+    fprintf(fs,"%s",asm_code.c_str());
+    fclose(fs);
 
     return 0;
 }

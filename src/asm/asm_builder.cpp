@@ -156,6 +156,7 @@ std::pair<int, bool> AsmBuilder::get_const_int_val(Value *val) { // disabled
 
 std::string AsmBuilder::generate_function_code(Function *func){
     std::string func_asm;
+    func_asm += func->getName() + ":" + InstGen::newline;
     func_asm += generate_function_entry_code(func);
     WARNNING("func entry %s:\n%s",func->getName().c_str(),func_asm.c_str());
     for (auto &bb : func->getBasicBlocks()) {
@@ -302,12 +303,12 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     return bb_asm;
 }
 std::string  AsmBuilder::getLabelName(BasicBlock *bb){
-    return "." + bb->getParentFunc()->getName() + "_" + bb->getName();
+    return InstGen::spaces + "." + bb->getParentFunc()->getName() + "_" + bb->getName();
 }
 
 std::string AsmBuilder::getLabelName(Function *func, int type) {
   const std::vector<std::string> name_list = {"pre", "post"};
-  return "." + func->getName() + "_" + name_list.at(type);
+  return InstGen::spaces + "." + func->getName() + "_" + name_list.at(type);
 }
 
 
