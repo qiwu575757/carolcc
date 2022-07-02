@@ -253,7 +253,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       register_mapping[(*v)]=be_replaced_v_src;
                       lru_list.erase(v++);
                   }
-                  
+
                   break;
               }
               else{
@@ -466,11 +466,16 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst_asm += InstGen::store(src_reg2, InstGen::Addr(src_reg1,0));
         }
     } else if (inst->isRet()) {
-      auto src_op1 = operands.at(0);
-      variable_list.push_back(src_op1);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      inst_asm += InstGen::ret(src_reg1);
+          auto src = operands.at(0);
+          if (src->getPrintName()[0] != '%') { //存储的值是立即数，需要先将立即数存储到reg
+            inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
+          } else {
+            auto src_op1 = operands.at(0);
+            variable_list.push_back(src_op1);
+            inst_asm += update_value_mapping(variable_list);
+            const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+            inst_asm += InstGen::ret(src_reg1);
+          }
     } else if (inst->isCmp()) {
         if (operands.size() == 1){
             auto src_op1 = operands.at(0);
