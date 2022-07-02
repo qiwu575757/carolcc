@@ -387,20 +387,31 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
     } else if (inst->isStore()) {
-        ConstantInt* src_op1 =  dynamic_cast<ConstantInt *>(operands.at(0));
-        const std::string reg_name = "_imm_"+std::to_string(key++);
-        Value * val = new Value(Type::getInt32Ty(), reg_name);
-        variable_list.push_back(val);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(src_op2);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[val]);
-        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-        // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
-        printf("******************** %d",atoi(src_op1->getName().c_str()));
-        inst_asm += InstGen::mov(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())),cmpop);
-        inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+        auto src = operands.at(0);
+        if (src->getPrintName()[0] != '%') { //存储的值是立即数，需要先将立即数存储到reg
+          ConstantInt* src_op1 =  dynamic_cast<ConstantInt *>(operands.at(0));
+          const std::string reg_name = "_imm_"+std::to_string(key++);
+          Value * val = new Value(Type::getInt32Ty(), reg_name);
+          variable_list.push_back(val);
+          auto src_op2 = operands.at(1);
+          variable_list.push_back(src_op2);
+          inst_asm += update_value_mapping(variable_list);
+          const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[val]);
+          const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+          // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+          InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+          inst_asm += InstGen::mov(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())),cmpop);
+          inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+        } else{ // 需要存储的值是寄存器
+          auto src_op1 = operands.at(0);
+          variable_list.push_back(src_op1);
+          auto src_op2 = operands.at(1);
+          variable_list.push_back(src_op2);
+          inst_asm += update_value_mapping(variable_list);
+          const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+          const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+          inst_asm += InstGen::store(src_reg2, InstGen::Addr(src_reg1,0));
+        }
     } else if (inst->isRet()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
