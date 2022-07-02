@@ -90,6 +90,7 @@ public:
   std::pair<int, bool> get_const_int_val(Value *val);
   std::string generateInstructionCode(Instruction *inst);
   void show_mapping();
+  void erase_register_map(Value * v);
 };
 
 #endif // SRC_ASM_BUILDER_H
