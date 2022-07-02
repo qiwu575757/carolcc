@@ -64,7 +64,7 @@ private:
   std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size=128;
+  int stack_size=1024;
   bool debug;
   std::string asm_code;
 
@@ -88,7 +88,7 @@ public:
   std::string getLabelName(Function *func, int type);
   std::string generate_global_vars();
   std::string generate_initializer(Constant *init);
-  std::pair<int, bool> get_const_int_val(Value *val);
+  std::pair<int, bool> get_const_val(Value *val);
   std::string generateInstructionCode(Instruction *inst);
   void show_mapping();
   void erase_register_map(Value * v);
