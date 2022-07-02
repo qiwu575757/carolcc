@@ -1336,16 +1336,17 @@ void SYSYBuilder::visit(tree_array_ident &node) {
         scope.find(node.id, array_params);
         tmp_ptr = builder->createLoad(var);
         int i = 0;
+        std::vector<Value*> indexes;
         for (auto exp : node.exps) {
             exp->accept(*this);
-            auto val = G_tmp_val;
+            indexes.push_back(G_tmp_val);
             // for (int j = i + 1; j < array_params.size(); j++) {//
             // 获取偏移地址
             //     val = builder->createMul(val, array_params[j]);
             // }
-            tmp_ptr = builder->createGEP(tmp_ptr, { val});
             i++;
         }
+        tmp_ptr = builder->createGEP(tmp_ptr, indexes);
     } else {
         tmp_ptr = var;
         for (auto exp : node.exps) {
