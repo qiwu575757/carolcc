@@ -224,7 +224,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         bool hit_v = false;
         int lru_index = 0;
         Value *be_replaced_v;
-        
+
         if(upd_v->getPrintName().size() > 1 && upd_v->getPrintName()[0] == '%'){
           printf("update list: %s\n",upd_v->getPrintName().c_str());
           for(auto v = lru_list.begin(); v != lru_list.end();){
@@ -284,7 +284,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         else{
           WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
         }
-        
+
 
 
     }
@@ -317,71 +317,119 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     BasicBlock *bb_cur = inst->getParent();
 
     if (inst->isAdd()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::add(target_reg,src_reg1,src_reg2);
+      auto src = operands.at(0);
+      if (src->getPrintName()[1] != '%') {
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::add(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
+      } else {
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::add(target_reg,src_reg1,src_reg2);
+      }
     } else if (inst->isSub()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::sub(target_reg,src_reg1,src_reg2);
+      auto src = operands.at(0);
+      if (src->getPrintName()[1] != '%') {
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::sub(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
+      } else {
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::sub(target_reg,src_reg1,src_reg2);
+      }
     } else if (inst->isMul()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::mul(target_reg,src_reg1,src_reg2);
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::mul(target_reg,src_reg1,src_reg2);
     } else if (inst->isDiv()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
     } else if (inst->isAnd()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::and_(target_reg,src_reg1,src_reg2);
+      auto src = operands.at(0);
+      if (src->getPrintName()[1] != '%') {
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::and_(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
+      } else {
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::and_(target_reg,src_reg1,src_reg2);
+      }
     } else if (inst->isOr()) {
-      auto src_op1 = operands.at(0);
-      auto src_op2 = operands.at(1);
-      variable_list.push_back(src_op1);
-      variable_list.push_back(src_op2);
-      variable_list.push_back(inst);
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
+      auto src = operands.at(0);
+      if (src->getPrintName()[1] != '%') {
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::orr(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
+      } else {
+        auto src_op1 = operands.at(0);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op1);
+        variable_list.push_back(src_op2);
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
+      }
     } else if (inst->isLoad()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
