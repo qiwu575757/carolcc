@@ -1,6 +1,8 @@
 #include "asm_builder.h"
 #include "asm_instr.h"
 #include "utils.h"
+
+int key = 0;//给需要的立即数标号
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
 }
@@ -205,7 +207,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
 void AsmBuilder::show_mapping(){
   int index = 0;
   for(auto v = lru_list.begin(); v != lru_list.end();v++){
-    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());  
+    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());
   }
   std::map<Value*, int>::iterator iter;
   iter = register_mapping.begin();
@@ -381,21 +383,28 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
     } else if (inst->isLoad()) {
-      // auto src_op1 = operands.at(0);
-      // variable_list.push_back(src_op1);
-      // variable_list.push_back(inst);
-      // inst_asm += update_value_mapping(variable_list);
-      // const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-      // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-      // inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
+      auto src_op1 = operands.at(0);
+      variable_list.push_back(src_op1);
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
     } else if (inst->isStore()) {
-        auto src_op1 = operands.at(0);
-        variable_list.push_back(src_op1);
-        variable_list.push_back(inst);
+        ConstantInt* src_op1 =  dynamic_cast<ConstantInt *>(operands.at(0));
+        const std::string reg_name = "_imm_"+std::to_string(key++);
+        Value * val = new Value(Type::getInt32Ty(), reg_name);
+        variable_list.push_back(val);
+        auto src_op2 = operands.at(1);
+        variable_list.push_back(src_op2);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-        const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-        inst_asm += InstGen::store(target_reg, InstGen::Addr(src_reg1,0));
+        const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[val]);
+        const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+        // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+        printf("******************** %d",atoi(src_op1->getName().c_str()));
+        inst_asm += InstGen::mov(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())),cmpop);
+        inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
     } else if (inst->isRet()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
@@ -429,7 +438,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                 default:
                     break;
             }
-        } 
+        }
     WARNNING("unrealized CMP");
     } else if (inst->isBr()) {
       if (operands.size() == 1){
