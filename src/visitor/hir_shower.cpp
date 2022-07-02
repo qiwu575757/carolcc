@@ -30,7 +30,7 @@ void HIrPrinter::visit(Argument *node) {
 void HIrPrinter::visit(BaseBlock *node) {
     
     if (node->isBaiscBlock()) {
-        print_left("BaseBlock","");
+        print_left("BaseBlock",node->getPrintName());
         add_tab();
         auto basic_block = dynamic_cast<BasicBlock *>(node);
         for (auto &instr: basic_block->getInstructions()) {
@@ -38,32 +38,32 @@ void HIrPrinter::visit(BaseBlock *node) {
         }
         delete_tab();
     } else if (node->isIfBlock()) {
-        print_left("IfBlock","");
+        print_left("IfBlock",node->getPrintName());
         add_tab();
         auto if_block = dynamic_cast<IfBlock *>(node);
-        print_left("IfBlock(cond)","");
+        print_left("IfBlock(cond)",node->getPrintName());
         for (auto &cond_base_block:* (if_block->getCondBaseBlockList())) {
             cond_base_block->accept(this);
         }
-      print_left("IfBlock(then)","");
+      print_left("IfBlock(then)",node->getPrintName());
         for (auto &then_block: *(if_block->getIfBodyBaseBlockList())) {
             then_block->accept(this);
         }
-      print_left("IfBlock(else)","");
+      print_left("IfBlock(else)",node->getPrintName());
         for (auto &else_block: *(if_block->getElseBodyBaseBlockList())) {
             else_block->accept(this);
         }
         delete_tab();
 
     } else if (node->isWhileBlock()) {
-        print_left("WhileBlock","");
+        print_left("WhileBlock",node->getPrintName());
         add_tab();
         auto while_block = dynamic_cast<WhileBlock *>(node);
-        print_left("WhileBlock(cond)","");
+        print_left("WhileBlock(cond)",node->getPrintName());
         for (auto &cond_block: *(while_block->getCondBaseBlockList())) {
             cond_block->accept(this);
         }
-        print_left("WhileBlock(body)","");
+        print_left("WhileBlock(body)",node->getPrintName());
         for (auto &body_block: *(while_block->getBodyBaseBlockList())) {
             body_block->accept(this);
         }
@@ -75,45 +75,45 @@ void HIrPrinter::visit(BaseBlock *node) {
 
 }
 void HIrPrinter::visit(LoadInst *node) {
-    print_left("AllocaInst","");
+    print_left("AllocaInst ",node->getPrintName());
 }
 void HIrPrinter::visit(ReturnInst *node) {
-    print_left("ReturnInst","");
+    print_left("ReturnInst",node->getPrintName());
 }
 void HIrPrinter::visit(UnaryInst *node) {
-    print_left("UnaryInst","");
+    print_left("UnaryInst",node->getPrintName());
 }
 void HIrPrinter::visit(BinaryInst *node) {
-    print_left("BinaryInst","");
+    print_left("BinaryInst",node->getPrintName());
 }
 void HIrPrinter::visit(StoreInst *node) {
-       print_left("StoreInst","");
+       print_left("StoreInst",node->getPrintName());
 }
 void HIrPrinter::visit(Value *node) {
-    print_left("Value","");
+    print_left("Value",node->getPrintName());
 }
 void HIrPrinter::visit(CmpInst *node) {
-   print_left("CmpInst","");
+   print_left("CmpInst",node->getPrintName());
 }
 void HIrPrinter::visit(BranchInst *node) {
-    print_left("BranchInst","");
+    print_left("BranchInst",node->getPrintName());
 }
 void HIrPrinter::visit(GetElementPtrInst *node) {
-    print_left("GetElementPtrInst","");
+    print_left("GetElementPtrInst",node->getPrintName());
 }
 void HIrPrinter::visit(CallInst *node) {
-    print_left("CallInst","");
+    print_left("CallInst",node->getPrintName());
 }
 void HIrPrinter::visit(ZExtInst *node) {
-    print_left("ZExtInst","");
+    print_left("ZExtInst",node->getPrintName());
 }
 
 void HIrPrinter::visit(HIR *node) {
     if(node->isBreak()){
-        print_left("break","");
+        print_left("break",node->getPrintName());
     }
     else if(node->isContinue()){
-        print_left("continue","");
+        print_left("continue",node->getPrintName());
     }
     else {
         ERROR("error  type");
@@ -121,19 +121,19 @@ void HIrPrinter::visit(HIR *node) {
 }
 
 void HIrPrinter::visit(ConstantInt *node) {
-    print_left("ConstantInt","");
+    print_left("ConstantInt",node->getPrintName());
 }
 void HIrPrinter::visit(ConstantFloat *node) {
-    print_left("ConstantFloat","");
+    print_left("ConstantFloat",node->getPrintName());
 }
 void HIrPrinter::visit(ConstantArray *node) {
-    print_left("ConstantArray","");
+    print_left("ConstantArray",node->getPrintName());
 }
 void HIrPrinter::print_array_init(ConstantArray *array){
     print_left("ConstantArray","");
 }
 void HIrPrinter::visit(GlobalVariable *node) {
-    print_left("GlobalVariable","");
+    print_left("GlobalVariable",node->getPrintName());
 }
 //void HIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
