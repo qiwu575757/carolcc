@@ -1030,13 +1030,20 @@ void SYSYBuilder::visit(tree_l_and_exp &node) {
     INFO("line:%d", node._line_no);
     /*wuqi TODO*/
     auto end_block = BasicBlock::create("");
-    auto res = builder->createAllocaAtEntry(Type::getInt32Ty());
+    auto res = builder->createAllocaAtEntry(Type::getInt1Ty());
     if (node.l_and_exp == nullptr) {
         node.eq_exp->accept(*this);
     } else {
         auto second_block = BasicBlock::create("");
 
         node.l_and_exp->accept(*this);
+        if (G_tmp_val->getType()->isInt32()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_INT(0));
+        } else if (G_tmp_val->getType()->isFloatTy()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_FLOAT(0.0));
+        }
         auto l_val = G_tmp_val;
         builder->createStore(l_val,res);
         builder->createCondBranch(l_val,second_block,end_block);
@@ -1044,6 +1051,13 @@ void SYSYBuilder::visit(tree_l_and_exp &node) {
         builder->pushBaseBlock(second_block);
         builder->SetInstrInsertPoint(second_block);
         node.eq_exp->accept(*this);
+        if (G_tmp_val->getType()->isInt32()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_INT(0));
+        } else if (G_tmp_val->getType()->isFloatTy()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_FLOAT(0.0));
+        }
         auto r_val = G_tmp_val;
         builder->createStore(r_val,res);
 
@@ -1055,7 +1069,7 @@ void SYSYBuilder::visit(tree_l_and_exp &node) {
 }
 
 void SYSYBuilder::visit(tree_l_or_exp &node) {
-    auto res = builder->createAllocaAtEntry(Type::getInt32Ty());
+    auto res = builder->createAllocaAtEntry(Type::getInt1Ty());
     // todo 维护 en_block 的父子关系
     auto end_block = BasicBlock::create("");
     INFO("line:%d", node._line_no);
@@ -1066,6 +1080,13 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
         auto second_block = BasicBlock::create("");
 
         node.l_or_exp->accept(*this);
+        if (G_tmp_val->getType()->isInt32()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_INT(0));
+        } else if (G_tmp_val->getType()->isFloatTy()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_FLOAT(0.0));
+        }
         auto l_val = G_tmp_val;
         builder->createStore(l_val,res);
         builder->createCondBranch(l_val,end_block,second_block);
@@ -1073,6 +1094,13 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
         builder->pushBaseBlock(second_block);
         builder->SetInstrInsertPoint(second_block);
         node.l_and_exp->accept(*this);
+        if (G_tmp_val->getType()->isInt32()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_INT(0));
+        } else if (G_tmp_val->getType()->isFloatTy()) {
+            G_tmp_val =
+                builder->createNEQ(Type::getInt1Ty(), G_tmp_val, CONST_FLOAT(0.0));
+        }
         auto r_val = G_tmp_val;
         builder->createStore(r_val,res);
 
@@ -1315,7 +1343,7 @@ void SYSYBuilder::visit(tree_array_ident &node) {
             // 获取偏移地址
             //     val = builder->createMul(val, array_params[j]);
             // }
-            tmp_ptr = builder->createGEP(tmp_ptr, {CONST_INT(0), val});
+            tmp_ptr = builder->createGEP(tmp_ptr, { val});
             i++;
         }
     } else {
