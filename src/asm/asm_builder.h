@@ -64,7 +64,7 @@ private:
   std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size=1024;
+  int stack_size=128;
   bool debug;
   std::string asm_code;
 

@@ -203,6 +203,8 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
     for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
     callee_reg_list.push_back(InstGen::pc);
     func_tail_code += InstGen::pop(callee_reg_list);
+    func_tail_code += InstGen::spaces+"bx  lr " + InstGen::newline;
+
     return func_tail_code;
 }
 void AsmBuilder::show_mapping(){
@@ -320,7 +322,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     if (inst->isAdd()) {
       auto src = operands.at(0);
-      if (src->getPrintName()[1] != '%') {
+      if (src->getPrintName()[0] != '%') {
         auto src_op1 = operands.at(0);
         variable_list.push_back(src_op1);
         auto src_op2 = operands.at(1);
@@ -343,7 +345,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       }
     } else if (inst->isSub()) {
       auto src = operands.at(0);
-      if (src->getPrintName()[1] != '%') {
+      if (src->getPrintName()[0] != '%') {
         auto src_op1 = operands.at(0);
         variable_list.push_back(src_op1);
         auto src_op2 = operands.at(1);
@@ -388,7 +390,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
     } else if (inst->isAnd()) {
       auto src = operands.at(0);
-      if (src->getPrintName()[1] != '%') {
+      if (src->getPrintName()[0] != '%') {
         auto src_op1 = operands.at(0);
         variable_list.push_back(src_op1);
         auto src_op2 = operands.at(1);
@@ -411,7 +413,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       }
     } else if (inst->isOr()) {
       auto src = operands.at(0);
-      if (src->getPrintName()[1] != '%') {
+      if (src->getPrintName()[0] != '%') {
         auto src_op1 = operands.at(0);
         variable_list.push_back(src_op1);
         auto src_op2 = operands.at(1);
@@ -464,7 +466,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst_asm += update_value_mapping(variable_list);
           const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
-          inst_asm += InstGen::store(src_reg2, InstGen::Addr(src_reg1,0));
+          inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
         }
     } else if (inst->isRet()) {
           auto src = operands.at(0);
@@ -525,8 +527,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
           const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
-          inst_asm += "cmp    "+ target_reg.getName() + ", " + "#0";
-          inst_asm += "beq    " + InstGen::Label(getLabelName(bb_cur)).getName() +
+          inst_asm += InstGen::spaces +"cmp "+ target_reg.getName() + ", " + "#0";
+          inst_asm += InstGen::spaces + "beq " + InstGen::Label(getLabelName(bb_cur)).getName() +
                                     "_branch_" + std::to_string(register_mapping[src_op1]);
           inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
                                     "_branch_" + std::to_string(register_mapping[src_op2]),
@@ -545,6 +547,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         }
         inst_asm += InstGen::bl(func_name);
         inst_asm += InstGen::pop(caller_reg_list);
+    } else if (inst->isAlloca()) {
+      stack_cur_size += 4;
+      stack_mapping[inst] = stack_cur_size;
+      variable_list.push_back(inst);
+      inst_asm += update_value_mapping(variable_list);
+      const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+      inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size-4));
     }
     else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
