@@ -141,7 +141,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                            array_params);
                 args[i]->setArrayBound(array_params);
             } else {  // 单个
-                auto alloc = builder->createAllocaAtEntry(TyInt32);
+                auto alloc = builder->createAllocaAtEntry(args[i]->getType());
                 builder->createStore(args[i], alloc);
                 scope.push(param->funcfparamone->id, alloc);
             }
