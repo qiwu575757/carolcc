@@ -207,7 +207,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
 void AsmBuilder::show_mapping(){
   int index = 0;
   for(auto v = lru_list.begin(); v != lru_list.end();v++){
-    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());  
+    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());
   }
   std::map<Value*, int>::iterator iter;
   iter = register_mapping.begin();
@@ -226,13 +226,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         int lru_index = 0;
         Value *be_replaced_v;
         if(upd_v->getName() == "" || upd_v->getName() == "%"){
-<<<<<<< HEAD
-          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getName().c_str());
-        }
-=======
           WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
-        } 
->>>>>>> 671fa460557e9c3debcded926d8684db7852b0b4
+        }
         for(auto v = lru_list.begin(); v != lru_list.end();){
             if(lru_index==reg_num){
                 be_replaced_v = *v;
