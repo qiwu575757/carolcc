@@ -54,6 +54,7 @@ public:
     BranchInst *createIf(Value *cond, BasicBlock *true_block, BasicBlock *false_block);
     BranchInst *createWhile(Value *cond, BasicBlock *block);
     BranchInst *createBranch(BasicBlock *block);
+    BranchInst *createCondBranch(Value *cond, BasicBlock *then_block,BasicBlock* else_block) ;
     StoreInst *createStore(Value *value, Value *ptr);
     LoadInst *createLoad(Value *ptr);
     GetElementPtrInst *createGEP(Value *ptr, std::vector<Value *> idxs);
