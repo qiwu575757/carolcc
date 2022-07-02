@@ -253,12 +253,13 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       register_mapping[(*v)]=be_replaced_v_src;
                       lru_list.erase(v++);
                   }
-
+                  
                   break;
               }
               else{
                 v++;
               }
+              lru_index+=1;
           }
 
           if(! hit_v){ //first time
