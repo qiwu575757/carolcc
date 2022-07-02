@@ -115,7 +115,7 @@ class Runner():
         for path_name, dir, files_name in os.walk("test/"):
             for file in files_name:
                 # 如果是目录
-                if file[-3:] != ".sy" and file[-4:] != '.out':
+                if file[-3:] != ".sy" and file[-4:] != '.out' and file[-3:] !=".in":
                     os.remove(path_name+file)
 
     def check(self,file="",case=""):

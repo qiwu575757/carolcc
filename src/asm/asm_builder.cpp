@@ -64,18 +64,34 @@ std::string AsmBuilder::generate_global_vars() {
 }
 
 std::string AsmBuilder::generate_initializer(Constant *init) {
-  std::string asm_code;
+  std::string asm_code,array_code;
   auto array_init = dynamic_cast<ConstantArray *>(init);
   if (array_init) {
     auto length =
         static_cast<ArrayType *>(array_init->getType())->getNumOfElements();
     for (int i = 0; i < length; i++) {
-      asm_code +=
+      array_code +=
           AsmBuilder::generate_initializer(array_init->getElement(i));
     }
-    ERROR("UNDO array init in asm!");
+
+    bool check_array_init = false;
+    printf("array_size : %d\n",init->getType()->getSize());
+    for(int i=0;i<init->getType()->getSize()/4;i++){
+      if(array_code.c_str()[i*12+10]!='0'){
+        check_array_init=true;
+        break;
+      }
+      // printf(" |%c| ",array_code.c_str()[i*12+10]);
+    }
+    if(check_array_init){
+      asm_code += array_code;
+    }
+    else{
+      asm_code += InstGen::spaces + ".zero "+std::to_string(init->getType()->getSize())+"\n";
+    }
+    // ERROR("UNDO array init in asm!");
   } else {
-    auto val = AsmBuilder::get_const_int_val(init);
+    auto val = AsmBuilder::get_const_val(init);
     if (!val.second) {
       std::cerr << "Function generateInitializerCode exception!" << std::endl;
       abort();
@@ -86,16 +102,30 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
   return asm_code;
 }
 
-std::pair<int, bool> AsmBuilder::get_const_int_val(Value *val) { // disabled
-  auto const_val = dynamic_cast<ConstantInt *>(val);
+std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
+  auto const_int_val = dynamic_cast<ConstantInt *>(val);
+  auto const_float_val = dynamic_cast<ConstantFloat *>(val);
   auto inst_val = dynamic_cast<Instruction *>(val);
-  if (const_val) {
-    return std::make_pair(const_val->getValue(), true);
+  //#### UNDO ####
+  //  NOT SUPPORT FLOAT
+  //#### UNDO ####
+
+  if (const_int_val || const_float_val) {
+    if(const_float_val){
+      ERROR("UNDO init float! in asm");
+      ///??????
+      float data = const_float_val->getValue();
+      int float_data = *((int*)(&data));
+      return std::make_pair(float_data, true);
+    }
+    else{
+      return std::make_pair(const_int_val->getValue(), true);
+    }
   } else if (inst_val && false) {
     auto op_list = inst_val->getOperandList();
     if (dynamic_cast<BinaryInst *>(val)) {
-      auto val_0 = AsmBuilder::get_const_int_val(op_list.at(0));
-      auto val_1 = AsmBuilder::get_const_int_val(op_list.at(1));
+      auto val_0 = AsmBuilder::get_const_val(op_list.at(0));
+      auto val_1 = AsmBuilder::get_const_val(op_list.at(1));
       if (val_0.second && val_1.second) {
         int ret = 0;
         bool flag = true;
@@ -131,7 +161,7 @@ std::pair<int, bool> AsmBuilder::get_const_int_val(Value *val) { // disabled
       }
     }
     if (dynamic_cast<UnaryInst *>(val)) {
-      auto val_0 = AsmBuilder::get_const_int_val(op_list.at(0));
+      auto val_0 = AsmBuilder::get_const_val(op_list.at(0));
       if (val_0.second) {
         int ret = 0;
         bool flag = true;
