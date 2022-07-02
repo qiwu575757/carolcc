@@ -137,7 +137,7 @@ std::string BinaryInst::getOperatorString() const
         else if (getType()->isFloatTy())
             return "fadd";
         else
-            ERROR("unsupported type");
+            return "not supported";
     case Instruction::SUB:
     {
         if (getType()->isIntegerTy())
@@ -145,7 +145,7 @@ std::string BinaryInst::getOperatorString() const
         else if (getType()->isFloatTy())
             return "fsub";
         else
-            ERROR("unsupported type");
+            return "not supported";
     }
     case Instruction::MUL:
     {
@@ -154,7 +154,7 @@ std::string BinaryInst::getOperatorString() const
         else if (getType()->isFloatTy())
             return "fmul";
         else
-            ERROR("unsupported type");
+            return "not supported";
     }
     case Instruction::DIV:
     {
@@ -163,7 +163,7 @@ std::string BinaryInst::getOperatorString() const
         else if (getType()->isFloatTy())
             return "fdiv";
         else
-            ERROR("unsupported type");
+            return "not supported";
     }
     case Instruction::REM:
     {
@@ -172,9 +172,7 @@ std::string BinaryInst::getOperatorString() const
         else if (getType()->isFloatTy())
             return "frem";
         else
-        {
-            ERROR("ERROR type");
-        }
+            return "not supported";
     }
 
         //        case Instruction::SHL:return "shl";

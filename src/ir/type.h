@@ -59,6 +59,7 @@ public:
     Type *getPointerElementType();
 
     int getSize(bool extended = true);
+    int getDims();
 
     void print(std::ofstream &output_file);
 
