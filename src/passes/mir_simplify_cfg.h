@@ -3,7 +3,7 @@
 
 #include "ir/basic_block.h"
 #include "ir/function.h"
-#include "IRBuilder.h"
+#include "visitor/ir_builder.h"
 #include "ir/instruction.h"
 #include "module.h"
 #include "pass_manager.h"
@@ -14,8 +14,8 @@ private:
   MirSimplifyCFG();
 
 public:
-  MirSimplifyCFG(Module *m) : Transform(m) {}
-  ~SimplifyCFG(){};
+  MirSimplifyCFG(Module *m, const std::string &name) : Transform(m,name) {}
+  ~MirSimplifyCFG(){};
   void run() override;
   void RemoveNoPredecessorBB();
   void MergeSinglePredecessorBB();
@@ -23,3 +23,4 @@ public:
   void EliminateSingleUnCondBrBB();
   void RemoveSelfLoopBB();
 };
+#endif
