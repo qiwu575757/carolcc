@@ -90,7 +90,9 @@ class Runner():
         os.system('cmake ..')
         os.system('make -j8')
         os.chdir('..')
-
+    
+    def open_ir(self,test):
+        os.system('code '+test_results+"/"+test+"/ir/" + self.scheme + ".ir")
     def clean(self):
         if os.path.exists(build_file+"/compiler"):
             os.remove(build_file+"/compiler")
@@ -142,7 +144,6 @@ class Runner():
 
 
     def generate_path(self):
-        
 
         if not os.path.exists(build_file):
             os.mkdir(build_file)
@@ -204,6 +205,9 @@ class Runner():
         else:
             subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
+
+        if self.args.debug:
+            self.open_ir(testcase)
 
 
     def ir_to_asm(self, testcase):
