@@ -339,7 +339,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
 
-                        
+
                       }
                       else{
                         int be_replaced_v_offset = stack_mapping[be_replaced_v];
@@ -460,7 +460,7 @@ int AsmBuilder::find_register(Value *v){
 
 int AsmBuilder::find_register(Value *v,std::string &code){
   auto global = dynamic_cast<GlobalVariable *>(v);
-  
+
   if(v==nullptr){
     ERROR(" value is nullptr");
   }
@@ -503,6 +503,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     BasicBlock *bb_cur = inst->getParent();
 
     int type_size=0;
+    //用于接收可能的全局变量寄存器分配操作str
+    std::string register_str = "";
     if(!inst->isAlloca()){
       //维护变量的栈分配
       type_size = inst->getType()->getSize();
@@ -519,8 +521,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
         inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
 
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::add(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
       } else {
         auto src_op1 = operands.at(0);
@@ -532,9 +537,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
         inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
 
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::add(target_reg,src_reg1,src_reg2);
       }
     } else if (inst->isSub()) {
@@ -545,8 +555,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         auto src_op2 = operands.at(1);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
+        register_str = "";
         inst_asm += InstGen::sub(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
       } else {
         auto src_op1 = operands.at(0);
@@ -555,9 +569,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::sub(target_reg,src_reg1,src_reg2);
       }
     } else if (inst->isMul()) {
@@ -567,9 +586,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::mul(target_reg,src_reg1,src_reg2);
     } else if (inst->isDiv()) {
         auto src_op1 = operands.at(0);
@@ -578,9 +602,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
     } else if (inst->isAnd()) {
       auto src = operands.at(0);
@@ -590,8 +619,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         auto src_op2 = operands.at(1);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
+        register_str = "";
         inst_asm += InstGen::and_(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
       } else {
         auto src_op1 = operands.at(0);
@@ -600,9 +633,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::and_(target_reg,src_reg1,src_reg2);
       }
     } else if (inst->isOr()) {
@@ -613,8 +651,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         auto src_op2 = operands.at(1);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::orr(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
       } else {
         auto src_op1 = operands.at(0);
@@ -623,9 +664,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
         inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
       }
     } else if (inst->isLoad()) {
@@ -634,8 +680,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.push_back(inst);
 
       inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+      const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += register_str;
+      register_str = "";
 
       inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op1->getPrintName().c_str(), "");
       inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
@@ -649,9 +699,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           auto src_op2 = operands.at(1);
           variable_list.push_back(src_op2);
           inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(val));
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-          // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(val,register_str));
+          inst_asm += register_str;
+          register_str = "";
+          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+          inst_asm += register_str;
+          // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
 
 
           inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
@@ -669,8 +722,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           auto src_op2 = operands.at(1);
           variable_list.push_back(src_op2);
           inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
+          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+          inst_asm += register_str;
+          register_str = "";
+          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+          inst_asm += register_str;
 
           inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
@@ -683,8 +739,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             auto src_op1 = operands.at(0);
             variable_list.push_back(src_op1);
             inst_asm += update_value_mapping(variable_list);
-            if (find_register(src_op1) != 0) {//如果源寄存器就是r0，就无需mov
-              const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
+            if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
+              inst_asm += register_str;
+              register_str = "";
+              const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+              inst_asm += register_str;
               inst_asm += InstGen::ret(src_reg1);
             }
           }
@@ -723,9 +782,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           variable_list.push_back(src_op1);
           inst_asm += update_value_mapping(variable_list);
           inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
-                                    "_branch_" + std::to_string(find_register(src_op1)),
+                                    "_branch_" + std::to_string(find_register(src_op1,register_str)),
                                 0),
                  InstGen::NOP);
+          inst_asm += register_str;
       } else if (operands.size() == 2) {
           auto src_op1 = operands.at(0);
           variable_list.push_back(src_op1);
@@ -733,15 +793,24 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           variable_list.push_back(src_op2);
           variable_list.push_back(inst);
           inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1));
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2));
-          const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+          inst_asm += register_str;
+          register_str = "";
+          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+          inst_asm += register_str;
+          register_str = "";
+          const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+          inst_asm += register_str;
+          register_str = "";
           inst_asm += InstGen::spaces +"cmp "+ target_reg.getName() + ", " + "#0";
           inst_asm += InstGen::spaces + "beq " + InstGen::Label(getLabelName(bb_cur)).getName() +
-                                    "_branch_" + std::to_string(find_register(src_op1));
+                                    "_branch_" + std::to_string(find_register(src_op1,register_str));
+          inst_asm += register_str;
+          register_str = "";
           inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
-                                    "_branch_" + std::to_string(find_register(src_op2)),
+                                    "_branch_" + std::to_string(find_register(src_op2,register_str)),
                                       InstGen::NOP));
+          inst_asm += register_str;
       }
     } else if (inst->isCall()) {
         std::vector<InstGen::Reg> caller_reg_list;
@@ -769,7 +838,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
       variable_list.push_back(inst);
       inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += register_str;
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
     } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
       // new register variable_list.push_back(inst);
@@ -790,7 +860,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += InstGen::comment(" gep "+inst->getPrintName()," from " + src_op1->getPrintName());
 
       // init result reg 0
-      inst_asm += InstGen::setValue(InstGen::Reg(find_register(inst)),InstGen::Constant(0));
+      inst_asm += InstGen::setValue(InstGen::Reg(find_register(inst,register_str)),InstGen::Constant(0));
+      inst_asm += register_str;
+      register_str = "";
       // get operand length
       //
       auto array_ty = src_op1->getType()->getPointerElementType();
@@ -804,45 +876,59 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
             inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
 
-            inst_asm += InstGen::setValue(InstGen::Reg(find_register(val1)),InstGen::Constant(element_size));
+            InstGen::Reg dst_reg = InstGen::Reg(find_register(val1,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            inst_asm += InstGen::setValue(dst_reg,InstGen::Constant(element_size));
             // inst_asm += InstGen::mul(InstGen::Reg(find_register(val1)),InstGen::Reg(find_register(val1)), InstGen::Reg(find_register(val2)));
 
-            inst_asm += InstGen::mla(InstGen::Reg(find_register(inst)),InstGen::Reg(find_register(val1)),
-            InstGen::Reg(find_register(val2)), InstGen::Reg(find_register(inst)));
+            InstGen::Reg inst1_reg = InstGen::Reg(find_register(inst,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            InstGen::Reg val1_reg = InstGen::Reg(find_register(val1,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            InstGen::Reg val2_reg =  InstGen::Reg(find_register(val2,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            InstGen::Reg inst2_reg =  InstGen::Reg(find_register(inst,register_str));
+            inst_asm += register_str;
+
+            inst_asm += InstGen::mla(inst1_reg,val1_reg,val2_reg,inst2_reg);
+
           } else if(static_cast<ConstantInt*>(src_op)->getValue()!=0){
             // 邪法
             inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
 
             WARNNING("SRC OP name is: ",src_op->getPrintName().c_str());
             int offset = static_cast<ConstantInt*>(src_op)->getValue() * element_size;
-            inst_asm += InstGen::add(InstGen::Reg(find_register(inst)),InstGen::Reg(find_register(inst)),
-            InstGen::Constant(offset));
+            InstGen::Reg inst1_reg = InstGen::Reg(find_register(inst,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            InstGen::Reg inst2_reg = InstGen::Reg(find_register(inst,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            inst_asm += InstGen::add(inst1_reg,inst2_reg, InstGen::Constant(offset));
             // variable_list.push_back(src_op2);
           }
           // variable_list.push_back(inst);
           array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
       }
-      inst_asm += InstGen::add(InstGen::Reg(find_register(inst)),InstGen::Reg(find_register(inst)),
-          InstGen::Reg(find_register(src_op1)));
+      InstGen::Reg inst1_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      InstGen::Reg inst2_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      InstGen::Reg inst3_reg =  InstGen::Reg(find_register(src_op1,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      inst_asm += InstGen::add(inst1_reg,inst2_reg,inst3_reg);
       variable_list.clear();
       variable_list.push_back(val1);
       variable_list.push_back(val2);
       inst_asm +=  erase_value_mapping(variable_list);
 
-      // const InstGen::Reg size_reg = InstGen::Reg(find_register(val1));
-      // int offset = src_op1->getType()->getPointerElementType()->getSize();
-      // inst_asm += InstGen::setValue(size_reg,InstGen::Constant(offset));
-      // const InstGen::Reg base_reg = InstGen::Reg(find_register(src_op1));
-      // if (src_op2->isConstant()) {//立即数
-      //   const InstGen::Reg dem_reg = InstGen::Reg(find_register(val2));
-      //   const InstGen::Reg target_reg = InstGen::Reg(find_register(inst));
-
-      //   inst_asm += InstGen::mla(target_reg,size_reg,dem_reg, base_reg);
-      // } else {
-      //   const InstGen::Reg dem_reg = InstGen::Reg(find_register(src_op2));
-      //   const InstGen::Reg target_reg = InstGen::Reg(register_mapping(inst));
-
-      //   inst_asm += InstGen::mla(target_reg,size_reg,dem_reg, base_reg);
       }
      else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
