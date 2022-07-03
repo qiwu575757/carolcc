@@ -74,6 +74,8 @@ public:
     this->debug = debug;
   }
   ~AsmBuilder() {}
+  int find_register(Value *v);
+  void set_register(Value *v,int data);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);

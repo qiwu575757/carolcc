@@ -243,12 +243,6 @@ void AsmBuilder::show_mapping(){
   for(auto v = lru_list.begin(); v != lru_list.end();v++){
     printf("LRU list %d: %s\n",index++,(*v)->getName().c_str());
   }
-  // std::map<Value*, int>::iterator iter;
-  // iter = register_mapping.begin();
-  // while(iter != register_mapping.end()) {
-  //     std::cout << "REGISTER " << iter->second << " : " << iter->first->getPrintName() << std::endl;
-  //     iter++;
-  // }
   for(auto& iter:register_mapping){
       std::cout << "REGISTER " << iter.second << " : " << iter.first->getPrintName() << std::endl;
   }
@@ -290,7 +284,7 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
               MyAssert("nullptr",replace_v!=nullptr);
               register_mapping[replace_v]=reg_index;
               // data update
-              // alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
+              alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
               alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
               break;
             }
@@ -385,7 +379,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                     if(register_bits[i]==0){
                       MyAssert("nullptr",upd_v);
 
-                       register_mapping[upd_v]=i;
+                       set_register(upd_v,i);
                         lru_list.push_front(upd_v);
                         break;
                     }
@@ -398,7 +392,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
               }
               else  if(!be_replaced_v->isConstant()){
                   printf(" value %s update value %s\n",upd_v->getPrintName().c_str(),be_replaced_v->getPrintName().c_str());
-                  int be_replaced_v_src = register_mapping[be_replaced_v];// reg
+                  int be_replaced_v_src = find_register(be_replaced_v);// reg
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.push_front(upd_v);
 
@@ -408,7 +402,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   //map update
                   register_mapping.erase(be_replaced_v);
                   MyAssert("nullptr",upd_v);
-                  register_mapping[upd_v]=be_replaced_v_src;
+                  set_register(upd_v,be_replaced_v_src);
 
               }
               else{
@@ -445,6 +439,27 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
   return InstGen::spaces + "." + func->getName() + "_" + name_list.at(type);
 }
 
+int AsmBuilder::find_register(Value *v){
+  if(v==nullptr){
+    ERROR(" value is nullptr");
+  }
+  if(register_mapping.count(v)){
+    return register_mapping[v];
+  }else{
+    ERROR(" not find v in register!");
+  }
+}
+
+void AsmBuilder::set_register(Value *v,int data){
+  if(v==nullptr){
+    ERROR(" value is nullptr");
+  }
+  if(register_mapping.count(v)){
+    ERROR(" not find v in register!");
+  }else{
+    register_mapping[v]=data;
+  }
+}
 
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string inst_asm;
