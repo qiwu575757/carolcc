@@ -162,6 +162,23 @@ IntegerType *Type::getInt32Ty() { return int32_type; }
 FloatType *Type::getFloatTy() { return float_type; }
 PointerType *Type::getInt32PtrTy() { return int32ptr_type; }
 PointerType *Type::getFloatPtrTy() { return floatptr_type; }
+int Type::getDims() {
+    int res = 0;
+    switch (_id) {
+        case LabelTyID:
+            res = -10000;
+            break;
+        case ArrayTyID:
+            res = 1+ static_cast<ArrayType*>(this)->getElementType()->getDims();
+            break;
+        case PointerTyID:
+            res = 1+ static_cast<PointerType*>(this)->getPointerElementType()->getDims();
+            break;
+        default:
+            res = 0;
+    }
+    return res;
+}
 // IntegerType
 IntegerType::IntegerType(unsigned num_bits)
     : Type(Type::IntegerTyID), _num_bits(num_bits) {}
