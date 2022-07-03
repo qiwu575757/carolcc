@@ -83,6 +83,7 @@ public:
   std::string generate_function_exit_code(Function *func);
   /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *>update_v);
+  void erase_value_mapping(std::list<Value*> erase_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);

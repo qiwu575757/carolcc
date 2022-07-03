@@ -249,6 +249,28 @@ void AsmBuilder::show_mapping(){
       iter++;
   }
 }
+
+void AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
+    std::string alloc_reg_asm;
+    /****/
+    for(auto ers_v : erase_v){
+        // check if value is in list
+        if(register_mapping.count(ers_v)){
+          register_mapping.erase(ers_v);
+        }
+        for(auto v = lru_list.begin(); v != lru_list.end();)
+        {
+          if((*v)==ers_v){
+            lru_list.erase(v++);
+          }
+          else{
+            v++;
+          }
+        }
+    }
+    return;
+}
+
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
     /****/
@@ -500,6 +522,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
           inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+
+          variable_list.empty();
+          variable_list.push_back(val);
+          erase_value_mapping(variable_list);
+
         } else{ // 需要存储的值是寄存器
           auto src_op1 = operands.at(0);
           variable_list.push_back(src_op1);
@@ -630,7 +657,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
             inst_asm += InstGen::mla(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[val1]),
             InstGen::Reg(register_mapping[val2]), InstGen::Reg(register_mapping[inst]));
-          } else {
+          } else if(static_cast<ConstantInt*>(src_op)->getValue()!=0){
             // 邪法
             WARNNING("SRC OP name is: ",src_op->getPrintName().c_str());
             int offset = static_cast<ConstantInt*>(src_op)->getValue() * element_size;
@@ -641,6 +668,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           // variable_list.push_back(inst);
           array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
       }
+      variable_list.empty();
+      variable_list.push_back(val1);
+      variable_list.push_back(val2);
+      erase_value_mapping(variable_list);
       inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
           InstGen::Reg(register_mapping[src_op1]));
 

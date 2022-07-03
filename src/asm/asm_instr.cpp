@@ -102,7 +102,7 @@ std::string mvn(const Reg &dst, const Value &src, const CmpOp &cond) {
 std::string setValue(const Reg &dst, const Constant &src) {
   std::string asm_instr;
   auto val = src.getValue();
-  if (0 <= val && val <= imm_8_max) {
+  if (0 <= val && val <= imm_16_max) {
     asm_instr += mov(dst, Constant(val));
   } else if (-imm_8_max <= val && val <= 0) {
     asm_instr += mvn(dst, Constant(-val - 1));
