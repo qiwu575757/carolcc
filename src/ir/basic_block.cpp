@@ -107,6 +107,12 @@ BasicBlock::BasicBlock()
 void BasicBlock::accept(IrVisitorBase *v) {
     v->visit(this);
 }
+std::list<BasicBlock *> &BasicBlock::getSuccBasicBlockList() {
+    return _succ_bbs;
+}
+std::list<BasicBlock*>& BasicBlock::getPreBasicBlockList() {
+    return _pre_bbs;
+}
 
 /// IF BLOCK ///
 void IfBlock::addCondBaseBlock(BaseBlock *bb) {

@@ -47,6 +47,8 @@ public:
     void insertInstr(Instruction *pos, Instruction *insertInstr);
     void deleteInstr(Instruction *instr);
     void addPreBasicBlock(BasicBlock *bb);
+    std::list<BasicBlock*>& getPreBasicBlockList();
+    std::list<BasicBlock*>& getSuccBasicBlockList();
     void addSuccBasicBlock(BasicBlock *bb);
     void removePreBasicBlock(BasicBlock *bb);
     void removeSuccBasicBlock(BasicBlock *bb);

@@ -193,7 +193,19 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
           output_file << node->getName() << ":" << std::endl;
         }
         else if(node->getFunction()->getBaseBlocks().empty()&&*(node->getFunction()->getBasicBlocks().cbegin())!=node ){
-          output_file << node->getName() << ":" << std::endl;
+          output_file << node->getName() << ":" ;
+          if(!basic_block->getPreBasicBlockList().empty()){
+              output_file<<"\t\t\t\t\t\t\t\t\t\t;preds =";
+          }
+          int i = 0;
+          for(auto& pred : basic_block->getPreBasicBlockList()){
+              output_file<<pred->getPrintName();
+              i++;
+              if(i!=basic_block->getPreBasicBlockList().size()){
+                  output_file<<", ";
+              }
+          }
+          output_file<<std::endl;
         }
         for (auto &instr: basic_block->getInstructions()) {
             print_tabs();
