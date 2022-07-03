@@ -18,9 +18,9 @@
 #define __ASSERT
 
 #define __DEBUG
-#define __WARN
-#define __TRACE
-#define __INFO
+//#define __WARN
+//#define __TRACE
+//#define __INFO
 
 #ifdef __ASSERT
 #define MyAssert(info, cond)                                           \
@@ -76,6 +76,8 @@
 #define TRACE(format, ...)
 #endif
 
+
+
 enum class LOG_TYPE {
     ERROR,
     DEBUG,
@@ -130,7 +132,8 @@ public:
     explicit logger(const std::string &file_name, LOG_TYPE type, bool to_screen, bool to_file)
         : log_type(type), log_file_name(file_name), to_file(to_file), to_screen(to_screen), print_file_position(false) {
         std::string name = file_name + ".log";
-        f = fopen(name.c_str(), "w+");
+        if(to_file)
+            f = fopen(name.c_str(), "w+");
     }
     explicit logger(const std::string &file_name, LOG_TYPE type, bool to_screen)
         : logger(file_name, type, to_screen, false){};
@@ -210,6 +213,15 @@ public:
 //debug_log test5("errortest");
 //test5.set_caller_position(false);
 //test5.println("hello world");
-
+#define SYSY_BUILDER_
+#ifdef SYSY_BUILDER_
+#define SYSY_BUILDER(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define SYSY_BUILDER(format, ...)
+#endif
 
 #endif// EASYCC_ERROR_H
