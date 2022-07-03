@@ -668,13 +668,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           // variable_list.push_back(inst);
           array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
       }
+      inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
+          InstGen::Reg(register_mapping[src_op1]));
       variable_list.empty();
       variable_list.push_back(val1);
       variable_list.push_back(val2);
       erase_value_mapping(variable_list);
-      inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
-          InstGen::Reg(register_mapping[src_op1]));
-
 
       // const InstGen::Reg size_reg = InstGen::Reg(register_mapping[val1]);
       // int offset = src_op1->getType()->getPointerElementType()->getSize();
