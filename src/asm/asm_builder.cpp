@@ -249,7 +249,7 @@ void AsmBuilder::show_mapping(){
   std::map<Value*, int>::iterator iter2;
   iter2 = stack_mapping.begin();
   while(iter2 != stack_mapping.end()) {
-      std::cout << "STACK sp+" << iter2->second << " : "  << std::endl;
+      std::cout << "STACK sp+" << iter2->second << " : " << iter2->first->getPrintName() << std::endl;
       iter2++;
   }
 }
@@ -287,7 +287,7 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
           MyAssert("nullptr",replace_v!=nullptr);
           set_register(replace_v,reg_index,true);
           // data update
-          alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
+          alloc_reg_asm += InstGen::comment("erase: load edge value"+ replace_v->getPrintName()+ " to reg:"+ std::to_string(reg_index),"");
           alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
 
         }
@@ -475,10 +475,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::list<Value *> variable_list;
     BasicBlock *bb_cur = inst->getParent();
 
-    //维护变量的栈分配
-    int type_size = inst->getType()->getSize();
-    stack_mapping[inst] = stack_cur_size;
-
+    int type_size=0;
+    if(!inst->isAlloca()){
+      //维护变量的栈分配
+      type_size = inst->getType()->getSize();
+      stack_mapping[inst] = stack_cur_size;
+    }
     if (inst->isAdd()) {
       auto src = operands.at(0);
       if (src->isConstant()) {
@@ -730,8 +732,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += InstGen::bl(func_name);
         inst_asm += InstGen::pop(caller_reg_list);
     } else if (inst->isAlloca()) {
+      type_size = inst->getType()->getSize();
+      stack_mapping[inst] = stack_cur_size+type_size;
+
       inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp+" + std::to_string(stack_cur_size),
       " size: "+std::to_string(type_size));
+
+     type_size+=4;
 
       variable_list.push_back(inst);
       inst_asm += update_value_mapping(variable_list);
@@ -766,7 +773,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
 
           //  element_size = src_op->getType()->getPointerElementType()->getSize();
-          if (src_op->getPrintName()[0] == '%') {//不是立即数
+          if (!src_op->isConstant()) {//不是立即数
 
             inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
 
