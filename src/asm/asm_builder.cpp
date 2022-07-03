@@ -629,7 +629,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             // inst_asm += InstGen::mul(InstGen::Reg(register_mapping[val1]),InstGen::Reg(register_mapping[val1]), InstGen::Reg(register_mapping[val2]));
 
             inst_asm += InstGen::mla(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[val1]),
-            InstGen::Reg(register_mapping[val2]), InstGen::Reg(register_mapping[src_op1]));
+            InstGen::Reg(register_mapping[val2]), InstGen::Reg(register_mapping[inst]));
           } else {
             // 邪法
             WARNNING("SRC OP name is: ",src_op->getPrintName().c_str());
@@ -641,6 +641,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           // variable_list.push_back(inst);
           array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
       }
+      inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
+          InstGen::Reg(register_mapping[src_op1]));
+
 
       // const InstGen::Reg size_reg = InstGen::Reg(register_mapping[val1]);
       // int offset = src_op1->getType()->getPointerElementType()->getSize();
