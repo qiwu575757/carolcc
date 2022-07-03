@@ -99,6 +99,16 @@ std::string mvn(const Reg &dst, const Value &src, const CmpOp &cond) {
   return asm_instr;
 }
 
+std::string comment(std::string str1, std::string str2) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += ";";
+  asm_instr += str1;
+  asm_instr += ", ";
+  asm_instr += str2;
+  asm_instr += newline;
+  return asm_instr;
+}
 std::string setValue(const Reg &dst, const Constant &src) {
   std::string asm_instr;
   auto val = src.getValue();

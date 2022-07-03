@@ -150,7 +150,7 @@ public:
   explicit Label(std::string label) : label(label), offset(0) {}
   std::string getName() const { return label + "+" + std::to_string(offset); }
 };
-
+std::string comment(std::string str1, std::string str2);
 std::string condCode(const CmpOp &cond);
 std::string push(const std::vector<Reg> &reg_list);
 std::string pop(const std::vector<Reg> &reg_list);

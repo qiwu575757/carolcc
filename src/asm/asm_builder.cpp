@@ -303,9 +303,11 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         lru_list.emplace_front(*v);
 
                         // data update
-                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
+                        // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-
+                        
+                        alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
+                        
                       }
                       else{
                         int be_replaced_v_offset = stack_mapping[be_replaced_v];
@@ -317,6 +319,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         // data update
                         alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
+                      
+                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
                       }
                       //map update
                       register_mapping.erase(be_replaced_v);
@@ -337,7 +341,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   register_mapping[upd_v]=lru_list.size();
                   lru_list.emplace_front(upd_v);
               }
-              else{
+              else  if(be_replaced_v->getName()[0] != '_'){
                   int be_replaced_v_src = register_mapping[be_replaced_v];// reg
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.emplace_front(upd_v);
@@ -347,6 +351,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   //map update
                   register_mapping.erase(be_replaced_v);
                   register_mapping[upd_v]=be_replaced_v_src;
+                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),"to sp+"+std::to_string(be_replaced_v_dst));
+
               }
           }
           show_mapping();
