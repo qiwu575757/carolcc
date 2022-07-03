@@ -303,10 +303,10 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         lru_list.emplace_front(*v);
 
                         // data update
+                        alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
                         // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
 
-                        alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
 
                       }
                       else{
@@ -317,10 +317,9 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         lru_list.emplace_front(*v);
 
                         // data update
+                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
                         alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-
-                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
                       }
                       //map update
                       register_mapping.erase(be_replaced_v);
@@ -346,12 +345,12 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.emplace_front(upd_v);
 
+                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),"to sp+"+std::to_string(be_replaced_v_dst));
                   // data update
                   alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
                   //map update
                   register_mapping.erase(be_replaced_v);
                   register_mapping[upd_v]=be_replaced_v_src;
-                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),"to sp+"+std::to_string(be_replaced_v_dst));
 
               }
           }
@@ -641,6 +640,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += InstGen::bl(func_name);
         inst_asm += InstGen::pop(caller_reg_list);
     } else if (inst->isAlloca()) {
+      inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp+" + std::to_string(stack_cur_size),
+      " size: "+std::to_string(type_size));
+
       variable_list.push_back(inst);
       inst_asm += update_value_mapping(variable_list);
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
@@ -661,6 +663,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
       // update register
       inst_asm += update_value_mapping(variable_list);
+      inst_asm += InstGen::comment(" gep "+inst->getPrintName()," from " + src_op1->getPrintName());
+
       // init result reg 0
       inst_asm += InstGen::setValue(InstGen::Reg(register_mapping[inst]),InstGen::Constant(0));
       // get operand length
@@ -669,8 +673,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       for(int i = 1; i < operands.size();i++){
           auto src_op = operands.at(i);
           auto element_size = array_ty->getSize();
+
+
           //  element_size = src_op->getType()->getPointerElementType()->getSize();
           if (src_op->getPrintName()[0] == '%') {//不是立即数
+
+            inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
+
             inst_asm += InstGen::setValue(InstGen::Reg(register_mapping[val1]),InstGen::Constant(element_size));
             // inst_asm += InstGen::mul(InstGen::Reg(register_mapping[val1]),InstGen::Reg(register_mapping[val1]), InstGen::Reg(register_mapping[val2]));
 
@@ -678,6 +687,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             InstGen::Reg(register_mapping[val2]), InstGen::Reg(register_mapping[inst]));
           } else if(static_cast<ConstantInt*>(src_op)->getValue()!=0){
             // 邪法
+            inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
+
             WARNNING("SRC OP name is: ",src_op->getPrintName().c_str());
             int offset = static_cast<ConstantInt*>(src_op)->getValue() * element_size;
             inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
