@@ -75,7 +75,7 @@ void HIrPrinter::visit(BaseBlock *node) {
 
 }
 void HIrPrinter::visit(LoadInst *node) {
-    print_left("AllocaInst ",node->getPrintName());
+    print_left("LoadInst ",node->getPrintName());
 }
 void HIrPrinter::visit(ReturnInst *node) {
     print_left("ReturnInst",node->getPrintName());

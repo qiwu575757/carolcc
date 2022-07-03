@@ -257,6 +257,8 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
             ERROR("error type");
         }
     }
+    else
+        output_file<<"void";
     output_file << std::endl;
 }
 void LLVMIrPrinter::visit(UnaryInst *node) {
