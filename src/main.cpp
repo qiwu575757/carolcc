@@ -109,17 +109,17 @@ int main(int argc, char **argv) {
             builder->getModule()->MIRMEMprint(output_file);
     }
 
-//   AsmBuilder asm_builder(builder->getModule(), debug);
-//   std::string asm_code = asm_builder.generate_asm(input_file.c_str());
-//   std::cout<<"################-asm_code-#################"<<std::endl;
-//   std::fflush(0);
-//   std::cout<<asm_code;
-//   std::cout<<"################-asm_code-#################"<<std::endl;
+  AsmBuilder asm_builder(builder->getModule(), debug);
+  std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+  std::cout<<"################-asm_code-#################"<<std::endl;
+  std::fflush(0);
+  std::cout<<asm_code;
+  std::cout<<"################-asm_code-#################"<<std::endl;
 
-//    std::string strFileName = "test.s";
-//    FILE* fs = fopen(strFileName.c_str(), "w+");
-//    fprintf(fs,"%s",asm_code.c_str());
-//    fclose(fs);
+   std::string strFileName = "test.s";
+   FILE* fs = fopen(strFileName.c_str(), "w+");
+   fprintf(fs,"%s",asm_code.c_str());
+   fclose(fs);
 
     return 0;
 }

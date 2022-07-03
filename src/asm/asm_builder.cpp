@@ -243,25 +243,29 @@ void AsmBuilder::show_mapping(){
   for(auto v = lru_list.begin(); v != lru_list.end();v++){
     printf("LRU list %d: %s\n",index++,(*v)->getName().c_str());
   }
-  std::map<Value*, int>::iterator iter;
-  iter = register_mapping.begin();
-  while(iter != register_mapping.end()) {
-      std::cout << "REGISTER " << iter->second << " : " << iter->first->getPrintName() << std::endl;
-      iter++;
+  // std::map<Value*, int>::iterator iter;
+  // iter = register_mapping.begin();
+  // while(iter != register_mapping.end()) {
+  //     std::cout << "REGISTER " << iter->second << " : " << iter->first->getPrintName() << std::endl;
+  //     iter++;
+  // }
+  for(auto& iter:register_mapping){
+      std::cout << "REGISTER " << iter.second << " : " << iter.first->getPrintName() << std::endl;
   }
   std::map<Value*, int>::iterator iter2;
   iter2 = stack_mapping.begin();
   while(iter2 != stack_mapping.end()) {
-      std::cout << "STACK sp+" << iter2->second << " : " << iter2->first->getPrintName() << std::endl;
+      std::cout << "STACK sp+" << iter2->second << " : "  << std::endl;
       iter2++;
   }
 }
 
-void AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
+std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
     std::string alloc_reg_asm;
     /****/
     for(auto ers_v : erase_v){
         printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
+        int reg_index = register_mapping[ers_v];
         // check if value is in list
         if(register_mapping.count(ers_v)==1){
           register_mapping.erase(ers_v);
@@ -269,15 +273,37 @@ void AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
         for(auto v = lru_list.begin(); v != lru_list.end();)
         {
           if((*v)==ers_v){
-            lru_list.erase(v++);
+            ////
+            if(lru_list.size()>reg_num){
+              lru_list.erase(v++);
+              int index=0;
+              Value * replace_v ;
 
+              for(auto v_edge = lru_list.begin(); v_edge != lru_list.end();v_edge++){
+                if(index==reg_num){
+                    replace_v = (*v_edge);
+                    break;
+                }
+                index++;
+              }
+              int replace_v_offset = stack_mapping[replace_v];
+              MyAssert("nullptr",replace_v!=nullptr);
+              register_mapping[replace_v]=reg_index;
+              // data update
+              // alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
+              alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
+              break;
+            }
+            else{
+              lru_list.erase(v++);
+            }
           }
           else{
             v++;
           }
         }
     }
-    return;
+    return alloc_reg_asm;
 }
 
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
@@ -289,16 +315,17 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         int lru_index = 0;
         Value *be_replaced_v;
 
-        if(upd_v->getPrintName().size() > 1 && upd_v->getPrintName()[0] == '%'){
-          printf("update list: %s\n",upd_v->getPrintName().c_str());
+        if(!upd_v->isConstant()){
+          printf("--update list: %s\n",upd_v->getPrintName().c_str());
           for(auto v = lru_list.begin(); v != lru_list.end();){
               if(lru_index==reg_num){
                   be_replaced_v = *v;
               }
               if(upd_v == (*v)){
+                printf("HIT\n");
                   hit_v = true;
                   if(lru_index<=reg_num){ // don't need to split
-                      lru_list.emplace_front(*v);
+                      lru_list.push_front(*v);
                       v=lru_list.erase(v++);
                   }
                   else{ // split
@@ -307,7 +334,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         int used_v_offset = stack_mapping[(*v)];
                         int used_v_dst = be_replaced_v_src;//reg
 
-                        lru_list.emplace_front(*v);
+                        lru_list.push_front(*v);
 
                         // data update
                         alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
@@ -321,7 +348,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         int used_v_offset = stack_mapping[(*v)];
                         int used_v_dst = be_replaced_v_src;//reg
 
-                        lru_list.emplace_front(*v);
+                        lru_list.push_front(*v);
 
                         // data update
                         alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
@@ -330,6 +357,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       }
                       //map update
                       register_mapping.erase(be_replaced_v);
+                      MyAssert("nullptr",*(v));
                       register_mapping[(*v)]=be_replaced_v_src;
                       lru_list.erase(v++);
                   }
@@ -355,28 +383,31 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   }
                   for(int i=0;i<=reg_num;i++){
                     if(register_bits[i]==0){
+                      MyAssert("nullptr",upd_v);
+
                        register_mapping[upd_v]=i;
-                        lru_list.emplace_front(upd_v);
+                        lru_list.push_front(upd_v);
                         break;
                     }
                     else if (register_bits[i]>1)
                     {
-                      ERROR("wrong reg alloc : %d was aloocated for %d times \n",i,register_bits[i]);
+                      // ERROR("wrong reg alloc : %d was aloocated for %d times \n",i,register_bits[i]);
                     }
 
                   }
               }
-              else  if(be_replaced_v->getName()[0] != '_'){
+              else  if(!be_replaced_v->isConstant()){
                   printf(" value %s update value %s\n",upd_v->getPrintName().c_str(),be_replaced_v->getPrintName().c_str());
                   int be_replaced_v_src = register_mapping[be_replaced_v];// reg
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
-                  lru_list.emplace_front(upd_v);
+                  lru_list.push_front(upd_v);
 
                   alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),"to sp+"+std::to_string(be_replaced_v_dst));
                   // data update
                   alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
                   //map update
                   register_mapping.erase(be_replaced_v);
+                  MyAssert("nullptr",upd_v);
                   register_mapping[upd_v]=be_replaced_v_src;
 
               }
@@ -578,7 +609,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
           variable_list.clear();
           variable_list.push_back(val);
-          erase_value_mapping(variable_list);
+          inst_asm += erase_value_mapping(variable_list);
 
         } else{ // 需要存储的值是寄存器
           auto src_op1 = operands.at(0);
@@ -739,7 +770,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.clear();
       variable_list.push_back(val1);
       variable_list.push_back(val2);
-      erase_value_mapping(variable_list);
+      inst_asm +=  erase_value_mapping(variable_list);
 
       // const InstGen::Reg size_reg = InstGen::Reg(register_mapping[val1]);
       // int offset = src_op1->getType()->getPointerElementType()->getSize();

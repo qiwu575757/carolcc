@@ -33,7 +33,10 @@ void Value::removeUse(Value *val, unsigned value_no) {
 
     _user_list.erase(iter);
 }
-
+bool Value::isConstant(){
+        auto constant = dynamic_cast<Constant*>(this);
+        return constant != nullptr;
+}
 std::string Value::getName() {
     return _name;
 }

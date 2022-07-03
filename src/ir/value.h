@@ -18,6 +18,7 @@ private:
 public:
     Value(const std::string &name, Type *type);
     Value(Type *type, const std::string &name);
+    bool isConstant();
     Type* getType() const;
     void addUse(User * user,unsigned value_num);
     void replaceAllUse(Value *new_value); //将对某个值的使用全部替换为新值
