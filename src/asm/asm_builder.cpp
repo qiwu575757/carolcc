@@ -259,7 +259,7 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
     /****/
     for(auto ers_v : erase_v){
         printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
-        int reg_index = register_mapping[ers_v];
+        int reg_index = find_register(ers_v);
         // check if value is in list
         if(register_mapping.count(ers_v)==1){
           register_mapping.erase(ers_v);
@@ -282,7 +282,7 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
               }
               int replace_v_offset = stack_mapping[replace_v];
               MyAssert("nullptr",replace_v!=nullptr);
-              register_mapping[replace_v]=reg_index;
+              set_register(replace_v,reg_index);
               // data update
               alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
               alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
@@ -323,7 +323,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       v=lru_list.erase(v++);
                   }
                   else{ // split
-                      int be_replaced_v_src = register_mapping[be_replaced_v];// reg
+                      int be_replaced_v_src = find_register(be_replaced_v);// reg
                       if(be_replaced_v->getName()[0] == '_'){
                         int used_v_offset = stack_mapping[(*v)];
                         int used_v_dst = be_replaced_v_src;//reg
@@ -352,7 +352,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       //map update
                       register_mapping.erase(be_replaced_v);
                       MyAssert("nullptr",*(v));
-                      register_mapping[(*v)]=be_replaced_v_src;
+                      set_register((*v),be_replaced_v_src);
                       lru_list.erase(v++);
                   }
 
