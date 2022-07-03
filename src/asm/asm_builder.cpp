@@ -283,13 +283,16 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
             }
             index++;
           }
-          int replace_v_offset = stack_mapping[replace_v];
-          MyAssert("nullptr",replace_v!=nullptr);
-          set_register(replace_v,reg_index,true);
-          // data update
-          alloc_reg_asm += InstGen::comment("erase: load edge value"+ replace_v->getPrintName()+ " to reg:"+ std::to_string(reg_index),"");
-          alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
+          if(register_mapping.count(replace_v)==0){
 
+            int replace_v_offset = stack_mapping[replace_v];
+            MyAssert("nullptr",replace_v!=nullptr);
+            set_register(replace_v,reg_index,true);
+            // data update
+            alloc_reg_asm += InstGen::comment("erase: load edge value"+ replace_v->getPrintName()+ " to reg:"+ std::to_string(reg_index),"");
+            alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
+
+          }
         }
 
         // check if value is in list
@@ -382,12 +385,13 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       MyAssert("nullptr",upd_v);
 
                        set_register(upd_v,i,true);
+                       alloc_reg_asm += InstGen::comment("alloc "+upd_v->getPrintName()+" to reg "+std::to_string(i),"");
                         lru_list.push_front(upd_v);
                         break;
                     }
                     else if (register_bits[i]>1)
                     {
-                      // ERROR("wrong reg alloc : %d was aloocated for %d times \n",i,register_bits[i]);
+                      ERROR("wrong reg alloc : %d was allocated for %d times \n",i,register_bits[i]);
                     }
 
                   }
@@ -415,7 +419,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
           show_mapping();
         }
         else{
-          // WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
+          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
         }
 
 
