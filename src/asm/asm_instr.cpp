@@ -710,7 +710,6 @@ std::string ret(const Value &src) {
   InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
   asm_instr += mov(target_reg,src, cmpop);
 
-
   return asm_instr;
 }
 

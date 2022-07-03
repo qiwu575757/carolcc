@@ -272,15 +272,28 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   }
                   else{ // split
                       int be_replaced_v_src = register_mapping[be_replaced_v];// reg
-                      int be_replaced_v_offset = stack_mapping[be_replaced_v];
-                      int used_v_offset = stack_mapping[(*v)];
-                      int used_v_dst = be_replaced_v_src;//reg
+                      if(be_replaced_v->getName()[0] == '_'){
+                        int used_v_offset = stack_mapping[(*v)];
+                        int used_v_dst = be_replaced_v_src;//reg
 
-                      lru_list.emplace_front(*v);
+                        lru_list.emplace_front(*v);
 
-                      // data update
-                      alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
-                      alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
+                        // data update
+                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
+                        alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
+
+                      }
+                      else{
+                        int be_replaced_v_offset = stack_mapping[be_replaced_v];
+                        int used_v_offset = stack_mapping[(*v)];
+                        int used_v_dst = be_replaced_v_src;//reg
+
+                        lru_list.emplace_front(*v);
+
+                        // data update
+                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
+                        alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
+                      }
                       //map update
                       register_mapping.erase(be_replaced_v);
                       register_mapping[(*v)]=be_replaced_v_src;
@@ -302,12 +315,11 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
               }
               else{
                   int be_replaced_v_src = register_mapping[be_replaced_v];// reg
-                  int be_replaced_v_dst = stoi(be_replaced_v->getName());//stack
-
+                  int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.emplace_front(upd_v);
 
                   // data update
-                  alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst<<2));
+                  alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
                   //map update
                   register_mapping.erase(be_replaced_v);
                   register_mapping[upd_v]=be_replaced_v_src;
@@ -506,8 +518,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             auto src_op1 = operands.at(0);
             variable_list.push_back(src_op1);
             inst_asm += update_value_mapping(variable_list);
-            const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
-            inst_asm += InstGen::ret(src_reg1);
+            if (register_mapping[src_op1] != 0) {//如果源寄存器就是r0，就无需mov
+              const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
+              inst_asm += InstGen::ret(src_reg1);
+            }
           }
     } else if (inst->isCmp()) {
         if (operands.size() == 1){
@@ -585,7 +599,65 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
       stack_cur_size += type_size;
-    } else {
+    } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
+      // new register variable_list.push_back(inst);
+      variable_list.push_back(inst);
+      auto src_op1 = operands.at(0);
+      variable_list.push_back(src_op1);
+
+      const std::string reg_name1 = "_imm_"+std::to_string(key++);
+      Value * val1 = new Value(Type::getInt32Ty(), reg_name1);
+      variable_list.push_back(val1);
+
+      const std::string reg_name2 = "_imm_"+std::to_string(key++);
+      Value * val2 = new Value(Type::getInt32Ty(), reg_name2);
+      variable_list.push_back(val2);
+
+      // update register
+      inst_asm += update_value_mapping(variable_list);
+      // init result reg 0
+      inst_asm += InstGen::setValue(InstGen::Reg(register_mapping[inst]),InstGen::Constant(0));
+      // get operand length
+      //
+      auto array_ty = src_op1->getType()->getPointerElementType();
+      for(int i = 1; i < operands.size();i++){
+          auto src_op = operands.at(i);
+          auto element_size = array_ty->getSize();
+          //  element_size = src_op->getType()->getPointerElementType()->getSize();
+          if (src_op->getPrintName()[0] == '%') {//不是立即数
+            inst_asm += InstGen::setValue(InstGen::Reg(register_mapping[val1]),InstGen::Constant(element_size));
+            // inst_asm += InstGen::mul(InstGen::Reg(register_mapping[val1]),InstGen::Reg(register_mapping[val1]), InstGen::Reg(register_mapping[val2]));
+
+            inst_asm += InstGen::mla(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[val1]),
+            InstGen::Reg(register_mapping[val2]), InstGen::Reg(register_mapping[src_op1]));
+          } else {
+            // 邪法
+            WARNNING("SRC OP name is: ",src_op->getPrintName().c_str());
+            int offset = static_cast<ConstantInt*>(src_op)->getValue() * element_size;
+            inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
+            InstGen::Constant(offset));
+            // variable_list.push_back(src_op2);
+          }
+          // variable_list.push_back(inst);
+          array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
+      }
+
+      // const InstGen::Reg size_reg = InstGen::Reg(register_mapping[val1]);
+      // int offset = src_op1->getType()->getPointerElementType()->getSize();
+      // inst_asm += InstGen::setValue(size_reg,InstGen::Constant(offset));
+      // const InstGen::Reg base_reg = InstGen::Reg(register_mapping[src_op1]);
+      // if (src_op2->getPrintName()[0] != '%') {//立即数
+      //   const InstGen::Reg dem_reg = InstGen::Reg(register_mapping[val2]);
+      //   const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+
+      //   inst_asm += InstGen::mla(target_reg,size_reg,dem_reg, base_reg);
+      // } else {
+      //   const InstGen::Reg dem_reg = InstGen::Reg(register_mapping[src_op2]);
+      //   const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+
+      //   inst_asm += InstGen::mla(target_reg,size_reg,dem_reg, base_reg);
+      }
+     else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
