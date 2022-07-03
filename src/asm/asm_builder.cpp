@@ -1,6 +1,7 @@
 #include "asm_builder.h"
 #include "asm_instr.h"
 #include "utils.h"
+#include <memory.h>
 
 int key = 0;//给需要的立即数标号
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
@@ -240,13 +241,19 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
 void AsmBuilder::show_mapping(){
   int index = 0;
   for(auto v = lru_list.begin(); v != lru_list.end();v++){
-    printf("\tLRU list %d: %s\n",index++,(*v)->getName().c_str());
+    printf("LRU list %d: %s\n",index++,(*v)->getName().c_str());
   }
   std::map<Value*, int>::iterator iter;
   iter = register_mapping.begin();
   while(iter != register_mapping.end()) {
-      std::cout << "R " << iter->second << " : " << iter->first->getPrintName() << std::endl;
+      std::cout << "REGISTER " << iter->second << " : " << iter->first->getPrintName() << std::endl;
       iter++;
+  }
+  std::map<Value*, int>::iterator iter2;
+  iter2 = stack_mapping.begin();
+  while(iter2 != stack_mapping.end()) {
+      std::cout << "STACK sp+" << iter2->second << " : " << iter2->first->getPrintName() << std::endl;
+      iter2++;
   }
 }
 
@@ -336,11 +343,31 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
           }
 
           if(! hit_v){ //first time
-              if(lru_list.size()<=reg_num){
-                  register_mapping[upd_v]=lru_list.size();
-                  lru_list.emplace_front(upd_v);
+
+              if(register_mapping.size()<=reg_num){
+                  int register_bits[reg_num+1];
+                  memset(register_bits,0,sizeof(register_bits));
+                  std::map<Value*, int>::iterator iter;
+                  iter = register_mapping.begin();
+                  while(iter != register_mapping.end()) {
+                    register_bits[ iter->second] +=1;
+                    iter++;
+                  }
+                  for(int i=0;i<=reg_num;i++){
+                    if(register_bits[i]==0){
+                       register_mapping[upd_v]=i;
+                        lru_list.emplace_front(upd_v);
+                        break;
+                    }
+                    else if (register_bits[i]>1)
+                    {
+                      ERROR("wrong reg alloc : %d was aloocated for %d times \n",i,register_bits[i]);
+                    }
+
+                  }
               }
               else  if(be_replaced_v->getName()[0] != '_'){
+                  printf(" value %s update value %s\n",upd_v->getPrintName().c_str(),be_replaced_v->getPrintName().c_str());
                   int be_replaced_v_src = register_mapping[be_replaced_v];// reg
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.emplace_front(upd_v);
@@ -352,6 +379,9 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   register_mapping.erase(be_replaced_v);
                   register_mapping[upd_v]=be_replaced_v_src;
 
+              }
+              else{
+                  ERROR(" wrong in reg alloc !");
               }
           }
           show_mapping();
@@ -403,6 +433,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         auto src_op2 = operands.at(1);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
+
+        inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
+
         const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
         const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
         inst_asm += InstGen::add(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
@@ -413,6 +446,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         variable_list.push_back(src_op2);
         variable_list.push_back(inst);
         inst_asm += update_value_mapping(variable_list);
+
+        inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
+
         const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
         const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
         const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
@@ -535,7 +571,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
 
 
-          inst_asm +=  InstGen::comment(src_reg1.getName()+" store to "+src_op1->getPrintName().c_str(), "");
+          inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
           InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
           inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
@@ -553,7 +589,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
 
-          inst_asm +=  InstGen::comment(src_op1->getPrintName()+" store to "+src_op2->getPrintName().c_str(), "");
+          inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
         }
     } else if (inst->isRet()) {
