@@ -386,6 +386,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::list<Value *> variable_list;
     BasicBlock *bb_cur = inst->getParent();
 
+    //维护变量的栈分配
+    int type_size = inst->getType()->getSize();
+    stack_mapping[inst] = stack_cur_size;
+
     if (inst->isAdd()) {
       auto src = operands.at(0);
       if (src->getPrintName()[0] != '%') {
@@ -621,13 +625,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += InstGen::bl(func_name);
         inst_asm += InstGen::pop(caller_reg_list);
     } else if (inst->isAlloca()) {
-      int type_size = inst->getType()->getSize();
-      stack_mapping[inst] = stack_cur_size;
       variable_list.push_back(inst);
       inst_asm += update_value_mapping(variable_list);
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
-      stack_cur_size += type_size;
     } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
       // new register variable_list.push_back(inst);
       variable_list.push_back(inst);
@@ -695,6 +696,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
      else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
+
+    stack_cur_size += type_size;
+
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;
 }
