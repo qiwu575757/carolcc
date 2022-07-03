@@ -240,7 +240,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
     // pop (save register and pc)
     std::vector<InstGen::Reg> callee_reg_list;
     for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
-    callee_reg_list.push_back(InstGen::pc);
+    callee_reg_list.push_back(InstGen::lr);
     func_tail_code += InstGen::pop(callee_reg_list);
     func_tail_code += InstGen::spaces+"bx  lr " + InstGen::newline;
 
@@ -393,7 +393,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       MyAssert("nullptr",upd_v);
 
                        set_register(upd_v,i,true);
-                       alloc_reg_asm += InstGen::comment("alloc "+upd_v->getPrintName()+" to reg "+std::to_string(i),"");
+                       alloc_reg_asm += InstGen::comment("LRU: alloc "+upd_v->getPrintName()+" to reg "+std::to_string(i),"");
                         lru_list.push_front(upd_v);
                         break;
                     }
@@ -487,21 +487,31 @@ int AsmBuilder::find_register(Value *v,std::string &code){
     ERROR(" value is nullptr");
   }
   if(register_mapping.count(v)){
+    if(global){
+      std::list<Value *> variable_list;
+      const std::string reg_name = ".LCPI_"+v->getName();
+      variable_list.push_back(v);
+      update_value_mapping(variable_list);
+
+      code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
+      return register_mapping[v];
+    }
     v->getPrintName();
+
     return register_mapping[v];
   }else{
     if(global){
       std::list<Value *> variable_list;
-      const std::string reg_name = "_imm_"+std::to_string(key++);
-      Value * val = new Value(Type::getInt32Ty(), reg_name);
-      variable_list.push_back(val);
+      const std::string reg_name = ".LCPI_"+v->getName();
+      variable_list.push_back(v);
       update_value_mapping(variable_list);
-      code += InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
-      code += erase_value_mapping(variable_list);
-      code += v->getPrintName();
+
+      code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
       return register_mapping[v];
     }
-    ERROR(" not find v in register! %s",v->getPrintName().c_str());
+    else {
+      ERROR(" not find v in register! %s",v->getPrintName().c_str());
+    }
   }
 }
 
@@ -850,19 +860,30 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             offset+=4;
         }
         inst_asm += InstGen::bl(func_name);
+
+        stack_mapping[inst]=return_offset;
+        inst_asm += InstGen::str(InstGen::Reg(0),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+
         inst_asm += InstGen::pop(caller_reg_list);
+
+        variable_list.push_back(inst);
+
+        inst_asm += update_value_mapping(variable_list);
+        inst_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+
     } else if (inst->isAlloca()) {
       type_size = inst->getType()->getSize();
       stack_mapping[inst] = stack_cur_size+type_size;
 
-      inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp+" + std::to_string(stack_cur_size),
-      " size: "+std::to_string(type_size));
 
-     type_size+=4;
+      type_size+=4;
 
       variable_list.push_back(inst);
       inst_asm += update_value_mapping(variable_list);
+
       const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp+" + std::to_string(stack_cur_size),
+      " size: "+std::to_string(type_size));
       inst_asm += register_str;
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
     } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
@@ -884,9 +905,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += InstGen::comment(" gep "+inst->getPrintName()," from " + src_op1->getPrintName());
 
       // init result reg 0
-      inst_asm += InstGen::setValue(InstGen::Reg(find_register(inst,register_str)),InstGen::Constant(0));
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
       inst_asm += register_str;
-      register_str = "";
+      inst_asm += InstGen::setValue(target_reg,InstGen::Constant(0));
       // get operand length
       //
       auto array_ty = src_op1->getType()->getPointerElementType();
