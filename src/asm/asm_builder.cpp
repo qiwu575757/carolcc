@@ -339,7 +339,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
 
-
+                        
                       }
                       else{
                         int be_replaced_v_offset = stack_mapping[be_replaced_v];
@@ -350,7 +350,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
 
                         // data update
                         alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
-                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
+                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
                       }
                       //map update
