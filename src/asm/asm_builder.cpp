@@ -254,14 +254,16 @@ void AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
     std::string alloc_reg_asm;
     /****/
     for(auto ers_v : erase_v){
+        printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
         // check if value is in list
-        if(register_mapping.count(ers_v)){
+        if(register_mapping.count(ers_v)==1){
           register_mapping.erase(ers_v);
         }
         for(auto v = lru_list.begin(); v != lru_list.end();)
         {
           if((*v)==ers_v){
             lru_list.erase(v++);
+
           }
           else{
             v++;
@@ -523,7 +525,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
 
-          variable_list.empty();
+          variable_list.clear();
           variable_list.push_back(val);
           erase_value_mapping(variable_list);
 
@@ -670,7 +672,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       }
       inst_asm += InstGen::add(InstGen::Reg(register_mapping[inst]),InstGen::Reg(register_mapping[inst]),
           InstGen::Reg(register_mapping[src_op1]));
-      variable_list.empty();
+      variable_list.clear();
       variable_list.push_back(val1);
       variable_list.push_back(val2);
       erase_value_mapping(variable_list);
