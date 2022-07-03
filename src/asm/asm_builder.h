@@ -75,7 +75,7 @@ public:
   }
   ~AsmBuilder() {}
   int find_register(Value *v);
-  void set_register(Value *v,int data);
+  void set_register(Value *v,int data,bool init);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);
@@ -85,7 +85,7 @@ public:
   std::string generate_function_exit_code(Function *func);
   /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *>update_v);
-  std::string erase_value_mapping(std::list<Value*> erase_v);
+  std::string erase_value_mapping(std::list<Value*>& erase_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);

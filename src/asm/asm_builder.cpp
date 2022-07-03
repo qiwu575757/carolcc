@@ -254,48 +254,48 @@ void AsmBuilder::show_mapping(){
   }
 }
 
-std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
+std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
     std::string alloc_reg_asm;
     /****/
     for(auto ers_v : erase_v){
         printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
         int reg_index = find_register(ers_v);
-        // check if value is in list
-        if(register_mapping.count(ers_v)==1){
-          auto iter = register_mapping.find(ers_v);
-          register_mapping.erase(iter);
-        }
         for(auto v = lru_list.begin(); v != lru_list.end();)
         {
           if((*v)==ers_v){
             ////
-            if(lru_list.size()>reg_num){
               lru_list.erase(v++);
-              int index=0;
-              Value * replace_v ;
-
-              for(auto v_edge = lru_list.begin(); v_edge != lru_list.end();v_edge++){
-                if(index==reg_num){
-                    replace_v = (*v_edge);
-                    break;
-                }
-                index++;
-              }
-              int replace_v_offset = stack_mapping[replace_v];
-              MyAssert("nullptr",replace_v!=nullptr);
-              set_register(replace_v,reg_index);
-              // data update
-              alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
-              alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
-              break;
-            }
-            else{
-              lru_list.erase(v++);
-            }
+            break;
           }
           else{
             v++;
           }
+        }
+
+        if(lru_list.size()>reg_num-1){
+          int index=0;
+          Value * replace_v ;
+
+          for(auto v_edge = lru_list.begin(); v_edge != lru_list.end();v_edge++){
+            if(index==reg_num-1){
+                replace_v = (*v_edge);
+                break;
+            }
+            index++;
+          }
+          int replace_v_offset = stack_mapping[replace_v];
+          MyAssert("nullptr",replace_v!=nullptr);
+          set_register(replace_v,reg_index,true);
+          // data update
+          alloc_reg_asm += InstGen::comment("erase: load edge value to reg ","");
+          alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
+
+        }
+
+        // check if value is in list
+        if(register_mapping.count(ers_v)==1){
+          auto iter = register_mapping.find(ers_v);
+          register_mapping.erase(iter);
         }
     }
     return alloc_reg_asm;
@@ -354,7 +354,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                       auto iter = register_mapping.find(be_replaced_v);
                       register_mapping.erase(iter);
                       MyAssert("nullptr",*(v));
-                      set_register((*v),be_replaced_v_src);
+                      set_register((*v),be_replaced_v_src,true);
                       lru_list.erase(v++);
                   }
 
@@ -381,7 +381,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                     if(register_bits[i]==0){
                       MyAssert("nullptr",upd_v);
 
-                       set_register(upd_v,i);
+                       set_register(upd_v,i,true);
                         lru_list.push_front(upd_v);
                         break;
                     }
@@ -405,7 +405,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   auto iter = register_mapping.find(be_replaced_v);
                   register_mapping.erase(be_replaced_v);
                   MyAssert("nullptr",upd_v);
-                  set_register(upd_v,be_replaced_v_src);
+                  set_register(upd_v,be_replaced_v_src,true);
 
               }
               else{
@@ -415,7 +415,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
           show_mapping();
         }
         else{
-          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
+          // WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
         }
 
 
@@ -447,20 +447,25 @@ int AsmBuilder::find_register(Value *v){
     ERROR(" value is nullptr");
   }
   if(register_mapping.count(v)){
+    v->getPrintName();
     return register_mapping[v];
   }else{
-    ERROR(" not find v in register!");
+    ERROR(" not find v in register! %s",v->getPrintName().c_str());
   }
 }
 
-void AsmBuilder::set_register(Value *v,int data){
+void AsmBuilder::set_register(Value *v,int data,bool init){
   if(v==nullptr){
     ERROR(" value is nullptr");
   }
   if(register_mapping.count(v)){
-    ERROR(" not find v in register!");
-  }else{
+    v->getPrintName();
     register_mapping[v]=data;
+  }else if(init){
+    register_mapping[v]=data;
+  }
+  else{
+    ERROR(" not init and not find v in register! %s",v->getPrintName().c_str());
   }
 }
 
