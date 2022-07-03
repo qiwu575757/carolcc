@@ -91,6 +91,7 @@ public:
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
   std::string generate_global_vars();
+  std::string generate_use_of_global_vars();
   std::string generate_initializer(Constant *init);
   std::pair<int, bool> get_const_val(Value *val);
   std::string generateInstructionCode(Instruction *inst);

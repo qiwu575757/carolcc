@@ -42,11 +42,19 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
 }
 std::string AsmBuilder::generate_module_tail(){
     std::string module_tail_code;
-    module_tail_code += InstGen::spaces + ".data" + InstGen::newline;
+    module_tail_code += generate_use_of_global_vars();
+    module_tail_code += ".data" + InstGen::newline;
     module_tail_code += AsmBuilder::generate_global_vars();
     return module_tail_code;
 }
-
+std::string AsmBuilder::generate_use_of_global_vars() {
+  std::string asm_code;
+  for (auto &global_var : this->module->getGlobalVariables()) {
+    asm_code += ".LCPI_"+global_var->getName() + ":" + InstGen::newline;
+    asm_code += InstGen::spaces+".long "+global_var->getName() + InstGen::newline;
+  }
+  return asm_code;
+}
 std::string AsmBuilder::generate_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
@@ -313,7 +321,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         int lru_index = 0;
         Value *be_replaced_v;
 
-        if(!upd_v->isConstant()){
+        if(true){
           printf("--update list: %s\n",upd_v->getPrintName().c_str());
           for(auto v = lru_list.begin(); v != lru_list.end();){
               if(lru_index==reg_num){
@@ -419,7 +427,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
           show_mapping();
         }
         else{
-          WARNNING("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
+          ERROR("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
         }
 
 
@@ -447,6 +455,8 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
 }
 
 int AsmBuilder::find_register(Value *v){
+  auto global = dynamic_cast<GlobalVariable *>(v);
+
   if(v==nullptr){
     ERROR(" value is nullptr");
   }
@@ -454,6 +464,18 @@ int AsmBuilder::find_register(Value *v){
     v->getPrintName();
     return register_mapping[v];
   }else{
+    if(global){
+      std::list<Value *> variable_list;
+      const std::string reg_name = "._LCPI"+v->getName();
+      Constant * val = new Constant(Type::getInt32Ty(), reg_name);
+      variable_list.push_back(val);
+      update_value_mapping(variable_list);
+      InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
+      erase_value_mapping(variable_list);
+      v->getPrintName();
+      WARNNING("GLOBAL VALUE NEED CONVERT!");
+      return register_mapping[v];
+    }
     ERROR(" not find v in register! %s",v->getPrintName().c_str());
   }
 }
@@ -465,18 +487,20 @@ int AsmBuilder::find_register(Value *v,std::string &code){
     ERROR(" value is nullptr");
   }
   if(register_mapping.count(v)){
-    if(global){
-      const std::string reg_name = "_imm_"+std::to_string(key++);
-      Constant * val = new Constant(Type::getInt32Ty(), reg_name);
-      update_value_mapping({val});
-      code = InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label(""));
-
-      v->getPrintName();
-      return register_mapping[v];
-    }
     v->getPrintName();
     return register_mapping[v];
   }else{
+    if(global){
+      std::list<Value *> variable_list;
+      const std::string reg_name = "_imm_"+std::to_string(key++);
+      Value * val = new Value(Type::getInt32Ty(), reg_name);
+      variable_list.push_back(val);
+      update_value_mapping(variable_list);
+      code += InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
+      code += erase_value_mapping(variable_list);
+      code += v->getPrintName();
+      return register_mapping[v];
+    }
     ERROR(" not find v in register! %s",v->getPrintName().c_str());
   }
 }
