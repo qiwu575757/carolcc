@@ -146,6 +146,5 @@ bool HighIRsimplyCFG::MergeBasicBlock(BasicBlock *bb, BaseBlock *nextbb) {
   } else {
     return false;
   }
-
   return false;
 }

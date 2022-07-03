@@ -17,10 +17,10 @@ public:
   MirSimplifyCFG(Module *m, const std::string &name) : Transform(m,name) {}
   ~MirSimplifyCFG(){};
   void run() override;
-  void RemoveNoPredecessorBB();
-  void MergeSinglePredecessorBB();
+  void RemoveNoPredecessorBaseBlocks();
+  void MergeSinglePredecessorBaseBlocks();
   void EliminateSinglePredecessorPhi();
-  void EliminateSingleUnCondBrBB();
-  void RemoveSelfLoopBB();
+  void EliminateSingleUnCondBrBaseBlocks();
+  void RemoveSelfLoopBaseBlocks();
 };
 #endif

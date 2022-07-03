@@ -4,6 +4,12 @@
 std::list<Instruction *> &BasicBlock::getInstructions() {
     return this->_instructions;
 }
+std::list<BasicBlock *>  &BasicBlock::getPreBasicBlocks() { 
+    return _pre_bbs; 
+}
+std::list<BasicBlock *>  &BasicBlock::getSuccBasicBlocks() {
+    return _succ_bbs; 
+}
 BasicBlock *BasicBlock::create(const std::string &name, Function *func) {
     return new BasicBlock(name,func);
 }
@@ -104,6 +110,7 @@ BasicBlock::BasicBlock(const std::string &name)
 BasicBlock::BasicBlock()
 : BasicBlock("", nullptr){
 }
+
 void BasicBlock::accept(IrVisitorBase *v) {
     v->visit(this);
 }
