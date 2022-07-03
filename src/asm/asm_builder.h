@@ -75,6 +75,7 @@ public:
   }
   ~AsmBuilder() {}
   int find_register(Value *v);
+  int find_register(Value *v,std::string &code);
   void set_register(Value *v,int data,bool init);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);

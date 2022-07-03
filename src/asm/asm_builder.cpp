@@ -458,6 +458,29 @@ int AsmBuilder::find_register(Value *v){
   }
 }
 
+int AsmBuilder::find_register(Value *v,std::string &code){
+  auto global = dynamic_cast<GlobalVariable *>(v);
+  
+  if(v==nullptr){
+    ERROR(" value is nullptr");
+  }
+  if(register_mapping.count(v)){
+    if(global){
+      const std::string reg_name = "_imm_"+std::to_string(key++);
+      Constant * val = new Constant(Type::getInt32Ty(), reg_name);
+      update_value_mapping({val});
+      code = InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label(""));
+
+      v->getPrintName();
+      return register_mapping[v];
+    }
+    v->getPrintName();
+    return register_mapping[v];
+  }else{
+    ERROR(" not find v in register! %s",v->getPrintName().c_str());
+  }
+}
+
 void AsmBuilder::set_register(Value *v,int data,bool init){
   if(v==nullptr){
     ERROR(" value is nullptr");
