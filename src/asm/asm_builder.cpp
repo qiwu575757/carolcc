@@ -305,9 +305,9 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         // data update
                         // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-                        
+
                         alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
-                        
+
                       }
                       else{
                         int be_replaced_v_offset = stack_mapping[be_replaced_v];
@@ -319,7 +319,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         // data update
                         alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-                      
+
                         alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
                       }
                       //map update
@@ -514,9 +514,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
       variable_list.push_back(inst);
+
       inst_asm += update_value_mapping(variable_list);
       const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
       const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+
+      inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op1->getPrintName().c_str(), "");
       inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
     } else if (inst->isStore()) {
         auto src = operands.at(0);
@@ -531,6 +534,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[val]);
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
           // const InstGen::Reg target_reg = InstGen::Reg(register_mapping[inst]);
+
+
+          inst_asm +=  InstGen::comment(src_reg1.getName()+" store to "+src_op1->getPrintName().c_str(), "");
           InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
           inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
@@ -547,6 +553,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst_asm += update_value_mapping(variable_list);
           const InstGen::Reg src_reg1 = InstGen::Reg(register_mapping[src_op1]);
           const InstGen::Reg src_reg2 = InstGen::Reg(register_mapping[src_op2]);
+
+          inst_asm +=  InstGen::comment(src_op1->getPrintName()+" store to "+src_op2->getPrintName().c_str(), "");
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
         }
     } else if (inst->isRet()) {
@@ -624,6 +632,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         std::string func_name = operands.at(0)->getName();
         std::vector<Value *> args(operands.begin() + 1, operands.end());
         int offset = 0;
+
+        inst_asm += InstGen::comment(" call "+func_name, "");
         for(auto arg:args){
             inst_asm += InstGen::str(InstGen::sp,InstGen::Addr(InstGen::sp,offset));
             offset+=4;
