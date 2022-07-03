@@ -262,7 +262,8 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*> erase_v){
         int reg_index = find_register(ers_v);
         // check if value is in list
         if(register_mapping.count(ers_v)==1){
-          register_mapping.erase(ers_v);
+          auto iter = register_mapping.find(ers_v);
+          register_mapping.erase(iter);
         }
         for(auto v = lru_list.begin(); v != lru_list.end();)
         {
@@ -350,7 +351,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
                       }
                       //map update
-                      register_mapping.erase(be_replaced_v);
+                      auto iter = register_mapping.find(be_replaced_v);
+                      register_mapping.erase(iter);
                       MyAssert("nullptr",*(v));
                       set_register((*v),be_replaced_v_src);
                       lru_list.erase(v++);
@@ -400,6 +402,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   // data update
                   alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
                   //map update
+                  auto iter = register_mapping.find(be_replaced_v);
                   register_mapping.erase(be_replaced_v);
                   MyAssert("nullptr",upd_v);
                   set_register(upd_v,be_replaced_v_src);
