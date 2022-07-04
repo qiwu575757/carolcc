@@ -11,7 +11,7 @@ protected:
     Module *_m;
 
 public:
-    pass(Module *m, const std::string &name) : _m(m), _name(name){};
+    pass(Module *m, const std::string &name) : _name(name), _m(m){};
     void set_name(std::string &name) {
         _name = name;
     }

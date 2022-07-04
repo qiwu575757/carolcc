@@ -28,5 +28,6 @@ public:
     virtual void visit(ConstantInt *node) = 0;
     virtual void visit(ConstantFloat *node) = 0;
     virtual void visit(ConstantArray *node) = 0;
+    virtual void visit(PhiInstr *node) = 0;
 };
 #endif//COMPILER_IR_VISITOR_BASE_H

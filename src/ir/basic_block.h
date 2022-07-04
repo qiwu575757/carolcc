@@ -27,9 +27,22 @@ public:
     std::list<BasicBlock *> _pre_bbs;
     std::list<BasicBlock *> _succ_bbs;
     std::set<BasicBlock *> _doms;// dominance set
-    BaseBlock *_idom = nullptr;
-    std::set<BaseBlock *> _dom_frontier;
-    std::set<BaseBlock *> _dom_tree_succ_blocks;
+
+    std::set<BasicBlock *> _dom_tree_succ_blocks;// dominance set
+    std::set<BasicBlock *> _dom_frontier;// dominance set
+
+    void addDomFrontier(BasicBlock* bb){_dom_frontier.insert(bb);}
+    std::set<BasicBlock*>& getDomFrontier(){return _dom_frontier;}
+
+    void addDomTreeSucc(BasicBlock* bb){_dom_tree_succ_blocks.insert(bb);}
+    std::set<BasicBlock*>& getDomTreeSucc(){return _dom_tree_succ_blocks;}
+
+    void addDom(BasicBlock* bb){_doms.insert(bb);}
+    std::set<BasicBlock*>& getDoms(){return _doms;}
+
+    BasicBlock *_idom = nullptr;
+    void setIDom(BasicBlock* idom){_idom = idom;}
+    BasicBlock* getIDom(){return _idom;}
     std::list<Instruction *> _instructions;
     std::unordered_set<Value *> _active_in, _active_out, _defined_vals; /*活跃变量进入，活跃变量输出，本模块定义的变量*/
     std::unordered_map<Value *, BasicBlock *> _inherited_vals;          /*继承莫个基本块的变量*/
