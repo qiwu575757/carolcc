@@ -21,6 +21,7 @@ public:
      * @param v  具体的参数
      */
     void setOperand(unsigned no, Value *v);
+    void addOperand( Value *v);
     Value *getOperand(unsigned no) const;
     std::vector<Value*>& getOperandList(){return _operands_list;}
     unsigned getOperandNumber() const { return _use_number; };
