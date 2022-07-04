@@ -13,7 +13,8 @@ Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_
     if(_parent== nullptr){
         WARNNING("null parent" );
     }
-    _parent->addInstr(this);
+    if(_parent!=nullptr)
+        _parent->addInstr(this);
 }
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums)
     : Instruction(type, op_id, op_nums, nullptr)
@@ -508,11 +509,12 @@ void HIR::accept(IrVisitorBase *v)
 }
 PhiInstr::PhiInstr(Type *ty, std::vector<Value *> vals,
                    std::vector<BasicBlock *> val_bbs, BasicBlock *parent)
-: Instruction(ty,Instruction::PHI,2*vals.size()+1){
+: Instruction(ty,Instruction::PHI,2*vals.size()){
     parent->getInstructions().push_front(this);
     for(int i=0;i<vals.size();i++){
         setOperand(2*i,vals[i]);
         setOperand(2*i+1,val_bbs[i]);
     }
 }
-PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) { return new PhiInstr(ty, {},{},bb); }
+PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) { return new PhiInstr(ty,0,bb); }
+void PhiInstr::accept(IrVisitorBase *v) { v->visit(this); }

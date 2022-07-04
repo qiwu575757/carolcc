@@ -13,19 +13,24 @@ Type *Value::getType() const{
 }
 
 void Value::replaceAllUse(Value *new_val) {
+    printf("[repalce all user of %s]\n",this->getPrintName().c_str());
+    if(new_val )
+        printf("new val %s\n",new_val->getPrintName().c_str());
     for (auto use : _user_list) {
         auto user = dynamic_cast<User *>(use->_user);
+        printf(" user %s  argnum: %d \n",user->getPrintName().c_str(),use->_value_no);
         user->setOperand(use->_value_no, new_val);
     }
     this->_user_list.clear();
 }
 
-void Value::removeUse(Value *val, unsigned value_no) {
+void Value::removeUse(Value *user, unsigned value_no) {
     Use *remove_use;
     for (auto use : _user_list) {
         // 这里需要检查
-        if (use->_user == val)
+        if (use->_user == user)
         {
+            MyAssert("error ",use->_value_no == value_no);
             remove_use = use;
             break;
         }

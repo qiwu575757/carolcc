@@ -8,6 +8,17 @@ class Value;
 class Module;
 class Function;
 class BasicBlock;
+
+#define __MEM2REG_LOG
+#ifdef __MEM2REG_LOG
+#define MEM2REG_LOG(format, ...)                                                            \
+    do {                                                                             \
+        printf(BLUE "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define MEM2REG_LOG(format, ...)
+#endif
 class Mem2Reg : public  Transform{
    private:
     Function* _cur_func;

@@ -506,8 +506,9 @@ void LLVMIrPrinter::visit(PhiInstr *node) {
         << node->getOperand(i)->getPrintName()
         << "] ";
         if( i !=node->getOperandNumber()-1)
-        output_file<<",";
+            output_file<<",";
     }
+    output_file<<std::endl;
 }
 
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
