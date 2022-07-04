@@ -194,10 +194,13 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
 
 
 std::string AsmBuilder::generate_function_code(Function *func){
+    stack_cur_size = 0;//
+    stack_mapping.clear();
     std::string func_asm;
     func_asm += func->getName() + ":" + InstGen::newline;
     func_asm += generate_function_entry_code(func);
     WARNNING("func entry %s:\n%s",func->getName().c_str(),func_asm.c_str());
+    
     for (auto &bb : func->getBasicBlocks()) {
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
@@ -230,6 +233,15 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     //     source.push_back(dummy);
     //     target.push_back(arg);
     // }
+   
+    int offset=0;
+    for(auto arg: func->getArgs()){
+      func_head_code+=update_value_mapping({arg});
+      func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
+      stack_mapping[arg]=offset;
+      offset+=4;
+      stack_cur_size+=4;
+    }
     return func_head_code;
 }
 std::string AsmBuilder::generate_function_exit_code(Function *func){
@@ -855,8 +867,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         int offset = 0;
 
         inst_asm += InstGen::comment(" call "+func_name, "");
+        
         for(auto arg:args){
-            inst_asm += InstGen::str(InstGen::sp,InstGen::Addr(InstGen::sp,offset));
+            update_value_mapping({arg});
+            inst_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+            inst_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             offset+=4;
         }
         inst_asm += InstGen::bl(func_name);
@@ -865,7 +880,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += InstGen::str(InstGen::Reg(0),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
 
         inst_asm += InstGen::pop(caller_reg_list);
-
+        variable_list.clear();
         variable_list.push_back(inst);
 
         inst_asm += update_value_mapping(variable_list);
@@ -886,6 +901,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       " size: "+std::to_string(type_size));
       inst_asm += register_str;
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
+
     } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
       // new register variable_list.push_back(inst);
       variable_list.push_back(inst);

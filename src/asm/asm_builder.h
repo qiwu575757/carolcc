@@ -65,7 +65,7 @@ private:
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   int stack_size=1024;
-  int return_offset=stack_size-8;
+  int return_offset=1020;
   bool debug;
   std::string asm_code;
 

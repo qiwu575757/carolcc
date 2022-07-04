@@ -337,14 +337,25 @@ class Runner():
             self.sy_to_ir(frontend_instr=frontend_instr, testcase=testcase)
             if self.args.ir: return 0
             self.ir_to_asm(testcase=testcase)
-            if self.args.asm: return 0
+            if self.args.asm: 
+                # out_file = open("test.out", "w+")
+                print("compiling the asm file...")
+                subprocess.run("./run_obj.sh".split())
+                # subprocess.run("echo $?".split())
+                return 0
             self.asm_to_obj(testcase=testcase)
             self.obj_to_bin(testcase=testcase)
             return self.run_single_test(testcase=testcase)
         else:
             Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
             self.sy_to_asm(frontend_instr=frontend_instr, testcase=testcase)
-            if self.args.asm: return 0
+            if self.args.asm: 
+                # out_file = open("test.out", "w+")
+                print("compiling the asm file...")
+                subprocess.run("./run_obj.sh".split())
+                # subprocess.run("echo $?".split())
+                # os.su("echo $?")
+                return 0
             self.asm_to_obj(testcase=testcase)
             self.obj_to_bin(testcase=testcase)
             return self.run_single_test(testcase=testcase)
