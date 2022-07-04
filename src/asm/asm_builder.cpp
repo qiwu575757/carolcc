@@ -196,6 +196,8 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
 std::string AsmBuilder::generate_function_code(Function *func){
     stack_cur_size = 0;//
     stack_mapping.clear();
+    register_mapping.clear();
+    lru_list.clear();
     std::string func_asm;
     func_asm += func->getName() + ":" + InstGen::newline;
     func_asm += generate_function_entry_code(func);
