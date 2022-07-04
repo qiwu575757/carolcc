@@ -14,16 +14,17 @@ Type *Value::getType() const{
 
 void Value::replaceAllUse(Value *new_val) {
     for (auto use : _user_list) {
-        auto old_val = dynamic_cast<User *>(use->_value);
-        old_val->setOperand(use->_value_no, new_val);
+        auto user = dynamic_cast<User *>(use->_user);
+        user->setOperand(use->_value_no, new_val);
     }
+    this->_user_list.clear();
 }
 
 void Value::removeUse(Value *val, unsigned value_no) {
     Use *remove_use;
     for (auto use : _user_list) {
         // 这里需要检查
-        if (use->_value_no == value_no)
+        if (use->_user == val)
         {
             remove_use = use;
             break;

@@ -135,6 +135,9 @@ void HIrPrinter::print_array_init(ConstantArray *array){
 void HIrPrinter::visit(GlobalVariable *node) {
     print_left("GlobalVariable",node->getPrintName());
 }
+void HIrPrinter::visit(PhiInstr *node) {
+    print_left("PhiInstr",node->getPrintName());
+}
 //void HIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
 //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4

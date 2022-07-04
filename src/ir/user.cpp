@@ -27,3 +27,8 @@ void User::removeUseOps() {
         i++;
     }
 }
+void User::addOperand(Value *v) {
+    _operands_list.push_back(v);
+    v->addUse(this,_use_number);
+    _use_number++;
+}

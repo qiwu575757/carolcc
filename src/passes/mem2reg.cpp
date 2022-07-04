@@ -1,0 +1,193 @@
+
+#include "mem2reg.h"
+#include "module.h"
+#include "ir/instruction.h"
+#include "ir/basic_block.h"
+#include "ir/constant.h"
+#include "ir/value.h"
+
+#include <map>
+#include <set>
+#include <vector>
+#include <queue>
+#include <stack>
+
+std::map<Value*,std::vector<Value*> > newest_live_var;
+
+void Mem2Reg::run() {
+    for(auto f : _m->getFunctions()){
+        if(!f->getBasicBlocks().empty()){
+            _cur_func = f;
+            genPhi();
+        }
+
+    }
+}
+
+void Mem2Reg::genPhi() {
+    std::set<Value *> globals;
+    std::map<Value *, std::set<BasicBlock *>> var_blocks;
+    std::vector<std::vector<BasicBlock*>> defBlocks ;
+    std::vector<AllocaInst*> allocas ;
+   std::map<AllocaInst*, int> allocaLookup ;
+
+   // find defs block  -- has store
+    for (auto bb : _cur_func->getBasicBlocks()) {
+        for (auto instr : bb->getInstructions()) {
+            if (instr->isAlloca()) {
+                auto alloca= static_cast< AllocaInst*>(instr);
+                // only local int
+                if (alloca->getAllocaType()->isFloatTy()|| alloca->getAllocaType()->isIntegerTy()) {
+                    //            defs.put(allocaInst, new ArrayList<>());
+                    allocas.push_back(alloca);
+                    allocaLookup.insert({alloca, allocas.size() - 1});
+                    defBlocks.emplace_back();
+                }
+            }
+        }
+    }
+
+    // 记录定义 alloca指令的 block,即有对alloca 进行store操作的块
+    for (auto bb :_cur_func->getBasicBlocks()) {
+        for (auto inst : bb->getInstructions()) {
+            if (inst->isStore()) {
+                auto  storeInst = static_cast<StoreInst*> (inst);
+                auto ptr =  dynamic_cast<AllocaInst*>( storeInst->getLVal());
+
+                if (!dynamic_cast<AllocaInst*>(ptr)) {
+                    continue;
+                }
+                auto index = allocaLookup.find(ptr) ;
+                if (index != allocaLookup.end()) {
+                    defBlocks.at(index->second).push_back(bb);
+                }
+            }
+        }
+    }
+
+
+    // 对store指令所在块的支配边界插入phi指令
+    std::queue<BasicBlock*> W ;
+    std::map<PhiInstr*, int> phiToAllocaMap ;
+    std::set<BasicBlock*> visited;
+    for (auto allocaInst : allocas) {
+        auto index = allocaLookup.find(allocaInst)->second;
+        auto alloca_type = allocaInst->getAllocaType();
+
+        visited.clear();
+
+        for(auto  bb : defBlocks.at(index)){
+            W.push(bb);
+        }
+
+        while (!W.empty()) {
+            auto bb = W.front();W.pop();
+            for (auto y : bb->getDomFrontier()) {
+                if ( visited.find(y)!=visited.end()) {
+                    visited.insert(y);
+                    auto phiInst = PhiInstr::createPhi(alloca_type, y->getPreBasicBlockList().size(), y);
+                    phiToAllocaMap.insert({phiInst, index});
+                    if (std::find(defBlocks.at(index).begin(), defBlocks.at(index).end(), y)== defBlocks.at(index).end()){
+                        W.push(y);
+                    }
+                }
+            }
+        }
+    }
+    std::vector<Value*> values ;
+    for (int i = 0; i < allocas.size(); i++) {
+        //      values.add(new UndefValue());
+        if(allocas.at(i)->getAllocaType()->isIntegerTy()){
+            values.push_back(ConstantInt::create(0));
+        }else if (allocas.at(i)->getAllocaType()->isFloatTy()) {
+            values.push_back(ConstantFloat::create(0));
+        }
+    }
+    visited.clear();
+
+    std::stack<RenameData*> renameDataStack ;
+    renameDataStack.push(new RenameData(_cur_func->getEntryBlock(), nullptr, values));
+
+    while (!renameDataStack.empty()) {
+        auto* data = renameDataStack.top() ;renameDataStack.pop();
+
+          std::vector<Value*> currValues ;
+          currValues.assign(data->_values.begin(),data->_values.end());
+
+        // 对于插入的 phi 指令，更新 incomingVals 为 values 中的对应值
+        for (auto inst : data->_bb->getInstructions()) {
+
+            if (!inst->isPhi()) {
+                break;
+            }
+            auto phiInst = static_cast<PhiInstr*>( inst);
+            if (phiToAllocaMap.find(phiInst) == phiToAllocaMap.end()) {
+                continue;
+            }
+//            auto  predIndex = data._bb->getPreBasicBlockList().indexOf(data.pred);
+            phiInst->setParams(data->_values.at(phiToAllocaMap.find(phiInst)->second), data->_pred);
+        }
+
+        // 已经删除过 alloca/load/store，但是可能有来自其他前驱基本块的 incomingVals，所以在这里才 `continue;`
+        if (visited.find(data->_bb)!=visited.end()) {
+            continue;
+        }
+
+        visited.insert(data->_bb);
+
+        std::vector<Instruction*> wait_delete;
+        for (auto inst : data->_bb->getInstructions()) {
+            // AllocaInst
+            if (inst->isAlloca() && allocaLookup.count(static_cast<AllocaInst*>(inst))) {
+                wait_delete.push_back(inst);
+            }
+                // LoadInst
+            else if (inst->isLoad()) {
+                auto loadInst = static_cast<LoadInst*>(inst);
+                auto ptr_is_alloca = dynamic_cast< AllocaInst*>(loadInst->getOperand(0));
+                if (!ptr_is_alloca) {
+                    continue;
+                }
+
+                if (!ptr_is_alloca->getAllocaType()->isFloatTy()&& !ptr_is_alloca->getAllocaType()->isIntegerTy()) {
+                    continue;
+                }
+                int allocaIndex = allocaLookup.find(ptr_is_alloca)->second;
+
+                loadInst->replaceAllUse(currValues.at(allocaIndex));
+                wait_delete.push_back(loadInst);
+                inst->removeUseOps();
+            }
+                // StoreInst
+            else if (inst->isStore()) {
+                auto storeInst = static_cast<StoreInst*>( inst);
+                auto ptr_store = dynamic_cast< AllocaInst*>(storeInst->getOperand(1));
+                if (!ptr_store->isAlloca()) {
+                    continue;
+                }
+                auto allocaInst = static_cast<AllocaInst*>(ptr_store);
+                if (!allocaInst->getAllocaType()->isFloatTy() && ! allocaInst->getAllocaType()->isIntegerTy()) {
+                    continue;
+                }
+                auto allocaIndex = allocaLookup.find(allocaInst)->second;
+                currValues[allocaIndex] = storeInst->getOperand(0);
+                wait_delete.push_back(inst);
+                inst->removeUseOps();
+                inst->replaceAllUse(nullptr);
+           }
+           // Phi
+           else if (inst->isPhi()) {
+               auto phiInst = static_cast<PhiInstr*>( inst);
+               auto allocaIndex = phiToAllocaMap.find(phiInst)->second;
+               currValues[allocaIndex] = phiInst;
+           }
+       }
+        for(auto instr:wait_delete){
+            data->_bb->deleteInstr(instr);
+        }
+
+        for (auto b  : data->_bb->getSuccBasicBlockList()) {
+           renameDataStack.push(new RenameData(b, data->_bb, currValues));
+       }
+   }
+}
