@@ -37,6 +37,8 @@ bool G_tmp_computing = false;
 // 标记当前为全局初始化状态 说明全局变量必须计算初值
 bool G_in_global_init = false;
 
+bool G_tmp_computable = false;
+
 void SYSYBuilder::visit(tree_comp_unit &node) {
     SYSY_BUILDER("line:%d", node._line_no); MyAssert("no function defined", node.functions.size() != 0);
     SYSY_BUILDER(" comp_unit functions %d definitions %d 42", node.functions.size(),
@@ -301,7 +303,9 @@ void SYSYBuilder::visit(tree_exp &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*wuqi TODO*/
     if (node.add_exp != nullptr) {
+        G_tmp_computable = false;//
         node.add_exp->accept(*this);
+        G_tmp_computable = false;
     } else {
         ERROR("tree_exp has null add exp");
     }
@@ -605,6 +609,7 @@ void SYSYBuilder::visit(tree_stmt &node) {
         return;
     } else if (node.exp != nullptr) {  //
         node.exp->accept(*this);
+
         return;
     } else if (node.if_else_stmt != nullptr) {
         node.if_else_stmt->accept(*this);
@@ -710,9 +715,11 @@ void SYSYBuilder::visit(tree_number &node) {
         if (!node.is_int) {
             SYSY_BUILDER("visiting float %f", node.float_value);
             G_tmp_val = CONST_FLOAT(node.float_value);
+            G_tmp_float = node.float_value;
         } else if (node.is_int) {
             SYSY_BUILDER("visiting int %d", node.int_value);
             G_tmp_val = CONST_INT(node.int_value);
+            G_tmp_int = node.int_value;
         } else {
             ERROR("ERROR type in tree number");
         }
@@ -730,8 +737,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
         } else if (node.l_val != nullptr) {
             node.l_val->accept(*this);
             if (G_tmp_type->isFloatTy()) {
-                G_tmp_float =
-                    static_cast<ConstantFloat *>(G_tmp_val)->getValue();
+                G_tmp_float = static_cast<ConstantFloat *>(G_tmp_val)->getValue();
             } else if (G_tmp_type->isInt32()) {
                 G_tmp_int = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             } else {
@@ -748,6 +754,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
         if (node.exp != nullptr) {
             node.exp->accept(*this);
         } else if (node.l_val != nullptr) {
+            G_tmp_computable = false;
             if (G_require_address) {  // 若要求传参需要地址
                 SYSY_BUILDER("arg need addr");
                 G_require_address = false;
@@ -805,42 +812,92 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         }
     } else {
         SYSY_BUILDER(" unary exp 719");
-
+        auto val = G_tmp_val;
+        int vi;
+        float vf;
         if (node.primary_exp != nullptr) {
             SYSY_BUILDER("primary");
             node.primary_exp->accept(*this);
+            if(G_tmp_computable){
+                vi = G_tmp_int;
+                vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    val = CONST_INT(G_tmp_int);
+                }
+            }
+        
         } else if (node.unary_exp != nullptr) {
             SYSY_BUILDER("unary");
             node.unary_exp->accept(*this);
+            if(G_tmp_computable){
+                vi = G_tmp_int;
+                vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    val = CONST_INT(G_tmp_int);
+                }
+            }
         } else {
             SYSY_BUILDER("func call");
             node.func_call->accept(*this);
+            G_tmp_computable = false;
         }
+        
+       
 
-        if (node.oprt == "-") {
-            // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
-            //             ? CONST_FLOAT(0.0) : CONST_INT(0);
-            if (G_tmp_val->getType()->isFloatTy()) {
-                auto const0 = CONST_FLOAT(0.0);
-                G_tmp_val = builder->createSub(const0, G_tmp_val);
-            } else if (G_tmp_val->getType()->isInt32()) {
-                auto const0 = CONST_INT(0);
-                G_tmp_val = builder->createSub(const0, G_tmp_val);
-            } else if (G_tmp_val->getType()->isBool()) {
-                auto val_i32 = builder->creatZExtInst(TyInt32, G_tmp_val);
-                auto const0 = CONST_INT(0);
-                G_tmp_val = builder->createSub(const0, val_i32);
-            } else {
-                ERROR("");
+        if(G_tmp_computable){
+            if (node.oprt == "-") {
+                // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
+                //             ? CONST_FLOAT(0.0) : CONST_INT(0);
+                if (G_tmp_type->isFloatTy()) {
+                    G_tmp_float = -vf;
+                } else if (G_tmp_type->isInt32()) {
+                    G_tmp_int = -vi;
+                } else {
+                    ERROR("");
+                }
+            } else if (node.oprt == "!") {
+                if (G_tmp_val->getType()->isIntegerTy()) {
+                    auto const0 = CONST_INT(0);
+                    G_tmp_val =
+                        builder->createEQ(Type::getInt1Ty(), val, const0);
+                } else {
+                    ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+                }
             }
-        } else if (node.oprt == "!") {
-            if (G_tmp_val->getType()->isIntegerTy()) {
-                auto const0 = CONST_INT(0);
-                G_tmp_val =
-                    builder->createEQ(Type::getInt1Ty(), G_tmp_val, const0);
-            } else {
-                ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+        }   
+        else{
+            if (node.oprt == "-") {
+                // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
+                //             ? CONST_FLOAT(0.0) : CONST_INT(0);
+                if (G_tmp_val->getType()->isFloatTy()) {
+                    auto const0 = CONST_FLOAT(0.0);
+                    G_tmp_val = builder->createSub(const0, G_tmp_val);
+                } else if (G_tmp_val->getType()->isInt32()) {
+                    auto const0 = CONST_INT(0);
+                    G_tmp_val = builder->createSub(const0, G_tmp_val);
+                } else if (G_tmp_val->getType()->isBool()) {
+                    auto val_i32 = builder->creatZExtInst(TyInt32, G_tmp_val);
+                    auto const0 = CONST_INT(0);
+                    G_tmp_val = builder->createSub(const0, val_i32);
+                } else {
+                    ERROR("");
+                }
+            } else if (node.oprt == "!") {
+                if (G_tmp_val->getType()->isIntegerTy()) {
+                    auto const0 = CONST_INT(0);
+                    G_tmp_val =
+                        builder->createEQ(Type::getInt1Ty(), G_tmp_val, const0);
+                } else {
+                    ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+                }
             }
+   
         }
     }
 }
@@ -888,23 +945,76 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
         } else {
             node.mul_exp->accept(*this);
             auto l_val = G_tmp_val;
+            int l_vi;
+            float l_vf;
+            if(G_tmp_computable){
+                l_vi = G_tmp_int;
+                l_vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    l_val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    l_val = CONST_INT(G_tmp_int);
+                }
+            }
             node.unary_exp->accept(*this);
             auto r_val = G_tmp_val;
+            int r_vi;
+            float r_vf;
+            if(G_tmp_computable){
+                r_vi = G_tmp_int;
+                r_vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    r_val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    r_val = CONST_INT(G_tmp_int);
+                }
+            }
 
-            if (l_val->getType()->isBool()) {
-                l_val = builder->creatZExtInst(TyInt32, l_val);
-            }
-            if (r_val->getType()->isBool()) {
-                r_val = builder->creatZExtInst(TyInt32, r_val);
-            }
+            if(G_tmp_computable){
+                if (node.oprt == "*") {
+                    if (G_tmp_type->isFloatTy()) {
+                        G_tmp_float = l_vf * r_vf;
+                    } else if (G_tmp_type->isInt32()) {
+                        G_tmp_int = l_vi * r_vi;
+                    } else {
+                        ERROR("");
+                    }
+                } else if (node.oprt == "/") {
+                    if (G_tmp_type->isFloatTy()) {
+                        G_tmp_float = l_vf / r_vf;
+                    } else if (G_tmp_type->isInt32()) {
+                        G_tmp_int = l_vi / r_vi;
+                    } else {
+                        ERROR("");
+                    }
+                } else if (node.oprt == "%") {
+                    if (G_tmp_type->getTypeID() == Type::IntegerTyID) {
+                        G_tmp_int = l_vi / r_vi;
+                    } else {
+                        ERROR("Invalid oprt Mod for float type");
+                    }
+                }
 
-            if (node.oprt == "*") {
-                G_tmp_val = builder->createMul(l_val, r_val);
-            } else if (node.oprt == "/") {
-                G_tmp_val = builder->createDiv(l_val, r_val);
-            } else if (node.oprt == "%") {
-                G_tmp_val = builder->createRem(l_val, r_val);
             }
+            else{
+                if (l_val->getType()->isBool()) {
+                    l_val = builder->creatZExtInst(TyInt32, l_val);
+                }
+                if (r_val->getType()->isBool()) {
+                    r_val = builder->creatZExtInst(TyInt32, r_val);
+                }
+
+                if (node.oprt == "*") {
+                    G_tmp_val = builder->createMul(l_val, r_val);
+                } else if (node.oprt == "/") {
+                    G_tmp_val = builder->createDiv(l_val, r_val);
+                } else if (node.oprt == "%") {
+                    G_tmp_val = builder->createRem(l_val, r_val);
+                }
+            }
+            
         }
     }
 }
@@ -948,21 +1058,68 @@ void SYSYBuilder::visit(tree_add_exp &node) {
             SYSY_BUILDER("add exp 837");
             node.add_exp->accept(*this);
             auto l_val = G_tmp_val;
+            int l_vi;
+            float l_vf;
+            if(G_tmp_computable){
+                l_vi = G_tmp_int;
+                l_vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    l_val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    l_val = CONST_INT(G_tmp_int);
+                }
+            }
             node.mul_exp->accept(*this);
             auto r_val = G_tmp_val;
+            int r_vi;
+            float r_vf;
+            if(G_tmp_computable){
+                r_vi = G_tmp_int;
+                r_vf = G_tmp_float;
+                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                    r_val = CONST_FLOAT(G_tmp_float);
+                }
+                else{
+                    r_val = CONST_INT(G_tmp_int);
+                }
+            }
 
-            if (l_val->getType()->isBool()) {
-                l_val = builder->creatZExtInst(TyInt32, l_val);
+            if(G_tmp_computable){
+                if (node.oprt == "+") {
+                    if (G_tmp_type->isFloatTy()) {
+                        G_tmp_float = l_vf + r_vf;
+                    } else if (G_tmp_type->isInt32()) {
+                        G_tmp_int = l_vi + r_vi;
+                    } else {
+                        ERROR("");
+                    }
+                } else if (node.oprt == "-") {
+                    if (G_tmp_type->isFloatTy()) {
+                        G_tmp_float = l_vf - r_vi;
+                    } else if (G_tmp_type->isInt32()) {
+                        G_tmp_int = l_vi - r_vi;
+                    } else {
+                        ERROR("");
+                    }
+                }
             }
-            if (r_val->getType()->isBool()) {
-                r_val = builder->creatZExtInst(TyInt32, r_val);
+            else{
+                if (l_val->getType()->isBool()) {
+                    l_val = builder->creatZExtInst(TyInt32, l_val);
+                }
+                if (r_val->getType()->isBool()) {
+                    r_val = builder->creatZExtInst(TyInt32, r_val);
+                }
+                
+                if (node.oprt == "+") {
+                    G_tmp_val = builder->createAdd(l_val, r_val);
+                } else if (node.oprt == "-") {
+                    G_tmp_val = builder->createSub(l_val, r_val);
+                }
             }
 
-            if (node.oprt == "+") {
-                G_tmp_val = builder->createAdd(l_val, r_val);
-            } else if (node.oprt == "-") {
-                G_tmp_val = builder->createSub(l_val, r_val);
-            }
+            
         }
     }
 }

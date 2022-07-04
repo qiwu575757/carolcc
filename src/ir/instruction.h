@@ -289,6 +289,7 @@ class PhiInstr : public Instruction {
     };
 
    public:
+    void accept(IrVisitorBase *v) override;
     static PhiInstr *createPhi(Type *ty, BasicBlock *bb);
     static PhiInstr *createPhi(Type *ty, unsigned num_ops, BasicBlock *parent) {
         return new PhiInstr(ty, num_ops, parent);

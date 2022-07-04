@@ -83,10 +83,10 @@ void Mem2Reg::genPhi() {
         while (!W.empty()) {
             auto bb = W.front();W.pop();
             for (auto y : bb->getDomFrontier()) {
-                if ( visited.find(y)!=visited.end()) {
+                if ( visited.find(y)==visited.end()) {
                     visited.insert(y);
-                    auto phiInst = PhiInstr::createPhi(alloca_type, y->getPreBasicBlockList().size(), y);
-                    phiToAllocaMap.insert({phiInst, index});
+                    auto phiInst = PhiInstr::createPhi(alloca_type, y);
+                    phiToAllocaMap[phiInst]= index;
                     if (std::find(defBlocks.at(index).begin(), defBlocks.at(index).end(), y)== defBlocks.at(index).end()){
                         W.push(y);
                     }
@@ -138,6 +138,9 @@ void Mem2Reg::genPhi() {
         std::vector<Instruction*> wait_delete;
         for (auto inst : data->_bb->getInstructions()) {
             // AllocaInst
+            if(inst->isRet()){
+                MEM2REG_LOG("get ret");
+            }
             if (inst->isAlloca() && allocaLookup.count(static_cast<AllocaInst*>(inst))) {
                 wait_delete.push_back(inst);
             }
@@ -154,6 +157,9 @@ void Mem2Reg::genPhi() {
                 }
                 int allocaIndex = allocaLookup.find(ptr_is_alloca)->second;
 
+                if(auto phi_instr = dynamic_cast<PhiInstr*>(currValues.at(allocaIndex))){
+                    MEM2REG_LOG("using phi ");
+                }
                 loadInst->replaceAllUse(currValues.at(allocaIndex));
                 wait_delete.push_back(loadInst);
                 inst->removeUseOps();
@@ -162,7 +168,7 @@ void Mem2Reg::genPhi() {
             else if (inst->isStore()) {
                 auto storeInst = static_cast<StoreInst*>( inst);
                 auto ptr_store = dynamic_cast< AllocaInst*>(storeInst->getOperand(1));
-                if (!ptr_store->isAlloca()) {
+                if (!ptr_store) {
                     continue;
                 }
                 auto allocaInst = static_cast<AllocaInst*>(ptr_store);
@@ -170,6 +176,8 @@ void Mem2Reg::genPhi() {
                     continue;
                 }
                 auto allocaIndex = allocaLookup.find(allocaInst)->second;
+                MEM2REG_LOG("cur alloca index is %d",allocaIndex);
+                MEM2REG_LOG("cur value size is %d",currValues.size());
                 currValues[allocaIndex] = storeInst->getOperand(0);
                 wait_delete.push_back(inst);
                 inst->removeUseOps();
