@@ -496,6 +496,20 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
     }
     output_file << ", align 4" << std::endl;
 }
+void LLVMIrPrinter::visit(PhiInstr *node) {
+    output_file<<node->getPrintName()<<" = phi ";
+    node->getType()->print(output_file);
+    for(int i=0;i<node->getOperandNumber();i++){
+        output_file<<"[ "
+        << node->getOperand(i++)->getPrintName()
+        << ", "
+        << node->getOperand(i)->getPrintName()
+        << "] ";
+        if( i !=node->getOperandNumber()-1)
+        output_file<<",";
+    }
+}
+
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
 //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4

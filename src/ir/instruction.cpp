@@ -10,7 +10,9 @@
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums, BasicBlock *parent)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id)
 {
-    MyAssert("null parent", _parent != nullptr);
+    if(_parent== nullptr){
+        WARNNING("null parent" );
+    }
     _parent->addInstr(this);
 }
 Instruction::Instruction(Type *type, Instruction::OpKind op_id, unsigned int op_nums)
@@ -301,6 +303,10 @@ BranchInst::BranchInst(BranchInst::BrOp br_op, Value *block, BasicBlock *parent)
 }
 BranchInst *BranchInst::createIf(Value *cond, BasicBlock *true_block, BasicBlock *false_block, BasicBlock *parent)
 {
+    true_block->addPreBasicBlock(parent);
+    false_block->addPreBasicBlock(parent);
+    parent->addSuccBasicBlock(true_block);
+    parent->addSuccBasicBlock(false_block);
     return new BranchInst(BranchInst::IF, cond, true_block, false_block, parent);
 }
 BranchInst *BranchInst::createWhile(Value *cond, BasicBlock *block, BasicBlock *parent)
@@ -309,6 +315,8 @@ BranchInst *BranchInst::createWhile(Value *cond, BasicBlock *block, BasicBlock *
 }
 BranchInst *BranchInst::createBranch(BasicBlock *block, BasicBlock *parent)
 {
+    parent->addSuccBasicBlock(block);
+    block->addPreBasicBlock(parent);
     return new BranchInst(BranchInst::BRANCH, block, parent);
 }
 
@@ -498,3 +506,13 @@ void HIR::accept(IrVisitorBase *v)
 {
     v->visit(this);
 }
+PhiInstr::PhiInstr(Type *ty, std::vector<Value *> vals,
+                   std::vector<BasicBlock *> val_bbs, BasicBlock *parent)
+: Instruction(ty,Instruction::PHI,2*vals.size()+1){
+    parent->getInstructions().push_front(this);
+    for(int i=0;i<vals.size();i++){
+        setOperand(2*i,vals[i]);
+        setOperand(2*i+1,val_bbs[i]);
+    }
+}
+PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) { return new PhiInstr(ty, {},{},bb); }
