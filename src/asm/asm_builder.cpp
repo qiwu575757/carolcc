@@ -544,6 +544,215 @@ void AsmBuilder::set_register(Value *v,int data,bool init){
   }
 }
 
+// 用于生成二元算数指令的汇编
+std::string AsmBuilder::generate_arithmetic_asm (Instruction *inst) {
+    auto &operands = inst->getOperandList();
+    std::list<Value *> variable_list;
+    std::string return_asm;
+    //用于接收可能的全局变量寄存器分配操作str
+    std::string register_str = "";
+
+    auto src_op0 = operands.at(0);
+    auto src_op1 = operands.at(1);
+
+    if (inst->isAdd()) {
+
+      variable_list.push_back(inst);
+
+      if (src_op0->isConstant() ) { // 第一个操作数为立即数
+          // 给第一个操作数加上名字，用于分配寄存器,建立映射
+          const std::string reg_name_0 = "_imm_"+std::to_string(key++);
+          Value * src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
+          variable_list.push_back(src_value_0);
+
+          // 将立即数的值存储到 constant中
+          ConstantInt* const_val_0 =  dynamic_cast<ConstantInt *>(src_op0);
+
+          if (src_op1->isConstant()) {// IMM IMM
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " + "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            // 将立即数的值绑定到寄存器中
+            return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+            return_asm += InstGen::add(target_reg,src_reg_0,src_const_1);
+          }
+          else { // 第二个操作数是寄存器 IMM REG
+            variable_list.push_back(src_op1);
+
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " + "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+
+            return_asm += InstGen::add(target_reg,src_reg_0,src_reg_1);
+          }
+      } else { // 第一个操作数为reg型变量
+          // 给寄存器分配
+          variable_list.push_back(src_op0);
+
+          if (src_op1->isConstant()) { //REG IMM
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " + "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+            // 生成constant存储立即数的值
+            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+            return_asm += InstGen::add(target_reg,src_reg_0,src_const_1);
+          } else { // REG REG
+            variable_list.push_back(src_op1);
+
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " + "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+
+            return_asm += InstGen::add(target_reg,src_reg_0,src_reg_1);
+          }
+      }
+    } else if (inst->isSub()) {
+
+      variable_list.push_back(inst);
+
+      if (src_op0->isConstant() ) { // 第一个操作数为立即数
+          // 给第一个操作数加上名字，用于分配寄存器,建立映射
+          const std::string reg_name_0 = "_imm_"+std::to_string(key++);
+          Value * src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
+          variable_list.push_back(src_value_0);
+
+          // 将立即数的值存储到 constant中
+          ConstantInt* const_val_0 =  dynamic_cast<ConstantInt *>(src_op0);
+
+          if (src_op1->isConstant()) {// IMM IMM
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " - "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            // 将立即数的值绑定到寄存器中
+            return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+            return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
+          }
+          else { // 第二个操作数是寄存器 IMM REG
+            variable_list.push_back(src_op1);
+
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " - "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+
+            return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
+          }
+      } else { // 第一个操作数为reg型变量
+          // 给寄存器分配
+          variable_list.push_back(src_op0);
+
+          if (src_op1->isConstant()) { //REG IMM
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " - "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+            // 生成constant存储立即数的值
+            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+            return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
+          } else { // REG REG
+            variable_list.push_back(src_op1);
+
+            // 寄存器分配
+            return_asm += update_value_mapping(variable_list);
+
+            return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " - "+
+                        src_op1->getPrintName(), "");
+
+            // find分配的寄存器
+            const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+            return_asm += register_str;
+            register_str = "";
+            const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+            return_asm += register_str;
+
+            return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
+          }
+      }
+    }
+
+  return return_asm;
+}
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string inst_asm;
     auto &operands = inst->getOperandList();
@@ -558,75 +767,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       type_size = inst->getType()->getSize();
       stack_mapping[inst] = stack_cur_size;
     }
-    if (inst->isAdd()) {
-      auto src = operands.at(0);
-      if (src->isConstant()) {
-        auto src_op1 = operands.at(0);
-        variable_list.push_back(src_op1);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
 
-        inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
-
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::add(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
-      } else {
-        auto src_op1 = operands.at(0);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(src_op1);
-        variable_list.push_back(src_op2);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-
-        inst_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op1->getPrintName() + " + "+src_op2->getPrintName(), "");
-
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::add(target_reg,src_reg1,src_reg2);
-      }
-    } else if (inst->isSub()) {
-      auto src = operands.at(0);
-      if (src->isConstant()) {
-        auto src_op1 = operands.at(0);
-        variable_list.push_back(src_op1);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        inst_asm += InstGen::sub(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
-      } else {
-        auto src_op1 = operands.at(0);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(src_op1);
-        variable_list.push_back(src_op2);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::sub(target_reg,src_reg1,src_reg2);
-      }
+    if (inst->isAdd() || inst->isSub()) {
+      inst_asm += generate_arithmetic_asm(inst);
     } else if (inst->isMul()) {
         auto src_op1 = operands.at(0);
         auto src_op2 = operands.at(1);
@@ -659,69 +802,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
         inst_asm += register_str;
         inst_asm += InstGen::sdiv(target_reg,src_reg1,src_reg2);
-    } else if (inst->isAnd()) {
-      auto src = operands.at(0);
-      if (src->isConstant()) {
-        auto src_op1 = operands.at(0);
-        variable_list.push_back(src_op1);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        inst_asm += InstGen::and_(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
-      } else {
-        auto src_op1 = operands.at(0);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(src_op1);
-        variable_list.push_back(src_op2);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::and_(target_reg,src_reg1,src_reg2);
-      }
-    } else if (inst->isOr()) {
-      auto src = operands.at(0);
-      if (src->isConstant()) {
-        auto src_op1 = operands.at(0);
-        variable_list.push_back(src_op1);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::orr(target_reg,src_reg1,InstGen::Constant(atoi(src_op2->getPrintName().c_str())));
-      } else {
-        auto src_op1 = operands.at(0);
-        auto src_op2 = operands.at(1);
-        variable_list.push_back(src_op1);
-        variable_list.push_back(src_op2);
-        variable_list.push_back(inst);
-        inst_asm += update_value_mapping(variable_list);
-        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-        inst_asm += register_str;
-        register_str = "";
-        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-        inst_asm += register_str;
-        inst_asm += InstGen::orr(target_reg,src_reg1,src_reg2);
-      }
     } else if (inst->isLoad()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);

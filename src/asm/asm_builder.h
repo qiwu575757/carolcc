@@ -98,6 +98,7 @@ public:
   std::string generateInstructionCode(Instruction *inst);
   void show_mapping();
   void erase_register_map(Value * v);
+  std::string generate_arithmetic_asm (Instruction *inst);
 };
 
 #endif // SRC_ASM_BUILDER_H
