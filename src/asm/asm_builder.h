@@ -58,7 +58,7 @@ const int clone_flag = CLONE_VM | SIGCHLD;
 class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
-  std::map<Value *, int> register_mapping;
+  std::map<Value *, int> register_mapping; // value - id
   std::map<Value *, int> stack_mapping; // value - offset
   int stack_cur_size=0;
   std::list<Value *> lru_list;
@@ -78,6 +78,7 @@ public:
   int find_register(Value *v);
   int find_register(Value *v,std::string &code);
   void set_register(Value *v,int data,bool init);
+  std::string swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);
@@ -98,7 +99,9 @@ public:
   std::string generateInstructionCode(Instruction *inst);
   void show_mapping();
   void erase_register_map(Value * v);
-  std::string generate_arithmetic_asm (Instruction *inst);
+  std::string generateArithmeticOper (Instruction *inst);
+  std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,std::string func_name);
+
 };
 
 #endif // SRC_ASM_BUILDER_H

@@ -4,6 +4,9 @@
 #include <memory.h>
 
 int key = 0;//给需要的立即数标号
+std::list<Value *> variable_list;//待分配寄存器的变量列表
+
+
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
 }
@@ -544,8 +547,42 @@ void AsmBuilder::set_register(Value *v,int data,bool init){
   }
 }
 
+std::string AsmBuilder::swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1) {
+  std::string return_asm;
+  int id_0 = reg_0.getID();
+  int id_1 = reg_1.getID();
+
+  return_asm +=  InstGen::comment("swap register " + reg_0.getName() + ", " + reg_1.getName(), "");
+  // 首先维护 register_mapping 映射关系
+  Value *temp_val_0, *temp_val_1;
+  for (auto iter: register_mapping) { // 首先找到对应寄存器的value
+    if (iter.second == id_0) {
+      temp_val_0 = iter.first;
+    }
+    if (iter.second == id_1) {
+      temp_val_1 = iter.first;
+    }
+  }
+  // 交换对应映射
+  register_mapping[temp_val_0] = id_1;
+  register_mapping[temp_val_1] = id_0;
+
+  // 将对应寄存器的值进行交换
+  // 先将第一个寄存器存入栈中
+  std::vector<InstGen::Reg> reg_list_0;
+  reg_list_0.push_back(reg_0);
+  std::vector<InstGen::Reg> reg_list_1;
+  reg_list_1.push_back(reg_1);
+  return_asm += InstGen::push(reg_list_0);
+
+  return_asm += InstGen::mov(reg_0,reg_1,InstGen::CmpOp(InstGen::NOP));
+  return_asm += InstGen::pop(reg_list_1);
+
+  return return_asm;
+}
+
 // 用于生成二元算数指令的汇编
-std::string AsmBuilder::generate_arithmetic_asm (Instruction *inst) {
+std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
     auto &operands = inst->getOperandList();
     std::list<Value *> variable_list;
     std::string return_asm;
@@ -637,7 +674,8 @@ std::string AsmBuilder::generate_arithmetic_asm (Instruction *inst) {
             } else if (inst->isSub()) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
             } else if (inst->isDiv()) {
-              return_asm += InstGen::sdiv(target_reg,src_reg_0,src_reg_1);
+              // for div imm reg, 先将IMM 保存到reg，然后调用函数计算
+              return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv");
             }
 
           }
@@ -711,7 +749,7 @@ std::string AsmBuilder::generate_arithmetic_asm (Instruction *inst) {
             } else if (inst->isSub()) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
             } else if (inst->isDiv()) {
-              return_asm += InstGen::sdiv(target_reg,src_reg_0,src_reg_1);
+              return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv");
             }
           }
       }
@@ -842,13 +880,54 @@ std::string AsmBuilder::generate_arithmetic_asm (Instruction *inst) {
           }
       }
     }
-    
+
   return return_asm;
 }
+
+std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Value *>operands,std::string func_name) {
+    std::string return_asm;
+    // 保存調用者保存寄存器
+    std::vector<InstGen::Reg> caller_reg_list;
+    for(auto reg : caller_save_regs)
+        caller_reg_list.push_back(reg);
+    return_asm += InstGen::push(caller_reg_list);
+
+    return_asm += InstGen::comment(" call "+func_name, "");
+    if (inst->isCall()) { //若该指令直接调用函数，其第一个operand为函数名,传参时需要跳过
+      std::vector<Value *> args(operands.begin()+1, operands.end());;
+
+      int offset = 0;
+
+      for(auto arg: args){
+            update_value_mapping({arg});
+            return_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+            return_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+            offset += 4;
+        }
+        return_asm += InstGen::bl(func_name);
+    } else {
+      std::vector<Value *> args(operands.begin(), operands.end());;
+      for (int i = 0; i < 2; i++ ) { //对于除法函数，只有两个参数
+        return_asm += swap_register(InstGen::Reg(i), InstGen::Reg(find_register(args[i])));
+      }
+      return_asm += InstGen::bl(func_name);
+    }
+
+    stack_mapping[inst]=return_offset;
+    return_asm += InstGen::str(InstGen::Reg(0),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+    return_asm += InstGen::pop(caller_reg_list);
+    variable_list.clear();
+    variable_list.push_back(inst);
+    return_asm += update_value_mapping(variable_list);
+    return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+    
+    return return_asm;
+}
+
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string inst_asm;
     auto &operands = inst->getOperandList();
-    std::list<Value *> variable_list;
+
     BasicBlock *bb_cur = inst->getParent();
 
     int type_size=0;
@@ -861,7 +940,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     }
 
     if (inst->isAdd() || inst->isSub() || inst->isMul() || inst->isDiv()) { //算术运算指令
-      inst_asm += generate_arithmetic_asm(inst);
+      inst_asm += generateArithmeticOper(inst);
     }  else if (inst->isLoad()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
@@ -1001,33 +1080,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst_asm += register_str;
       }
     } else if (inst->isCall()) {
-        std::vector<InstGen::Reg> caller_reg_list;
-        for(auto reg : caller_save_regs) caller_reg_list.push_back(reg);
-        inst_asm += InstGen::push(caller_reg_list);
-        std::string func_name = operands.at(0)->getName();
-        std::vector<Value *> args(operands.begin() + 1, operands.end());
-        int offset = 0;
-
-        inst_asm += InstGen::comment(" call "+func_name, "");
-
-        for(auto arg:args){
-            update_value_mapping({arg});
-            inst_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-            inst_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
-            offset+=4;
-        }
-        inst_asm += InstGen::bl(func_name);
-
-        stack_mapping[inst]=return_offset;
-        inst_asm += InstGen::str(InstGen::Reg(0),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
-
-        inst_asm += InstGen::pop(caller_reg_list);
-        variable_list.clear();
-        variable_list.push_back(inst);
-
-        inst_asm += update_value_mapping(variable_list);
-        inst_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
-
+      std::string func_name = operands.at(0)->getName();
+      inst_asm += generateFunctionCall(inst,operands,func_name);
     } else if (inst->isAlloca()) {
       type_size = inst->getType()->getSize();
       stack_mapping[inst] = stack_cur_size+type_size;
