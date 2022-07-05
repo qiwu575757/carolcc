@@ -78,7 +78,7 @@ public:
   int find_register(Value *v);
   int find_register(Value *v,std::string &code);
   void set_register(Value *v,int data,bool init);
-  std::string swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1);
+  // std::string swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);
@@ -100,7 +100,8 @@ public:
   void show_mapping();
   void erase_register_map(Value * v);
   std::string generateArithmeticOper (Instruction *inst);
-  std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,std::string func_name);
+  std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,
+          std::string func_name, int return_reg);
 
 };
 
