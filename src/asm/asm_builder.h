@@ -86,12 +86,14 @@ public:
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code(Function *func);
   std::string generate_function_exit_code(Function *func);
+
   /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *>update_v);
   std::string erase_value_mapping(std::list<Value*>& erase_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
+  std::string getLabelName(BasicBlock *bb, std::string id);
   std::string generate_global_vars();
   std::string generate_use_of_global_vars();
   std::string generate_initializer(Constant *init);
@@ -99,10 +101,10 @@ public:
   std::string generateInstructionCode(Instruction *inst);
   void show_mapping();
   void erase_register_map(Value * v);
-  std::string generateArithmeticOper (Instruction *inst);
+  std::string generateOperInst (Instruction *inst);
   std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,
           std::string func_name, int return_reg);
-
+  std::string generateCmpInst(Instruction *inst, Value *imm_0);
 };
 
 #endif // SRC_ASM_BUILDER_H

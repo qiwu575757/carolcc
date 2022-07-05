@@ -5,7 +5,7 @@
 
 int key = 0;//给需要的立即数标号
 std::list<Value *> variable_list;//待分配寄存器的变量列表
-
+InstGen::CmpOp last_cmp_op;//因为br指令中没有存储跳转条件信息，需要利用br指令上一条的
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
@@ -463,7 +463,11 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     return bb_asm;
 }
 std::string  AsmBuilder::getLabelName(BasicBlock *bb){
-    return InstGen::spaces + "." + bb->getParentFunc()->getName() + "_" + bb->getName();
+    return "." + bb->getParentFunc()->getName() + "_" + bb->getName();
+}
+
+std::string  AsmBuilder::getLabelName(BasicBlock *bb, std::string id){
+    return "." + bb->getParentFunc()->getName() + "_" + id;
 }
 
 std::string AsmBuilder::getLabelName(Function *func, int type) {
@@ -582,25 +586,27 @@ void AsmBuilder::set_register(Value *v,int data,bool init){
 //   return return_asm;
 // }
 
-// 用于生成二元算数指令的汇编
-std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
+// 用于生成二元运算指令的汇编
+std::string AsmBuilder::generateOperInst (Instruction *inst) {
     auto &operands = inst->getOperandList();
     std::list<Value *> variable_list;
     std::string return_asm;
     //用于接收可能的全局变量寄存器分配操作str
     std::string register_str = "";
+    // 若第一个操作数为立即数，存储该立即数的value
+    Value * src_value_0;//NOTICE
 
     auto src_op0 = operands.at(0);
     auto src_op1 = operands.at(1);
 
-    if (inst->isAdd() || inst->isSub() || inst->isDiv()) {
+    if (inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp()) {
 
       variable_list.push_back(inst);
 
       if (src_op0->isConstant() ) { // 第一个操作数为立即数
           // 给第一个操作数加上名字，用于分配寄存器,建立映射
           const std::string reg_name_0 = "_imm_"+std::to_string(key++);
-          Value * src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
+          src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
           variable_list.push_back(src_value_0);
 
           // 将立即数的值存储到 constant中
@@ -619,6 +625,9 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
                           src_op1->getPrintName(), "");
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
+                          src_op1->getPrintName(), "");
+            } else if (inst->isCmp()) {
+              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
                           src_op1->getPrintName(), "");
             }
 
@@ -639,6 +648,8 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
             } else if (inst->isDiv()) {
               return_asm += InstGen::divConst(target_reg,src_reg_0,src_const_1);
+            } else if (inst->isCmp()) {
+              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           }
@@ -657,6 +668,9 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
                           src_op1->getPrintName(), "");
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
+                          src_op1->getPrintName(), "");
+            } else if (inst->isCmp()) {
+              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
                           src_op1->getPrintName(), "");
             }
 
@@ -677,6 +691,8 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
             } else if (inst->isDiv()) {
               // for div imm reg, 先将IMM 保存到reg，然后调用函数计算
               return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv", 0);
+            } else if (inst->isCmp()) {
+              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           }
@@ -698,6 +714,9 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
                           src_op1->getPrintName(), "");
+            } else if (inst->isCmp()) {
+              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
+                          src_op1->getPrintName(), "");
             }
 
             // find分配的寄存器
@@ -715,6 +734,8 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
             } else if (inst->isDiv()) {
               return_asm += InstGen::divConst(target_reg,src_reg_0,src_const_1);
+            } else if (inst->isCmp()) {
+              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           } else { // REG REG
@@ -732,6 +753,9 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
                           src_op1->getPrintName(), "");
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
+                          src_op1->getPrintName(), "");
+            } else if (inst->isCmp()) {
+              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
                           src_op1->getPrintName(), "");
             }
 
@@ -751,6 +775,8 @@ std::string AsmBuilder::generateArithmeticOper (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
             } else if (inst->isDiv()) {
               return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv", 0);
+            }else if (inst->isCmp()) {
+              return_asm += generateCmpInst(inst,src_value_0);
             }
           }
       }
@@ -965,6 +991,105 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     return return_asm;
 }
 
+InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse) {
+  InstGen::CmpOp asmCmpOp;
+
+  if (!reverse) {
+    switch (myCmpOp) {
+    case CmpInst::CmpOp::EQ:
+      asmCmpOp = InstGen::CmpOp::EQ;
+      break;
+    case CmpInst::CmpOp::NEQ:
+      asmCmpOp = InstGen::CmpOp::NE;
+      break;
+    case CmpInst::CmpOp::GT:
+      asmCmpOp = InstGen::CmpOp::GT;
+      break;
+    case CmpInst::CmpOp::GE:
+      asmCmpOp = InstGen::CmpOp::GE;
+      break;
+    case CmpInst::CmpOp::LT:
+      asmCmpOp = InstGen::CmpOp::LT;
+      break;
+    case CmpInst::CmpOp::LE:
+      asmCmpOp = InstGen::CmpOp::LE;
+      break;
+    default:
+      ERROR("CmpOp type not valid");
+    }
+  } else {
+    switch (myCmpOp) {
+    case CmpInst::CmpOp::EQ:
+      asmCmpOp = InstGen::CmpOp::NE;
+      break;
+    case CmpInst::CmpOp::NEQ:
+      asmCmpOp = InstGen::CmpOp::EQ;
+      break;
+    case CmpInst::CmpOp::GT:
+      asmCmpOp = InstGen::CmpOp::LE;
+      break;
+    case CmpInst::CmpOp::GE:
+      asmCmpOp = InstGen::CmpOp::LT;
+      break;
+    case CmpInst::CmpOp::LT:
+      asmCmpOp = InstGen::CmpOp::GE;
+      break;
+    case CmpInst::CmpOp::LE:
+      asmCmpOp = InstGen::CmpOp::GT;
+      break;
+    default:
+      ERROR("CmpOp type not valid");
+    }
+  }
+
+  return asmCmpOp;
+}
+
+std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
+    std::string return_asm;
+    auto &operands = inst->getOperandList();
+    std::string register_str = "";
+
+    auto src_op0 = operands.at(0);
+    auto src_op1 = operands.at(1);
+    InstGen::CmpOp cmp_op = cmpConvert(static_cast<CmpInst *>(inst)->_cmp_op, false);
+    last_cmp_op = cmp_op;
+
+    if (src_op0->isConstant()) {
+      // 查找存储立即数的寄存器
+      InstGen::Reg src_reg_0 = InstGen::Reg(find_register(imm_0));
+      if (src_op1->isConstant()) {
+        // 生成constant存储立即数的值
+        const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+        return_asm += InstGen::cmp(src_reg_0,src_const_1);
+      }
+      else {
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        return_asm += InstGen::cmp(src_reg_0,src_reg_1);
+      }
+    } else {
+      InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0));
+      if (src_op1->isConstant()) {
+        // 生成constant存储立即数的值
+        const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+        return_asm += InstGen::cmp(src_reg_0,src_const_1);
+      }
+      else {
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        return_asm += InstGen::cmp(src_reg_0,src_reg_1);
+      }
+    }
+    // 将比较结果存入目标寄存器， 0 --> false, 1 --> true;
+    return_asm += InstGen::mov(InstGen::Reg(find_register(inst)),InstGen::Constant(0),cmp_op);
+    return_asm += InstGen::mov(InstGen::Reg(find_register(inst)),InstGen::Constant(1),cmp_op);
+
+    return return_asm;
+}
+
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string inst_asm;
     auto &operands = inst->getOperandList();
@@ -980,8 +1105,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       stack_mapping[inst] = stack_cur_size;
     }
 
-    if (inst->isAdd() || inst->isSub() || inst->isMul() || inst->isDiv() || inst->isRem()) { //算术运算指令
-      inst_asm += generateArithmeticOper(inst);
+    if (inst->isAdd() || inst->isSub() || inst->isMul() ||
+        inst->isDiv() || inst->isRem() || inst->isCmp()) { //算术运算指令
+      inst_asm += generateOperInst(inst);
     }  else if (inst->isLoad()) {
       auto src_op1 = operands.at(0);
       variable_list.push_back(src_op1);
@@ -1055,70 +1181,29 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
               inst_asm += InstGen::ret(src_reg1);
             }
           }
-    } else if (inst->isCmp()) {
-        if (operands.size() == 1){
-            auto src_op1 = operands.at(0);
-            switch (dynamic_cast<CmpInst *>(inst)->_cmp_op)
-            {
-                case CmpInst::EQ:
-                    /* code */
-                    break;
-                case CmpInst::NEQ:
-                    /* code */
-                    break;
-                case CmpInst::GT:
-                    /* code */
-                    break;
-                case CmpInst::LE:
-                    /* code */
-                    break;
-                case CmpInst::GE:
-                    /* code */
-                    break;
-                case CmpInst::LT:
-                    /* code */
-                    break;
-
-                default:
-                    break;
-            }
-        }
-    WARNNING("unrealized CMP");
     } else if (inst->isBr()) {
       if (operands.size() == 1){
-          auto src_op1 = operands.at(0);
-          variable_list.push_back(src_op1);
-          inst_asm += update_value_mapping(variable_list);
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
-                                    "_branch_" + std::to_string(find_register(src_op1,register_str)),
-                                0),
-                 InstGen::NOP);
-          inst_asm += register_str;
+          auto src_op0 = operands.at(0)->getName();
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op0)),InstGen::NOP);
       } else if (operands.size() == 2) {
-          auto src_op1 = operands.at(0);
-          variable_list.push_back(src_op1);
-          auto src_op2 = operands.at(1);
-          variable_list.push_back(src_op2);
-          variable_list.push_back(inst);
+          WARNNING("不太理解 br i1 %1, label %2 形式的跳转指令");
+      } else if (operands.size() == 3) {
+          auto src_op0 = operands.at(0);
+          variable_list.push_back(src_op0);
+
           inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          inst_asm += InstGen::spaces +"cmp "+ target_reg.getName() + ", " + "#0";
-          inst_asm += InstGen::spaces + "beq " + InstGen::Label(getLabelName(bb_cur)).getName() +
-                                    "_branch_" + std::to_string(find_register(src_op1,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur) +
-                                    "_branch_" + std::to_string(find_register(src_op2,register_str)),
-                                      InstGen::NOP));
-          inst_asm += register_str;
+          auto src_op1_id = operands.at(1)->getName();
+          auto src_op2_id = operands.at(2)->getName();
+
+          // // 根据reg0指令为0还是1判断跳转条件是否成立
+          // const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+          // inst_asm += register_str;
+          // register_str = "";
+
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),last_cmp_op);
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),last_cmp_op);
+      } else {
+        ERROR("TO many args in br instruction");
       }
     } else if (inst->isCall()) {
       std::string func_name = operands.at(0)->getName();
@@ -1134,7 +1219,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += update_value_mapping(variable_list);
 
       const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-      inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp+" + std::to_string(stack_cur_size),
+      inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp + " + std::to_string(stack_cur_size),
       " size: "+std::to_string(type_size));
       inst_asm += register_str;
       inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));

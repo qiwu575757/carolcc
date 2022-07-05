@@ -148,7 +148,7 @@ public:
   explicit Label(std::string label, int offset)
       : label(label), offset(offset) {}
   explicit Label(std::string label) : label(label), offset(0) {}
-  std::string getName() const { return label + "+" + std::to_string(offset); }
+  std::string getName() const { return label; }
 };
 std::string comment(std::string str1, std::string str2);
 std::string condCode(const CmpOp &cond);
@@ -209,6 +209,8 @@ std::tuple<int, int, int> choose_multiplier(int d, int N);
 std::string divConst(const Reg &dst, const Reg &src,
                      const Constant &divisor);
 std::string ret(const Value &src);
+
+
 }; // namespace InstGen
 
 const InstGen::Reg vinst_temp_reg = InstGen::Reg(11);
