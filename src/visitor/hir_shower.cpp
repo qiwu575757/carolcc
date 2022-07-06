@@ -18,10 +18,21 @@ void HIrPrinter::visit(AllocaInst *node) {
 void HIrPrinter::visit(Function *node) {
     depth = 1;
     print_left("Function",node->getPrintName());
-    for (auto &bb: node->getBaseBlocks()) {
-        add_tab();
-        bb->accept(this);
-        delete_tab();
+    if(node->getBasicBlocks().empty()){
+        printf("HIR structure\n");
+        for (auto &bb: node->getBaseBlocks()) {
+            add_tab();
+            bb->accept(this);
+            delete_tab();
+        }
+    }
+    else {
+        printf("LLVM IR structure\n");
+        for (auto &bb: node->getBasicBlocks()) {
+            add_tab();
+            bb->accept(this);
+            delete_tab();
+        }
     }
 }
 void HIrPrinter::visit(Argument *node) {

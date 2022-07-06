@@ -12,7 +12,7 @@ void Argument::accept(IrVisitorBase *v) {
 }
 
 Function::Function(FunctionType *type, const std::string &name, Module *parent)
-    : GlobalValue(type, name), _parent(parent) {
+    : GlobalValue(type, name), _parent(parent) ,_is_builtin(false){
         parent->AddFunction(this);
         buildArgs();
 }

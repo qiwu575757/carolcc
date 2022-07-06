@@ -71,11 +71,12 @@ void Module::HighIRprint(const std::string &file_name) {
 }
 void Module::HIRSHOW(const std::string &file_name) {
     HIrPrinter printer(file_name);
-    for (auto global_var: _global_variable_list) {
-        global_var->accept(&printer);
-    }
+//    for (auto global_var: _global_variable_list) {
+//        global_var->accept(&printer);
+//    }
     for (auto func: _function_list) {
-        func->accept(&printer);
+        if(!func->isBuiltin())
+            func->accept(&printer);
     }
 }
 void Module::MIRMEMprint(const std::string &file_name) {

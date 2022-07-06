@@ -9,7 +9,7 @@
 class HIrPrinter : public IrVisitorBase {
 public:
     explicit HIrPrinter(const std::string &name):depth(0) {
-            printf("%s",name.c_str());
+            printf("%s\n",name.c_str());
             printf("###########################################\n");
         }
     ~HIrPrinter(){
