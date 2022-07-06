@@ -76,6 +76,7 @@ public:
 
     // Methods about argument
     unsigned getNumArgs() const;
+
     std::vector<Argument *> &getArgs() {
         return _args;
     }
@@ -101,7 +102,8 @@ public:
         return _base_block_list;
     }
 
-
+    bool isBuiltin() const {return _is_builtin;}
+    void setBuiltin(bool flag){_is_builtin = flag;}
 
 private:
     Instruction* _alloca_end;
@@ -109,6 +111,7 @@ private:
     std::list<BaseBlock *> _base_block_list;
     Module *_parent;
     std::list<BasicBlock *> _basic_block_list;
+    bool  _is_builtin;
 
 private:
     void buildArgs();

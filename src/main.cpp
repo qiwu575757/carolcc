@@ -6,14 +6,18 @@
 #include <string>
 
 #include "asm/asm_builder.h"
+#include "passes/EmitHir.h"
+#include "passes/dominators.h"
 #include "passes/hir_to_mir.h"
 #include "passes/lowerir.h"
+#include "passes/mem2reg.h"
 #include "passes/pass_manager.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/sysy_builder.h"
 #include "visitor/tree_visitor_base.h"
+
 extern int yyparse();
 extern int yyrestart(FILE *);
 extern FILE *yyin;
@@ -77,49 +81,34 @@ int main(int argc, char **argv) {
     builder->build(root);
     // auto *shower = new syntax_detail_shower();
     // shower->visit(*root);
-    if (is_emit_hir) {
-        WARNNING("emitting  hir");
-        auto hir_output_file = input_file;
-        hir_output_file.replace(hir_output_file.end() - 2,
-                                hir_output_file.end(), "hir");
-        if (is_debug) {
-            builder->getModule()->HighIRprint(std::string(hir_output_file));
-            if (is_show_hir_pad_graph)
-                builder->getModule()->HIRSHOW(std::string(hir_output_file));
-        } else {
-            builder->getModule()->HighIRprint(std::string(output_file));
-            // builder->getModule()->HIRSHOW(std::string(output_file));
-        }
-    }
 
     pass_manager PM(builder->getModule().get());
+    if(is_emit_hir)
+        PM.add_pass<EmitHir>("EmitHir");
+    if(is_show_hir_pad_graph)
+        PM.add_pass<EmitPadGraph>("EmitPadGraph");
+
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    //  PM.add_pass<LowerIR>("LowerIR");
+    if(is_emit_mir)
+        PM.add_pass<EmitIR>("EmitIR");
+    if(is_show_hir_pad_graph)
+        PM.add_pass<EmitPadGraph>("EmitPadGraph");
+//    PM.add_pass<Dominators>("Dominators");
+//    PM.add_pass<Mem2Reg>("Mem2Reg");
     PM.run();
 
 
-    if (is_emit_mir) {
-        WARNNING("emitting  mir");
-        auto mir_output_file = input_file;
-        mir_output_file.replace(mir_output_file.end() - 2,
-                                mir_output_file.end(), "ir");
-        if (is_debug)
-            builder->getModule()->MIRMEMprint(mir_output_file);
-        else
-            builder->getModule()->MIRMEMprint(output_file);
-    }
+    //   AsmBuilder asm_builder(builder->getModule(), debug);
+    //   std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+    //   std::cout<<"################-asm_code-#################"<<std::endl;
+    //   std::fflush(0);
+    //   std::cout<<asm_code;
+    //   std::cout<<"################-asm_code-#################"<<std::endl;
 
-  AsmBuilder asm_builder(builder->getModule(), debug);
-  std::string asm_code = asm_builder.generate_asm(input_file.c_str());
-  std::cout<<"################-asm_code-#################"<<std::endl;
-  std::fflush(0);
-  std::cout<<asm_code;
-  std::cout<<"################-asm_code-#################"<<std::endl;
-
-   std::string strFileName = "test.s";
-   FILE* fs = fopen(strFileName.c_str(), "w+");
-   fprintf(fs,"%s",asm_code.c_str());
-   fclose(fs);
+    //    std::string strFileName = "test.s";
+    //    FILE* fs = fopen(strFileName.c_str(), "w+");
+    //    fprintf(fs,"%s",asm_code.c_str());
+    //    fclose(fs);
 
     return 0;
 }

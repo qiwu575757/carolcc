@@ -115,6 +115,7 @@ void Dominators::run() {
         if(f->getBasicBlocks().empty()){
             continue ;
         }
+        DOMINATOR_LOG("dominators cur_func is %s\n",f->getName().c_str());
         createReversePostOrder(f);
         createIDoms(f);
         printIDom(f);
