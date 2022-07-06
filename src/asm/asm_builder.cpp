@@ -614,9 +614,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
           src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
           variable_list.push_back(src_value_0);
 
-          // 将立即数的值存储到 constant中
-          ConstantInt* const_val_0 =  dynamic_cast<ConstantInt *>(src_op0);
-
           if (src_op1->isConstant()) {// IMM IMM
             // 寄存器分配
             return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -802,18 +799,12 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
           Value * src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
           variable_list.push_back(src_value_0);
 
-          // 将立即数的值存储到 constant中
-          ConstantInt* const_val_0 =  dynamic_cast<ConstantInt *>(src_op0);
-
           if (src_op1->isConstant()) {// IMM IMM
             // 乘法指令两个操作数必须均为reg
             // 给第一个操作数加上名字，用于分配寄存器,建立映射
             const std::string reg_name_1 = "_imm_"+std::to_string(key++);
             Value * src_value_1 = new Value(Type::getInt32Ty(), reg_name_1);
             variable_list.push_back(src_value_1);
-
-            // 将立即数的值存储到 constant中
-            ConstantInt* const_val_1 =  dynamic_cast<ConstantInt *>(src_op1);
 
             // 寄存器分配
             return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -842,7 +833,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
 
             const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
             return_asm += register_str;
-            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
 
             if (inst->isMul()) {
               return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
@@ -894,9 +884,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             const std::string reg_name_1 = "_imm_"+std::to_string(key++);
             Value * src_value_1 = new Value(Type::getInt32Ty(), reg_name_1);
             variable_list.push_back(src_value_1);
-
-            // 将立即数的值存储到 constant中
-            ConstantInt* const_val_1 =  dynamic_cast<ConstantInt *>(src_op1);
 
             // 寄存器分配
             return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -1130,21 +1117,21 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst->isDiv() || inst->isRem() || inst->isCmp()) { //算术运算指令
       inst_asm += generateOperInst(inst);
     }  else if (inst->isLoad()) {
-      auto src_op1 = operands.at(0);
-      variable_list.push_back(src_op1);
+      auto src_op0 = operands.at(0);
+      variable_list.push_back(src_op0);
       variable_list.push_back(inst);
 
       inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
       inst_asm += register_str;
       register_str = "";
       const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
       inst_asm += register_str;
       register_str = "";
 
-      inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op1->getPrintName().c_str(), "");
-      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
+      inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "");
+      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg0,0));
 
     } else if (inst->isStore()) {
         auto src = operands.at(0);
