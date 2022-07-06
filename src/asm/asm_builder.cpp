@@ -241,6 +241,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
 
     int offset=0;
     for(auto arg: func->getArgs()){
+      func_head_code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       func_head_code+=update_value_mapping({arg});
       func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
       stack_mapping[arg]=offset;
@@ -374,7 +375,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                         lru_list.push_front(*v);
 
                         // data update
-                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),"load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
+                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),
+                                  "load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
                         alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_offset));
                         alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
                       }
@@ -427,7 +429,8 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
                   int be_replaced_v_dst = stack_mapping[be_replaced_v];
                   lru_list.push_front(upd_v);
 
-                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),"to sp+"+std::to_string(be_replaced_v_dst));
+                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),
+                        "to sp+"+std::to_string(be_replaced_v_dst));
                   // data update
                   alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
                   //map update
@@ -512,6 +515,7 @@ int AsmBuilder::find_register(Value *v,std::string &code){
       std::list<Value *> variable_list;
       const std::string reg_name = ".LCPI_"+v->getName();
       variable_list.push_back(v);
+      code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       update_value_mapping(variable_list);
 
       code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
@@ -525,6 +529,7 @@ int AsmBuilder::find_register(Value *v,std::string &code){
       std::list<Value *> variable_list;
       const std::string reg_name = ".LCPI_"+v->getName();
       variable_list.push_back(v);
+      code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       update_value_mapping(variable_list);
 
       code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
@@ -614,6 +619,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
 
           if (src_op1->isConstant()) {// IMM IMM
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             // 增加asm 注释
@@ -657,6 +663,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             variable_list.push_back(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             // 增加asm 注释
@@ -678,6 +685,9 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
             return_asm += register_str;
             register_str = "";
+            // 将立即数的值绑定到寄存器中
+            return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
             const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
             return_asm += register_str;
             register_str = "";
@@ -702,6 +712,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
 
           if (src_op1->isConstant()) { //REG IMM
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             // 增加asm 注释
@@ -742,6 +753,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             variable_list.push_back(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             // 增加asm 注释
@@ -804,6 +816,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             ConstantInt* const_val_1 =  dynamic_cast<ConstantInt *>(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             if (inst->isMul()) {
@@ -841,6 +854,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             variable_list.push_back(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             if (inst->isMul()) {
@@ -855,6 +869,9 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
             return_asm += register_str;
             register_str = "";
+            // 将立即数的值绑定到寄存器中
+            return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
             const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
             return_asm += register_str;
             register_str = "";
@@ -882,6 +899,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             ConstantInt* const_val_1 =  dynamic_cast<ConstantInt *>(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             if (inst->isMul()) {
@@ -914,6 +932,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             variable_list.push_back(src_op1);
 
             // 寄存器分配
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             return_asm += update_value_mapping(variable_list);
 
             if (inst->isMul()) {
@@ -962,6 +981,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       int offset = 0;
 
       for(auto arg: args){
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             update_value_mapping({arg});
             return_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
             return_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
@@ -985,6 +1005,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     return_asm += InstGen::pop(caller_reg_list);
     variable_list.clear();
     variable_list.push_back(inst);
+    return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
     return_asm += update_value_mapping(variable_list);
     return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
 
@@ -1084,7 +1105,7 @@ std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
       }
     }
     // 将比较结果存入目标寄存器， 0 --> false, 1 --> true;
-    return_asm += InstGen::mov(InstGen::Reg(find_register(inst)),InstGen::Constant(0),cmp_op);
+    return_asm += InstGen::mov(InstGen::Reg(find_register(inst)),InstGen::Constant(0),InstGen::NOP);
     return_asm += InstGen::mov(InstGen::Reg(find_register(inst)),InstGen::Constant(1),cmp_op);
 
     return return_asm;
@@ -1113,6 +1134,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.push_back(src_op1);
       variable_list.push_back(inst);
 
+      inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
       const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
       inst_asm += register_str;
@@ -1123,6 +1145,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
       inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op1->getPrintName().c_str(), "");
       inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg1,0));
+
     } else if (inst->isStore()) {
         auto src = operands.at(0);
         if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
@@ -1132,6 +1155,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           variable_list.push_back(val);
           auto src_op2 = operands.at(1);
           variable_list.push_back(src_op2);
+          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           inst_asm += update_value_mapping(variable_list);
           const InstGen::Reg src_reg1 = InstGen::Reg(find_register(val,register_str));
           inst_asm += register_str;
@@ -1155,6 +1179,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           variable_list.push_back(src_op1);
           auto src_op2 = operands.at(1);
           variable_list.push_back(src_op2);
+          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           inst_asm += update_value_mapping(variable_list);
           const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
           inst_asm += register_str;
@@ -1164,6 +1189,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
           inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
           inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+
         }
     } else if (inst->isRet()) {
           auto src = operands.at(0);
@@ -1172,6 +1198,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           } else {
             auto src_op1 = operands.at(0);
             variable_list.push_back(src_op1);
+            inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             inst_asm += update_value_mapping(variable_list);
             if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
               inst_asm += register_str;
@@ -1180,6 +1207,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
               inst_asm += register_str;
               inst_asm += InstGen::ret(src_reg1);
             }
+
           }
     } else if (inst->isBr()) {
       if (operands.size() == 1){
@@ -1191,6 +1219,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           auto src_op0 = operands.at(0);
           variable_list.push_back(src_op0);
 
+          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           inst_asm += update_value_mapping(variable_list);
           auto src_op1_id = operands.at(1)->getName();
           auto src_op2_id = operands.at(2)->getName();
@@ -1201,7 +1230,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           // register_str = "";
 
           inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),last_cmp_op);
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),last_cmp_op);
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),InstGen::NOP);
+
       } else {
         ERROR("TO many args in br instruction");
       }
@@ -1210,12 +1240,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += generateFunctionCall(inst,operands,func_name, 0);
     } else if (inst->isAlloca()) {
       type_size = inst->getType()->getSize();
+      MyAssert("type size", type_size != 1);
       stack_mapping[inst] = stack_cur_size+type_size;
-
 
       type_size+=4;
 
       variable_list.push_back(inst);
+      inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
 
       const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
@@ -1239,6 +1270,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.push_back(val2);
 
       // update register
+      inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
       inst_asm += InstGen::comment(" gep "+inst->getPrintName()," from " + src_op1->getPrintName());
 
@@ -1317,7 +1349,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
 
+    if (type_size < 4) {
+      type_size = 4;//保证对于bool型变量也分配4byte空间
+    }
     stack_cur_size += type_size;
+    variable_list.clear();//清空列表
 
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;
