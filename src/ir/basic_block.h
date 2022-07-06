@@ -49,6 +49,8 @@ public:
     static BasicBlock *create(const std::string &name, Function *func);
     static BasicBlock *create(const std::string &name);
     std::list<Instruction *> &getInstructions();
+    std::list<BasicBlock *> &getPreBasicBlocks();
+    std::list<BasicBlock *> &getSuccBasicBlocks();
     void setParentFunc(Function *parent);
     Function *getParentFunc() const;
     Module *getModule() const;
@@ -66,7 +68,7 @@ public:
     void removePreBasicBlock(BasicBlock *bb);
     void removeSuccBasicBlock(BasicBlock *bb);
     void clearSuccBasicBlockList();
-
+    
     bool hasRet();
     bool isEntry();
     /*活跃变量分析*/
@@ -133,26 +135,4 @@ private:
 
 public:
     // this will auto add this to function's baseblock list
-    // don't use this in nested structure
-    static WhileBlock *create(const std::string &name, Function *func);
-    static WhileBlock *create(const std::string &name);
-
-    void addCondBaseBlock(BaseBlock *bb);
-    void addBodyBaseBlock(BaseBlock *bb);
-
-    std::list<BaseBlock *> *getCondBaseBlockList();
-    std::list<BaseBlock *> *getBodyBaseBlockList();
-
-    void removeCondBaseBlock(BaseBlock *bb);
-    void removeWhileBodyBaseBlock(BaseBlock *bb);
-    void removeBaseBlock(BaseBlock *bb);
-    void insertCondBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
-    void insertWhileBodyBaseBlockList(std::list<BaseBlock *>::iterator it, BaseBlock *bb);
-
-
-private:
-    std::list<BaseBlock *> _cond;
-    std::list<BaseBlock *> _body;
-};
-
-#endif
+    // don't use this in nested struct
