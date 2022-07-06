@@ -1,7 +1,8 @@
-#include "lowerir.h"
-#include "module.h"
+#include "lower_ir.h"
+
 #include "ir/basic_block.h"
 #include "ir/instruction.h"
+#include "module.h"
 
 void LowerIR::run() {
     for (auto func : _m->getFunctions()) {

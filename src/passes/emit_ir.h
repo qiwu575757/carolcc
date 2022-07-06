@@ -1,6 +1,6 @@
 
-#ifndef COMPILER_EMITHIR_H
-#define COMPILER_EMITHIR_H
+#ifndef COMPILER_EMIT_IR_H
+#define COMPILER_EMIT_IR_H
 #include "pass.h"
 class Module;
 class EmitHir : public pass{
@@ -23,4 +23,4 @@ class EmitPadGraph : public pass{
 
 };
 
-#endif  // COMPILER_EMITHIR_H
+#endif  // COMPILER_EMIT_IR_H

@@ -6,7 +6,6 @@
 #include "user.h"
 
 class BasicBlock;
-class User;
 class Instruction : public User {
    public:
     enum OpKind {

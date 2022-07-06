@@ -26,9 +26,37 @@ void User::removeUseOps() {
         op->removeUse(this, i);
         i++;
     }
+    _use_number = 0;
+
 }
 void User::addOperand(Value *v) {
     _operands_list.push_back(v);
     v->addUse(this,_use_number);
     _use_number++;
+}
+void User::rmOperand(unsigned  index) {
+    removeUseOps();
+
+    std::vector<Value* > old_operands ;
+    old_operands.swap(_operands_list);
+    _operands_list.clear();
+    for (int i = 0; i < old_operands.size(); ++i) {
+        if( i == index)
+            continue ;
+        addOperand(old_operands[i]);
+
+    }
+}
+void User::rmOperand(unsigned  i1,unsigned  i2) {
+    removeUseOps();
+
+    std::vector<Value* > old_operands ;
+    old_operands.swap(_operands_list);
+    _operands_list.clear();
+    for (int i = 0; i < old_operands.size(); ++i) {
+        if( i == i1|| i == i2)
+            continue ;
+        addOperand(old_operands[i]);
+
+    }
 }

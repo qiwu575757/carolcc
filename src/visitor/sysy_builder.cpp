@@ -1,8 +1,16 @@
 #include "sysy_builder.h"
 
+#include "ir/basic_block.h"
+#include "ir/constant.h"
 #include "ir/function.h"
+#include "ir/global_variable.h"
+#include "ir/instruction.h"
 #include "ir/type.h"
+#include "ir/user.h"
 #include "ir/value.h"
+#include "ir_builder.h"
+#include "passes/module.h"
+#include "syntax_tree.h"
 #include "utils.h"
 
 #define CONST_INT(num) ConstantInt::create(num)
@@ -20,7 +28,7 @@ Value *G_tmp_val = nullptr;
 Type *G_tmp_type = nullptr;
 // 函数传参是否需要地址
 bool G_require_address = false;
-int G_arg_dims ;
+int G_arg_dims;
 // function that is being built
 Function *G_cur_fun = nullptr;
 // detect scope pre-enter (for elegance only)
@@ -40,9 +48,10 @@ bool G_in_global_init = false;
 bool G_tmp_computable = false;
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
-    SYSY_BUILDER("line:%d", node._line_no); MyAssert("no function defined", node.functions.size() != 0);
-    SYSY_BUILDER(" comp_unit functions %d definitions %d 42", node.functions.size(),
-         node.definitions.size());
+    SYSY_BUILDER("line:%d", node._line_no);
+    MyAssert("no function defined", node.functions.size() != 0);
+    SYSY_BUILDER(" comp_unit functions %d definitions %d 42",
+                 node.functions.size(), node.definitions.size());
     // 这种写法会允许 后置全局变量定义出现，这是因为语法设计的问题
     for (auto defs : node.definitions) {
         G_in_global_init = true;
@@ -303,7 +312,7 @@ void SYSYBuilder::visit(tree_exp &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*wuqi TODO*/
     if (node.add_exp != nullptr) {
-        G_tmp_computable = false;//
+        G_tmp_computable = false;  //
         node.add_exp->accept(*this);
         G_tmp_computable = false;
     } else {
@@ -461,7 +470,8 @@ void SYSYBuilder::visit(tree_const_def &node) {
                 array_alloca->setInit();
                 auto ptr = builder->createGEP(array_alloca,
                                               {CONST_INT(0), CONST_INT(0)});
-                SYSY_BUILDER("bound size is ", node.const_init_val->bounds.size());
+                SYSY_BUILDER("bound size is ",
+                             node.const_init_val->bounds.size());
                 for (int i = 1; i < node.const_init_val->bounds.size(); i++) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0), CONST_INT(0)});
                 }
@@ -737,7 +747,8 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
         } else if (node.l_val != nullptr) {
             node.l_val->accept(*this);
             if (G_tmp_type->isFloatTy()) {
-                G_tmp_float = static_cast<ConstantFloat *>(G_tmp_val)->getValue();
+                G_tmp_float =
+                    static_cast<ConstantFloat *>(G_tmp_val)->getValue();
             } else if (G_tmp_type->isInt32()) {
                 G_tmp_int = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             } else {
@@ -760,8 +771,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
                 G_require_address = false;
                 node.l_val->accept(*this);
                 SYSY_BUILDER("finish");
-                while (G_tmp_val->getType()
-                            ->getDims()>G_arg_dims){
+                while (G_tmp_val->getType()->getDims() > G_arg_dims) {
                     SYSY_BUILDER("generating gep");
                     G_tmp_val = builder->createGEP(
                         G_tmp_val, {CONST_INT(0), CONST_INT(0)});
@@ -818,27 +828,25 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         if (node.primary_exp != nullptr) {
             SYSY_BUILDER("primary");
             node.primary_exp->accept(*this);
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 vi = G_tmp_int;
                 vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     val = CONST_INT(G_tmp_int);
                 }
             }
-        
+
         } else if (node.unary_exp != nullptr) {
             SYSY_BUILDER("unary");
             node.unary_exp->accept(*this);
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 vi = G_tmp_int;
                 vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     val = CONST_INT(G_tmp_int);
                 }
             }
@@ -847,10 +855,8 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
             node.func_call->accept(*this);
             G_tmp_computable = false;
         }
-        
-       
 
-        if(G_tmp_computable){
+        if (G_tmp_computable) {
             if (node.oprt == "-") {
                 // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
                 //             ? CONST_FLOAT(0.0) : CONST_INT(0);
@@ -867,11 +873,11 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                     G_tmp_val =
                         builder->createEQ(Type::getInt1Ty(), val, const0);
                 } else {
-                    ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+                    ERROR(
+                        "Not operation for flaot tyoe in visit tree_unary_exp");
                 }
             }
-        }   
-        else{
+        } else {
             if (node.oprt == "-") {
                 // auto const0 = (G_tmp_type->getTypeID() == Type::FloatTyID)
                 //             ? CONST_FLOAT(0.0) : CONST_INT(0);
@@ -894,10 +900,10 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                     G_tmp_val =
                         builder->createEQ(Type::getInt1Ty(), G_tmp_val, const0);
                 } else {
-                    ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+                    ERROR(
+                        "Not operation for flaot tyoe in visit tree_unary_exp");
                 }
             }
-   
         }
     }
 }
@@ -947,13 +953,12 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
             auto l_val = G_tmp_val;
             int l_vi;
             float l_vf;
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 l_vi = G_tmp_int;
                 l_vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     l_val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     l_val = CONST_INT(G_tmp_int);
                 }
             }
@@ -961,18 +966,17 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
             auto r_val = G_tmp_val;
             int r_vi;
             float r_vf;
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 r_vi = G_tmp_int;
                 r_vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     r_val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     r_val = CONST_INT(G_tmp_int);
                 }
             }
 
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 if (node.oprt == "*") {
                     if (G_tmp_type->isFloatTy()) {
                         G_tmp_float = l_vf * r_vf;
@@ -997,8 +1001,7 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
                     }
                 }
 
-            }
-            else{
+            } else {
                 if (l_val->getType()->isBool()) {
                     l_val = builder->creatZExtInst(TyInt32, l_val);
                 }
@@ -1014,7 +1017,6 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
                     G_tmp_val = builder->createRem(l_val, r_val);
                 }
             }
-            
         }
     }
 }
@@ -1060,13 +1062,12 @@ void SYSYBuilder::visit(tree_add_exp &node) {
             auto l_val = G_tmp_val;
             int l_vi;
             float l_vf;
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 l_vi = G_tmp_int;
                 l_vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     l_val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     l_val = CONST_INT(G_tmp_int);
                 }
             }
@@ -1074,18 +1075,17 @@ void SYSYBuilder::visit(tree_add_exp &node) {
             auto r_val = G_tmp_val;
             int r_vi;
             float r_vf;
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 r_vi = G_tmp_int;
                 r_vf = G_tmp_float;
-                if(G_tmp_type->getTypeID() == Type::FloatTyID){
+                if (G_tmp_type->getTypeID() == Type::FloatTyID) {
                     r_val = CONST_FLOAT(G_tmp_float);
-                }
-                else{
+                } else {
                     r_val = CONST_INT(G_tmp_int);
                 }
             }
 
-            if(G_tmp_computable){
+            if (G_tmp_computable) {
                 if (node.oprt == "+") {
                     if (G_tmp_type->isFloatTy()) {
                         G_tmp_float = l_vf + r_vf;
@@ -1103,23 +1103,20 @@ void SYSYBuilder::visit(tree_add_exp &node) {
                         ERROR("");
                     }
                 }
-            }
-            else{
+            } else {
                 if (l_val->getType()->isBool()) {
                     l_val = builder->creatZExtInst(TyInt32, l_val);
                 }
                 if (r_val->getType()->isBool()) {
                     r_val = builder->creatZExtInst(TyInt32, r_val);
                 }
-                
+
                 if (node.oprt == "+") {
                     G_tmp_val = builder->createAdd(l_val, r_val);
                 } else if (node.oprt == "-") {
                     G_tmp_val = builder->createSub(l_val, r_val);
                 }
             }
-
-            
         }
     }
 }
@@ -1541,4 +1538,122 @@ void SYSYBuilder::visit(tree_func_paramlist &node) {
 void SYSYBuilder::visit(syntax_tree_node &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     ERROR("error call");
-};
+}
+SYSYBuilder::SYSYBuilder(const std::string &name) {
+    module = std::shared_ptr<Module>(new Module(name));
+    builder = std::unique_ptr<IRBuilder>(new IRBuilder(nullptr, nullptr));
+
+    auto TyVoid = Type::getVoidTy();          // 改
+    auto TyInt32 = Type::getInt32Ty();        // 改
+    auto TyFloat = Type::getFloatTy();        // 改
+    auto TyIntPtr = Type::getInt32PtrTy();    // 改
+    auto TyFloatPtr = Type::getFloatPtrTy();  // 改
+
+    /**** 库函数引用 ****/
+    auto getint_type = FunctionType::get(TyInt32, {});
+    auto getfloat_type = FunctionType::get(TyFloat, {});
+    // auto getch_type = FunctionType::get(TyInt32, false);
+    auto getint_fun = Function::create(getint_type, "getint", module.get());
+    auto getch_fun = Function::create(getint_type, "getch", module.get());
+    auto getfloat_fun =
+        Function::create(getfloat_type, "getfloat", module.get());
+
+    std::vector<Type *> putint_params;
+    putint_params.push_back(TyInt32);
+    auto putint_type = FunctionType::get(TyVoid, putint_params);
+
+    auto putint_fun = Function::create(putint_type, "putint", module.get());
+
+    auto putch_fun = Function::create(putint_type, "putch", module.get());
+    std::vector<Type *> putfloat_params;
+    putfloat_params.push_back(TyFloat);
+    auto putfloat_type = FunctionType::get(TyVoid, putfloat_params);
+    auto putfloat_fun =
+        Function::create(putfloat_type, "putfloat", module.get());
+
+    std::vector<Type *> getarray_params;
+    getarray_params.push_back(TyIntPtr);
+    auto getarray_type = FunctionType::get(TyInt32, getarray_params);
+
+    auto getarray_fun =
+        Function::create(getarray_type, "getarray", module.get());
+    std::vector<Type *> getfarray_params;
+    getfarray_params.push_back(TyFloatPtr);
+    auto getfarray_type = FunctionType::get(TyInt32, getfarray_params);
+    auto getfarray_fun =
+        Function::create(getfarray_type, "getfarray", module.get());
+
+    std::vector<Type *> putarray_params;
+    putarray_params.push_back(TyInt32);
+    putarray_params.push_back(TyIntPtr);
+    auto putarray_type = FunctionType::get(TyVoid, putarray_params);
+
+    auto putarray_fun =
+        Function::create(putarray_type, "putarray", module.get());
+
+    std::vector<Type *> putfarray_params;
+    putfarray_params.push_back(TyInt32);
+    putfarray_params.push_back(TyFloatPtr);
+    auto putfarray_type = FunctionType::get(TyVoid, putarray_params);
+
+    auto putfarray_fun =
+        Function::create(putfarray_type, "putfarray", module.get());
+
+    std::vector<Type *> starttime_params;
+    // starttime_params.push_back(TyInt32);
+
+    auto starttime_type = FunctionType::get(TyVoid, starttime_params);
+
+    auto starttime_fun =
+        Function::create(starttime_type, "starttime", module.get());
+
+    std::vector<Type *> stoptime_params;
+    // stoptime_params.push_back(TyInt32);
+    auto stoptime_type = FunctionType::get(TyVoid, stoptime_params);
+
+    auto stoptime_fun =
+        Function::create(stoptime_type, "stoptime", module.get());
+
+    auto mtstart_type = FunctionType::get(TyInt32, {});
+
+    auto mtstart_fun =
+        Function::create(mtstart_type, "__mtstart", module.get());
+
+    std::vector<Type *> mtend_params;
+    mtend_params.push_back(TyInt32);
+    auto mtend_type = FunctionType::get(TyVoid, mtend_params);
+
+    auto mtend_fun = Function::create(mtend_type, "__mtend", module.get());
+
+    getint_fun->setBuiltin(true);
+    getfloat_fun->setBuiltin(true);
+    getch_fun->setBuiltin(true);
+    putint_fun->setBuiltin(true);
+    putch_fun->setBuiltin(true);
+    putfloat_fun->setBuiltin(true);
+    getarray_fun->setBuiltin(true);
+    getfarray_fun->setBuiltin(true);
+    putarray_fun->setBuiltin(true);
+    putfarray_fun->setBuiltin(true);
+    starttime_fun->setBuiltin(true);
+    stoptime_fun->setBuiltin(true);
+    mtstart_fun->setBuiltin(true);
+    mtend_fun->setBuiltin(true);
+    scope.enter();
+    scope.push("getint", getint_fun);
+    scope.push("getfloat", getfloat_fun);
+    scope.push("getch", getch_fun);
+    scope.push("putint", putint_fun);
+    scope.push("putch", putch_fun);
+    scope.push("putfloat", putfloat_fun);
+    scope.push("getarray", getarray_fun);
+    scope.push("getfarray", getfarray_fun);
+    scope.push("putarray", putarray_fun);
+    scope.push("putfarray", putfarray_fun);
+    scope.push("starttime", starttime_fun);
+    scope.push("stoptime", stoptime_fun);
+    scope.push("__mtstart", mtstart_fun);
+    scope.push("__mtend", mtend_fun);
+    /**** 库函数引用 END ****/
+}
+void SYSYBuilder::build(tree_comp_unit *node) { node->accept(*this); };

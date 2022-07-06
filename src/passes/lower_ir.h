@@ -1,5 +1,5 @@
-#ifndef COMPILER_LOWERIR_H
-#define COMPILER_LOWERIR_H
+#ifndef COMPILER_LOWER_IR_H
+#define COMPILER_LOWER_IR_H
 
 #include "pass.h"
 class BasicBlock;

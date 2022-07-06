@@ -1,4 +1,10 @@
 #include "hir_simplify_cfg.h"
+#include "ir/basic_block.h"
+#include "ir/function.h"
+#include "visitor/ir_builder.h"
+#include "ir/instruction.h"
+#include "module.h"
+#include "pass_manager.h"
 
 void HighIRsimplyCFG::run() {
   for (auto fun : _m->getFunctions()) {

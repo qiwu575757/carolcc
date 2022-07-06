@@ -22,6 +22,8 @@ public:
      */
     void setOperand(unsigned no, Value *v);
     void addOperand( Value *v);
+    void rmOperand(unsigned  i1,unsigned  i2) ;
+    void rmOperand(unsigned  index);
     Value *getOperand(unsigned no) const;
     std::vector<Value*>& getOperandList(){return _operands_list;}
     unsigned getOperandNumber() const { return _use_number; };

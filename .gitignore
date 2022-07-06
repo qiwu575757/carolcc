@@ -28,7 +28,7 @@ core
 run_test_one.sh
 
 scripts/__pycache__
-test
+test/
 test_file/functional/.gitkeep
 */*.hir
 *.hir

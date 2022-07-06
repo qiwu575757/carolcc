@@ -6,10 +6,11 @@
 #include <string>
 
 #include "asm/asm_builder.h"
-#include "passes/EmitHir.h"
 #include "passes/dominators.h"
+#include "passes/emit_ir.h"
 #include "passes/hir_to_mir.h"
-#include "passes/lowerir.h"
+#include "passes/mir_simplify_cfg.h"
+#include "passes/lower_ir.h"
 #include "passes/mem2reg.h"
 #include "passes/pass_manager.h"
 #include "utils.h"
@@ -83,20 +84,28 @@ int main(int argc, char **argv) {
     // shower->visit(*root);
 
     pass_manager PM(builder->getModule().get());
-    if(is_emit_hir)
+
+    if(is_emit_hir )
         PM.add_pass<EmitHir>("EmitHir");
-    if(is_show_hir_pad_graph)
+    if(is_show_hir_pad_graph && is_debug)
         PM.add_pass<EmitPadGraph>("EmitPadGraph");
+
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    if(is_emit_mir)
+    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+
+
+    if(is_emit_mir && is_debug)
         PM.add_pass<EmitIR>("EmitIR");
-    if(is_show_hir_pad_graph)
+    if(is_show_hir_pad_graph && is_debug)
         PM.add_pass<EmitPadGraph>("EmitPadGraph");
-//    PM.add_pass<Dominators>("Dominators");
-//    PM.add_pass<Mem2Reg>("Mem2Reg");
+    PM.add_pass<Dominators>("Dominators");
+    PM.add_pass<Mem2Reg>("Mem2Reg");
     PM.run();
 
+    if(is_emit_mir && !is_debug){
+        builder->getModule()->MIRMEMprint(output_file);
+    }
 
     //   AsmBuilder asm_builder(builder->getModule(), debug);
     //   std::string asm_code = asm_builder.generate_asm(input_file.c_str());

@@ -43,8 +43,14 @@ void Function::addBasicBlockAfter(std::_List_iterator<BasicBlock *> after_pos, B
 }
 
 void Function::removeBasicBlock(BasicBlock *basicblock) {
-    std::list<BasicBlock *>::iterator pos = find(_basic_block_list.begin(),_basic_block_list.end(), basicblock);
+    auto pos = find(_basic_block_list.begin(),_basic_block_list.end(), basicblock);
     _basic_block_list.erase(pos);
+    for(auto pre:basicblock->getPreBasicBlockList()){
+        pre->removeSuccBasicBlock(basicblock);
+    }
+    for(auto succ : basicblock->getSuccBasicBlockList()){
+        succ->removePreBasicBlock(basicblock);
+    }
 }
 
 unsigned Function::getNumArgs() const {
