@@ -25,7 +25,7 @@ Function *BasicBlock::getParentFunc() const {
 Module *BasicBlock::getModule() const {
     return this->getParentFunc()->getParent();
 }
-const Instruction *BasicBlock::getTerminator() const {
+Instruction *BasicBlock::getTerminator() const {
   if (_instructions.empty()) {
     return nullptr;
   }

@@ -52,32 +52,33 @@ class Instruction : public User {
     };
 
     OpKind getInstructionKind() const { return _op_id; }
-    bool isRet() { return _op_id == Instruction::RET; }
-    bool isBr() { return _op_id == Instruction::BR; }
-    //    bool isNeg() { return _op_id == Instruction::NEG; }
-    bool isNot() { return _op_id == Instruction::NOT; }
-    bool isAdd() { return _op_id == Instruction::ADD; }
-    bool isSub() { return _op_id == Instruction::SUB; }
-    bool isMul() { return _op_id == Instruction::MUL; }
-    bool isDiv() { return _op_id == Instruction::DIV; }
-    bool isRem() { return _op_id == Instruction::REM; }
-    bool isShl() { return _op_id == Instruction::SHL; }
-    bool isLshr() { return _op_id == Instruction::LSHR; }
-    bool isAshr() { return _op_id == Instruction::ASHR; }
-    bool isAnd() { return _op_id == Instruction::AND; }
-    bool isOr() { return _op_id == Instruction::OR; }
-    bool isXor() { return _op_id == Instruction::XOR; }
-    bool isAlloca() { return _op_id == Instruction::ALLOCA; }
-    bool isLoad() { return _op_id == Instruction::LOAD; }
-    bool isStore() { return _op_id == Instruction::STORE; }
-    bool isCmp() { return _op_id == Instruction::CMP; }
-    bool isPhi() { return _op_id == Instruction::PHI; }
-    bool isGep() { return _op_id == Instruction::GEP; }
-    bool isCall() { return _op_id == Instruction::CALL; }
-    bool isZext() { return _op_id == Instruction::ZEXT; }
-    bool isBreak() { return _op_id == Instruction::BREAK; }
-    bool isContinue() { return _op_id == Instruction::CONTINUE; }
-    inline BasicBlock *getParent() { return _parent; }
+    bool isRet()const  { return _op_id == Instruction::RET; }
+    bool isBr() const { return _op_id == Instruction::BR; }
+    //    bool isNeg()const { return _op_id == Instruction::NEG; }
+    bool isNot() const{ return _op_id == Instruction::NOT; }
+    bool isAdd() const{ return _op_id == Instruction::ADD; }
+    bool isSub() const{ return _op_id == Instruction::SUB; }
+    bool isMul() const{ return _op_id == Instruction::MUL; }
+    bool isDiv() const{ return _op_id == Instruction::DIV; }
+    bool isRem() const{ return _op_id == Instruction::REM; }
+    bool isShl() const{ return _op_id == Instruction::SHL; }
+    bool isLshr() const{ return _op_id == Instruction::LSHR; }
+    bool isAshr() const{ return _op_id == Instruction::ASHR; }
+    bool isAnd() const{ return _op_id == Instruction::AND; }
+    bool isOr() const{ return _op_id == Instruction::OR; }
+    bool isXor() const{ return _op_id == Instruction::XOR; }
+    bool isAlloca() const{ return _op_id == Instruction::ALLOCA; }
+    bool isLoad() const{ return _op_id == Instruction::LOAD; }
+    bool isStore() const{ return _op_id == Instruction::STORE; }
+    bool isCmp() const{ return _op_id == Instruction::CMP; }
+    bool isPhi() const{ return _op_id == Instruction::PHI; }
+    bool isGep() const{ return _op_id == Instruction::GEP; }
+    bool isCall() const{ return _op_id == Instruction::CALL; }
+    bool isZext() const{ return _op_id == Instruction::ZEXT; }
+    bool isBreak() const{ return _op_id == Instruction::BREAK; }
+    bool isContinue() const{ return _op_id == Instruction::CONTINUE; }
+    BasicBlock *getParent() const{ return _parent; }
+    void setParent(BasicBlock* parent) { _parent = parent; }
 
    protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);

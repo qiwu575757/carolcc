@@ -92,6 +92,9 @@ int main(int argc, char **argv) {
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
+    if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
+
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 

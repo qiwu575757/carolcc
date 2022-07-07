@@ -7,12 +7,16 @@
 //    passes.push_back(new pass_type(name));
 //}
 
+
+
+
 void pass_manager::run() {
     auto i = 0;
     for (pass* ps : passes) {
         i++;
         MyAssert("passes is nullptr",ps != nullptr);
         try {
+            printf("running pass [%s]\n",ps->getName().c_str());
             ps->run();
         }
         catch (...) {

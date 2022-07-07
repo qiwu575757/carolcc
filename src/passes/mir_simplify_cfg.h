@@ -3,6 +3,19 @@
 
 
 #include "pass.h"
+
+#define __MIR_SIMPLIFY_CFG_LOG
+#ifdef __MIR_SIMPLIFY_CFG_LOG
+#define SIMPLIFY_CFG_LOG(format, ...)                                                            \
+    do {                                                                             \
+        printf(BLUE "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define SIMPLIFY_CFG_LOG(format, ...)
+#endif
+
+
 class Function;
 class MirSimplifyCFG : public Transform {
 private:

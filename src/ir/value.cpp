@@ -13,12 +13,12 @@ Type *Value::getType() const{
 }
 
 void Value::replaceAllUse(Value *new_val) {
-    printf("[repalce all user of %s]\n",this->getPrintName().c_str());
-    if(new_val )
-        printf("new val %s\n",new_val->getPrintName().c_str());
+//    printf("[repalce all user of %s]\n",this->getPrintName().c_str());
+//    if(new_val )
+//        printf("new val %s\n",new_val->getPrintName().c_str());
     for (auto use : _user_list) {
         auto user = dynamic_cast<User *>(use->_user);
-        printf(" user %s  argnum: %d \n",user->getPrintName().c_str(),use->_value_no);
+//        printf(" user %s  argnum: %d \n",user->getPrintName().c_str(),use->_value_no);
         user->setOperand(use->_value_no, new_val);
     }
     this->_user_list.clear();

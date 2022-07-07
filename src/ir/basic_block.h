@@ -54,7 +54,7 @@ public:
     void setParentFunc(Function *parent);
     Function *getParentFunc() const;
     Module *getModule() const;
-    const Instruction *getTerminator() const;
+    Instruction *getTerminator() const;
     void addInstr(Instruction *instr);
     void addInstrBegin(Instruction *instr);
     bool empty();
