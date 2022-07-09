@@ -4,7 +4,7 @@
 #include "pass.h"
 
 class Function;
-class BinaryInst
+class BinaryInst;
 class ConstantFold : public Transform {
    public:
     ConstantFold(Module* m,const std::string &name): Transform(m,name){}
