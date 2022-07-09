@@ -12,6 +12,10 @@ Type *Value::getType() const{
     return _type;
 }
 
+/**
+ * 用 new_val 替换掉使用自己的地方
+ * @param new_val
+ */
 void Value::replaceAllUse(Value *new_val) {
 //    printf("[repalce all user of %s]\n",this->getPrintName().c_str());
 //    if(new_val )
@@ -23,7 +27,11 @@ void Value::replaceAllUse(Value *new_val) {
     }
     this->_user_list.clear();
 }
-
+/**
+ * 删掉自己在user 里作为第几个参数被使用的记录
+ * @param user
+ * @param value_no
+ */
 void Value::removeUse(Value *user, unsigned value_no) {
     Use *remove_use;
     for (auto use : _user_list) {

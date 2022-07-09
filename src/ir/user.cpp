@@ -19,7 +19,9 @@ Value *User::getOperand(unsigned int no)const {
 void User::accept(IrVisitorBase *v) {
     v->visit(this);
 }
-
+/**
+ * 删掉 自己参数被使用的记录
+ */
 void User::removeUseOps() {
     int i = 0;
     for ( auto op : _operands_list) {
