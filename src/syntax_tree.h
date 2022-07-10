@@ -191,12 +191,6 @@ public:
     std::list<std::shared_ptr<tree_block>> block;
 };
 
-// class tree_func_type : public syntax_tree_node {
-// public:
-//     void accept(tree_visitor_base &v) final;
-
-//     type_helper type;
-// };
 
 class tree_func_fparams : public syntax_tree_node {
 public:
