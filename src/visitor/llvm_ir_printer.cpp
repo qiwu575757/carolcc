@@ -295,26 +295,57 @@ void LLVMIrPrinter::visit(Value *node) {
     ERROR("TODO");
 }
 void LLVMIrPrinter::visit(CmpInst *node) {
-    WARNNING("icmp print float type");
-    output_file << node->getPrintName() << " = "
-                << "icmp ";
+    output_file << node->getPrintName() << " = ";
+    bool is_float = false;
+    if(node->getOperand(0)->getType()->isFloatTy()){
+        output_file<<"fcmp ";
+        is_float=true;
+    }
+    else if(node->getOperand(0)->getType()->isIntegerTy()){
+        output_file<<"icmp ";
+        is_float=false;
+    }
+    else {
+        ERROR("error type");
+    }
+
+
+
     if(node->isEq()){
-        output_file<<"eq";
+        if(!is_float)
+            output_file<<"eq";
+        else 
+            output_file<<"oeq";
     }
     else if(node->isNeq()){
-        output_file<<"ne";
+        if(!is_float)
+            output_file<<"ne";
+        else 
+            output_file<<"one";
     }
     else if(node->isGe()){
-        output_file<<"sge";
+        if(!is_float)
+            output_file<<"sge";
+        else 
+            output_file<<"oge";
     }
     else if(node->isGt()){
-        output_file<<"sgt";
+        if(!is_float)
+            output_file<<"sgt";
+        else 
+            output_file<<"ogt";
     }
     else if(node->isLt()){
-        output_file<<"slt";
+        if(!is_float)
+            output_file<<"slt";
+        else 
+            output_file<<"olt";
     }
     else if(node->isLe()){
-        output_file<<"sle";
+        if(!is_float)
+            output_file<<"sle";
+        else 
+            output_file<<"ole";
     }
     output_file<<" ";
     MyAssert("icmp has no oprt",node->getOperandNumber()==2);

@@ -1140,13 +1140,13 @@ void SYSYBuilder::visit(tree_rel_exp &node) {
         }
 
         if (node.oprt == "<=") {
-            G_tmp_val = builder->createLE(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createLE(Type::getInt1Ty(), l_val, r_val);
         } else if (node.oprt == "<") {
-            G_tmp_val = builder->createLT(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createLT(Type::getInt1Ty(), l_val, r_val);
         } else if (node.oprt == ">") {
-            G_tmp_val = builder->createGT(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createGT(Type::getInt1Ty(), l_val, r_val);
         } else if (node.oprt == ">=") {
-            G_tmp_val = builder->createGE(new IntegerType(1), l_val, r_val);
+            G_tmp_val = builder->createGE(Type::getInt1Ty(), l_val, r_val);
         }
     }
 }

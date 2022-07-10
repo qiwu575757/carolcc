@@ -4,6 +4,9 @@
 #include "type.h"
 #include "user.h"
 #include "value.h"
+#include <iostream>
+#include <sstream>
+#include <string>
 
 class ArrayType;
 
@@ -43,7 +46,9 @@ private:
 public:
     void accept(IrVisitorBase *v) override;
     std::string getPrintName()override{
-        return std::to_string(_value);
+        std::stringstream out;
+        out << std::scientific<<_value;
+        return out.str();
     }
 
 public:
