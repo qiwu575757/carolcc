@@ -51,11 +51,7 @@ private:
 
 public:
     void accept(IrVisitorBase *v) override;
-    std::string getPrintName()override{
-        std::stringstream out;
-        out <<"0x"<< std::hex<<_union_number._hex_number;
-        return out.str();
-    }
+    std::string getPrintName()override;
 
 public:
     double getValue() const;

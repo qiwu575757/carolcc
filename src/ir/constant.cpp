@@ -3,6 +3,8 @@
 #include "visitor/ir_visitor_base.h"
 #include <list>
 #include <vector>
+#include <cstring>
+static bool is_constant_debug =false;
 long ConstantInt::getValue() const {
     return _value;
 }
@@ -29,6 +31,39 @@ ConstantFloat *ConstantFloat::create(double val) {
 }
 void ConstantFloat::accept(IrVisitorBase *v) {
     v->visit(this);
+}
+std::string ConstantFloat::getPrintName(){
+    std::stringstream out;
+    char buffer[200];
+    if(is_constant_debug){
+        out<<_value;
+        return out.str();
+    }
+    else {
+        out <<"0x"<< std::hex<<_union_number._hex_number;
+        sprintf(buffer, "%20.6e", _value);
+        char* B = buffer;
+        while (*B == ' ')
+        {
+            B++;
+        }
+        char* last_base_number = B+2;
+        bool is_all_zero = true;
+        while(*last_base_number !='e'){
+            if(*last_base_number != '0'){
+                is_all_zero=false;
+            }
+            last_base_number++;
+            
+        }
+        last_base_number--;
+        if(*last_base_number=='0' && !is_all_zero){
+            return B;
+        }
+        else {
+            return out.str();
+        }
+    }
 }
 Constant *ConstantArray::getElement(int index) {
     return this->_const_array.at(index);

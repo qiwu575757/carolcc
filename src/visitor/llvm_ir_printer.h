@@ -5,7 +5,7 @@
 #include <fstream>
 #include <unordered_map>
 #include "passes/module.h"
-#define PRINTER_
+// #define PRINTER_
 #ifdef PRINTER_
 #define PRINTER_LOG(format, ...)                                  \
     do {                                                                             \

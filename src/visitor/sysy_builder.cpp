@@ -59,7 +59,7 @@ void SYSYBuilder::visit(tree_comp_unit &node) {
         G_in_global_init = false;
     }
     for (auto func : node.functions) {
-        SYSY_BUILDER("visiting %s", func->id.c_str());
+        SYSY_BUILDER("visiting func %s", func->id.c_str());
         func->accept(*this);
     }
 }
@@ -201,7 +201,6 @@ void SYSYBuilder::visit(tree_block &node) {
 }
 
 void SYSYBuilder::visit(tree_const_decl &node) {
-    SYSY_BUILDER("line:%d", node._line_no);
     SYSY_BUILDER("line:%d", node._line_no);
     switch (node.b_type->type) {
         case type_helper::INT:
@@ -427,19 +426,20 @@ void SYSYBuilder::visit(tree_decl &node) {
 
 void SYSYBuilder::visit(tree_const_def &node) {
     SYSY_BUILDER("line:%d", node._line_no);
-    SYSY_BUILDER(" const_def 370");
+    SYSY_BUILDER(" const_def name is %s",node.id.c_str());
     if (node.const_init_val == nullptr) {
         ERROR("const_def need init value");
     } else {
         if (node.const_exp_list ==
             nullptr) {  // 非数组情况
                         //            G_tmp_computing = true;
-            SYSY_BUILDER(" const_def 374");
             node.const_init_val->accept(*this);
             //            G_tmp_computing = false;
             if(!G_tmp_val->getType()->eq(*G_tmp_type)){
-
+                SYSY_BUILDER("const def is casting");
+                G_tmp_val = checkAndCast(G_tmp_val,G_tmp_type);
             }
+            SYSY_BUILDER(" const_def name is %s value is %s",node.id.c_str(),G_tmp_val->getPrintName().c_str());
             scope.push(node.id, G_tmp_val);
         } else if (node.const_exp_list != nullptr) {  // arrray
             Type *array_element_ty = G_tmp_type;
@@ -461,6 +461,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
                 ConstantArray::turn(basic_type, bounds, G_array_init);
             if (scope.in_global_scope()) {
                 SYSY_BUILDER("global array");
+                SYSY_BUILDER("const global variable %c",node.id.c_str());
                 auto var = GlobalVariable::create(node.id, module.get(),
                                                   initializer->getType(), true,
                                                   initializer);
@@ -524,10 +525,12 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 G_in_global_init = false;
                 auto initializer =
                     ConstantArray::turn(basic_type, array_bounds, G_array_init);
+                SYSY_BUILDER("global variable %c",node.id.c_str());
                 auto var = GlobalVariable::create(node.id, module.get(),
                                                   ty_array, false, initializer);
                 scope.push(node.id, var);
             } else {
+                SYSY_BUILDER("global variable %c",node.id.c_str());
                 auto var = GlobalVariable::create(node.id, module.get(),
                                                   ty_array, false, nullptr);
                 scope.push(node.id, var);
@@ -582,16 +585,19 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 else {
                     initializer= dynamic_cast<Constant*>(G_tmp_val);
                 }
+                SYSY_BUILDER("global variable %c",node.id.c_str());
                 auto var = GlobalVariable::create(node.id, &*module, G_tmp_type,
                                                   false, initializer);
                 scope.push(node.id, var);
             } else {
                 GlobalVariable* var;
                 if(G_tmp_type->isInt32()){
+                SYSY_BUILDER("global variable %c",node.id.c_str());
                     var = GlobalVariable::create(node.id, &*module, TyInt32,
                                                       false, CONST_INT(0));
                 }
                 else if(G_tmp_type->isFloatTy()){
+                SYSY_BUILDER("global variable %c",node.id.c_str());
                     var = GlobalVariable::create(node.id, &*module, Type::getFloatTy(),
                                                  false, CONST_FLOAT(0));
                 }
@@ -699,7 +705,7 @@ void SYSYBuilder::visit(tree_return_stmt &node) {
         G_tmp_type = G_cur_fun->getResultType();
         node.exp->accept(*this);
         G_tmp_type = nullptr;
-
+        G_tmp_val=checkAndCast(G_tmp_val,G_cur_fun->getResultType());
         builder->createRet(G_tmp_val);
     }
 }
@@ -1723,8 +1729,23 @@ Value *SYSYBuilder::checkAndCast(Value *value,Type* target_value) {
              (value->getType()->isFloatTy() || value->getType()->isIntegerTy())
     );
     auto res = value;
-    if(!value->getType()->eq(*target_value)){
+    if(!res->getType()->eq(*target_value)){
+        auto const_int = dynamic_cast<ConstantInt*>(value);
+        auto const_float = dynamic_cast<ConstantFloat*>(value);
+        if(const_int){
+            MyAssert("error type",target_value->isFloatTy());
+            auto val = const_int->getValue();
+            res = CONST_FLOAT(val);
+        }
+        else if(const_float){
+            MyAssert("error type",target_value->isInt32());
+            auto val = const_float->getValue();
+            res = CONST_INT(val);
+
+        }
+        else {
         res = builder->createCast(res,target_value);
+        }
     }
     return res;
 

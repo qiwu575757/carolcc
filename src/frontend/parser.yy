@@ -699,7 +699,7 @@ Number
             $$ = new tree_number();
             $$->_line_no = yyline+1;
             $$->float_value = (float)atof($1->c_str());
-            $$->is_int=true;
+            $$->is_int=false;
         }
     ;
 
