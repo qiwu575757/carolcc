@@ -5,6 +5,7 @@
 
 int key = 0;//给需要的立即数标号
 std::list<Value *> variable_list;//待分配寄存器的变量列表
+ int reg_index = 0; //从 0 号寄存器开始分配
 InstGen::CmpOp last_cmp_op;//因为br指令中没有存储跳转条件信息，需要利用br指令上一条的
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
@@ -291,7 +292,6 @@ std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
 
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
-    int reg_index = 0; //从 0 号寄存器开始分配
 
     /****/
     for (auto upd_v : update_v) {
@@ -1173,7 +1173,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     stack_cur_size += type_size;
     variable_list.clear();//清空列表
     register_mapping.clear();//清空寄存器映射
-
+    reg_index = 0;
+    
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;
 }
