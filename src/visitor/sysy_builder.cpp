@@ -37,8 +37,8 @@ bool G_pre_enter_scope = false;
 std::vector<Value *> G_array_init;
 // 用于记录维度数目
 // 用于计算数值与val转换
-int G_tmp_int = 0;
-float G_tmp_float = 0.0;
+long G_tmp_int = 0;
+double G_tmp_float = 0.0;
 BaseBlock *cond_end;
 // 标记当前为计算数值状态 并且使用到 G_tmp_int/G_tmp_float
 bool G_tmp_computing = false;
@@ -274,21 +274,24 @@ void SYSYBuilder::visit(tree_const_init_val &node) {
 void SYSYBuilder::visit(tree_const_exp &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     SYSY_BUILDER(" tree_const_exp 264 %d", G_in_global_init);
-    if (G_tmp_type == Type::getFloatTy()) {
-        G_tmp_computing = true;
-    } else if (G_tmp_type == Type::getInt32Ty()) {
-        G_tmp_computing = true;
-    } else {
-        ERROR("erorr type");
-    }
+//    if (G_tmp_type == Type::getFloatTy()) {
+//        G_tmp_computing = true;
+//    } else if (G_tmp_type == Type::getInt32Ty()) {
+//        G_tmp_computing = true;
+//    } else {
+//        ERROR("erorr type");
+//    }
+    G_tmp_computing = true;
     node.add_exp->accept(*this);
-    if (G_tmp_type->isFloatTy()) {
-        G_tmp_val = CONST_INT(G_tmp_int);
-    } else if (G_tmp_type->isIntegerTy()) {
-        G_tmp_val = CONST_INT(G_tmp_int);
-    } else {
-        ERROR("error type");
-    }
+     // 直接会用 value 返回，现在不需要这些操作了
+    // 再添加完 浮点 隐式类型转换之后
+//    if (G_tmp_type->isFloatTy()) {
+//        G_tmp_val = CONST_INT(G_tmp_int);
+//    } else if (G_tmp_type->isIntegerTy()) {
+//        G_tmp_val = CONST_INT(G_tmp_int);
+//    } else {
+//        ERROR("error type");
+//    }
     G_tmp_computing = false;
 }
 
@@ -339,8 +342,6 @@ void SYSYBuilder::visit(tree_init_val &node) {
             node.exp->accept(*this);
         }
 
-        if (G_in_global_init) {
-        }
     } else {  // array
         auto cur_bnd = node.bounds[0];
         auto dim_length = 1;
@@ -436,6 +437,9 @@ void SYSYBuilder::visit(tree_const_def &node) {
             SYSY_BUILDER(" const_def 374");
             node.const_init_val->accept(*this);
             //            G_tmp_computing = false;
+            if(!G_tmp_val->getType()->eq(*G_tmp_type)){
+
+            }
             scope.push(node.id, G_tmp_val);
         } else if (node.const_exp_list != nullptr) {  // arrray
             Type *array_element_ty = G_tmp_type;
@@ -452,7 +456,8 @@ void SYSYBuilder::visit(tree_const_def &node) {
 
             node.const_init_val->bounds.assign(bounds.begin(), bounds.end());
             node.const_init_val->accept(*this);
-            auto initializer = ConstantArray::turn(bounds, G_array_init);
+            auto initializer =
+                ConstantArray::turn(nullptr, bounds, G_array_init);
             if (scope.in_global_scope()) {
                 SYSY_BUILDER("global array");
                 auto var = GlobalVariable::create(node.id, module.get(),
@@ -501,10 +506,11 @@ void SYSYBuilder::visit(tree_var_def &node) {
         // dim v
         for (auto exp : node.array_def->const_exps) {
             exp->accept(*this);
-            int dim_v = static_cast<ConstantInt *>(G_tmp_val)->getValue();
+            int dim_v = dynamic_cast<ConstantInt *>(G_tmp_val)->getValue();
             array_bounds.push_back(dim_v);
         }
         Type *ty_array = G_tmp_type;
+        Type* basic_type = G_tmp_type;
         for (int i = array_bounds.size() - 1; i >= 0; i--) {
             ty_array = ArrayType::get(ty_array, array_bounds[i]);
         }
@@ -516,7 +522,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 node.init_val->accept(*this);
                 G_in_global_init = false;
                 auto initializer =
-                    ConstantArray::turn(array_bounds, G_array_init);
+                    ConstantArray::turn(basic_type, array_bounds, G_array_init);
                 auto var = GlobalVariable::create(node.id, module.get(),
                                                   ty_array, false, initializer);
                 scope.push(node.id, var);
@@ -542,8 +548,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 for (int i = 0; i < G_array_init.size(); i++) {
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
+                        G_array_init[i] = checkAndCast(G_array_init[i],p->getElementType()->getPointerElementType());
                         builder->createStore(G_array_init[i], p);
                     } else {
+                        G_array_init[i] = checkAndCast(G_array_init[i],ptr->getElementType()->getPointerElementType());
                         builder->createStore(G_array_init[i], ptr);
                     }
                 }
@@ -556,25 +564,52 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 G_in_global_init = true;
                 node.init_val->accept(*this);
                 G_in_global_init = false;
-                auto initializer = static_cast<Constant *>(G_tmp_val);
-                auto var = GlobalVariable::create(node.id, &*module, TyInt32,
+                Constant* initializer ;
+                if(!G_tmp_val->getType()->eq(*G_tmp_type)){
+                    if(G_tmp_val->getType()->isFloatTy() && G_tmp_type->isInt32()){
+                        auto val  = dynamic_cast<ConstantFloat*>(G_tmp_val)->getValue();
+                        initializer = CONST_INT(val);
+                    }
+                    else if(G_tmp_val->getType()->isInt32()&& G_tmp_type->isFloatTy()) {
+                        auto val  = dynamic_cast<ConstantInt*>(G_tmp_val)->getValue();
+                        initializer = CONST_FLOAT(val);
+                    }
+                    else {
+                        ERROR("ERROR TYPE");
+                    }
+                }
+                else {
+                    initializer= dynamic_cast<Constant*>(G_tmp_val);
+                }
+                auto var = GlobalVariable::create(node.id, &*module, G_tmp_type,
                                                   false, initializer);
                 scope.push(node.id, var);
             } else {
-                auto var = GlobalVariable::create(node.id, &*module, TyInt32,
-                                                  false, CONST_INT(0));
+                GlobalVariable* var;
+                if(G_tmp_type->isInt32()){
+                    var = GlobalVariable::create(node.id, &*module, TyInt32,
+                                                      false, CONST_INT(0));
+                }
+                else if(G_tmp_type->isFloatTy()){
+                    var = GlobalVariable::create(node.id, &*module, Type::getFloatTy(),
+                                                 false, CONST_FLOAT(0));
+                }
+                else {
+                    ERROR("error type");
+                }
                 scope.push(node.id, var);
             }
         } else {
-            auto val_alloc = builder->createAllocaAtEntry(TyInt32);
+            auto val_alloc = builder->createAllocaAtEntry(G_tmp_type);
             scope.push(node.id, val_alloc);
             if (node.init_val != nullptr) {  // 变量赋值
                 node.init_val->accept(*this);
+                G_tmp_val = checkAndCast(G_tmp_val,val_alloc->getType()->getPointerElementType());
                 builder->createStore(G_tmp_val, val_alloc);
+                }
             }
         }
     }
-}
 
 void SYSYBuilder::visit(tree_block_item_list &node) {
     SYSY_BUILDER("line:%d", node._line_no);
@@ -648,6 +683,9 @@ void SYSYBuilder::visit(tree_assign_stmt &node) {
     auto lval = G_tmp_val;
     node.exp->accept(*this);
     auto rval = G_tmp_val;
+    // 赋值语句cast
+    // 这里可能没处理一些其他比较复杂的情况
+    rval= checkAndCast(rval,lval->getType()->getPointerElementType());
     builder->createStore(rval, lval);
 }
 
@@ -708,29 +746,16 @@ void SYSYBuilder::visit(tree_l_val &node) {
 void SYSYBuilder::visit(tree_number &node) {
     SYSY_BUILDER("line:%d", node._line_no);
 
-    /*wuqi TODO*/
-    if (G_tmp_computing) {
-        if (!node.is_int) {
-            SYSY_BUILDER("visiting float %f", node.float_value);
-            G_tmp_float = node.float_value;
-        } else if (node.is_int) {
-            SYSY_BUILDER("visiting int %d", node.int_value);
-            G_tmp_int = node.int_value;
-        } else {
-            ERROR("ERROR type in tree number");
-        }
+    if (!node.is_int) {
+        SYSY_BUILDER("visiting float %f", node.float_value);
+        G_tmp_val = CONST_FLOAT(node.float_value);
+        G_tmp_float = node.float_value;
+    } else if (node.is_int) {
+        SYSY_BUILDER("visiting int %d", node.int_value);
+        G_tmp_val = CONST_INT(node.int_value);
+        G_tmp_int = node.int_value;
     } else {
-        if (!node.is_int) {
-            SYSY_BUILDER("visiting float %f", node.float_value);
-            G_tmp_val = CONST_FLOAT(node.float_value);
-            G_tmp_float = node.float_value;
-        } else if (node.is_int) {
-            SYSY_BUILDER("visiting int %d", node.int_value);
-            G_tmp_val = CONST_INT(node.int_value);
-            G_tmp_int = node.int_value;
-        } else {
-            ERROR("ERROR type in tree number");
-        }
+        ERROR("ERROR type in tree number");
     }
 }
 
@@ -744,13 +769,15 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             node.exp->accept(*this);
         } else if (node.l_val != nullptr) {
             node.l_val->accept(*this);
-            if (G_tmp_type->isFloatTy()) {
+            // 修改 类型转换的时候把这里注释掉了
+            // 现在返回值全都用constant 类型对象来保存
+            if (G_tmp_val->getType()->isFloatTy()) {
                 G_tmp_float =
                     static_cast<ConstantFloat *>(G_tmp_val)->getValue();
-            } else if (G_tmp_type->isInt32()) {
+            } else if (G_tmp_val->getType()->isInt32()) {
                 G_tmp_int = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             } else {
-                ERROR("");
+                ERROR("ERROR TYPE");
             }
         } else if (node.number != nullptr) {
             SYSY_BUILDER("exp");
@@ -807,10 +834,12 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         }
 
         if (node.oprt == "-") {
-            if (G_tmp_type->isFloatTy()) {
+            if (G_tmp_val->getType()->isFloatTy()) {
                 G_tmp_float = -G_tmp_float;
-            } else if (G_tmp_type->isInt32()) {
+                G_tmp_val = CONST_FLOAT( dynamic_cast<ConstantFloat*>(G_tmp_val)->getValue());
+            } else if (G_tmp_val->getType()->isInt32()) {
                 G_tmp_int = -G_tmp_int;
+                G_tmp_val = CONST_INT( dynamic_cast<ConstantInt*>(G_tmp_val)->getValue());
             } else {
                 ERROR("");
             }
@@ -843,7 +872,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
             } else if (G_tmp_val->getType()->isInt32()) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, G_tmp_val);
-            } else if (G_tmp_val->getType()->isBool()) {
+            } else if (G_tmp_val->getType()->isBool()) {  // (! a == b)
                 auto val_i32 = builder->creatZExtInst(TyInt32, G_tmp_val);
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, val_i32);
@@ -855,8 +884,10 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val =
                     builder->createEQ(Type::getInt1Ty(), G_tmp_val, const0);
-            } else {
-                ERROR("Not operation for flaot tyoe in visit tree_unary_exp");
+            } else if (G_tmp_val->getType()->isFloatTy()) {
+                auto const_float0 = CONST_FLOAT(0.0);
+                G_tmp_val = builder->createEQ(Type::getInt1Ty(), G_tmp_val,
+                                              const_float0);
             }
         }
     }
@@ -871,60 +902,30 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
     } else {
         if (G_tmp_computing) {
             node.mul_exp->accept(*this);
-            auto l_val = (G_tmp_type->getTypeID() == Type::FloatTyID)
-                             ? G_tmp_float
-                             : G_tmp_int;
+            _oprd_queue.push(G_tmp_val);
             node.unary_exp->accept(*this);
-            auto r_val = (G_tmp_type->getTypeID() == Type::FloatTyID)
-                             ? G_tmp_float
-                             : G_tmp_int;
-
-            if (node.oprt == "*") {
-                if (G_tmp_type->isFloatTy()) {
-                    G_tmp_float = l_val * r_val;
-                } else if (G_tmp_type->isInt32()) {
-                    G_tmp_int = l_val * r_val;
-                } else {
-                    ERROR("");
-                }
-            } else if (node.oprt == "/") {
-                if (G_tmp_type->isFloatTy()) {
-                    G_tmp_float = l_val / r_val;
-                } else if (G_tmp_type->isInt32()) {
-                    G_tmp_int = l_val / r_val;
-                } else {
-                    ERROR("");
-                }
-            } else if (node.oprt == "%") {
-                if (G_tmp_type->getTypeID() == Type::IntegerTyID) {
-                    G_tmp_int = l_val / r_val;
-                } else {
-                    ERROR("Invalid oprt Mod for float type");
-                }
-            }
+            _oprd_queue.push(G_tmp_val);
+            calBinary(node.oprt);
         } else {
             node.mul_exp->accept(*this);
-            auto l_val = G_tmp_val;
-            int l_vi;
-            float l_vf;
+            _oprd_queue.push(G_tmp_val);
             node.unary_exp->accept(*this);
-            auto r_val = G_tmp_val;
-            int r_vi;
-            float r_vf;
+            _oprd_queue.push(G_tmp_val);
+            buildBinary(node.oprt);
 
-            if (l_val->getType()->isBool()) {
-                l_val = builder->creatZExtInst(TyInt32, l_val);
-            }
-            if (r_val->getType()->isBool()) {
-                r_val = builder->creatZExtInst(TyInt32, r_val);
-            }
-            if (node.oprt == "*") {
-                G_tmp_val = builder->createMul(l_val, r_val);
-            } else if (node.oprt == "/") {
-                G_tmp_val = builder->createDiv(l_val, r_val);
-            } else if (node.oprt == "%") {
-                G_tmp_val = builder->createRem(l_val, r_val);
-            }
+//            if (l_val->getType()->isBool()) {
+//                l_val = builder->creatZExtInst(TyInt32, l_val);
+//            }
+//            if (r_val->getType()->isBool()) {
+//                r_val = builder->creatZExtInst(TyInt32, r_val);
+//            }
+//            if (node.oprt == "*") {
+//                G_tmp_val = builder->createMul(l_val, r_val);
+//            } else if (node.oprt == "/") {
+//                G_tmp_val = builder->createDiv(l_val, r_val);
+//            } else if (node.oprt == "%") {
+//                G_tmp_val = builder->createRem(l_val, r_val);
+//            }
         }
     }
 }
@@ -937,55 +938,17 @@ void SYSYBuilder::visit(tree_add_exp &node) {
         node.mul_exp->accept(*this);
     } else {
         if (G_tmp_computing) {
-            SYSY_BUILDER("add exp 813");
             node.add_exp->accept(*this);
-            auto l_val = (G_tmp_type->getTypeID() == Type::FloatTyID)
-                             ? G_tmp_float
-                             : G_tmp_int;
+            _oprd_queue.push(G_tmp_val);
             node.mul_exp->accept(*this);
-            auto r_val = (G_tmp_type->getTypeID() == Type::FloatTyID)
-                             ? G_tmp_float
-                             : G_tmp_int;
-
-            if (node.oprt == "+") {
-                if (G_tmp_type->isFloatTy()) {
-                    G_tmp_float = l_val + r_val;
-                } else if (G_tmp_type->isInt32()) {
-                    G_tmp_int = l_val + r_val;
-                } else {
-                    ERROR("");
-                }
-            } else if (node.oprt == "-") {
-                if (G_tmp_type->isFloatTy()) {
-                    G_tmp_float = l_val - r_val;
-                } else if (G_tmp_type->isInt32()) {
-                    G_tmp_int = l_val - r_val;
-                } else {
-                    ERROR("");
-                }
-            }
+            _oprd_queue.push(G_tmp_val);
+            calBinary(node.oprt);
         } else {
-            SYSY_BUILDER("add exp 837");
             node.add_exp->accept(*this);
-            auto l_val = G_tmp_val;
-            int l_vi;
-            float l_vf;
+            _oprd_queue.push(G_tmp_val);
             node.mul_exp->accept(*this);
-            auto r_val = G_tmp_val;
-            int r_vi;
-            float r_vf;
-
-            if (l_val->getType()->isBool()) {
-                l_val = builder->creatZExtInst(TyInt32, l_val);
-            }
-            if (r_val->getType()->isBool()) {
-                r_val = builder->creatZExtInst(TyInt32, r_val);
-            }
-            if (node.oprt == "+") {
-                G_tmp_val = builder->createAdd(l_val, r_val);
-            } else if (node.oprt == "-") {
-                G_tmp_val = builder->createSub(l_val, r_val);
-            }
+            _oprd_queue.push(G_tmp_val);
+            buildBinary(node.oprt);
         }
     }
 }
@@ -996,27 +959,26 @@ void SYSYBuilder::visit(tree_rel_exp &node) {
     if (node.rel_exp == nullptr) {
         node.add_exp->accept(*this);
     } else {
+//        node.rel_exp->accept(*this);
+//        auto l_val = G_tmp_val;
+//        node.add_exp->accept(*this);
+//        auto r_val = G_tmp_val;
+
         node.rel_exp->accept(*this);
-        auto l_val = G_tmp_val;
+        _oprd_queue.push(G_tmp_val);
         node.add_exp->accept(*this);
-        auto r_val = G_tmp_val;
+        _oprd_queue.push(G_tmp_val);
+        buildBinary(node.oprt);
 
-        if (l_val->getType()->isBool()) {
-            l_val = builder->creatZExtInst(TyInt32, l_val);
-        }
-        if (r_val->getType()->isBool()) {
-            r_val = builder->creatZExtInst(TyInt32, r_val);
-        }
-
-        if (node.oprt == "<=") {
-            G_tmp_val = builder->createLE(Type::getInt1Ty(), l_val, r_val);
-        } else if (node.oprt == "<") {
-            G_tmp_val = builder->createLT(Type::getInt1Ty(), l_val, r_val);
-        } else if (node.oprt == ">") {
-            G_tmp_val = builder->createGT(Type::getInt1Ty(), l_val, r_val);
-        } else if (node.oprt == ">=") {
-            G_tmp_val = builder->createGE(Type::getInt1Ty(), l_val, r_val);
-        }
+//        if (node.oprt == "<=") {
+//            G_tmp_val = builder->createLE(Type::getInt1Ty(), l_val, r_val);
+//        } else if (node.oprt == "<") {
+//            G_tmp_val = builder->createLT(Type::getInt1Ty(), l_val, r_val);
+//        } else if (node.oprt == ">") {
+//            G_tmp_val = builder->createGT(Type::getInt1Ty(), l_val, r_val);
+//        } else if (node.oprt == ">=") {
+//            G_tmp_val = builder->createGE(Type::getInt1Ty(), l_val, r_val);
+//        }
     }
 }
 
@@ -1030,19 +992,24 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
         auto l_val = G_tmp_val;
         node.rel_exp->accept(*this);
         auto r_val = G_tmp_val;
+//
+//        if (l_val->getType()->isBool()) {
+//            l_val = builder->creatZExtInst(TyInt32, l_val);
+//        }
+//        if (r_val->getType()->isBool()) {
+//            r_val = builder->creatZExtInst(TyInt32, r_val);
+//        }
+        node.eq_exp->accept(*this);
+        _oprd_queue.push(G_tmp_val);
+        node.rel_exp->accept(*this);
+        _oprd_queue.push(G_tmp_val);
+        buildBinary(node.oprt);
 
-        if (l_val->getType()->isBool()) {
-            l_val = builder->creatZExtInst(TyInt32, l_val);
-        }
-        if (r_val->getType()->isBool()) {
-            r_val = builder->creatZExtInst(TyInt32, r_val);
-        }
-
-        if (node.oprt == "==") {
-            G_tmp_val = builder->createEQ(Type::getInt1Ty(), l_val, r_val);
-        } else if (node.oprt == "!=") {
-            G_tmp_val = builder->createNEQ(Type::getInt1Ty(), l_val, r_val);
-        }
+//        if (node.oprt == "==") {
+//            G_tmp_val = builder->createEQ(Type::getInt1Ty(), l_val, r_val);
+//        } else if (node.oprt == "!=") {
+//            G_tmp_val = builder->createNEQ(Type::getInt1Ty(), l_val, r_val);
+//        }
     }
 }
 
@@ -1394,6 +1361,9 @@ void SYSYBuilder::visit(tree_func_call &node) {
             }
             arg->accept(*this);
             G_require_address = false;
+            if(arg_type->isFloatTy()||arg_type->isIntegerTy()){
+                G_tmp_val = checkAndCast(G_tmp_val,arg_type);
+            }
             args.push_back(G_tmp_val);
         }
     }
@@ -1525,4 +1495,209 @@ SYSYBuilder::SYSYBuilder(const std::string &name) {
     scope.push("__mtend", mtend_fun);
     /**** 库函数引用 END ****/
 }
-void SYSYBuilder::build(tree_comp_unit *node) { node->accept(*this); };
+void SYSYBuilder::build(tree_comp_unit *node) { node->accept(*this); }
+void SYSYBuilder::calBinary(const std::string oprt) {
+    MyAssert("error oprd number", _oprd_queue.size() == 2);
+    auto oprt1 = _oprd_queue.front();
+    _oprd_queue.pop();
+    auto oprt2 = _oprd_queue.front();
+    _oprd_queue.pop();
+
+    if (!oprt1->getType()->eq(*oprt2->getType())) {
+        MyAssert(
+            "error type combo",
+            (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
+                (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()));
+
+        if (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) {
+            auto imm = dynamic_cast<ConstantInt *>(oprt2)->getValue();
+            oprt2 = CONST_FLOAT(imm);
+        } else if (oprt2->getType()->isFloatTy() &&
+                   oprt1->getType()->isInt32()) {
+            auto imm = dynamic_cast<ConstantInt *>(oprt1)->getValue();
+            oprt1 = CONST_FLOAT(imm);
+        } else {
+            ERROR("error type");
+        }
+    }
+
+    if (oprt1->getType()->eq(*oprt2->getType())) {
+        if (oprt1->getType()->isInt32()) {
+            auto a = dynamic_cast<ConstantInt *>(oprt1)->getValue();
+            auto b = dynamic_cast<ConstantInt *>(oprt2)->getValue();
+            long res = 0;
+            switch (oprt[0]) {
+                case '+':
+                    res = a + b;
+                    break;
+                case '-':
+                    res = a + b;
+                    break;
+                case '*':
+                    res = a * b;
+                    break;
+                case '/':
+                    res = a / b;
+                    break;
+                case '%':
+                    res = a % b;
+                    break;
+                default:
+                    ERROR("illegal oprt");
+            }
+            G_tmp_int = res;
+            G_tmp_val = CONST_INT(res);
+//            _oprd_queue.push(CONST_INT(res));
+        } else if (oprt1->getType()->isFloatTy()) {
+            auto a = dynamic_cast<ConstantFloat *>(oprt1)->getValue();
+            auto b = dynamic_cast<ConstantFloat *>(oprt2)->getValue();
+            double res = 0;
+            switch (oprt[0]) {
+                case '+':
+                    res = a + b;
+                    break;
+                case '-':
+                   res = a - b;
+                    break;
+                case '*':
+                    res = a * b;
+                    break;
+                case '/':
+                    res = a / b;
+                    break;
+                case '%':
+                    ERROR("error mod oprt for float");
+                default:
+                    ERROR("illegal oprt");
+            }
+            G_tmp_float = res;
+            G_tmp_val = CONST_FLOAT(res);
+//            _oprd_queue.push(CONST_FLOAT(res));
+        } else {
+            ERROR("error type");
+        }
+    }
+}
+void SYSYBuilder::buildBinary(const std::string oprt){
+    MyAssert("error oprd number", _oprd_queue.size() == 2);
+    auto oprt1 = _oprd_queue.front();
+    _oprd_queue.pop();
+    auto oprt2 = _oprd_queue.front();
+    _oprd_queue.pop();
+
+    if (oprt1->getType()->isBool()) {
+        oprt1 = builder->creatZExtInst(TyInt32, oprt1);
+    }
+    if (oprt2->getType()->isBool()) {
+        oprt2 = builder->creatZExtInst(TyInt32, oprt2);
+    }
+
+    if (!oprt1->getType()->eq(*oprt2->getType())) {
+        MyAssert(
+            "error type combo",
+            (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
+            (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()));
+
+        if (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) {
+            oprt2 = builder->createInt2Fp(oprt2);
+        } else if (oprt2->getType()->isFloatTy() &&
+                   oprt1->getType()->isInt32()) {
+            oprt1 = builder->createInt2Fp(oprt1);
+        } else {
+            ERROR("error type");
+        }
+    }
+
+    if (oprt1->getType()->eq(*oprt2->getType())) {
+        if (oprt1->getType()->isInt32()) {
+            Value* res ;
+            if(oprt == "+"){
+
+                res = builder->createAdd(oprt1,oprt2);
+            }
+            else if(oprt == "-"){
+                res = builder->createSub(oprt1,oprt2);
+            }
+            else if(oprt == "*"){
+                res = builder->createMul(oprt1,oprt2);
+            }
+            else if(oprt == "/"){
+                res = builder->createDiv(oprt1,oprt2);
+            }
+            else if(oprt == "%"){
+                res = builder->createRem(oprt1,oprt2);
+            }
+            else if (oprt == "<=") {
+                res = builder->createLE(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == "<") {
+                res = builder->createLT(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == ">") {
+                res = builder->createGT(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == ">=") {
+                res = builder->createGE(Type::getInt1Ty(), oprt1, oprt2);
+            }
+            else if (oprt == "==") {
+                res = builder->createEQ(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == "!=") {
+                res = builder->createNEQ(Type::getInt1Ty(), oprt1, oprt2);
+            }
+            else {
+                ERROR("ERROR TYPE");
+            }
+            G_tmp_val = res;
+            //            _oprd_queue.push(CONST_INT(res));
+        } else if (oprt1->getType()->isFloatTy()) {
+            Value* res ;
+            if(oprt == "+"){
+
+                res = builder->createAdd(oprt1,oprt2);
+            }
+            else if(oprt == "-"){
+                res = builder->createSub(oprt1,oprt2);
+            }
+            else if(oprt == "*"){
+                res = builder->createMul(oprt1,oprt2);
+            }
+            else if(oprt == "/"){
+                res = builder->createDiv(oprt1,oprt2);
+            }
+            else if(oprt == "%"){
+                ERROR("ERROR TYPE");
+            }
+            else if (oprt == "<=") {
+                res = builder->createLE(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == "<") {
+                res = builder->createLT(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == ">") {
+                res = builder->createGT(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == ">=") {
+                res = builder->createGE(Type::getInt1Ty(), oprt1, oprt2);
+            }
+            else if (oprt == "==") {
+                res = builder->createEQ(Type::getInt1Ty(), oprt1, oprt2);
+            } else if (oprt == "!=") {
+                res = builder->createNEQ(Type::getInt1Ty(), oprt1, oprt2);
+            }
+            else {
+                ERROR("ERROR TYPE");
+            }
+            G_tmp_val = res;
+            //            _oprd_queue.push(CONST_FLOAT(res));
+        } else {
+            ERROR("error type");
+        }
+    }
+
+}
+Value *SYSYBuilder::checkAndCast(Value *value,Type* target_value) {
+    MyAssert("复杂类型的类型转换!",
+             (target_value->isFloatTy() || target_value->isIntegerTy())&&
+             (value->getType()->isFloatTy() || value->getType()->isIntegerTy())
+    );
+    auto res = value;
+    if(!value->getType()->eq(*target_value)){
+        res = builder->createCast(res,target_value);
+    }
+    return res;
+
+};

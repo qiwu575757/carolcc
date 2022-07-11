@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include "utils.h"
 
 class IntegerType;
 class FunctionType;
@@ -125,6 +126,14 @@ public:
     Type *getElementType() const { return _contained; }
     unsigned getNumOfElements() const { return _num_elements; }
     std::vector<unsigned> getDims() const;
+    Type* getBasicType(){
+        Type * ty = _contained;
+        while(ty->isArrayTy()){
+            ty = static_cast<ArrayType*>(ty)->getElementType();
+        }
+        MyAssert("error type",ty->isFloatTy() || ty->isIntegerTy());
+        return ty;
+    }
 
 private:
     Type *_contained;      // The element type of the array.

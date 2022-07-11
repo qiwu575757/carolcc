@@ -48,6 +48,8 @@ class Instruction : public User {
         // HIR
         BREAK,
         CONTINUE,
+        //
+        CAST
 
     };
 
@@ -56,6 +58,7 @@ class Instruction : public User {
     bool isBr() const { return _op_id == Instruction::BR; }
     //    bool isNeg()const { return _op_id == Instruction::NEG; }
     bool isNot() const{ return _op_id == Instruction::NOT; }
+    bool isCast() const{ return _op_id == Instruction::CAST; }
     bool isAdd() const{ return _op_id == Instruction::ADD; }
     bool isSub() const{ return _op_id == Instruction::SUB; }
     bool isMul() const{ return _op_id == Instruction::MUL; }
@@ -97,7 +100,9 @@ class UnaryInst : public Instruction {
    public:
     //    static UnaryInst *createNeg(Value *v1, BasicBlock *parent);
     static UnaryInst *createNot(Value *v1, BasicBlock *parent);
+    static UnaryInst *createCast(Value *v1,Type* type_cast_to, BasicBlock *parent);
 };
+
 
 class BinaryInst : public Instruction {
    private:

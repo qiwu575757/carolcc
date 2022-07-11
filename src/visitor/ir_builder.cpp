@@ -142,3 +142,13 @@ HIR *IRBuilder::createContinue() {
     return HIR::createContinue(this->_basic_block);
 }
 void IRBuilder::SetEntryBlock(BasicBlock *bb) { _entry_block = bb; }
+UnaryInst *IRBuilder::createCast(Value *v1, Type *type_cast_to) {
+    return UnaryInst::createCast(v1,type_cast_to, this->_basic_block);
+
+}
+UnaryInst *IRBuilder::createFp2Int(Value *v1) {
+    return createCast(v1,Type::getInt32Ty());
+}
+UnaryInst *IRBuilder::createInt2Fp(Value *v1) {
+    return createCast(v1,Type::getFloatTy());
+}

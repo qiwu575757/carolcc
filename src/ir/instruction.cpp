@@ -36,6 +36,19 @@ UnaryInst *UnaryInst::createNot(Value *v1, BasicBlock *parent)
 {
     return new UnaryInst(v1->getType(), Instruction::NOT, v1, parent);
 }
+UnaryInst *UnaryInst::createCast(Value *v1,Type* type_cast_to, BasicBlock *parent) {
+    if(type_cast_to->isFloatTy()){
+        MyAssert("error type",v1->getType()->isInt32());
+    }
+    else if (type_cast_to->isInt32()){
+
+        MyAssert("error type",v1->getType()->isFloatTy());
+    }
+    else {
+        ERROR("error type");
+    }
+    return new UnaryInst(type_cast_to,Instruction::CAST,v1,parent);
+}
 
 BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *v2)
     : Instruction(type, op_id, 2)
@@ -518,3 +531,4 @@ PhiInstr::PhiInstr(Type *ty, std::vector<Value *> vals,
 }
 PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) { return new PhiInstr(ty,0,bb); }
 void PhiInstr::accept(IrVisitorBase *v) { v->visit(this); }
+
