@@ -5,6 +5,16 @@
 #include <fstream>
 #include <unordered_map>
 #include "passes/module.h"
+#define PRINTER_
+#ifdef PRINTER_
+#define PRINTER_LOG(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define PRINTER_LOG(format, ...)
+#endif
 
 class LLVMIrPrinter : public IrVisitorBase {
 public:

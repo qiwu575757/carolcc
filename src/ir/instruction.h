@@ -101,6 +101,8 @@ class UnaryInst : public Instruction {
     //    static UnaryInst *createNeg(Value *v1, BasicBlock *parent);
     static UnaryInst *createNot(Value *v1, BasicBlock *parent);
     static UnaryInst *createCast(Value *v1,Type* type_cast_to, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+    
 };
 
 

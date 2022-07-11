@@ -274,6 +274,7 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
     output_file << std::endl;
 }
 void LLVMIrPrinter::visit(UnaryInst *node) {
+    PRINTER_LOG("visiting llvm ir printer unary inst %d",node->isCast());
     output_file<<node->getPrintName()<<" = ";
     if(node->isCast()){
         if(node->getType()->isFloatTy() && node->getOperand(0)->getType()->isIntegerTy()){
@@ -287,6 +288,9 @@ void LLVMIrPrinter::visit(UnaryInst *node) {
             node->getOperand(0)->getType()->print(output_file);
             output_file<<node->getOperand(0)->getPrintName()<<" to ";
             node->getType()->print(output_file);
+        }
+        else {
+            ERROR("error type");
         }
     }
     output_file<<std::endl;

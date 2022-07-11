@@ -6,6 +6,7 @@
 #include "passes/module.h"
 #include "tree_visitor_base.h"
 #include <queue>
+#include <stack>
 class Scope;
 class IRBuilder;
 class Module;
@@ -76,7 +77,7 @@ class SYSYBuilder : public tree_visitor_base {
 
      // for cast
     // 用于暂存操作数
-    std::queue<Value*> _oprd_queue;
+    std::stack<Value*> _oprt_stack;
     // 用于计算立即数
     void calBinary(const std::string oprt);
     void buildBinary(const std::string oprt);

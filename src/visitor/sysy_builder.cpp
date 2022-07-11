@@ -443,6 +443,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
             scope.push(node.id, G_tmp_val);
         } else if (node.const_exp_list != nullptr) {  // arrray
             Type *array_element_ty = G_tmp_type;
+            Type* basic_type = G_tmp_type;
             std::vector<int32_t> bounds;
             for (auto &array_const_exp : node.const_exp_list->const_exp) {
                 array_const_exp->accept(*this);
@@ -457,7 +458,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
             node.const_init_val->bounds.assign(bounds.begin(), bounds.end());
             node.const_init_val->accept(*this);
             auto initializer =
-                ConstantArray::turn(nullptr, bounds, G_array_init);
+                ConstantArray::turn(basic_type, bounds, G_array_init);
             if (scope.in_global_scope()) {
                 SYSY_BUILDER("global array");
                 auto var = GlobalVariable::create(node.id, module.get(),
@@ -548,10 +549,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 for (int i = 0; i < G_array_init.size(); i++) {
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
-                        G_array_init[i] = checkAndCast(G_array_init[i],p->getElementType()->getPointerElementType());
+                        G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());
                         builder->createStore(G_array_init[i], p);
                     } else {
-                        G_array_init[i] = checkAndCast(G_array_init[i],ptr->getElementType()->getPointerElementType());
+                        G_array_init[i] = checkAndCast(G_array_init[i],ptr->getType()->getPointerElementType());
                         builder->createStore(G_array_init[i], ptr);
                     }
                 }
@@ -709,7 +710,7 @@ void SYSYBuilder::visit(tree_return_null_stmt &node) {
 }
 
 void SYSYBuilder::visit(tree_l_val &node) {
-    SYSY_BUILDER("line:%d", node._line_no);
+    SYSY_BUILDER("line:%d lval %s", node._line_no,node.id.c_str());
     /*wuqi TODO*/
     std::string &name = node.id.empty() ? node.array_ident->id : node.id;
     SYSY_BUILDER("l_val %s", name.c_str());
@@ -803,6 +804,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             } else {  // 保证返回值 G_tmp_val 是 float/int num
                 SYSY_BUILDER("arg needn't addr");
                 node.l_val->accept(*this);
+                SYSY_BUILDER("return from lval to primary exp ");
                 if (G_tmp_val->getType()->isIntegerTy() ||
                     G_tmp_val->getType()->isFloatTy()) {
                     return;
@@ -854,10 +856,12 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         if (node.primary_exp != nullptr) {
             SYSY_BUILDER("primary");
             node.primary_exp->accept(*this);
+            SYSY_BUILDER("returned from primary exp to unary exp");
 
         } else if (node.unary_exp != nullptr) {
             SYSY_BUILDER("unary");
             node.unary_exp->accept(*this);
+            SYSY_BUILDER("returned from unary exp to unary exp");
         } else {
             SYSY_BUILDER("func call");
             node.func_call->accept(*this);
@@ -902,15 +906,21 @@ void SYSYBuilder::visit(tree_mul_exp &node) {
     } else {
         if (G_tmp_computing) {
             node.mul_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
             node.unary_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal binary queue size is %d",_oprt_stack.size());
             calBinary(node.oprt);
         } else {
             node.mul_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
             node.unary_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal build queue size is %d",_oprt_stack.size());
             buildBinary(node.oprt);
 
 //            if (l_val->getType()->isBool()) {
@@ -939,15 +949,21 @@ void SYSYBuilder::visit(tree_add_exp &node) {
     } else {
         if (G_tmp_computing) {
             node.add_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
             node.mul_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal binary queue size is %d",_oprt_stack.size());
             calBinary(node.oprt);
         } else {
             node.add_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
             node.mul_exp->accept(*this);
-            _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+            _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal build queue size is %d",_oprt_stack.size());
             buildBinary(node.oprt);
         }
     }
@@ -965,9 +981,12 @@ void SYSYBuilder::visit(tree_rel_exp &node) {
 //        auto r_val = G_tmp_val;
 
         node.rel_exp->accept(*this);
-        _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+        _oprt_stack.push(G_tmp_val);
         node.add_exp->accept(*this);
-        _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+        _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal build queue size is %d",_oprt_stack.size());
         buildBinary(node.oprt);
 
 //        if (node.oprt == "<=") {
@@ -988,10 +1007,10 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
     if (node.eq_exp == nullptr) {
         node.rel_exp->accept(*this);
     } else {
-        node.eq_exp->accept(*this);
-        auto l_val = G_tmp_val;
-        node.rel_exp->accept(*this);
-        auto r_val = G_tmp_val;
+        // node.eq_exp->accept(*this);
+        // auto l_val = G_tmp_val;
+        // node.rel_exp->accept(*this);
+        // auto r_val = G_tmp_val;
 //
 //        if (l_val->getType()->isBool()) {
 //            l_val = builder->creatZExtInst(TyInt32, l_val);
@@ -1000,9 +1019,12 @@ void SYSYBuilder::visit(tree_eq_exp &node) {
 //            r_val = builder->creatZExtInst(TyInt32, r_val);
 //        }
         node.eq_exp->accept(*this);
-        _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+        _oprt_stack.push(G_tmp_val);
         node.rel_exp->accept(*this);
-        _oprd_queue.push(G_tmp_val);
+            SYSY_BUILDER("pushing one size is %d",_oprt_stack.size());
+        _oprt_stack.push(G_tmp_val);
+            SYSY_BUILDER("cal build queue size is %d",_oprt_stack.size());
         buildBinary(node.oprt);
 
 //        if (node.oprt == "==") {
@@ -1497,11 +1519,13 @@ SYSYBuilder::SYSYBuilder(const std::string &name) {
 }
 void SYSYBuilder::build(tree_comp_unit *node) { node->accept(*this); }
 void SYSYBuilder::calBinary(const std::string oprt) {
-    MyAssert("error oprd number", _oprd_queue.size() == 2);
-    auto oprt1 = _oprd_queue.front();
-    _oprd_queue.pop();
-    auto oprt2 = _oprd_queue.front();
-    _oprd_queue.pop();
+    // MyAssert("error oprd number", _oprt_stack.size() == 2);
+    SYSY_BUILDER("in cal binary,queue size is %d",_oprt_stack.size());
+
+    auto oprt2 = _oprt_stack.top();
+    _oprt_stack.pop();
+    auto oprt1 = _oprt_stack.top();
+    _oprt_stack.pop();
 
     if (!oprt1->getType()->eq(*oprt2->getType())) {
         MyAssert(
@@ -1578,12 +1602,16 @@ void SYSYBuilder::calBinary(const std::string oprt) {
         }
     }
 }
+int cnt = 0;
 void SYSYBuilder::buildBinary(const std::string oprt){
-    MyAssert("error oprd number", _oprd_queue.size() == 2);
-    auto oprt1 = _oprd_queue.front();
-    _oprd_queue.pop();
-    auto oprt2 = _oprd_queue.front();
-    _oprd_queue.pop();
+    cnt ++;
+    SYSY_BUILDER("int build binary %d",cnt);
+    SYSY_BUILDER("queue size is %d",_oprt_stack.size());
+    // MyAssert("error oprd number", _oprt_stack.size() == 2);
+    auto oprt2 = _oprt_stack.top();
+    _oprt_stack.pop();
+    auto oprt1 = _oprt_stack.top();
+    _oprt_stack.pop();
 
     if (oprt1->getType()->isBool()) {
         oprt1 = builder->creatZExtInst(TyInt32, oprt1);

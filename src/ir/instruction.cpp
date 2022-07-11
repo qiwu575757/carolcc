@@ -139,7 +139,10 @@ BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1, Value *
 }
 void BinaryInst::accept(IrVisitorBase *v)
 {
-
+    v->visit(this);
+}
+void UnaryInst::accept(IrVisitorBase *v)
+{
     v->visit(this);
 }
 std::string BinaryInst::getOperatorString() const
