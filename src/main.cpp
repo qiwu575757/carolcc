@@ -45,7 +45,7 @@ int main(int argc, char **argv) {
     //        return 0;
     //    }
     bool is_emit_hir = false;
-    bool is_emit_mir = false;
+    bool is_emit_mir = true;
     bool is_show_hir_pad_graph = false;
     bool is_debug = false;
     std::string input_file, output_file;
@@ -86,45 +86,46 @@ int main(int argc, char **argv) {
 
     pass_manager PM(builder->getModule().get());
 
-    if(is_emit_hir )
-        PM.add_pass<EmitHir>("EmitHir");
-    if(is_show_hir_pad_graph && is_debug)
-        PM.add_pass<EmitPadGraph>("EmitPadGraph");
+    // if(is_emit_hir )
+    //     PM.add_pass<EmitHir>("EmitHir");
+    // if(is_show_hir_pad_graph && is_debug)
+    //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
-    if(is_show_hir_pad_graph && is_debug)
-        PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    PM.add_pass<Dominators>("Dominators");
-    PM.add_pass<Mem2Reg>("Mem2Reg");
-    PM.add_pass<ConstantFold>("ConstantFold");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
+    // if(is_show_hir_pad_graph && is_debug)
+    //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
+    // PM.add_pass<Dominators>("Dominators");
+    // PM.add_pass<Mem2Reg>("Mem2Reg");
+    // PM.add_pass<ConstantFold>("ConstantFold");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
     PM.run();
 
     if(is_emit_mir && !is_debug){
         builder->getModule()->MIRMEMprint(output_file);
     }
 
-    //   AsmBuilder asm_builder(builder->getModule(), debug);
-    //   std::string asm_code = asm_builder.generate_asm(input_file.c_str());
-    //   std::cout<<"################-asm_code-#################"<<std::endl;
-    //   std::fflush(0);
-    //   std::cout<<asm_code;
-    //   std::cout<<"################-asm_code-#################"<<std::endl;
+    AsmBuilder asm_builder(builder->getModule(), debug);
+    std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+    std::cout<<"################-asm_code-#################"<<std::endl;
+    std::fflush(0);
+    std::cout<<asm_code;
+    std::cout<<"################-asm_code-#################"<<std::endl;
 
-    //    std::string strFileName = "test.s";
-    //    FILE* fs = fopen(strFileName.c_str(), "w+");
-    //    fprintf(fs,"%s",asm_code.c_str());
-    //    fclose(fs);
+    std::string strFileName = "test.s";
+    FILE* fs = fopen(strFileName.c_str(), "w+");
+    fprintf(fs,"%s",asm_code.c_str());
+    fclose(fs);
 
+    std::cout<<"ERROR";
     return 0;
 }

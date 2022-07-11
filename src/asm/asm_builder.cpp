@@ -43,6 +43,7 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
     module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
     return module_header_code;
 }
+
 std::string AsmBuilder::generate_module_tail(){
     std::string module_tail_code;
     module_tail_code += generate_use_of_global_vars();
@@ -50,6 +51,7 @@ std::string AsmBuilder::generate_module_tail(){
     module_tail_code += AsmBuilder::generate_global_vars();
     return module_tail_code;
 }
+
 std::string AsmBuilder::generate_use_of_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
@@ -58,6 +60,7 @@ std::string AsmBuilder::generate_use_of_global_vars() {
   }
   return asm_code;
 }
+
 std::string AsmBuilder::generate_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
@@ -200,7 +203,7 @@ std::string AsmBuilder::generate_function_code(Function *func){
     stack_cur_size = 0;//
     stack_mapping.clear();
     register_mapping.clear();
-    lru_list.clear();
+
     std::string func_asm;
     func_asm += func->getName() + ":" + InstGen::newline;
     func_asm += generate_function_entry_code(func);
@@ -214,6 +217,7 @@ std::string AsmBuilder::generate_function_code(Function *func){
 
     return func_asm;
 }
+
 std::string AsmBuilder::generate_function_entry_code(Function *func){
     std::string func_head_code;
     //func name
@@ -228,16 +232,6 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     //sp sub
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(this->stack_size));
-    //arg in reg or stack
-    // for (auto &arg : func->getArgs()) {
-    //     bool extended = false;
-    //     auto sizeof_val = arg->getType()->getSize(extended);
-    //     sizeof_val = ((sizeof_val + 3) / 4) * 4;
-
-    //     this->stack_mapping.erase(dummy);
-    //     source.push_back(dummy);
-    //     target.push_back(arg);
-    // }
 
     int offset=0;
     for(auto arg: func->getArgs()){
@@ -250,6 +244,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     }
     return func_head_code;
 }
+
 std::string AsmBuilder::generate_function_exit_code(Function *func){
     std::string func_tail_code;
     // sp add
@@ -264,11 +259,10 @@ std::string AsmBuilder::generate_function_exit_code(Function *func){
 
     return func_tail_code;
 }
+
 void AsmBuilder::show_mapping(){
   int index = 0;
-  for(auto v = lru_list.begin(); v != lru_list.end();v++){
-    printf("LRU list %d: %s\n",index++,(*v)->getName().c_str());
-  }
+
   for(auto& iter:register_mapping){
       std::cout << "REGISTER " << iter.second << " : " << iter.first->getPrintName() << std::endl;
   }
@@ -281,179 +275,40 @@ void AsmBuilder::show_mapping(){
 }
 
 std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
-    std::string alloc_reg_asm;
-    /****/
-    for(auto ers_v : erase_v){
-        printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
-        int reg_index = find_register(ers_v);
-        for(auto v = lru_list.begin(); v != lru_list.end();)
-        {
-          if((*v)==ers_v){
-            ////
-              lru_list.erase(v++);
-            break;
-          }
-          else{
-            v++;
-          }
-        }
-
-        if(lru_list.size()>reg_num-1){
-          int index=0;
-          Value * replace_v ;
-
-          for(auto v_edge = lru_list.begin(); v_edge != lru_list.end();v_edge++){
-            if(index==reg_num-1){
-                replace_v = (*v_edge);
-                break;
-            }
-            index++;
-          }
-          if(register_mapping.count(replace_v)==0){
-
-            int replace_v_offset = stack_mapping[replace_v];
-            MyAssert("nullptr",replace_v!=nullptr);
-            set_register(replace_v,reg_index,true);
-            // data update
-            alloc_reg_asm += InstGen::comment("erase: load edge value"+ replace_v->getPrintName()+ " to reg:"+ std::to_string(reg_index),"");
-            alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,replace_v_offset));
-
-          }
-        }
-
-        // check if value is in list
-        if(register_mapping.count(ers_v)==1){
-          auto iter = register_mapping.find(ers_v);
-          register_mapping.erase(iter);
-        }
-    }
-    return alloc_reg_asm;
+  ERROR("TODO");
 }
 
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
     std::string alloc_reg_asm;
+    int reg_index = 0; //从 0 号寄存器开始分配
+
     /****/
-    for(auto upd_v : update_v){
-        // check if value is in list
-        bool hit_v = false;
-        int lru_index = 0;
-        Value *be_replaced_v;
-
-        if(true){
-          printf("--update list: %s\n",upd_v->getPrintName().c_str());
-          for(auto v = lru_list.begin(); v != lru_list.end();){
-              if(lru_index==reg_num){
-                  be_replaced_v = *v;
-              }
-              if(upd_v == (*v)){
-                printf("HIT\n");
-                  hit_v = true;
-                  if(lru_index<=reg_num){ // don't need to split
-                      lru_list.push_front(*v);
-                      v=lru_list.erase(v++);
-                  }
-                  else{ // split
-                      int be_replaced_v_src = find_register(be_replaced_v);// reg
-                      if(be_replaced_v->getName()[0] == '_'){
-                        int used_v_offset = stack_mapping[(*v)];
-                        int used_v_dst = be_replaced_v_src;//reg
-
-                        lru_list.push_front(*v);
-
-                        // data update
-                        alloc_reg_asm += InstGen::comment("load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset),"");
-                        // alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,used_v_offset));
-                        alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-
-
-                      }
-                      else{
-                        int be_replaced_v_offset = stack_mapping[be_replaced_v];
-                        int used_v_offset = stack_mapping[(*v)];
-                        int used_v_dst = be_replaced_v_src;//reg
-
-                        lru_list.push_front(*v);
-
-                        // data update
-                        alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" to "+std::to_string(be_replaced_v_src),
-                                  "load "+(*v)->getPrintName()+" from sp+"+std::to_string(used_v_offset));
-                        alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_offset));
-                        alloc_reg_asm += InstGen::ldr(InstGen::Reg(used_v_dst),InstGen::Addr(InstGen::sp,used_v_offset));
-                      }
-                      //map update
-                      auto iter = register_mapping.find(be_replaced_v);
-                      register_mapping.erase(iter);
-                      MyAssert("nullptr",*(v));
-                      set_register((*v),be_replaced_v_src,true);
-                      lru_list.erase(v++);
-                  }
-
-                  break;
-              }
-              else{
-                v++;
-              }
-              lru_index+=1;
-          }
-
-          if(! hit_v){ //first time
-
-              if(register_mapping.size()<=reg_num){
-                  int register_bits[reg_num+1];
-                  memset(register_bits,0,sizeof(register_bits));
-                  std::map<Value*, int>::iterator iter;
-                  iter = register_mapping.begin();
-                  while(iter != register_mapping.end()) {
-                    register_bits[ iter->second] +=1;
-                    iter++;
-                  }
-                  for(int i=0;i<=reg_num;i++){
-                    if(register_bits[i]==0){
-                      MyAssert("nullptr",upd_v);
-
-                       set_register(upd_v,i,true);
-                       alloc_reg_asm += InstGen::comment("LRU: alloc "+upd_v->getPrintName()+" to reg "+std::to_string(i),"");
-                        lru_list.push_front(upd_v);
-                        break;
-                    }
-                    else if (register_bits[i]>1)
-                    {
-                      ERROR("wrong reg alloc : %d was allocated for %d times \n",i,register_bits[i]);
-                    }
-
-                  }
-              }
-              else  if(!be_replaced_v->isConstant()){
-                  printf(" value %s update value %s\n",upd_v->getPrintName().c_str(),be_replaced_v->getPrintName().c_str());
-                  int be_replaced_v_src = find_register(be_replaced_v);// reg
-                  int be_replaced_v_dst = stack_mapping[be_replaced_v];
-                  lru_list.push_front(upd_v);
-
-                  alloc_reg_asm += InstGen::comment("store "+be_replaced_v->getPrintName()+" from reg "+std::to_string(be_replaced_v_src),
-                        "to sp+"+std::to_string(be_replaced_v_dst));
-                  // data update
-                  alloc_reg_asm += InstGen::str(InstGen::Reg(be_replaced_v_src),InstGen::Addr(InstGen::sp,be_replaced_v_dst));
-                  //map update
-                  auto iter = register_mapping.find(be_replaced_v);
-                  register_mapping.erase(be_replaced_v);
-                  MyAssert("nullptr",upd_v);
-                  set_register(upd_v,be_replaced_v_src,true);
-
-              }
-              else{
-                  ERROR(" wrong in reg alloc !");
-              }
-          }
-          show_mapping();
-        }
-        else{
-          ERROR("[WARNNING] wrong name '%s' which can not be identified",upd_v->getPrintName().c_str());
-        }
-
-
-
+    for (auto upd_v : update_v) {
+      if (stack_mapping.count(upd_v)) {//栈中有该变量
+        int v_offset = stack_mapping[upd_v];
+        alloc_reg_asm += InstGen::comment("load "+(upd_v)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+        alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+        register_mapping[upd_v] = reg_index++;
+      } else {// 直接增加寄存器映射
+        register_mapping[upd_v] = reg_index++;
+      }
     }
+
     return alloc_reg_asm;
+}
+
+std::string AsmBuilder::flushRegs2Stack(std::list<Value*> flush_v) {
+    std::string flush_asm;
+
+    for (auto flu_v : flush_v) {
+      if (stack_mapping.count(flu_v)) {
+          int v_offset = stack_mapping[flu_v];
+          flush_asm += InstGen::comment("store "+(flu_v)->getPrintName()+" to sp+"+std::to_string(v_offset),"push val");
+          flush_asm += InstGen::store(InstGen::Reg(register_mapping[flu_v]),InstGen::Addr(InstGen::sp,v_offset));
+        }
+    }
+
+    return flush_asm;
 }
 
 std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
@@ -495,7 +350,7 @@ int AsmBuilder::find_register(Value *v){
       variable_list.push_back(val);
       update_value_mapping(variable_list);
       InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
-      erase_value_mapping(variable_list);
+      // erase_value_mapping(variable_list);
       v->getPrintName();
       WARNNING("GLOBAL VALUE NEED CONVERT!");
       return register_mapping[v];
@@ -556,45 +411,10 @@ void AsmBuilder::set_register(Value *v,int data,bool init){
   }
 }
 
-// //
-// std::string AsmBuilder::swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1) {
-//   std::string return_asm;
-//   int id_0 = reg_0.getID();
-//   int id_1 = reg_1.getID();
-
-//   return_asm +=  InstGen::comment("swap register " + reg_0.getName() + ", " + reg_1.getName(), "");
-//   // 首先维护 register_mapping 映射关系
-//   Value *temp_val_0, *temp_val_1;
-//   for (auto iter: register_mapping) { // 首先找到对应寄存器的value
-//     if (iter.second == id_0) {
-//       temp_val_0 = iter.first;
-//     }
-//     if (iter.second == id_1) {
-//       temp_val_1 = iter.first;
-//     }
-//   }
-//   // 交换对应映射
-//   register_mapping[temp_val_0] = id_1;
-//   register_mapping[temp_val_1] = id_0;
-
-//   // 将对应寄存器的值进行交换
-//   // 先将第一个寄存器存入栈中
-//   std::vector<InstGen::Reg> reg_list_0;
-//   reg_list_0.push_back(reg_0);
-//   std::vector<InstGen::Reg> reg_list_1;
-//   reg_list_1.push_back(reg_1);
-//   return_asm += InstGen::push(reg_list_0);
-
-//   return_asm += InstGen::mov(reg_0,reg_1,InstGen::CmpOp(InstGen::NOP));
-//   return_asm += InstGen::pop(reg_list_1);
-
-//   return return_asm;
-// }
-
 // 用于生成二元运算指令的汇编
 std::string AsmBuilder::generateOperInst (Instruction *inst) {
     auto &operands = inst->getOperandList();
-    std::list<Value *> variable_list;
+    // std::list<Value *> variable_list;
     std::string return_asm;
     //用于接收可能的全局变量寄存器分配操作str
     std::string register_str = "";
@@ -1159,7 +979,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
           variable_list.clear();
           variable_list.push_back(val);
-          inst_asm += erase_value_mapping(variable_list);
+          // inst_asm += erase_value_mapping(variable_list);
 
         } else{ // 需要存储的值是寄存器
           auto src_op1 = operands.at(0);
@@ -1329,7 +1149,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.clear();
       variable_list.push_back(val1);
       variable_list.push_back(val2);
-      inst_asm +=  erase_value_mapping(variable_list);
+      // inst_asm +=  erase_value_mapping(variable_list);
 
       }
      else {
@@ -1339,8 +1159,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     if (type_size < 4) {
       type_size = 4;//保证对于bool型变量也分配4byte空间
     }
+
+    // 将寄存器的值刷到栈里，退化为栈分配
+    inst_asm += flushRegs2Stack(variable_list);
+
     stack_cur_size += type_size;
     variable_list.clear();//清空列表
+    register_mapping.clear();//清空寄存器映射
 
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;

@@ -61,7 +61,6 @@ private:
   std::map<Value *, int> register_mapping; // value - id
   std::map<Value *, int> stack_mapping; // value - offset
   int stack_cur_size=0;
-  std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   int stack_size=1024;
@@ -78,7 +77,6 @@ public:
   int find_register(Value *v);
   int find_register(Value *v,std::string &code);
   void set_register(Value *v,int data,bool init);
-  // std::string swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);
@@ -90,6 +88,7 @@ public:
   /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *>update_v);
   std::string erase_value_mapping(std::list<Value*>& erase_v);
+  std::string flushRegs2Stack(std::list<Value *>flush_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
