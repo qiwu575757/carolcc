@@ -275,7 +275,18 @@ void AsmBuilder::show_mapping(){
 }
 
 std::string AsmBuilder::erase_value_mapping(std::list<Value*>& erase_v){
-  ERROR("TODO");
+    std::string alloc_reg_asm;
+    /****/
+    for(auto ers_v : erase_v){
+        printf("[X] erase: %s\n",ers_v->getPrintName().c_str());
+
+        // check if value is in list
+        if(register_mapping.count(ers_v)==1){
+          auto iter = register_mapping.find(ers_v);
+          register_mapping.erase(iter);
+        }
+    }
+    return alloc_reg_asm;
 }
 
 std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
@@ -350,7 +361,7 @@ int AsmBuilder::find_register(Value *v){
       variable_list.push_back(val);
       update_value_mapping(variable_list);
       InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
-      // erase_value_mapping(variable_list);
+      erase_value_mapping(variable_list);
       v->getPrintName();
       WARNNING("GLOBAL VALUE NEED CONVERT!");
       return register_mapping[v];
@@ -788,6 +799,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       int offset = 0;
 
       for(auto arg: args){
+            // 通过栈传递函数参数
             return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
             update_value_mapping({arg});
             return_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
@@ -807,7 +819,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       return_asm += InstGen::bl(func_name);
     }
 
-    stack_mapping[inst]=return_offset;
+    stack_mapping[inst] = return_offset;
     return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
     return_asm += InstGen::pop(caller_reg_list);
     variable_list.clear();
@@ -1146,11 +1158,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += register_str;
       register_str = "";
       inst_asm += InstGen::add(inst1_reg,inst2_reg,inst3_reg);
-      variable_list.clear();
-      variable_list.push_back(val1);
-      variable_list.push_back(val2);
-      // inst_asm +=  erase_value_mapping(variable_list);
-
       }
      else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
