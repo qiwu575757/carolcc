@@ -1116,9 +1116,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       Value * val1 = new Value(Type::getInt32Ty(), reg_name1);
       variable_list.push_back(val1);
 
-      const std::string reg_name2 = "_imm_"+std::to_string(key++);
-      Value * val2 = new Value(Type::getInt32Ty(), reg_name2);
-      variable_list.push_back(val2);
+      // 若操作数是寄存器，需要增加寄存器映射
+      for(int i = 1; i < operands.size();i++) {
+        auto src_op = operands.at(i);
+        if (!src_op->isConstant()) {//不是立即数
+          variable_list.push_back(src_op);
+        }
+      }
 
       // update register
       inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -1135,7 +1139,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       for(int i = 1; i < operands.size();i++){
           auto src_op = operands.at(i);
           auto element_size = array_ty->getSize();
-
 
           //  element_size = src_op->getType()->getPointerElementType()->getSize();
           if (!src_op->isConstant()) {//不是立即数
@@ -1154,7 +1157,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             InstGen::Reg val1_reg = InstGen::Reg(find_register(val1,register_str));
             inst_asm += register_str;
             register_str = "";
-            InstGen::Reg val2_reg =  InstGen::Reg(find_register(val2,register_str));
+            InstGen::Reg val2_reg =  InstGen::Reg(find_register(src_op,register_str));
             inst_asm += register_str;
             register_str = "";
             InstGen::Reg inst2_reg =  InstGen::Reg(find_register(inst,register_str));
@@ -1162,7 +1165,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
             inst_asm += InstGen::mla(inst1_reg,val1_reg,val2_reg,inst2_reg);
 
-          } else if(static_cast<ConstantInt*>(src_op)->getValue()!=0){
+          } else if(static_cast<ConstantInt*>(src_op)->getValue() != 0){
             // 邪法
             inst_asm += InstGen::comment(" gep += "+src_op->getPrintName()+" * "+std::to_string(element_size),"");
 
