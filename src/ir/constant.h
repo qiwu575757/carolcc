@@ -40,8 +40,8 @@ public:
 
 class ConstantFloat : public Constant {
 private:
-    double _value;
-    ConstantFloat(Type *ty, double value) : Constant(ty, "", 0), _value(value) {
+    float _value;
+    ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {
         _union_number._value=value;
     }
     union format{
@@ -54,9 +54,9 @@ public:
     std::string getPrintName()override;
 
 public:
-    double getValue() const;
+    float getValue() const;
     void setValue(float value);
-    static ConstantFloat *create(double val);
+    static ConstantFloat *create(float val);
 };
 
 class ConstantArray : public Constant {

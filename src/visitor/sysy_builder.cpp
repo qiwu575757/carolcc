@@ -38,7 +38,7 @@ std::vector<Value *> G_array_init;
 // 用于记录维度数目
 // 用于计算数值与val转换
 long G_tmp_int = 0;
-double G_tmp_float = 0.0;
+float G_tmp_float = 0.0;
 BaseBlock *cond_end;
 // 标记当前为计算数值状态 并且使用到 G_tmp_int/G_tmp_float
 bool G_tmp_computing = false;
@@ -1581,7 +1581,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
         } else if (oprt1->getType()->isFloatTy()) {
             auto a = dynamic_cast<ConstantFloat *>(oprt1)->getValue();
             auto b = dynamic_cast<ConstantFloat *>(oprt2)->getValue();
-            double res = 0;
+            float res = 0;
             switch (oprt[0]) {
                 case '+':
                     res = a + b;

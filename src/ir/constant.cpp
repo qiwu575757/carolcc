@@ -20,13 +20,14 @@ ConstantInt *ConstantInt::get(int val) {
 void ConstantInt::accept(IrVisitorBase *v) {
     v->visit(this);
 }
-double ConstantFloat::getValue() const {
+float ConstantFloat::getValue() const {
     return _value;
 }
 void ConstantFloat::setValue(float value) {
     _value = value;
+    _union_number._value = value;
 }
-ConstantFloat *ConstantFloat::create(double val) {
+ConstantFloat *ConstantFloat::create(float val) {
     return new ConstantFloat(Type::getFloatTy(), val);
 }
 void ConstantFloat::accept(IrVisitorBase *v) {
@@ -34,36 +35,38 @@ void ConstantFloat::accept(IrVisitorBase *v) {
 }
 std::string ConstantFloat::getPrintName(){
     std::stringstream out;
-    char buffer[200];
-    if(is_constant_debug){
-        out<<_value;
-        return out.str();
-    }
-    else {
-        out <<"0x"<< std::hex<<_union_number._hex_number;
-        sprintf(buffer, "%20.6e", _value);
-        char* B = buffer;
-        while (*B == ' ')
-        {
-            B++;
-        }
-        char* last_base_number = B+2;
-        bool is_all_zero = true;
-        while(*last_base_number !='e'){
-            if(*last_base_number != '0'){
-                is_all_zero=false;
-            }
-            last_base_number++;
+    out << "0x" << std::hex << _union_number._hex_number;
+    return out.str();
+    // char buffer[200];
+    // if(is_constant_debug){
+    //     out<<_value;
+    //     return out.str();
+    // }
+    // else {
+        // out <<"0x"<< std::hex<<_union_number._hex_number;
+    //     sprintf(buffer, "%20.6e", _value);
+    //     char* B = buffer;
+    //     while (*B == ' ')
+    //     {
+    //         B++;
+    //     }
+    //     char* last_base_number = B+2;
+    //     bool is_all_zero = true;
+    //     while(*last_base_number !='e'){
+    //         if(*last_base_number != '0'){
+    //             is_all_zero=false;
+    //         }
+    //         last_base_number++;
             
-        }
-        last_base_number--;
-        if(*last_base_number=='0' && !is_all_zero){
-            return B;
-        }
-        else {
-            return out.str();
-        }
-    }
+    //     }
+    //     last_base_number--;
+    //     if(*last_base_number=='0' && !is_all_zero){
+    //         return B;
+    //     }
+    //     else {
+    //         return out.str();
+    //     }
+    // }
 }
 Constant *ConstantArray::getElement(int index) {
     return this->_const_array.at(index);
@@ -93,7 +96,7 @@ ConstantArray *ConstantArray::turn(Type *basic_type,
             else {
                 if(ele->getType()->isIntegerTy() && basic_type->isFloatTy()){
                     auto vall = dynamic_cast<ConstantInt*>(ele)->getValue();
-                    init_list.push_back( ConstantFloat::create(static_cast<double>(vall)));
+                    init_list.push_back( ConstantFloat::create(static_cast<float>(vall)));
                 }
                 else if (ele->getType()->isFloatTy() && basic_type->isIntegerTy()){
                     auto vall = dynamic_cast<ConstantFloat*>(ele)->getValue();
