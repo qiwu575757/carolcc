@@ -942,7 +942,7 @@ std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
       if (src_op1->isConstant()) {
         // 生成constant存储立即数的值
         const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
-        return_asm += InstGen::cmp(src_reg_0,src_const_1);
+        return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
       }
       else {
         const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
@@ -955,7 +955,7 @@ std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
       if (src_op1->isConstant()) {
         // 生成constant存储立即数的值
         const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
-        return_asm += InstGen::cmp(src_reg_0,src_const_1);
+        return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
       }
       else {
         const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
@@ -1023,7 +1023,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
           inst_asm += register_str;
           // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-
 
           inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
           InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
