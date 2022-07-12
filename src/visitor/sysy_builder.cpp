@@ -1461,7 +1461,7 @@ SYSYBuilder::SYSYBuilder(const std::string &name) {
     std::vector<Type *> putfarray_params;
     putfarray_params.push_back(TyInt32);
     putfarray_params.push_back(TyFloatPtr);
-    auto putfarray_type = FunctionType::get(TyVoid, putarray_params);
+    auto putfarray_type = FunctionType::get(TyVoid, putfarray_params);
 
     auto putfarray_fun =
         Function::create(putfarray_type, "putfarray", module.get());
