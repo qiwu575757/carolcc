@@ -237,8 +237,13 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     int offset=0;
     for(auto arg: func->getArgs()){
       func_head_code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      func_head_code+=update_value_mapping({arg});
-      func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
+      // func_head_code += update_value_mapping({arg});
+      // int v_offset = stack_mapping[arg];
+      // func_head_code += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+      // func_head_code += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+      //register_mapping[arg] = reg_index++;
+
+      // func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
       stack_mapping[arg]=offset;
       offset+=4;
       stack_cur_size+=4;
@@ -295,7 +300,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
 
     /****/
     for (auto upd_v : update_v) {
-      if (stack_mapping.count(upd_v)) {//栈中有该变量
+      if (stack_mapping.count(upd_v) == 1) {//栈中有该变量
         int v_offset = stack_mapping[upd_v];
         alloc_reg_asm += InstGen::comment("load "+(upd_v)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
         alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
@@ -303,6 +308,22 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
       } else {// 直接增加寄存器映射
         register_mapping[upd_v] = reg_index++;
       }
+    }
+    show_mapping();
+
+    return alloc_reg_asm;
+}
+
+std::string AsmBuilder::update_arg_mapping(Value *arg) {
+    std::string alloc_reg_asm;
+
+    if (stack_mapping.count(arg) == 1) {//栈中有该变量
+      int v_offset = stack_mapping[arg];
+      alloc_reg_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+      alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+      register_mapping[arg] = reg_index++;
+    } else {// 直接增加寄存器映射
+      ERROR("WRONG ARG");
     }
 
     return alloc_reg_asm;
@@ -331,6 +352,7 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
 
     return bb_asm;
 }
+
 std::string  AsmBuilder::getLabelName(BasicBlock *bb){
     return "." + bb->getParentFunc()->getName() + "_" + bb->getName();
 }
@@ -799,9 +821,19 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       int offset = 0;
 
       for(auto arg: args){
+            std::list<Value*> arg_list;
+            arg_list.push_back(arg);
             // 通过栈传递函数参数
-            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-            update_value_mapping({arg});
+            return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),
+                        "stack offset = "+std::to_string(stack_mapping[arg]));
+            MyAssert("error arg", stack_mapping.count(arg) == 1);
+            // update_value_mapping(arg_list);
+            int v_offset = stack_mapping[arg]+caller_save_regs.size()*4;
+            return_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+            return_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+            register_mapping[arg] = reg_index++;
+            // update_arg_mapping(arg);
+
             return_asm += InstGen::comment("transfer args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
             return_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             offset += 4;
@@ -1060,9 +1092,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else if (inst->isAlloca()) {
       type_size = inst->getType()->getSize();
       MyAssert("type size", type_size != 1);
-      stack_mapping[inst] = stack_cur_size+type_size;
+      stack_mapping[inst] = stack_cur_size + type_size;
 
-      type_size+=4;
+      type_size += 4;
 
       variable_list.push_back(inst);
       inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -1174,7 +1206,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     variable_list.clear();//清空列表
     register_mapping.clear();//清空寄存器映射
     reg_index = 0;
-    
+
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;
 }

@@ -86,7 +86,8 @@ public:
   std::string generate_function_exit_code(Function *func);
 
   /*LRU list update interval by function code; insert ldr str instr*/
-  std::string update_value_mapping(std::list<Value *>update_v);
+  std::string update_value_mapping(std::list<Value *> update_v);
+  std::string update_arg_mapping(Value *arg);
   std::string erase_value_mapping(std::list<Value*>& erase_v);
   std::string flushRegs2Stack(std::list<Value *>flush_v);
   std::string generateBasicBlockCode(BasicBlock *bb);
@@ -101,7 +102,7 @@ public:
   void show_mapping();
   void erase_register_map(Value * v);
   std::string generateOperInst (Instruction *inst);
-  std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,
+  std::string generateFunctionCall(Instruction *inst, std::vector<Value *> operands,
           std::string func_name, int return_reg);
   std::string generateCmpInst(Instruction *inst, Value *imm_0);
 };
