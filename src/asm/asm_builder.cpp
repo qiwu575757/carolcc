@@ -6,7 +6,6 @@
 int key = 0;//给需要的立即数标号
 std::list<Value *> variable_list;//待分配寄存器的变量列表
  int reg_index = 0; //从 0 号寄存器开始分配
-InstGen::CmpOp last_cmp_op;//因为br指令中没有存储跳转条件信息，需要利用br指令上一条的
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
@@ -839,6 +838,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
             offset += 4;
         }
         return_asm += InstGen::bl(func_name);
+        stack_mapping[inst] = return_offset;
+        return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+        return_asm += InstGen::pop(caller_reg_list);
+        variable_list.clear();
+        variable_list.push_back(inst);
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+        return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+
     } else {
       std::vector<Value *> args(operands.begin(), operands.end());
       for (int i = 0; i < 2; i++ ) { //对于除法函数,取余函数，只有两个参数
@@ -849,16 +857,11 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
         }
       }
       return_asm += InstGen::bl(func_name);
-    }
 
-    stack_mapping[inst] = return_offset;
-    return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
-    return_asm += InstGen::pop(caller_reg_list);
-    variable_list.clear();
-    variable_list.push_back(inst);
-    return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-    return_asm += update_value_mapping(variable_list);
-    return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+      return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+      return_asm += InstGen::pop(caller_reg_list);
+      return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+    }
 
     return return_asm;
 }
@@ -925,7 +928,6 @@ std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
     auto src_op0 = operands.at(0);
     auto src_op1 = operands.at(1);
     InstGen::CmpOp cmp_op = cmpConvert(static_cast<CmpInst *>(inst)->_cmp_op, false);
-    last_cmp_op = cmp_op;
 
     if (src_op0->isConstant()) {
       // 查找存储立即数的寄存器
@@ -1075,12 +1077,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           auto src_op1_id = operands.at(1)->getName();
           auto src_op2_id = operands.at(2)->getName();
 
-          // // 根据reg0指令为0还是1判断跳转条件是否成立
-          // const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
-          // inst_asm += register_str;
-          // register_str = "";
+          // 根据reg0指令为0还是1判断跳转条件是否成立, 1 ==> 条件成立
+          const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+          inst_asm += register_str;
+          register_str = "";
+          inst_asm += InstGen::cmp(src_reg0, InstGen::Constant(1));
 
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),last_cmp_op);
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),InstGen::EQ);
           inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),InstGen::NOP);
 
       } else {
