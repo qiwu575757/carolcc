@@ -20,8 +20,9 @@ extern int yyline;
 [ \t] {}
 \n {yyline++;}
 [1-9][0-9]*|0[0-7]*|(0x|0X)[0-9a-fA-F]*  {SAVE_TOKEN; return TINTEGER;}
-[0-9]+[Ee][0-9]+  {SAVE_TOKEN; return TINTEGER;}
-[0-9]+[Ee]"+"[0-9]+  {SAVE_TOKEN; return TINTEGER;}
+
+[0-9]+[Ee][0-9]+  {SAVE_TOKEN; return TFLOATNUM;}
+[0-9]+[Ee]"+"[0-9]+  {SAVE_TOKEN; return TFLOATNUM;}
 
 [0-9]+[Ee]"-"[0-9]+ {SAVE_TOKEN; return TFLOATNUM;}//here may have problems
 [0-9]*"."[0-9]*[Ee][-+][0-9]+ {SAVE_TOKEN; return TFLOATNUM;}

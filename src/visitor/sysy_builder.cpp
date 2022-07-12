@@ -844,10 +844,10 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         if (node.oprt == "-") {
             if (G_tmp_val->getType()->isFloatTy()) {
                 G_tmp_float = -G_tmp_float;
-                G_tmp_val = CONST_FLOAT( dynamic_cast<ConstantFloat*>(G_tmp_val)->getValue());
+                G_tmp_val = CONST_FLOAT( -dynamic_cast<ConstantFloat*>(G_tmp_val)->getValue());
             } else if (G_tmp_val->getType()->isInt32()) {
                 G_tmp_int = -G_tmp_int;
-                G_tmp_val = CONST_INT( dynamic_cast<ConstantInt*>(G_tmp_val)->getValue());
+                G_tmp_val = CONST_INT( -dynamic_cast<ConstantInt*>(G_tmp_val)->getValue());
             } else {
                 ERROR("");
             }
