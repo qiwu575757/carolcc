@@ -303,7 +303,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
       if (stack_mapping.count(upd_v) == 1) {//栈中有该变量
         int v_offset = stack_mapping[upd_v];
         alloc_reg_asm += InstGen::comment("load "+(upd_v)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
-        alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+        alloc_reg_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
         register_mapping[upd_v] = reg_index++;
       } else {// 直接增加寄存器映射
         register_mapping[upd_v] = reg_index++;
@@ -320,7 +320,7 @@ std::string AsmBuilder::update_arg_mapping(Value *arg) {
     if (stack_mapping.count(arg) == 1) {//栈中有该变量
       int v_offset = stack_mapping[arg];
       alloc_reg_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
-      alloc_reg_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+      alloc_reg_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
       register_mapping[arg] = reg_index++;
     } else {// 直接增加寄存器映射
       ERROR("WRONG ARG");
@@ -839,23 +839,23 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
             if (arg->isConstant()) {// 若参数直接为立即数
               return_asm += InstGen::setValue(InstGen::Reg(reg_index++),InstGen::Constant(atoi(arg->getPrintName().c_str())));
               return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::str(InstGen::Reg(reg_index-1),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::store(InstGen::Reg(reg_index-1),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             } else { // 若参数为变量
               // update_value_mapping(arg_list);
               int v_offset = stack_mapping[arg]+caller_save_regs.size()*4;
               return_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
-              return_asm += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+              return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
               register_mapping[arg] = reg_index++;
               // update_arg_mapping(arg);
               return_asm += InstGen::comment("transfer val args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::store(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             }
             offset += 4;
         }
         return_asm += InstGen::bl(func_name);
         if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) {// 若有返回值
           // stack_mapping[inst] = return_offset;
-          return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+          return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
         }
 
         return_asm += InstGen::pop(caller_reg_list);
@@ -865,7 +865,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           variable_list.push_back(inst);
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_value_mapping(variable_list);
-          return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+          return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
         }
     } else {
       std::vector<Value *> args(operands.begin(), operands.end());
@@ -878,9 +878,9 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       }
       return_asm += InstGen::bl(func_name);
 
-      return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+      return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
       return_asm += InstGen::pop(caller_reg_list);
-      return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+      return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
     }
 
     return return_asm;
@@ -1133,8 +1133,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp + " + std::to_string(stack_cur_size),
       " size: "+std::to_string(type_size));
       inst_asm += register_str;
-      inst_asm += InstGen::add(target_reg,InstGen::sp,InstGen::Constant(stack_cur_size));
-
+      inst_asm += InstGen::instConst(InstGen::add, target_reg, InstGen::sp,
+                                 InstGen::Constant(stack_cur_size));
     } else if (inst->isGep()) { //将gep指令转化为mul, add %1 =
       // new register variable_list.push_back(inst);
       variable_list.push_back(inst);
@@ -1206,7 +1206,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             InstGen::Reg inst2_reg = InstGen::Reg(find_register(inst,register_str));
             inst_asm += register_str;
             register_str = "";
-            inst_asm += InstGen::add(inst1_reg,inst2_reg, InstGen::Constant(offset));
+            inst_asm += InstGen::instConst(InstGen::add, inst1_reg, inst2_reg,
+                                 InstGen::Constant(offset));
             // variable_list.push_back(src_op2);
           }
           // variable_list.push_back(inst);
