@@ -200,7 +200,7 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
 
 
 std::string AsmBuilder::generate_function_code(Function *func){
-    stack_cur_size = 0;//
+    stack_cur_size = 0;
     stack_mapping.clear();
     register_mapping.clear();
 
@@ -213,6 +213,7 @@ std::string AsmBuilder::generate_function_code(Function *func){
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
+    // 用于函数无return的情况
     func_asm += generate_function_exit_code();
 
     return func_asm;
@@ -853,7 +854,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
         }
         return_asm += InstGen::bl(func_name);
         if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) {// 若有返回值
-          stack_mapping[inst] = return_offset;
+          // stack_mapping[inst] = return_offset;
           return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
         }
 
@@ -1085,9 +1086,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             inst_asm += InstGen::ret(src_reg1);
           }
         }
-      } else { // ret void, 生成函数退栈操作代码
-        inst_asm += generate_function_exit_code();
       }
+
     } else if (inst->isBr()) {
       if (operands.size() == 1){
           auto src_op0 = operands.at(0)->getName();
@@ -1233,6 +1233,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     // 将寄存器的值刷到栈里，退化为栈分配
     inst_asm += flushRegs2Stack(variable_list);
+
+    if (inst->isRet()) {
+      // 生成函数退栈操作代码
+      inst_asm += generate_function_exit_code();
+    }
 
     stack_cur_size += type_size;
     variable_list.clear();//清空列表
