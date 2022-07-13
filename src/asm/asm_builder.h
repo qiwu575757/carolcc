@@ -63,8 +63,10 @@ private:
   int stack_cur_size=0;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size=8192;//根据需要，可扩充
-  int return_offset=8188;
+  int stack_size=65536;//根据需要，可扩充 64k
+  int return_offset=65532;
+  // int stack_size=131072;//根据需要，可扩充 128k
+  // int return_offset=131068;
   bool debug;
   std::string asm_code;
 

@@ -244,9 +244,9 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
       //register_mapping[arg] = reg_index++;
 
       // func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
-      stack_mapping[arg]=offset;
-      offset+=4;
-      stack_cur_size+=4;
+      stack_mapping[arg] = offset;
+      offset += 4;
+      stack_cur_size += 4;
     }
     return func_head_code;
 }
@@ -309,7 +309,7 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         register_mapping[upd_v] = reg_index++;
       }
     }
-    show_mapping();
+    // show_mapping();
 
     return alloc_reg_asm;
 }
@@ -837,18 +837,18 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
             MyAssert("error arg", stack_mapping.count(arg) == 1);
 
             if (arg->isConstant()) {// 若参数直接为立即数
-              return_asm += InstGen::setValue(InstGen::Reg(reg_index++),InstGen::Constant(atoi(arg->getPrintName().c_str())));
+              return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(atoi(arg->getPrintName().c_str())));
               return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(reg_index-1),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             } else { // 若参数为变量
               // update_value_mapping(arg_list);
-              int v_offset = stack_mapping[arg]+caller_save_regs.size()*4;
+              int v_offset = stack_mapping[arg] + caller_save_regs.size()*4;
               return_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
               return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
-              register_mapping[arg] = reg_index++;
+              // register_mapping[arg] = reg_index++;
               // update_arg_mapping(arg);
               return_asm += InstGen::comment("transfer val args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             }
             offset += 4;
         }

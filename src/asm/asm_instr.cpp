@@ -598,7 +598,7 @@ std::string load(const Reg &dst, const Addr &src) {
 }
 
 std::string store(const Reg &src, const Addr &dst) {
-  assert(src != vinst_temp_reg);
+  assert(src != vinst_temp_reg); //这可能只是之前的调用约定
   std::string asm_instr;
   int offset = dst.getOffset();
   if (offset > imm_12_max || offset < -imm_12_max) {
