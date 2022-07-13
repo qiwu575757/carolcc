@@ -208,8 +208,8 @@ std::string vvmul(const Reg &sum, const Reg &v1, const Reg &v2, const int len);
 std::tuple<int, int, int> choose_multiplier(int d, int N);
 std::string divConst(const Reg &dst, const Reg &src,
                      const Constant &divisor);
-std::string ret(const Value &src);
-
+std::string ret(const Constant &src);
+std::string ret(const Reg &src);
 
 }; // namespace InstGen
 

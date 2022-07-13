@@ -83,7 +83,7 @@ public:
   std::string generate_module_tail();
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code(Function *func);
-  std::string generate_function_exit_code(Function *func);
+  std::string generate_function_exit_code();
 
   /*LRU list update interval by function code; insert ldr str instr*/
   std::string update_value_mapping(std::list<Value *> update_v);

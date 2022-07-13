@@ -65,8 +65,8 @@ std::string AsmBuilder::generate_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
     asm_code += global_var->getName() + ":" + InstGen::newline;
-    if (!global_var->getType()->getPointerElementType()->eq(
-            *global_var->getOperandList().at(0)->getType())) {
+    //MyAssert("the array operand size is 0", global_var->getOperandNumber() != 0);
+    if (global_var->getInit() == nullptr) {
       asm_code += InstGen::spaces + ".zero" + " " +
                   std::to_string(global_var->getType()->getSize()) +
                   InstGen::newline;
@@ -213,7 +213,7 @@ std::string AsmBuilder::generate_function_code(Function *func){
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
-    func_asm += generate_function_exit_code(func);
+    func_asm += generate_function_exit_code();
 
     return func_asm;
 }
@@ -250,11 +250,11 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     return func_head_code;
 }
 
-std::string AsmBuilder::generate_function_exit_code(Function *func){
+std::string AsmBuilder::generate_function_exit_code(){
     std::string func_tail_code;
     // sp add
     func_tail_code += InstGen::instConst(InstGen::add, InstGen::sp, InstGen::sp,
-                                 InstGen::Constant(this->stack_size));
+                                 InstGen::Constant(stack_size));
     // pop (save register and pc)
     std::vector<InstGen::Reg> callee_reg_list;
     for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
@@ -842,18 +842,22 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
               return_asm += InstGen::str(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
             }
             offset += 4;
-
         }
         return_asm += InstGen::bl(func_name);
-        stack_mapping[inst] = return_offset;
-        return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
-        return_asm += InstGen::pop(caller_reg_list);
-        variable_list.clear();
-        variable_list.push_back(inst);
-        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-        return_asm += update_value_mapping(variable_list);
-        return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+        if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) {// 若有返回值
+          stack_mapping[inst] = return_offset;
+          return_asm += InstGen::str(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+        }
 
+        return_asm += InstGen::pop(caller_reg_list);
+
+        if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) { // 若有返回值
+          variable_list.clear();
+          variable_list.push_back(inst);
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_value_mapping(variable_list);
+          return_asm += InstGen::ldr(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+        }
     } else {
       std::vector<Value *> args(operands.begin(), operands.end());
       for (int i = 0; i < 2; i++ ) { //对于除法函数,取余函数，只有两个参数
@@ -982,8 +986,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string register_str = "";
     if(!inst->isAlloca()){
       //维护变量的栈分配
-      type_size = inst->getType()->getSize();
-      stack_mapping[inst] = stack_cur_size;
+      if (inst->isGep()) {
+        type_size = 4;
+        stack_mapping[inst] = stack_cur_size;
+      } else {
+        type_size = inst->getType()->getSize();
+        stack_mapping[inst] = stack_cur_size;
+      }
     }
 
     if (inst->isAdd() || inst->isSub() || inst->isMul() ||
@@ -1051,23 +1060,26 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
         }
     } else if (inst->isRet()) {
-          auto src = operands.at(0);
-          if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
-            inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
-          } else {
-            auto src_op1 = operands.at(0);
-            variable_list.push_back(src_op1);
-            inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-            inst_asm += update_value_mapping(variable_list);
-            if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
-              inst_asm += register_str;
-              register_str = "";
-              const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-              inst_asm += register_str;
-              inst_asm += InstGen::ret(src_reg1);
-            }
-
+      if (inst->getOperandNumber() != 0) { // 处理有返回值的情况
+        auto src = operands.at(0);
+        if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
+          inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
+        } else {
+          auto src_op1 = operands.at(0);
+          variable_list.push_back(src_op1);
+          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          inst_asm += update_value_mapping(variable_list);
+          if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
+            inst_asm += register_str;
+            register_str = "";
+            const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+            inst_asm += register_str;
+            inst_asm += InstGen::ret(src_reg1);
           }
+        }
+      } else { // ret void, 生成函数退栈操作代码
+        inst_asm += generate_function_exit_code();
+      }
     } else if (inst->isBr()) {
       if (operands.size() == 1){
           auto src_op0 = operands.at(0)->getName();

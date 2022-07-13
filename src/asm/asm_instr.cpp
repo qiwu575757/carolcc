@@ -713,7 +713,16 @@ std::string divConst(const Reg &dst, const Reg &src,
   return asm_instr;
 }
 
-std::string ret(const Value &src) {
+std::string ret(const Constant &src) {
+  const InstGen::Reg target_reg = InstGen::Reg(0);
+  std::string asm_instr;
+  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
+  asm_instr += setValue(target_reg,src);
+
+  return asm_instr;
+}
+
+std::string ret(const Reg &src) {
   const InstGen::Reg target_reg = InstGen::Reg(0);
   std::string asm_instr;
   InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
