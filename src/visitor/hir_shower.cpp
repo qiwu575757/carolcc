@@ -92,7 +92,10 @@ void HIrPrinter::visit(ReturnInst *node) {
     print_left("ReturnInst",node->getPrintName());
 }
 void HIrPrinter::visit(UnaryInst *node) {
-    print_left("UnaryInst",node->getPrintName());
+    if(node->isCast())
+        print_left("cast",node->getPrintName());
+    else
+        print_left("UnaryInst",node->getPrintName());
 }
 void HIrPrinter::visit(BinaryInst *node) {
     print_left("BinaryInst",node->getPrintName());

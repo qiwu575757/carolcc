@@ -214,7 +214,7 @@ public:
 //test5.set_caller_position(false);
 //test5.println("hello world");
 
-// #define SYSY_BUILDER_
+#define SYSY_BUILDER_
 #ifdef SYSY_BUILDER_
 #define SYSY_BUILDER(format, ...)                                  \
     do {                                                                             \

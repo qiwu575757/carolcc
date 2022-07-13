@@ -8,7 +8,7 @@
 class IRBuilder {
 private:
     BasicBlock *_basic_block; //注意这个块和父基本块不是父子关系 只是用于插入指令
-    BasicBlock *_entry_block;
+    BasicBlock *_entry_block{};
     BaseBlock *_father_block;
     std::list<BaseBlock *>* _base_block_list;
 public:
@@ -32,6 +32,9 @@ public:
 
 //    UnaryInst *createNeg(Value *v1);
     UnaryInst *createNot(Value *v1);
+    UnaryInst *createCast(Value *v1,Type* type_cast_to);
+    UnaryInst *createFp2Int(Value *v1);
+    UnaryInst *createInt2Fp(Value *v1);
     BinaryInst *createAdd(Value *v1, Value *v2);
     BinaryInst *createSub(Value *v1, Value *v2);
     BinaryInst *createMul(Value *v1, Value *v2);

@@ -79,6 +79,10 @@ void Function::addAlloca(AllocaInst* alloca) {
       entry->deleteInstr(alloca);
       entry->insertAfterInstr(_alloca_end,alloca);
     }
+    else {
+      entry->deleteInstr(alloca);
+      entry->getInstructions().push_front(alloca);
+    }
     _alloca_end=alloca;
 
 }

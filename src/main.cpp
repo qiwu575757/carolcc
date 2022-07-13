@@ -96,7 +96,7 @@ int main(int argc, char **argv) {
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
     // if(is_emit_mir && is_debug)

@@ -4,6 +4,9 @@
 #include "type.h"
 #include "user.h"
 #include "value.h"
+#include <iostream>
+#include <sstream>
+#include <string>
 
 class ArrayType;
 
@@ -21,14 +24,14 @@ public:
     void accept(IrVisitorBase *v) override;
 
 private:
-    int _value;
-    ConstantInt(Type *ty, int value) : Constant(ty, "", 0), _value(value) {}
+    long _value;
+    ConstantInt(Type *ty, long value) : Constant(ty, "", 0), _value(value) {}
 
 public:
 
-    int getValue() const;
+    long getValue() const;
     void setValue(int value);
-    static ConstantInt *create(int val);
+    static ConstantInt *create(long val);
     std::string getPrintName()override{
         return std::to_string(_value);
     }
@@ -38,13 +41,17 @@ public:
 class ConstantFloat : public Constant {
 private:
     float _value;
-    ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {}
+    ConstantFloat(Type *ty, float value) : Constant(ty, "", 0), _value(value) {
+        _union_number._value=value;
+    }
+    union format{
+        double _value;
+        unsigned  long _hex_number;
+    }_union_number{};
 
 public:
     void accept(IrVisitorBase *v) override;
-    std::string getPrintName()override{
-        return std::to_string(_value);
-    }
+    std::string getPrintName()override;
 
 public:
     float getValue() const;
@@ -71,7 +78,9 @@ public:
      * @param array_init  线性内容
      * @return  构造好的存有内容的多维数组
      */
-    static ConstantArray *turn(std::vector<int32_t> &array_bounds,std::vector<Value*> &array_init);
+    static ConstantArray *turn(Type *basic_type,
+                               std::vector<int32_t> &array_bounds,
+                               std::vector<Value *> &array_init);
     Constant *getElement(int index);
 
     unsigned getNumElements() const { return _const_array.size(); }

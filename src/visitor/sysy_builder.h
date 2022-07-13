@@ -5,6 +5,8 @@
 
 #include "passes/module.h"
 #include "tree_visitor_base.h"
+#include <queue>
+#include <stack>
 class Scope;
 class IRBuilder;
 class Module;
@@ -66,9 +68,20 @@ class SYSYBuilder : public tree_visitor_base {
     void visit(tree_array_ident &node) final;
     void visit(tree_func_call &node) final;
     void visit(tree_func_paramlist &node) final;
+
     std::unique_ptr<IRBuilder> builder;
     Scope scope;
     std::shared_ptr<Module> module;
+
+
+
+     // for cast
+    // 用于暂存操作数
+    std::stack<Value*> _oprt_stack;
+    // 用于计算立即数
+    void calBinary(const std::string oprt);
+    void buildBinary(const std::string oprt);
+    Value* checkAndCast(Value* value,Type* target_type);
 };
 
 #endif
