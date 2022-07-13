@@ -375,18 +375,6 @@ int AsmBuilder::find_register(Value *v){
     v->getPrintName();
     return register_mapping[v];
   }else{
-    if(global){
-      std::list<Value *> variable_list;
-      const std::string reg_name = "._LCPI"+v->getName();
-      Constant * val = new Constant(Type::getInt32Ty(), reg_name);
-      variable_list.push_back(val);
-      update_value_mapping(variable_list);
-      InstGen::ldr(InstGen::Reg(find_register(val)),InstGen::Label("._LCPI"+v->getName()));
-      erase_value_mapping(variable_list);
-      v->getPrintName();
-      WARNNING("GLOBAL VALUE NEED CONVERT!");
-      return register_mapping[v];
-    }
     ERROR(" not find v in register! %s",v->getPrintName().c_str());
   }
 }
@@ -399,13 +387,23 @@ int AsmBuilder::find_register(Value *v,std::string &code){
   }
   if(register_mapping.count(v)){
     if(global){
+      // get label
       std::list<Value *> variable_list;
-      const std::string reg_name = ".LCPI_"+v->getName();
       variable_list.push_back(v);
+
+      // generate label addr reg
+      const std::string reg_name_0 = "LCPI_"+std::to_string(key++);
+      Value *label_reg_addr = new Value(Type::getInt32Ty(), reg_name_0);
+      variable_list.push_back(label_reg_addr);
+
       code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       update_value_mapping(variable_list);
 
-      code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
+      // generate label
+      InstGen::Label src_label = InstGen::Label(".LCPI_"+v->getName());
+
+      code += InstGen::getAddress(InstGen::Reg(find_register(label_reg_addr)), src_label);
+      code += InstGen::load(InstGen::Reg(find_register(v)),InstGen::Addr(InstGen::Reg(find_register(label_reg_addr)), 0));
       return register_mapping[v];
     }
     v->getPrintName();
@@ -413,13 +411,23 @@ int AsmBuilder::find_register(Value *v,std::string &code){
     return register_mapping[v];
   }else{
     if(global){
+      // get label
       std::list<Value *> variable_list;
-      const std::string reg_name = ".LCPI_"+v->getName();
       variable_list.push_back(v);
+
+      // generate label addr reg
+      const std::string reg_name_0 = "LCPI_"+std::to_string(key++);
+      Value *label_reg_addr = new Value(Type::getInt32Ty(), reg_name_0);
+      variable_list.push_back(label_reg_addr);
+
       code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       update_value_mapping(variable_list);
 
-      code += InstGen::spaces +"ldr "+ "r" + std::to_string(find_register(v)) + ", " + ".LCPI_"+v->getName()+InstGen::newline;
+      // generate label
+      InstGen::Label src_label = InstGen::Label(".LCPI_"+v->getName());
+
+      code += InstGen::getAddress(InstGen::Reg(find_register(label_reg_addr)), src_label);
+      code += InstGen::load(InstGen::Reg(find_register(v)),InstGen::Addr(InstGen::Reg(find_register(label_reg_addr)), 0));
       return register_mapping[v];
     }
     else {
