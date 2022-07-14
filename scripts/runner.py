@@ -122,7 +122,7 @@ class Runner():
         self.detector = open(error_log+"error.log", "r")
         line_ = 0
         for l in self.detector.readlines():
-            if l.startswith("TOTAL"):
+            if l.startswith("TOTAL") or l.startswith("Timer"):
                 continue
             line_+=1
         self.detector.close()

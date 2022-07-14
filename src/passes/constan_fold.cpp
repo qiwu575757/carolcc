@@ -7,7 +7,10 @@
 #include "module.h"
 void ConstantFold::run() {
     for (auto f : _m->getFunctions()) {
-        if (!f->isBuiltin()) constantFold(f);
+        if (!f->isBuiltin()) {
+            constantFold(f);
+            deleteCondBr(f);
+        }
     }
 }
 
@@ -30,6 +33,15 @@ bool ConstantFold::detectBinaryConstantFold(BinaryInst *inst) {
     inst->replaceAllUse(new_constant);
     inst->removeUseOps();
     return true;
+}
+
+void ConstantFold::deleteCondBr(Function *f) {
+    for(auto bb : f->getBasicBlocks()){
+        if(bb->getTerminator()->isBr()){
+            auto br = bb->getTerminator()
+        }
+    }
+    
 }
 
 void ConstantFold::constantFold(Function *f) {

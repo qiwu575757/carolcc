@@ -80,33 +80,34 @@ int main(int argc, char **argv) {
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
+    std::cout<<"building syntax tree...\n";
     builder->build(root);
     // auto *shower = new syntax_detail_shower();
     // shower->visit(*root);
 
     pass_manager PM(builder->getModule().get());
 
-    if(is_emit_hir )
-        PM.add_pass<EmitHir>("EmitHir");
+    // if(is_emit_hir )
+        // PM.add_pass<EmitHir>("EmitHir");
     if(is_show_hir_pad_graph && is_debug)
         PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+        // PM.add_pass<EmitIR>("EmitIR");
 
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
-    if(is_show_hir_pad_graph && is_debug)
-        PM.add_pass<EmitPadGraph>("EmitPadGraph");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
+    // if(is_show_hir_pad_graph && is_debug)
+    //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
     PM.add_pass<Dominators>("Dominators");
     PM.add_pass<Mem2Reg>("Mem2Reg");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+        // PM.add_pass<EmitIR>("EmitIR");
      PM.add_pass<ConstantFold>("ConstantFold");
     if(is_emit_mir && is_debug)
         PM.add_pass<EmitIR>("EmitIR");

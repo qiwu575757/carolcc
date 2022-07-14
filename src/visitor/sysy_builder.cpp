@@ -1372,27 +1372,38 @@ void SYSYBuilder::visit(tree_array_ident &node) {
 }
 
 void SYSYBuilder::visit(tree_func_call &node) {
-    SYSY_BUILDER("func_call (%s) line:%d", node.id.c_str(), node._line_no);
-    auto func = module->getFunction(node.id);
-    MyAssert("func not found", func != nullptr);
+    SYSY_BUILDER("-----func_call (%s) line:%d", node.id.c_str(), node._line_no);
+    Function* func;
     std::vector<Value *> args;
-    if (node.func_param_list != nullptr) {
-        SYSY_BUILDER("node exp size is %d ", node.func_param_list->exps.size());
-        for (int i = 0; i < node.func_param_list->exps.size(); i++) {
-            auto arg = node.func_param_list->exps[i];
-            auto arg_type = func->getFunctionType()->getArgType(i);
-            if (arg_type->isFloatTy() || arg_type->isIntegerTy()) {
+    if(node.id == "starttime" ){
+        func = module->getFunction("_sysy_starttime");
+        args.push_back(CONST_INT(node._line_no));
+    } else if(node.id == "stoptime"){
+        func = module->getFunction("_sysy_stoptime");
+        args.push_back(CONST_INT(node._line_no));
+    }
+    else {
+        func = module->getFunction(node.id);
+        MyAssert("func not found", func != nullptr);
+        if (node.func_param_list != nullptr) {
+            SYSY_BUILDER("node exp size is %d ",
+                         node.func_param_list->exps.size());
+            for (int i = 0; i < node.func_param_list->exps.size(); i++) {
+                auto arg = node.func_param_list->exps[i];
+                auto arg_type = func->getFunctionType()->getArgType(i);
+                if (arg_type->isFloatTy() || arg_type->isIntegerTy()) {
+                    G_require_address = false;
+                } else {
+                    G_require_address = true;
+                    G_arg_dims = arg_type->getDims();
+                }
+                arg->accept(*this);
                 G_require_address = false;
-            } else {
-                G_require_address = true;
-                G_arg_dims = arg_type->getDims();
+                if (arg_type->isFloatTy() || arg_type->isIntegerTy()) {
+                    G_tmp_val = checkAndCast(G_tmp_val, arg_type);
+                }
+                args.push_back(G_tmp_val);
             }
-            arg->accept(*this);
-            G_require_address = false;
-            if(arg_type->isFloatTy()||arg_type->isIntegerTy()){
-                G_tmp_val = checkAndCast(G_tmp_val,arg_type);
-            }
-            args.push_back(G_tmp_val);
         }
     }
     G_tmp_val = builder->createCall(func, args);
@@ -1467,19 +1478,19 @@ SYSYBuilder::SYSYBuilder(const std::string &name) {
         Function::create(putfarray_type, "putfarray", module.get());
 
     std::vector<Type *> starttime_params;
-    // starttime_params.push_back(TyInt32);
+    starttime_params.push_back(TyInt32);
 
     auto starttime_type = FunctionType::get(TyVoid, starttime_params);
 
     auto starttime_fun =
-        Function::create(starttime_type, "starttime", module.get());
+        Function::create(starttime_type, "_sysy_starttime", module.get());
 
     std::vector<Type *> stoptime_params;
-    // stoptime_params.push_back(TyInt32);
+    stoptime_params.push_back(TyInt32);
     auto stoptime_type = FunctionType::get(TyVoid, stoptime_params);
 
     auto stoptime_fun =
-        Function::create(stoptime_type, "stoptime", module.get());
+        Function::create(stoptime_type, "_sysy_stoptime", module.get());
 
     auto mtstart_type = FunctionType::get(TyInt32, {});
 
@@ -1608,10 +1619,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
         }
     }
 }
-int cnt = 0;
 void SYSYBuilder::buildBinary(const std::string oprt){
-    cnt ++;
-    SYSY_BUILDER("int build binary %d",cnt);
     SYSY_BUILDER("queue size is %d",_oprt_stack.size());
     // MyAssert("error oprd number", _oprt_stack.size() == 2);
     auto oprt2 = _oprt_stack.top();

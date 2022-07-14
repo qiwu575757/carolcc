@@ -3,7 +3,7 @@
 #include "ir/basic_block.h"
 #include "ir/function.h"
 
-#define _DOMINATOR_LOG
+// #define _DOMINATOR_LOG
 
 #ifdef _DOMINATOR_LOG
 #define DOMINATOR_LOG(format, ...)                                  \

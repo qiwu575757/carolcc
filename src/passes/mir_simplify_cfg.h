@@ -4,7 +4,7 @@
 
 #include "pass.h"
 
-#define __MIR_SIMPLIFY_CFG_LOG
+// #define __MIR_SIMPLIFY_CFG_LOG
 #ifdef __MIR_SIMPLIFY_CFG_LOG
 #define SIMPLIFY_CFG_LOG(format, ...)                                                            \
     do {                                                                             \

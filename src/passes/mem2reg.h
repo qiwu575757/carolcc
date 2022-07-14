@@ -9,7 +9,7 @@ class Module;
 class Function;
 class BasicBlock;
 
-#define __MEM2REG_LOG
+// #define __MEM2REG_LOG
 #ifdef __MEM2REG_LOG
 #define MEM2REG_LOG(format, ...)                                                            \
     do {                                                                             \
