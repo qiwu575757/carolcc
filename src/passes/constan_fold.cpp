@@ -51,7 +51,7 @@ void ConstantFold::constantFold(Function *f) {
             }
 
             auto cmp_inst = dynamic_cast<CmpInst *>(inst);
-            if (cmp_inst != nullptr && cmp_inst->isCast()) {
+            if (cmp_inst != nullptr && cmp_inst->isCmp()) {
                 if (detectCmpConstantFold(cmp_inst))
                     wait_delete.push_back(cmp_inst);
                 continue;
@@ -88,25 +88,26 @@ Constant *ConstantFold::calConstantIntBinary(Instruction *pInstruction) {
         case Instruction::CMP:
             switch (dynamic_cast<CmpInst *>(pInstruction)->getCmpOp()) {
                 case CmpInst::EQ:
-                    res = ConstantInt::create(oprt1 == oprt2);
+                    res = ConstantInt::getBool(oprt1 == oprt2);
                     break;
 
                 case CmpInst::NEQ:
-                    res = ConstantInt::create(oprt1 != oprt2);
+                    res = ConstantInt::getBool(oprt1 != oprt2);
                     break;
                 case CmpInst::GT:
-                    res = ConstantInt::create(oprt1 > oprt2);
+                    res = ConstantInt::getBool(oprt1 > oprt2);
                     break;
                 case CmpInst::GE:
-                    res = ConstantInt::create(oprt1 >= oprt2);
+                    res = ConstantInt::getBool(oprt1 >= oprt2);
                     break;
                 case CmpInst::LT:
-                    res = ConstantInt::create(oprt1 < oprt2);
+                    res = ConstantInt::getBool(oprt1 < oprt2);
                     break;
                 case CmpInst::LE:
-                    res = ConstantInt::create(oprt1 <= oprt2);
+                    res = ConstantInt::getBool(oprt1 <= oprt2);
                     break;
             }
+            break;
         case Instruction::RET:
         case Instruction::BR:
         case Instruction::NOT:
@@ -155,24 +156,25 @@ Constant *ConstantFold::calConstantFloatBinary(Instruction *instr) {
         case Instruction::CMP:
             switch (dynamic_cast<CmpInst *>(instr)->getCmpOp()) {
                 case CmpInst::EQ:
-                    res = ConstantInt::create(oprt1 == oprt2);
+                    res = ConstantInt::getBool(oprt1 == oprt2);
                     break;
                 case CmpInst::NEQ:
-                    res = ConstantInt::create(oprt1 != oprt2);
+                    res = ConstantInt::getBool(oprt1 != oprt2);
                     break;
                 case CmpInst::GT:
-                    res = ConstantInt::create(oprt1 > oprt2);
+                    res = ConstantInt::getBool(oprt1 > oprt2);
                     break;
                 case CmpInst::GE:
-                    res = ConstantInt::create(oprt1 >= oprt2);
+                    res = ConstantInt::getBool(oprt1 >= oprt2);
                     break;
                 case CmpInst::LT:
-                    res = ConstantInt::create(oprt1 < oprt2);
+                    res = ConstantInt::getBool(oprt1 < oprt2);
                     break;
                 case CmpInst::LE:
-                    res = ConstantInt::create(oprt1 <= oprt2);
+                    res = ConstantInt::getBool(oprt1 <= oprt2);
                     break;
             }
+            break;
         case Instruction::REM:
         case Instruction::RET:
         case Instruction::BR:

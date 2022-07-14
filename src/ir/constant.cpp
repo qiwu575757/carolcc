@@ -17,6 +17,9 @@ ConstantInt *ConstantInt::create(long val) {
 ConstantInt *ConstantInt::get(int val) {
   return new ConstantInt(Type::getInt32Ty(), val);
 }
+ ConstantInt *ConstantInt::getBool(bool val){
+    return new ConstantInt(Type::getInt1Ty(),val);
+ }
 void ConstantInt::accept(IrVisitorBase *v) {
     v->visit(this);
 }

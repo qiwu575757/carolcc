@@ -36,6 +36,7 @@ public:
         return std::to_string(_value);
     }
     static ConstantInt *get(int val);
+    static ConstantInt *getBool(bool val);
 };
 
 class ConstantFloat : public Constant {
