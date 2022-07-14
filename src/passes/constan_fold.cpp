@@ -11,25 +11,24 @@ void ConstantFold::run() {
     }
 }
 
-bool ConstantFold::detectBinaryConstantFold(BinaryInst *binary_inst) {
-    auto oprt1 = binary_inst->getOperand(0);
+bool ConstantFold::detectBinaryConstantFold(BinaryInst *inst) {
+    auto oprt1 = inst->getOperand(0);
     if (!oprt1->isConstant()) return false;
-    auto oprt2 = binary_inst->getOperand(1);
+    auto oprt2 = inst->getOperand(1);
     if (!oprt2->isConstant()) return false;
 
     Constant *new_constant;
     if (oprt1->getType()->isIntegerTy() && oprt2->getType()->isIntegerTy()) {
-        auto val = calConstantIntBinary(binary_inst);
-        new_constant = ConstantInt::create(val);
+        new_constant = calConstantIntBinary(inst);
 
     } else if (oprt1->getType()->isFloatTy() && oprt2->getType()->isFloatTy()) {
-        auto val = calConstantFloatBinary(binary_inst);
-        new_constant = ConstantFloat::create(val);
+        new_constant = calConstantFloatBinary(inst);
+
     } else {
         ERROR("unsupported type");
     }
-    binary_inst->replaceAllUse(new_constant);
-    binary_inst->removeUseOps();
+    inst->replaceAllUse(new_constant);
+    inst->removeUseOps();
     return true;
 }
 
@@ -41,14 +40,21 @@ void ConstantFold::constantFold(Function *f) {
             if (binary_inst != nullptr) {
                 if (detectBinaryConstantFold(binary_inst))
                     wait_delete.push_back(binary_inst);
-                continue ;
+                continue;
             }
 
             auto unary_inst = dynamic_cast<UnaryInst *>(inst);
             if (unary_inst != nullptr && unary_inst->isCast()) {
-                if(detectCastConstantFold(unary_inst))
+                if (detectCastConstantFold(unary_inst))
                     wait_delete.push_back(unary_inst);
-                continue ;
+                continue;
+            }
+
+            auto cmp_inst = dynamic_cast<CmpInst *>(inst);
+            if (cmp_inst != nullptr && cmp_inst->isCast()) {
+                if (detectCmpConstantFold(cmp_inst))
+                    wait_delete.push_back(cmp_inst);
+                continue;
             }
         }
         for (auto inst : wait_delete) {
@@ -56,29 +62,51 @@ void ConstantFold::constantFold(Function *f) {
         }
     }
 }
-int ConstantFold::calConstantIntBinary(BinaryInst *binary_instr) {
-    auto oprt1_ptr = dynamic_cast<ConstantInt *>(binary_instr->getOperand(0));
-    auto oprt2_ptr = dynamic_cast<ConstantInt *>(binary_instr->getOperand(1));
+Constant *ConstantFold::calConstantIntBinary(Instruction *pInstruction) {
+    auto oprt1_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(0));
+    auto oprt2_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(1));
     MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
-    int res;
+    Constant *res;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
-    switch (binary_instr->getInstructionKind()) {
+    switch (pInstruction->getInstructionKind()) {
         case Instruction::ADD:
-            res = oprt1 + oprt2;
+            res = ConstantInt::create(oprt1 + oprt2);
             break;
         case Instruction::SUB:
-            res = oprt1 - oprt2;
+            res = ConstantInt::create(oprt1 - oprt2);
             break;
         case Instruction::MUL:
-            res = oprt1 * oprt2;
+            res = ConstantInt::create(oprt1 * oprt2);
             break;
         case Instruction::DIV:
-            res = oprt1 / oprt2;
+            res = ConstantInt::create(oprt1 / oprt2);
             break;
         case Instruction::REM:
-            res = oprt1 % oprt2;
+            res = ConstantInt::create(oprt1 % oprt2);
             break;
+        case Instruction::CMP:
+            switch (dynamic_cast<CmpInst *>(pInstruction)->getCmpOp()) {
+                case CmpInst::EQ:
+                    res = ConstantInt::create(oprt1 == oprt2);
+                    break;
+
+                case CmpInst::NEQ:
+                    res = ConstantInt::create(oprt1 != oprt2);
+                    break;
+                case CmpInst::GT:
+                    res = ConstantInt::create(oprt1 > oprt2);
+                    break;
+                case CmpInst::GE:
+                    res = ConstantInt::create(oprt1 >= oprt2);
+                    break;
+                case CmpInst::LT:
+                    res = ConstantInt::create(oprt1 < oprt2);
+                    break;
+                case CmpInst::LE:
+                    res = ConstantInt::create(oprt1 <= oprt2);
+                    break;
+            }
         case Instruction::RET:
         case Instruction::BR:
         case Instruction::NOT:
@@ -91,7 +119,6 @@ int ConstantFold::calConstantIntBinary(BinaryInst *binary_instr) {
         case Instruction::ALLOCA:
         case Instruction::LOAD:
         case Instruction::STORE:
-        case Instruction::CMP:
         case Instruction::PHI:
         case Instruction::GEP:
         case Instruction::CALL:
@@ -105,26 +132,47 @@ int ConstantFold::calConstantIntBinary(BinaryInst *binary_instr) {
     }
     return res;
 }
-float ConstantFold::calConstantFloatBinary(BinaryInst *binary_instr) {
-    auto oprt1_ptr = dynamic_cast<ConstantFloat *>(binary_instr->getOperand(0));
-    auto oprt2_ptr = dynamic_cast<ConstantFloat *>(binary_instr->getOperand(1));
+Constant *ConstantFold::calConstantFloatBinary(Instruction *instr) {
+    auto oprt1_ptr = dynamic_cast<ConstantFloat *>(instr->getOperand(0));
+    auto oprt2_ptr = dynamic_cast<ConstantFloat *>(instr->getOperand(1));
     MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
-    float res;
+    Constant *res;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
-    switch (binary_instr->getInstructionKind()) {
+    switch (instr->getInstructionKind()) {
         case Instruction::ADD:
-            res = oprt1 + oprt2;
+            res = ConstantFloat::create(oprt1 + oprt2);
             break;
         case Instruction::SUB:
-            res = oprt1 - oprt2;
+            res = ConstantFloat::create(oprt1 - oprt2);
             break;
         case Instruction::MUL:
-            res = oprt1 * oprt2;
+            res = ConstantFloat::create(oprt1 * oprt2);
             break;
         case Instruction::DIV:
-            res = oprt1 / oprt2;
+            res = ConstantFloat::create(oprt1 / oprt2);
             break;
+        case Instruction::CMP:
+            switch (dynamic_cast<CmpInst *>(instr)->getCmpOp()) {
+                case CmpInst::EQ:
+                    res = ConstantInt::create(oprt1 == oprt2);
+                    break;
+                case CmpInst::NEQ:
+                    res = ConstantInt::create(oprt1 != oprt2);
+                    break;
+                case CmpInst::GT:
+                    res = ConstantInt::create(oprt1 > oprt2);
+                    break;
+                case CmpInst::GE:
+                    res = ConstantInt::create(oprt1 >= oprt2);
+                    break;
+                case CmpInst::LT:
+                    res = ConstantInt::create(oprt1 < oprt2);
+                    break;
+                case CmpInst::LE:
+                    res = ConstantInt::create(oprt1 <= oprt2);
+                    break;
+            }
         case Instruction::REM:
         case Instruction::RET:
         case Instruction::BR:
@@ -138,7 +186,6 @@ float ConstantFold::calConstantFloatBinary(BinaryInst *binary_instr) {
         case Instruction::ALLOCA:
         case Instruction::LOAD:
         case Instruction::STORE:
-        case Instruction::CMP:
         case Instruction::PHI:
         case Instruction::GEP:
         case Instruction::CALL:
@@ -176,4 +223,27 @@ bool ConstantFold::detectCastConstantFold(UnaryInst *pInst) {
     } else {
         return false;
     }
+}
+bool ConstantFold::detectCmpConstantFold(CmpInst *pInst) {
+    bool is_int = true;
+    bool is_float = true;
+    Constant *new_constant = nullptr;
+    for (auto oprt : pInst->getOperandList()) {
+        if (!oprt->isConstant()) {
+            return false;
+        }
+        if (!oprt->getType()->isFloatTy()) is_float = false;
+        if (!oprt->getType()->isIntegerTy()) is_int = false;
+    }
+    if (is_int) {
+        new_constant = calConstantIntBinary(pInst);
+    } else if (is_float) {
+        new_constant = calConstantFloatBinary(pInst);
+    } else {
+        ERROR("error type");
+        return false;
+    }
+    pInst->replaceAllUse(new_constant);
+    pInst->removeUseOps();
+    return true;
 }

@@ -155,7 +155,7 @@ class CmpInst : public Instruction {
     bool isGe() { return _cmp_op == CmpInst::GE; }
     bool isLt() { return _cmp_op == CmpInst::LT; }
     bool isLe() { return _cmp_op == CmpInst::LE; }
-
+    CmpOp getCmpOp() { return _cmp_op; }
    private:
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
