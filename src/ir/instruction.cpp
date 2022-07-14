@@ -345,7 +345,7 @@ BranchInst *BranchInst::createCondBr(Value *cond, BasicBlock *if_true,
     bb->addSuccBasicBlock(if_false);
     bb->addSuccBasicBlock(if_true);
 
-    return new BranchInst(BranchInst::BRANCH, cond, if_true, if_false, bb);
+    return new BranchInst(BranchInst::COND_BRANCH, cond, if_true, if_false, bb);
 }
 
 void BranchInst::accept(IrVisitorBase *v)

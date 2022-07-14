@@ -36,12 +36,66 @@ bool ConstantFold::detectBinaryConstantFold(BinaryInst *inst) {
 }
 
 void ConstantFold::deleteCondBr(Function *f) {
-    for(auto bb : f->getBasicBlocks()){
-        if(bb->getTerminator()->isBr()){
-            auto br = bb->getTerminator()
+    for (auto bb : f->getBasicBlocks()) {
+        if (bb->getTerminator()->isBr()) {
+            auto br = bb->getTerminator();
+            if (dynamic_cast<BranchInst *>(br)->isConBranch()) {
+                auto cond = dynamic_cast<ConstantInt *>(br->getOperand(0));
+                auto true_bb = br->getOperand(1);
+                auto false_bb = br->getOperand(2);
+                if (cond) {
+                    if (cond->getValue() == 0) {
+                        bb->deleteInstr(br);
+                        for (auto succ_bb : bb->getSuccBasicBlocks()) {
+                            succ_bb->removePreBasicBlock(bb);
+                            if (succ_bb != false_bb) {
+                                for (auto instr : succ_bb->getInstructions()) {
+                                    if (instr->isPhi()) {
+                                        for (int i = 0;
+                                             i < instr->getOperandNumber();
+                                             i++) {
+                                            if (i % 2 == 1) {
+                                                if (instr->getOperand(i) ==
+                                                    bb) {
+                                                    instr->rmOperand(i - 1, i);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        bb->getSuccBasicBlocks().clear();
+                        BranchInst::createBranch(dynamic_cast<BasicBlock*>(false_bb),bb);
+
+                    } else {
+                        bb->deleteInstr(br);
+                        for (auto succ_bb : bb->getSuccBasicBlocks()) {
+                            succ_bb->removePreBasicBlock(bb);
+                            if (succ_bb != true_bb) {
+                                for (auto instr : succ_bb->getInstructions()) {
+                                    if (instr->isPhi()) {
+                                        for (int i = 0;
+                                             i < instr->getOperandNumber();
+                                             i++) {
+                                            if (i % 2 == 1) {
+                                                if (instr->getOperand(i) ==
+                                                    bb) {
+                                                    instr->rmOperand(i - 1, i);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        bb->getSuccBasicBlocks().clear();
+                        BranchInst::createBranch(dynamic_cast<BasicBlock*>(true_bb),bb);
+                    }
+                }
+            }
         }
     }
-    
 }
 
 void ConstantFold::constantFold(Function *f) {

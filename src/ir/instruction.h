@@ -179,12 +179,14 @@ class BranchInst : public Instruction {
         WHILE,
         IF,
         BRANCH,
+        COND_BRANCH,
     };
     void accept(IrVisitorBase *v) override;
 
     bool isWhile() { return _br_kind == BranchInst::WHILE; }
     bool isIf() { return _br_kind == BranchInst::IF; }
     bool isBranch() { return _br_kind == BranchInst::BRANCH; }
+    bool isConBranch(){return _br_kind == BranchInst::COND_BRANCH;}
 
    private:
     BrOp _br_kind;
