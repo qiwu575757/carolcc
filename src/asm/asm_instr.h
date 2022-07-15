@@ -21,6 +21,14 @@ const std::string reg_name[] = {"r0",  "r1", "r2", "r3", "r4",  "r5",
 
 const int max_reg_id = 15;
 
+const std::string vfpreg_name[] = {"s0",  "s1", "s2", "s3", "s4",  "s5", "s6",  "s7",
+                                "s8", "s9", "s10", "s11", "s12",  "s13", "s14",  "s15",
+                                "s16", "s17", "s18", "s19", "s20",  "s21", "s22",  "s23",
+                                "s24", "s25", "s26", "s27",  "s28", "s29",  "s30", "s31"
+                                };
+const int max_vfpreg_id = 31;
+
+
 enum CmpOp {
   EQ, // ==bx
   NE, // !=
@@ -52,6 +60,21 @@ public:
   const bool operator<(const Reg &rhs) const { return this->id < rhs.id; }
   const bool operator==(const Reg &rhs) const { return this->id == rhs.id; }
   const bool operator!=(const Reg &rhs) const { return this->id != rhs.id; }
+};
+
+class VFPReg : public Value {// VFP float registers
+  int id;
+
+public:
+  explicit VFPReg(int id) : id(id){};
+  bool is_reg() const { return true; }
+  bool is_constant() const { return false; }
+  bool has_shift() const { return false; }
+  int getID() const { return this->id; }
+  std::string getName() const { return vfpreg_name[id]; }
+  const bool operator<(const VFPReg &rhs) const { return this->id < rhs.id; }
+  const bool operator==(const VFPReg &rhs) const { return this->id == rhs.id; }
+  const bool operator!=(const VFPReg &rhs) const { return this->id != rhs.id; }
 };
 
 class RegShift : public Value {
@@ -211,6 +234,8 @@ std::string divConst(const Reg &dst, const Reg &src,
 std::string ret(const Constant &src);
 std::string ret(const Reg &src);
 
+// float point instructions
+std::string push(const std::vector<VFPReg> &reg_list);
 }; // namespace InstGen
 
 const InstGen::Reg vinst_temp_reg = InstGen::Reg(11);

@@ -24,13 +24,11 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     return asm_code;
 }
 
-/*
-*/
-
 std::string AsmBuilder::generate_module_header(std::string file_name){
     std::string module_header_code;
     module_header_code += InstGen::spaces + ".arch armv" + std::to_string(arch_version) +
               "-a" + InstGen::newline;
+    module_header_code += InstGen::spaces + ".fpu vfpv3-d16" + InstGen::newline;
     module_header_code += InstGen::spaces + ".file" + " " + "\"" +
                 file_name+"\"" + InstGen::newline;
     module_header_code += InstGen::spaces + ".text" + InstGen::newline;
@@ -226,8 +224,13 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     //get callee save registers
     // callee_save_regs
     std::vector<InstGen::Reg> callee_reg_list;
-    for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
+    std::vector<InstGen::VFPReg> callee_vfpreg_list;
+    for(auto reg : callee_save_regs)
+        callee_reg_list.push_back(reg);
+    for(auto reg : callee_save_vfpregs)
+        callee_vfpreg_list.push_back(reg);
     //push (save register and lr)
+    func_head_code += InstGen::push(callee_vfpreg_list);
     callee_reg_list.push_back(InstGen::lr);
     func_head_code += InstGen::push(callee_reg_list);
     //sp sub

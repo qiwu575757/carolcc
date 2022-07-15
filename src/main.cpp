@@ -103,7 +103,7 @@ int main(int argc, char **argv) {
     //     PM.add_pass<EmitIR>("EmitIR");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    PM.add_pass<Dominators>("Dominators");
+    // PM.add_pass<Dominators>("Dominators");
     // PM.add_pass<Mem2Reg>("Mem2Reg");
     PM.add_pass<ConstantFold>("ConstantFold");
     // if(is_emit_mir && is_debug)

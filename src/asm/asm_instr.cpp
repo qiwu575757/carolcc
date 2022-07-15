@@ -51,6 +51,25 @@ std::string push(const std::vector<Reg> &reg_list) {
   return asm_instr;
 }
 
+std::string push(const std::vector<VFPReg> &reg_list) {
+  std::string asm_instr;
+  bool flag = false;
+  asm_instr += spaces;
+  asm_instr += "vpush";
+  asm_instr += " ";
+  asm_instr += "{";
+  for (auto &i : reg_list) {
+    if (flag) {
+      asm_instr += ", ";
+    }
+    asm_instr += i.getName();
+    flag = true;
+  }
+  asm_instr += "}";
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
   bool flag = false;

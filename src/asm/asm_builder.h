@@ -37,6 +37,19 @@ const std::set<InstGen::Reg> caller_save_regs = {
 const std::set<InstGen::Reg> callee_save_regs = {
     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6),  InstGen::Reg(7),
     InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10), InstGen::Reg(11)};
+const std::set<InstGen::VFPReg> caller_save_vfpregs = {
+    InstGen::VFPReg(0), InstGen::VFPReg(1), InstGen::VFPReg(2), InstGen::VFPReg(3),
+    InstGen::VFPReg(4), InstGen::VFPReg(5), InstGen::VFPReg(6),  InstGen::VFPReg(7),
+    InstGen::VFPReg(8), InstGen::VFPReg(9), InstGen::VFPReg(10), InstGen::VFPReg(11),
+    InstGen::VFPReg(12), InstGen::VFPReg(13), InstGen::VFPReg(14), InstGen::VFPReg(15)
+    };
+const std::set<InstGen::VFPReg> callee_save_vfpregs = {
+    InstGen::VFPReg(16), InstGen::VFPReg(17), InstGen::VFPReg(18), InstGen::VFPReg(19),
+    InstGen::VFPReg(20), InstGen::VFPReg(21), InstGen::VFPReg(22), InstGen::VFPReg(23),
+    InstGen::VFPReg(24), InstGen::VFPReg(25), InstGen::VFPReg(26), InstGen::VFPReg(27),
+    InstGen::VFPReg(28), InstGen::VFPReg(29), InstGen::VFPReg(30), InstGen::VFPReg(31)
+    };
+
 const std::set<InstGen::Reg> allocate_regs = {
     InstGen::Reg(0), InstGen::Reg(1), InstGen::Reg(2), InstGen::Reg(3),
     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6), InstGen::Reg(7),
@@ -59,6 +72,7 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<Value *, int> register_mapping; // value - id
+  std::map<Value *, int> vfpregister_mapping; // float value - id
   std::map<Value *, int> stack_mapping; // value - offset
   int stack_cur_size=0;
   std::set<Value *> allocated;
