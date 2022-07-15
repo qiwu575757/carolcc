@@ -119,7 +119,12 @@ public:
   std::string generateOperInst (Instruction *inst);
   std::string generateFunctionCall(Instruction *inst, std::vector<Value *> operands,
           std::string func_name, int return_reg);
-  std::string generateCmpInst(Instruction *inst, Value *imm_0);
+  std::string generateCmpInst(Instruction *inst);
+
+// 浮点运算函数
+  std::string generateFPOperInst (Instruction *inst);
+  std::string update_fpvalue_mapping(std::list<Value *> update_v);
+  int find_vfpregister(Value *v,std::string &code);
 };
 
 #endif // SRC_ASM_BUILDER_H

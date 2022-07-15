@@ -5,7 +5,9 @@
 
 int key = 0;//给需要的立即数标号
 std::list<Value *> variable_list;//待分配寄存器的变量列表
- int reg_index = 0; //从 0 号寄存器开始分配
+std::list<Value *> fp_variable_list;//待分配寄存器的变量列表
+int reg_index = 0; //从 0 号寄存器开始分配
+int vfpreg_index = 0; //从 0 号寄存器开始分配
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
@@ -94,7 +96,6 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
         check_array_init=true;
         break;
       }
-      // printf(" |%c| ",array_code.c_str()[i*12+10]);
     }
     if(check_array_init){
       asm_code += array_code;
@@ -102,7 +103,6 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
     else{
       asm_code += InstGen::spaces + ".zero "+std::to_string(init->getType()->getSize())+"\n";
     }
-    // ERROR("UNDO array init in asm!");
   } else {
     auto val = AsmBuilder::get_const_val(init);
     if (!val.second) {
@@ -115,7 +115,7 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
   return asm_code;
 }
 
-std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
+std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled，不需要处理
   auto const_int_val = dynamic_cast<ConstantInt *>(val);
   auto const_float_val = dynamic_cast<ConstantFloat *>(val);
   auto inst_val = dynamic_cast<Instruction *>(val);
@@ -125,13 +125,12 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled
 
   if (const_int_val || const_float_val) {
     if(const_float_val){
-      ERROR("UNDO init float! in asm");
-      ///??????
-      float data = const_float_val->getValue();
-      int float_data = *((int*)(&data));
-      return std::make_pair(float_data, true);
-    }
-    else{
+      // ERROR("UNDO init float! in asm");
+      // 此处需要转化，但不知道怎么将转化，，，，，，，，，，，，，，，
+      float float_data = const_float_val->getValue();
+      // int float_data = *((int*)(&data));
+      return std::make_pair(const_float_val->getValue(), true);
+    } else{
       return std::make_pair(const_int_val->getValue(), true);
     }
   } else if (inst_val && false) {
@@ -229,15 +228,16 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
         callee_reg_list.push_back(reg);
     for(auto reg : callee_save_vfpregs)
         callee_vfpreg_list.push_back(reg);
+
     //push (save register and lr)
     func_head_code += InstGen::push(callee_vfpreg_list);
     callee_reg_list.push_back(InstGen::lr);
     func_head_code += InstGen::push(callee_reg_list);
-    //sp sub
+    //sp sub，开辟栈空间
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(this->stack_size));
 
-    int offset=0;
+    int offset = 0;
     for(auto arg: func->getArgs()){
       func_head_code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       // func_head_code += update_value_mapping({arg});
@@ -247,6 +247,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
       //register_mapping[arg] = reg_index++;
 
       // func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
+      //函数参数以及被提前存储在对应位置
       stack_mapping[arg] = offset;
       offset += 4;
       stack_cur_size += 4;
@@ -261,9 +262,16 @@ std::string AsmBuilder::generate_function_exit_code(){
                                  InstGen::Constant(stack_size));
     // pop (save register and pc)
     std::vector<InstGen::Reg> callee_reg_list;
-    for(auto reg : callee_save_regs) callee_reg_list.push_back(reg);
+    std::vector<InstGen::VFPReg> callee_vfpreg_list;
+    for(auto reg : callee_save_regs)
+        callee_reg_list.push_back(reg);
+    for(auto reg : callee_save_vfpregs)
+        callee_vfpreg_list.push_back(reg);
+
     callee_reg_list.push_back(InstGen::lr);
     func_tail_code += InstGen::pop(callee_reg_list);
+    func_tail_code += InstGen::pop(callee_vfpreg_list);
+
     func_tail_code += InstGen::spaces+"bx  lr " + InstGen::newline;
 
     return func_tail_code;
@@ -310,6 +318,24 @@ std::string AsmBuilder::update_value_mapping(std::list<Value*> update_v){
         register_mapping[upd_v] = reg_index++;
       } else {// 直接增加寄存器映射
         register_mapping[upd_v] = reg_index++;
+      }
+    }
+    // show_mapping();
+
+    return alloc_reg_asm;
+}
+
+std::string AsmBuilder::update_fpvalue_mapping(std::list<Value*> update_v){
+    std::string alloc_reg_asm;
+
+    for (auto upd_v : update_v) {
+      if (stack_mapping.count(upd_v) == 1) {//栈中有该变量
+        int v_offset = stack_mapping[upd_v];
+        alloc_reg_asm += InstGen::comment("vload "+(upd_v)->getPrintName()+" fp value from sp+"+std::to_string(v_offset),"pop val");
+        alloc_reg_asm += InstGen::vload(InstGen::VFPReg(vfpreg_index),InstGen::Addr(InstGen::sp,v_offset));
+        vfpregister_mapping[upd_v] = vfpreg_index++;
+      } else {// 直接增加寄存器映射
+        vfpregister_mapping[upd_v] = vfpreg_index++;
       }
     }
     // show_mapping();
@@ -383,10 +409,21 @@ int AsmBuilder::find_register(Value *v){
   }
 }
 
-int AsmBuilder::find_register(Value *v,std::string &code){
+int AsmBuilder::find_vfpregister(Value *v, std::string &code){
   auto global = dynamic_cast<GlobalVariable *>(v);
 
-  if(v==nullptr){
+  if(v == nullptr){
+    ERROR(" value is nullptr");
+  }
+  v->getPrintName();
+
+  return vfpregister_mapping[v];
+}
+
+int AsmBuilder::find_register(Value *v, std::string &code){
+  auto global = dynamic_cast<GlobalVariable *>(v);
+
+  if(v == nullptr){
     ERROR(" value is nullptr");
   }
   if(register_mapping.count(v)){
@@ -455,7 +492,7 @@ void AsmBuilder::set_register(Value *v,int data,bool init){
   }
 }
 
-// 用于生成二元运算指令的汇编
+// 用于生成二元整数运算指令的汇编
 std::string AsmBuilder::generateOperInst (Instruction *inst) {
     auto &operands = inst->getOperandList();
     // std::list<Value *> variable_list;
@@ -468,7 +505,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
     auto src_op0 = operands.at(0);
     auto src_op1 = operands.at(1);
 
-    if (inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp()) {
+    if (inst->isAdd() || inst->isSub() || inst->isDiv()) {
 
       variable_list.push_back(inst);
 
@@ -493,9 +530,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
                           src_op1->getPrintName(), "");
-            } else if (inst->isCmp()) {
-              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
-                          src_op1->getPrintName(), "");
             }
 
             // find分配的寄存器
@@ -515,8 +549,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
             } else if (inst->isDiv()) {
               return_asm += InstGen::divConst(target_reg,src_reg_0,src_const_1);
-            } else if (inst->isCmp()) {
-              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           }
@@ -536,9 +568,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
                           src_op1->getPrintName(), "");
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
-                          src_op1->getPrintName(), "");
-            } else if (inst->isCmp()) {
-              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
                           src_op1->getPrintName(), "");
             }
 
@@ -562,8 +591,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             } else if (inst->isDiv()) {
               // for div imm reg, 先将IMM 保存到reg，然后调用函数计算
               return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv", 0);
-            } else if (inst->isCmp()) {
-              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           }
@@ -586,9 +613,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
                           src_op1->getPrintName(), "");
-            } else if (inst->isCmp()) {
-              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
-                          src_op1->getPrintName(), "");
             }
 
             // find分配的寄存器
@@ -606,8 +630,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_const_1);
             } else if (inst->isDiv()) {
               return_asm += InstGen::divConst(target_reg,src_reg_0,src_const_1);
-            } else if (inst->isCmp()) {
-              return_asm += generateCmpInst(inst,src_value_0);
             }
 
           } else { // REG REG
@@ -627,9 +649,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
             } else if (inst->isDiv()) {
               return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " / "+
                           src_op1->getPrintName(), "");
-            } else if (inst->isCmp()) {
-              return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
-                          src_op1->getPrintName(), "");
             }
 
             // find分配的寄存器
@@ -648,8 +667,6 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
               return_asm += InstGen::sub(target_reg,src_reg_0,src_reg_1);
             } else if (inst->isDiv()) {
               return_asm += generateFunctionCall(inst,operands,"__aeabi_idiv", 0);
-            }else if (inst->isCmp()) {
-              return_asm += generateCmpInst(inst,src_value_0);
             }
           }
       }
@@ -816,6 +833,176 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
   return return_asm;
 }
 
+std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
+  auto &operands = inst->getOperandList();
+  // std::list<Value *> variable_list;
+  std::string return_asm;
+  //用于接收可能的全局变量寄存器分配操作str
+  std::string register_str = "";
+  // 若第一个操作数为立即数，存储该立即数的value
+  Value * src_value_0;//NOTICE
+
+  auto src_op0 = operands.at(0);
+  auto src_op1 = operands.at(1);
+
+  variable_list.push_back(inst);
+
+  if (src_op0->isConstant() ) { // 第一个操作数为立即数
+      // 给第一个操作数加上名字，用于分配寄存器,建立映射
+      const std::string reg_name_0 = "_imm_"+std::to_string(key++);
+      Value * src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
+      variable_list.push_back(src_value_0);
+
+      if (src_op1->isConstant()) {// IMM IMM
+        // 乘法指令两个操作数必须均为reg
+        // 给第一个操作数加上名字，用于分配寄存器,建立映射
+        const std::string reg_name_1 = "_imm_"+std::to_string(key++);
+        Value * src_value_1 = new Value(Type::getInt32Ty(), reg_name_1);
+        variable_list.push_back(src_value_1);
+
+        // 寄存器分配
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+
+        if (inst->isMul()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " * "+
+                      src_op1->getPrintName(), "");
+        } else if (inst->isRem()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " % "+
+                      src_op1->getPrintName(), "");
+        }
+
+        // find分配的寄存器
+        const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+        return_asm += register_str;
+        register_str = "";
+        // 将立即数的值绑定到寄存器中
+        return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_value_1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        // 将立即数的值绑定到寄存器中
+        return_asm += InstGen::setValue(src_reg_1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
+
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        return_asm += register_str;
+
+        if (inst->isMul()) {
+          return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
+        } else if (inst->isRem()) {
+          return_asm += generateFunctionCall(inst,operands,"__aeabi_idivmod", 1);
+        }
+      }
+      else { // 第二个操作数是寄存器 IMM REG
+        variable_list.push_back(src_op1);
+
+        // 寄存器分配
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+
+        if (inst->isMul()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " * "+
+                      src_op1->getPrintName(), "");
+        } else if (inst->isRem()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " % "+
+                      src_op1->getPrintName(), "");
+        }
+
+        // find分配的寄存器
+        const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0,register_str));
+        return_asm += register_str;
+        register_str = "";
+        // 将立即数的值绑定到寄存器中
+        return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        return_asm += register_str;
+
+        if (inst->isMul()) {
+          return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
+        } else if (inst->isRem()) {
+          return_asm += generateFunctionCall(inst,operands,"__aeabi_idivmod", 1);
+        }
+      }
+  } else { // 第一个操作数为reg型变量
+      // 给寄存器分配
+      variable_list.push_back(src_op0);
+
+      if (src_op1->isConstant()) { //REG IMM
+        // 乘法指令两个操作数必须均为reg
+        // 给第一个操作数加上名字，用于分配寄存器,建立映射
+        const std::string reg_name_1 = "_imm_"+std::to_string(key++);
+        Value * src_value_1 = new Value(Type::getInt32Ty(), reg_name_1);
+        variable_list.push_back(src_value_1);
+
+        // 寄存器分配
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+
+        if (inst->isMul()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " * "+
+                      src_op1->getPrintName(), "");
+        } else if (inst->isRem()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " % "+
+                      src_op1->getPrintName(), "");
+        }
+        // find分配的寄存器
+        const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_value_1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        // 将立即数的值绑定到寄存器中
+        return_asm += InstGen::setValue(src_reg_1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
+
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        return_asm += register_str;
+        const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+        if (inst->isMul()) {
+          return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
+        } else if (inst->isRem()) {
+          return_asm += generateFunctionCall(inst,operands,"__aeabi_idivmod", 1);
+        }
+      } else { // REG REG
+        variable_list.push_back(src_op1);
+
+        // 寄存器分配
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+
+        if (inst->isMul()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " * "+
+                      src_op1->getPrintName(), "");
+        } else if (inst->isRem()) {
+          return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " % "+
+                      src_op1->getPrintName(), "");
+        }
+
+        // find分配的寄存器
+        const InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        return_asm += register_str;
+
+        if (inst->isMul()) {
+          return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
+        } else if (inst->isRem()) {
+          return_asm += generateFunctionCall(inst,operands,"__aeabi_idivmod", 1);
+        }
+      }
+  }
+}
+
 std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Value *>operands,
             std::string func_name, int return_reg) {
     std::string return_asm;
@@ -841,8 +1028,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
 
             if (arg->isConstant()) {// 若参数直接为立即数
               return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(atoi(arg->getPrintName().c_str())));
-              return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_save_regs.size()+callee_save_vfpregs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+callee_save_vfpregs.size()+1)*4-stack_size));
             } else { // 若参数为变量
               // update_value_mapping(arg_list);
               int v_offset = stack_mapping[arg] + caller_save_regs.size()*4;
@@ -850,8 +1037,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
               return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
               // register_mapping[arg] = reg_index++;
               // update_arg_mapping(arg);
-              return_asm += InstGen::comment("transfer val args:",std::to_string(callee_save_regs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+1)*4-stack_size));
+              return_asm += InstGen::comment("transfer val args:",std::to_string(callee_save_regs.size()+callee_save_vfpregs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+callee_save_vfpregs.size()+1)*4-stack_size));
             }
             offset += 4;
         }
@@ -943,7 +1130,7 @@ InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse) {
   return asmCmpOp;
 }
 
-std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
+std::string AsmBuilder::generateCmpInst(Instruction *inst) {
     std::string return_asm;
     auto &operands = inst->getOperandList();
     std::string register_str = "";
@@ -952,32 +1139,157 @@ std::string AsmBuilder::generateCmpInst(Instruction *inst, Value *imm_0) {
     auto src_op1 = operands.at(1);
     InstGen::CmpOp cmp_op = cmpConvert(static_cast<CmpInst *>(inst)->_cmp_op, false);
 
-    if (src_op0->isConstant()) {
-      // 查找存储立即数的寄存器
-      InstGen::Reg src_reg_0 = InstGen::Reg(find_register(imm_0));
-      if (src_op1->isConstant()) {
-        // 生成constant存储立即数的值
-        const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
-        return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
+    Value *src_value_0, *src_value_1;//NOTICE
+    std::string reg_name_0, reg_name_1;
+
+    return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
+                          src_op1->getPrintName(), "");
+    variable_list.push_back(inst); // 对于cmp, fcmp结果均为int型
+
+    if (src_op0->getType()->isFloatTy()) { // 此处根据llvm ir生成fcmp逻辑仅判断op0的类型
+      return_asm += update_value_mapping(variable_list); // 结果保存在int值寄存器中
+
+      if (src_op0->isConstant()) {
+        // 给第一个操作数加上名字，用于分配寄存器,建立映射
+        std::string reg_name_0 = "_fpimm_"+std::to_string(key++);
+        src_value_0 = new Value(Type::getFloatTy(), reg_name_0);
+        fp_variable_list.push_back(src_value_0);
+
+        if (src_op1->isConstant()) { // vcmp 指令操作数均为reg
+          std::string reg_name_1 = "_fpimm_"+std::to_string(key++);
+          src_value_1 = new Value(Type::getFloatTy(), reg_name_1);
+          fp_variable_list.push_back(src_value_1);
+
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_fpvalue_mapping(fp_variable_list);
+
+          // find分配的寄存器
+          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+          // 将立即数的值绑定到寄存器中
+          return_asm += InstGen::vmov(src_reg_0,InstGen::ConstantFP(atof(src_op0->getPrintName().c_str())));
+
+          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_value_1,register_str));
+          // 将立即数的值绑定到寄存器中
+          return_asm += InstGen::vmov(src_reg_1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
+
+          return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
+        } else { // imm reg
+          fp_variable_list.push_back(src_op1);
+
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_fpvalue_mapping(fp_variable_list);
+
+          // find分配的寄存器
+          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+          // 将立即数的值绑定到寄存器中
+          return_asm += InstGen::vmov(src_reg_0,InstGen::ConstantFP(atof(src_op0->getPrintName().c_str())));
+          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_op1,register_str));
+          return_asm += register_str;
+          register_str = "";
+
+          return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
+        }
+      } else {
+        fp_variable_list.push_back(src_op0);
+
+        if (src_op1->isConstant()) { // reg imm
+          std::string reg_name_1 = "_fpimm_"+std::to_string(key++);
+          src_value_1 = new Value(Type::getFloatTy(), reg_name_1);
+          fp_variable_list.push_back(src_value_1);
+
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_fpvalue_mapping(fp_variable_list);
+
+          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_op0,register_str));
+          return_asm += register_str;
+          register_str = "";
+          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_value_1,register_str));
+          // 将立即数的值绑定到寄存器中
+          return_asm += InstGen::vmov(src_reg_1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
+
+          return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
+        } else { // reg reg
+          fp_variable_list.push_back(src_op1);
+
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_fpvalue_mapping(fp_variable_list);
+
+          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_op0,register_str));
+          return_asm += register_str;
+          register_str = "";
+          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_op1,register_str));
+          return_asm += register_str;
+          register_str = "";
+
+          return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
+        }
       }
-      else {
-        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
-        return_asm += register_str;
-        register_str = "";
-        return_asm += InstGen::cmp(src_reg_0,src_reg_1);
-      }
-    } else {
-      InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0));
-      if (src_op1->isConstant()) {
-        // 生成constant存储立即数的值
-        const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
-        return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
-      }
-      else {
-        const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
-        return_asm += register_str;
-        register_str = "";
-        return_asm += InstGen::cmp(src_reg_0,src_reg_1);
+    } else { // for icmp
+      if (src_op0->isConstant()) {
+        // 给第一个操作数加上名字，用于分配寄存器,建立映射
+        std::string reg_name_0 = "_imm_"+std::to_string(key++);
+        src_value_0 = new Value(Type::getInt32Ty(), reg_name_0);
+        variable_list.push_back(src_value_0);
+
+        if (src_op1->isConstant()) { // IMM IMM
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_value_mapping(variable_list);
+
+          // 查找存储立即数的寄存器
+          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0));
+          // 生成constant存储立即数的值
+          const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+
+          return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
+        } else { // IMM REG
+          variable_list.push_back(src_op1);
+
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_value_mapping(variable_list);
+
+          // 查找存储立即数的寄存器
+          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0));
+          const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+          return_asm += register_str;
+          register_str = "";
+          return_asm += InstGen::cmp(src_reg_0,src_reg_1);
+        }
+      } else {
+        // 给寄存器分配
+        variable_list.push_back(src_op0);
+
+        if (src_op1->isConstant()) { // REG IMM
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_value_mapping(variable_list);
+
+          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0));
+
+          // 生成constant存储立即数的值
+          const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+          return_asm += InstGen::instConst(InstGen::cmp, src_reg_0,src_const_1);
+        }
+        else { // REG REG
+          variable_list.push_back(src_op1);
+          // 寄存器分配
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_value_mapping(variable_list);
+
+          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0, register_str));
+          return_asm += register_str;
+          register_str = "";
+          const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
+          return_asm += register_str;
+          register_str = "";
+
+          return_asm += InstGen::cmp(src_reg_0,src_reg_1);
+        }
       }
     }
     // 将比较结果存入目标寄存器， 0 --> false, 1 --> true;
@@ -1008,9 +1320,15 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     }
 
     if (inst->isAdd() || inst->isSub() || inst->isMul() ||
-        inst->isDiv() || inst->isRem() || inst->isCmp()) { //算术运算指令
-      inst_asm += generateOperInst(inst);
-    }  else if (inst->isLoad()) {
+        inst->isDiv() || inst->isRem()) { //算术运算指令
+      if (inst->getType()->isFloatTy()) {
+        inst_asm += generateFPOperInst(inst);
+      } else {
+        inst_asm += generateOperInst(inst);
+      }
+    } else if (inst->isCmp()) {
+      inst_asm += generateCmpInst(inst);
+    } else if (inst->isLoad()) {
       auto src_op0 = operands.at(0);
       variable_list.push_back(src_op0);
       variable_list.push_back(inst);
@@ -1226,8 +1544,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst_asm += register_str;
       register_str = "";
       inst_asm += InstGen::add(inst1_reg,inst2_reg,inst3_reg);
-      }
-     else {
+    } else if(inst->isCast()){
+
+    } else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());
     }
 
@@ -1245,8 +1564,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     stack_cur_size += type_size;
     variable_list.clear();//清空列表
+    fp_variable_list.clear();//清空列表
     register_mapping.clear();//清空寄存器映射
+    vfpregister_mapping.clear();//清空寄存器映射
     reg_index = 0;
+    vfpreg_index = 0;
 
     WARNNING("coding instr %s type is %d ...\n%s",inst->getPrintName().c_str(),inst->getInstructionKind(),inst_asm.c_str());
     return inst_asm;

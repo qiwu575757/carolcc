@@ -89,6 +89,25 @@ std::string pop(const std::vector<Reg> &reg_list) {
   return asm_instr;
 }
 
+std::string pop(const std::vector<VFPReg> &reg_list) {
+  std::string asm_instr;
+  bool flag = false;
+  asm_instr += spaces;
+  asm_instr += "vpop";
+  asm_instr += " ";
+  asm_instr += "{";
+  for (auto &i : reg_list) {
+    if (flag) {
+      asm_instr += ", ";
+    }
+    asm_instr += i.getName();
+    flag = true;
+  }
+  asm_instr += "}";
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string mov(const Reg &dst, const Value &src, const CmpOp &cond) {
   std::string asm_instr;
   if (src.is_reg() && dst.getName() == src.getName()) {
@@ -96,6 +115,22 @@ std::string mov(const Reg &dst, const Value &src, const CmpOp &cond) {
   }
   asm_instr += spaces;
   asm_instr += "mov";
+  asm_instr += condCode(cond);
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += src.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
+std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &cond) {
+  std::string asm_instr;
+  if (src.is_reg() && dst.getName() == src.getName()) {
+    return asm_instr;
+  }
+  asm_instr += spaces;
+  asm_instr += "vmov.f32";
   asm_instr += condCode(cond);
   asm_instr += " ";
   asm_instr += dst.getName();
@@ -180,6 +215,18 @@ std::string ldr(const Reg &dst, const Addr &src) {
   return asm_instr;
 }
 
+std::string vldr(const VFPReg &dst, const Addr &src) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vldr.32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += src.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string ldr(const Reg &dst, const Label &src) {
   std::string asm_instr;
   asm_instr += spaces;
@@ -192,8 +239,24 @@ std::string ldr(const Reg &dst, const Label &src) {
   return asm_instr;
 }
 
+std::string vldr(const VFPReg &dst, const Label &src) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vldr.32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += src.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string ldr(const Reg &dst, const Reg &base, const Reg &offset) {
   return ldr(dst, base, offset, Constant(0));
+}
+
+std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset) {
+  return vldr(dst, base, offset, Constant(0));
 }
 
 std::string ldr(const Reg &dst, const Reg &base, const Reg &offset,
@@ -201,6 +264,28 @@ std::string ldr(const Reg &dst, const Reg &base, const Reg &offset,
   std::string asm_instr;
   asm_instr += spaces;
   asm_instr += "ldr";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += "[";
+  asm_instr += base.getName();
+  asm_instr += ", ";
+  asm_instr += "+";
+  asm_instr += offset.getName();
+  asm_instr += ", ";
+  asm_instr += "lsl";
+  asm_instr += " ";
+  asm_instr += shift.getName();
+  asm_instr += "]";
+  asm_instr += newline;
+  return asm_instr;
+}
+
+std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset,
+                const Constant &shift) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vldr.32";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -564,6 +649,18 @@ std::string cmp(const Reg &lhs, const Reg &rhs) {
   return asm_instr;
 }
 
+std::string vcmp(const VFPReg &lhs, const VFPReg &rhs) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vcmp.f32";
+  asm_instr += " ";
+  asm_instr += lhs.getName();
+  asm_instr += ", ";
+  asm_instr += rhs.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string b(const Label &dst, const CmpOp &cond) {
   std::string asm_instr;
   asm_instr += spaces;
@@ -612,6 +709,18 @@ std::string load(const Reg &dst, const Addr &src) {
     asm_instr += InstGen::ldr(dst, src.getReg(), vinst_temp_reg);
   } else {
     asm_instr += InstGen::ldr(dst, src);
+  }
+  return asm_instr;
+}
+
+std::string vload(const VFPReg &dst, const Addr &src) {
+  std::string asm_instr;
+  int offset = src.getOffset();
+  if (offset > imm_12_max || offset < -imm_12_max) {
+    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
+    asm_instr += InstGen::vldr(dst, src.getReg(), vinst_temp_reg);
+  } else {
+    asm_instr += InstGen::vldr(dst, src);
   }
   return asm_instr;
 }

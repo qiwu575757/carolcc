@@ -163,6 +163,18 @@ public:
   std::string getName() const { return "#" + std::to_string(this->value); }
 };
 
+class ConstantFP : public Value {
+  float value;
+
+public:
+  explicit ConstantFP(float value) : value(value) {}
+  bool is_reg() const { return false; }
+  bool is_constant() const { return true; }
+  bool has_shift() const { return false; }
+  float getValue() const { return this->value; }
+  std::string getName() const { return "#" + std::to_string(this->value); }
+};
+
 class Label {
   std::string label;
   int offset;
@@ -236,6 +248,18 @@ std::string ret(const Reg &src);
 
 // float point instructions
 std::string push(const std::vector<VFPReg> &reg_list);
+std::string pop(const std::vector<VFPReg> &reg_list);
+std::string vldr(const VFPReg &dst, const Addr &src);
+std::string vldr(const VFPReg &dst, const Label &src);
+std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset);
+std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset,
+                const Constant &shift);
+std::string vload(const VFPReg &dst, const Addr &src);
+std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &op = NOP);
+std::string vcmp(const VFPReg &lhs, const VFPReg &rhs);
+
+
+
 }; // namespace InstGen
 
 const InstGen::Reg vinst_temp_reg = InstGen::Reg(11);
