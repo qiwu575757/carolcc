@@ -268,6 +268,8 @@ std::string vstr(const VFPReg &src, const Label &dst);
 std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset);
 std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset,
                 const Constant &shift);
+std::string vret(const ConstantFP &src);
+std::string vret(const VFPReg &src);
 
 }; // namespace InstGen
 

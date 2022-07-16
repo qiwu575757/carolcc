@@ -1391,21 +1391,43 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       if (inst->getOperandNumber() != 0) { // 处理有返回值的情况
         auto src = operands.at(0);
         if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
-          inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
+          if (src->getType()->isFloatTy()) {
+            inst_asm += InstGen::vret(InstGen::ConstantFP(atof(src->getPrintName().c_str())));
+          } else {
+            inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
+          }
         } else {
-          auto src_op1 = operands.at(0);
-          variable_list.push_back(src_op1);
-          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-          inst_asm += update_value_mapping(variable_list);
-          if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
-            inst_asm += register_str;
-            register_str = "";
-            const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-            inst_asm += register_str;
-            inst_asm += InstGen::ret(src_reg1);
+          if (src->getType()->isFloatTy()) { // ret float %15
+            auto src_op1 = operands.at(0);
+            fp_variable_list.push_back(src_op1);
+            inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+            inst_asm += update_fpvalue_mapping(fp_variable_list);
+
+            if (find_vfpregister(src_op1,register_str) != 0) {//如果源寄存器就是s0，就无需mov
+              inst_asm += register_str;
+              register_str = "";
+              const InstGen::VFPReg src_reg1 = InstGen::VFPReg(find_register(src_op1,register_str));
+              inst_asm += register_str;
+              inst_asm += InstGen::vret(src_reg1);
+            }
+          } else {
+            auto src_op1 = operands.at(0);
+            variable_list.push_back(src_op1);
+            inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+            inst_asm += update_value_mapping(variable_list);
+            if (find_register(src_op1,register_str) != 0) {//如果源寄存器就是r0，就无需mov
+              inst_asm += register_str;
+              register_str = "";
+              const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+              inst_asm += register_str;
+              inst_asm += InstGen::ret(src_reg1);
+            }
           }
         }
       }
+
+      // 生成函数退栈操作代码,无论函数返回类型
+      inst_asm += generate_function_exit_code();
 
     } else if (inst->isBr()) {
       if (operands.size() == 1){
@@ -1554,11 +1576,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     // 将寄存器的值刷到栈里，退化为栈分配
     inst_asm += flushRegs2Stack(variable_list);
-
-    if (inst->isRet()) {
-      // 生成函数退栈操作代码
-      inst_asm += generate_function_exit_code();
-    }
 
     stack_cur_size += type_size;
     variable_list.clear();//清空列表

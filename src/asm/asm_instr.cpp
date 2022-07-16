@@ -981,11 +981,29 @@ std::string ret(const Constant &src) {
   return asm_instr;
 }
 
+std::string vret(const ConstantFP &src) {
+  const InstGen::VFPReg target_reg = InstGen::VFPReg(0);
+  std::string asm_instr;
+  // 未考虑返回值的大小范围
+  asm_instr += vmov(target_reg,src);
+
+  return asm_instr;
+}
+
 std::string ret(const Reg &src) {
   const InstGen::Reg target_reg = InstGen::Reg(0);
   std::string asm_instr;
   InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
   asm_instr += mov(target_reg,src, cmpop);
+
+  return asm_instr;
+}
+
+std::string vret(const VFPReg &src) {
+  const InstGen::VFPReg target_reg = InstGen::VFPReg(0);
+  std::string asm_instr;
+  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
+  asm_instr += vmov(target_reg,src, cmpop);
 
   return asm_instr;
 }
