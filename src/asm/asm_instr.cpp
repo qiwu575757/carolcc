@@ -377,10 +377,38 @@ std::string add(const Reg &dst, const Reg &op1, const Value &op2) {
   return asm_instr;
 }
 
+std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vadd.f32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += op1.getName();
+  asm_instr += ", ";
+  asm_instr += op2.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string sub(const Reg &dst, const Reg &op1, const Value &op2) {
   std::string asm_instr;
   asm_instr += spaces;
   asm_instr += "sub";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += op1.getName();
+  asm_instr += ", ";
+  asm_instr += op2.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
+std::string vsub(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vsub.f32";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -529,6 +557,20 @@ std::string mul(const Reg &dst, const Reg &op1, const Reg &op2) {
   return asm_instr;
 }
 
+std::string vmul(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vmul.f32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += op1.getName();
+  asm_instr += ", ";
+  asm_instr += op2.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string smmul(const Reg &dst, const Reg &op1, const Reg &op2) {
   std::string asm_instr;
   asm_instr += spaces;
@@ -625,6 +667,20 @@ std::string sdiv(const Reg &dst, const Reg &op1, const Reg &op2) {
   return asm_instr;
 }
 
+std::string vdiv(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vdiv.f32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += op1.getName();
+  asm_instr += ", ";
+  asm_instr += op2.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
 std::string cmp(const Reg &lhs, const Value &rhs) {
   std::string asm_instr;
   asm_instr += spaces;
@@ -657,6 +713,18 @@ std::string vcmp(const VFPReg &lhs, const VFPReg &rhs) {
   asm_instr += lhs.getName();
   asm_instr += ", ";
   asm_instr += rhs.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
+std::string vmrs() {
+  std::string asm_instr;
+  asm_instr += spaces;
+  asm_instr += "vmrs";
+  asm_instr += " ";
+  asm_instr += "APSR_nzcv";
+  asm_instr += ", ";
+  asm_instr += "FPSCR";
   asm_instr += newline;
   return asm_instr;
 }

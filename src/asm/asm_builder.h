@@ -119,7 +119,6 @@ public:
   std::string generateOperInst (Instruction *inst);
   std::string generateFunctionCall(Instruction *inst, std::vector<Value *> operands,
           std::string func_name, int return_reg);
-  std::string generateCmpInst(Instruction *inst);
 
 // 浮点运算函数
   std::string generateFPOperInst (Instruction *inst);

@@ -257,8 +257,11 @@ std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset,
 std::string vload(const VFPReg &dst, const Addr &src);
 std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &op = NOP);
 std::string vcmp(const VFPReg &lhs, const VFPReg &rhs);
-
-
+std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vsub(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vmul(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vdiv(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vmrs();// 将fcmp比较结果置位到CPSR(APSR)
 
 }; // namespace InstGen
 
