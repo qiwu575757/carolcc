@@ -104,7 +104,7 @@ public:
   std::string update_value_mapping(std::list<Value *> update_v);
   std::string update_arg_mapping(Value *arg);
   std::string erase_value_mapping(std::list<Value*>& erase_v);
-  std::string flushRegs2Stack(std::list<Value *>flush_v);
+  std::string flushRegs2Stack(std::list<Value*> flush_v1, std::list<Value*> flush_v2);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);

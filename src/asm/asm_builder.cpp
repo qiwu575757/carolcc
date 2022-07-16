@@ -358,14 +358,21 @@ std::string AsmBuilder::update_arg_mapping(Value *arg) {
     return alloc_reg_asm;
 }
 
-std::string AsmBuilder::flushRegs2Stack(std::list<Value*> flush_v) {
+std::string AsmBuilder::flushRegs2Stack(std::list<Value*> flush_v1, std::list<Value*> flush_v2) {
     std::string flush_asm;
 
-    for (auto flu_v : flush_v) {
+    for (auto flu_v : flush_v1) {
       if (stack_mapping.count(flu_v)) {
           int v_offset = stack_mapping[flu_v];
           flush_asm += InstGen::comment("store "+(flu_v)->getPrintName()+" to sp+"+std::to_string(v_offset),"push val");
           flush_asm += InstGen::store(InstGen::Reg(register_mapping[flu_v]),InstGen::Addr(InstGen::sp,v_offset));
+        }
+    }
+    for (auto flu_v : flush_v2) {
+      if (stack_mapping.count(flu_v)) {
+          int v_offset = stack_mapping[flu_v];
+          flush_asm += InstGen::comment("vstore "+(flu_v)->getPrintName()+" to sp+"+std::to_string(v_offset),"push val");
+          flush_asm += InstGen::vstore(InstGen::VFPReg(vfpregister_mapping[flu_v]),InstGen::Addr(InstGen::sp,v_offset));
         }
     }
 
@@ -1527,7 +1534,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
       type_size += 4;
 
-      variable_list.push_back(inst);
+      variable_list.push_back(inst); // inst 对应栈位置存储的值是地址
       inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
 
@@ -1647,7 +1654,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     }
 
     // 将寄存器的值刷到栈里，退化为栈分配
-    inst_asm += flushRegs2Stack(variable_list);
+    inst_asm += flushRegs2Stack(variable_list, fp_variable_list);
 
     stack_cur_size += type_size;
     variable_list.clear();//清空列表
