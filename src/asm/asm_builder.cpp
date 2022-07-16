@@ -1216,6 +1216,144 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
     return return_asm;
 }
 
+std::string AsmBuilder::generateLoadInst(Instruction *inst) {
+    std::string return_asm;
+    std::string register_str = "";
+    auto &operands = inst->getOperandList();
+
+    auto src_op0 = operands.at(0);
+    if (inst->getType()->isIntegerTy()) {
+      variable_list.push_back(src_op0);
+      variable_list.push_back(inst);
+
+      return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+      return_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+      return_asm += register_str;
+      register_str = "";
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      return_asm += register_str;
+      register_str = "";
+
+      return_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "");
+      return_asm += InstGen::load(target_reg, InstGen::Addr(src_reg0,0));
+    } else { // load fp element
+      variable_list.push_back(src_op0);
+      fp_variable_list.push_back(inst);
+
+      return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+      return_asm += update_value_mapping(variable_list);
+      return_asm += update_fpvalue_mapping(fp_variable_list);
+
+      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+      return_asm += register_str;
+      register_str = "";
+      const InstGen::VFPReg target_reg = InstGen::VFPReg(find_vfpregister(inst,register_str));
+      return_asm += register_str;
+      register_str = "";
+
+      return_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "fp load");
+      return_asm += InstGen::vload(target_reg, InstGen::Addr(src_reg0,0));
+    }
+
+    return return_asm;
+}
+
+std::string AsmBuilder::generateStoreInst(Instruction *inst) {
+    std::string return_asm;
+    std::string register_str = "";
+    auto &operands = inst->getOperandList();
+
+    Value *src_value_0, *src_value_1;//NOTICE
+    std::string reg_name_0, reg_name_1;
+
+    auto src = operands.at(0);
+    auto src_op2 = operands.at(1);
+    variable_list.push_back(src_op2);
+
+    if (src->getType()->isFloatTy()) {
+      if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
+        ConstantFloat* src_op1 =  dynamic_cast<ConstantFloat *>(operands.at(0));
+        std::string reg_name_0 = "_fpimm_"+std::to_string(key++);
+        src_value_0 = new Value(Type::getFloatTy(), reg_name_0);
+        fp_variable_list.push_back(src_value_0);
+
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_fpvalue_mapping(fp_variable_list);
+        return_asm += update_value_mapping(variable_list);
+
+        const InstGen::VFPReg src_reg1 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        return_asm += register_str;
+        // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+
+        return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "fp store");
+        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+        return_asm += InstGen::vmov(src_reg1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
+        return_asm += InstGen::vstore(src_reg1, InstGen::Addr(src_reg2,0));
+
+        // return_asm += erase_value_mapping(variable_list);
+
+      } else{ // 需要存储的值是寄存器
+        auto src_op1 = operands.at(0);
+        fp_variable_list.push_back(src_op1);
+
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_fpvalue_mapping(fp_variable_list);
+        return_asm += update_value_mapping(variable_list);
+
+        const InstGen::VFPReg src_reg1 = InstGen::VFPReg(find_vfpregister(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        return_asm += register_str;
+
+        return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "fp store");
+        return_asm += InstGen::vstore(src_reg1, InstGen::Addr(src_reg2,0));
+      }
+    } else {
+      if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
+        ConstantInt* src_op1 =  dynamic_cast<ConstantInt *>(operands.at(0));
+        const std::string reg_name = "_imm_"+std::to_string(key++);
+        Value * val = new Value(Type::getInt32Ty(), reg_name);
+        variable_list.push_back(val);
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(val,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        return_asm += register_str;
+        // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+
+        return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
+        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+        return_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
+        return_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+
+        // return_asm += erase_value_mapping(variable_list);
+
+      } else{ // 需要存储的值是寄存器
+        auto src_op1 = operands.at(0);
+        variable_list.push_back(src_op1);
+        return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+        return_asm += update_value_mapping(variable_list);
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        return_asm += register_str;
+        register_str = "";
+        const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
+        return_asm += register_str;
+
+        return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
+        return_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
+      }
+    }
+
+    return return_asm;
+}
+
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::string inst_asm;
     auto &operands = inst->getOperandList();
@@ -1246,65 +1384,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else if (inst->isCmp()) {
       inst_asm += generateFPOperInst(inst);
     } else if (inst->isLoad()) {
-      auto src_op0 = operands.at(0);
-      variable_list.push_back(src_op0);
-      variable_list.push_back(inst);
-
-      inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      inst_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
-      inst_asm += register_str;
-      register_str = "";
-      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-      inst_asm += register_str;
-      register_str = "";
-
-      inst_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "");
-      inst_asm += InstGen::load(target_reg, InstGen::Addr(src_reg0,0));
-
+      inst_asm += generateLoadInst(inst);
     } else if (inst->isStore()) {
-        auto src = operands.at(0);
-        if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
-          ConstantInt* src_op1 =  dynamic_cast<ConstantInt *>(operands.at(0));
-          const std::string reg_name = "_imm_"+std::to_string(key++);
-          Value * val = new Value(Type::getInt32Ty(), reg_name);
-          variable_list.push_back(val);
-          auto src_op2 = operands.at(1);
-          variable_list.push_back(src_op2);
-          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-          inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(val,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-          inst_asm += register_str;
-          // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-
-          inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
-          InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
-          inst_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
-          inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
-
-          variable_list.clear();
-          variable_list.push_back(val);
-          // inst_asm += erase_value_mapping(variable_list);
-
-        } else{ // 需要存储的值是寄存器
-          auto src_op1 = operands.at(0);
-          variable_list.push_back(src_op1);
-          auto src_op2 = operands.at(1);
-          variable_list.push_back(src_op2);
-          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-          inst_asm += update_value_mapping(variable_list);
-          const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
-          inst_asm += register_str;
-
-          inst_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
-          inst_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
-        }
+        inst_asm += generateStoreInst(inst);
     } else if (inst->isRet()) {
       if (inst->getOperandNumber() != 0) { // 处理有返回值的情况
         auto src = operands.at(0);
