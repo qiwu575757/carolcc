@@ -420,6 +420,17 @@ int AsmBuilder::find_vfpregister(Value *v, std::string &code){
   return vfpregister_mapping[v];
 }
 
+int AsmBuilder::find_vfpregister(Value *v){
+  auto global = dynamic_cast<GlobalVariable *>(v);
+
+  if(v == nullptr){
+    ERROR(" value is nullptr");
+  }
+  v->getPrintName();
+
+  return vfpregister_mapping[v];
+}
+
 int AsmBuilder::find_register(Value *v, std::string &code){
   auto global = dynamic_cast<GlobalVariable *>(v);
 
@@ -841,7 +852,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     std::vector<InstGen::Reg> caller_reg_list;
     for(auto reg : caller_save_regs)
         caller_reg_list.push_back(reg);
+    std::vector<InstGen::VFPReg> caller_vfpreg_list;
+    for(auto reg : caller_save_vfpregs)
+        caller_vfpreg_list.push_back(reg);
     return_asm += InstGen::push(caller_reg_list);
+    return_asm += InstGen::push(caller_vfpreg_list);
+
+    // 被调用者保存的寄存器数量
+    int callee_regs_size = callee_save_vfpregs.size() + callee_save_regs.size();
+    int caller_regs_size = caller_save_vfpregs.size() + caller_save_regs.size();
 
     return_asm += InstGen::comment(" call " + func_name, "");
     if (inst->isCall()) { //若该指令直接调用函数，其第一个operand为函数名,传参时需要跳过
@@ -858,36 +877,77 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
             MyAssert("error arg", stack_mapping.count(arg) == 1);
 
             if (arg->isConstant()) {// 若参数直接为立即数
-              return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(atoi(arg->getPrintName().c_str())));
-              return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_save_regs.size()+callee_save_vfpregs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+callee_save_vfpregs.size()+1)*4-stack_size));
+              if (arg->getType()->isFloatTy())  {
+                return_asm += InstGen::vmov(InstGen::VFPReg(vfpreg_index),InstGen::ConstantFP(atof(arg->getPrintName().c_str())));
+                return_asm += InstGen::comment("transfer fp imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+              } else {
+                return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(atoi(arg->getPrintName().c_str())));
+                return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+              }
             } else { // 若参数为变量
-              // update_value_mapping(arg_list);
-              int v_offset = stack_mapping[arg] + caller_save_regs.size()*4;
-              return_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
-              return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
-              // register_mapping[arg] = reg_index++;
-              // update_arg_mapping(arg);
-              return_asm += InstGen::comment("transfer val args:",std::to_string(callee_save_regs.size()+callee_save_vfpregs.size()+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-              return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_save_regs.size()+callee_save_vfpregs.size()+1)*4-stack_size));
+              if (arg->getType()->isFloatTy()) {
+                int v_offset = stack_mapping[arg] + caller_regs_size*4;
+                return_asm += InstGen::comment("load fp arg"+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+                return_asm += InstGen::vload(InstGen::VFPReg(vfpreg_index),InstGen::Addr(InstGen::sp,v_offset));
+
+                return_asm += InstGen::comment("transfer fp val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+              }else {
+                // update_value_mapping(arg_list);
+                int v_offset = stack_mapping[arg] + caller_regs_size*4;
+                return_asm += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+                return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+                // register_mapping[arg] = reg_index++;
+                // update_arg_mapping(arg);
+                return_asm += InstGen::comment("transfer val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+              }
             }
             offset += 4;
         }
         return_asm += InstGen::bl(func_name);
-        if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) {// 若有返回值
+        if (dynamic_cast<CallInst *>(inst)->getType()->isFloatTy()) {// 若有返回值
+          return_asm += InstGen::vstore(InstGen::VFPReg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
+        } else {
           // stack_mapping[inst] = return_offset;
-          return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+          return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
         }
 
+        return_asm += InstGen::pop(caller_vfpreg_list);
         return_asm += InstGen::pop(caller_reg_list);
 
-        if (!dynamic_cast<CallInst *>(inst)->getType()->isVoidTy()) { // 若有返回值
+        if (dynamic_cast<CallInst *>(inst)->getType()->isFloatTy()) { // 若有返回值
+          fp_variable_list.clear();
+          fp_variable_list.push_back(inst);
+          return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+          return_asm += update_fpvalue_mapping(fp_variable_list);
+          return_asm += InstGen::vload(InstGen::VFPReg(find_vfpregister(inst)),InstGen::Addr(InstGen::sp,return_offset));
+        } else {
           variable_list.clear();
           variable_list.push_back(inst);
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_value_mapping(variable_list);
           return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
         }
+    } else if (inst->isCast()) { // 实现 int/float 类型转化
+      int v_offset = stack_mapping[operands.at(0)] + caller_regs_size*4;
+      return_asm += InstGen::comment("load "+(operands.at(0))->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
+      return_asm += InstGen::load(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
+
+      return_asm += InstGen::mov(InstGen::Reg(0),InstGen::Reg(reg_index));
+
+      return_asm += InstGen::bl(func_name);
+      return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
+      return_asm += InstGen::pop(caller_vfpreg_list);
+      return_asm += InstGen::pop(caller_reg_list);
+
+      if (inst->getType()->isFloatTy()) { // abi 调用，通过 r0 进行参数传递和结果返回
+        return_asm += InstGen::vload(InstGen::VFPReg(find_vfpregister(inst)),InstGen::Addr(InstGen::sp,return_offset));
+      } else { // 结果为int
+        return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
+      }
     } else {
       std::vector<Value *> args(operands.begin(), operands.end());
       for (int i = 0; i < 2; i++ ) { //对于除法函数,取余函数，只有两个参数
@@ -899,7 +959,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       }
       return_asm += InstGen::bl(func_name);
 
-      return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_reg_list.size()*4));
+      return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
+      return_asm += InstGen::pop(caller_vfpreg_list);
       return_asm += InstGen::pop(caller_reg_list);
       return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
     }
@@ -1360,7 +1421,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     BasicBlock *bb_cur = inst->getParent();
 
-    int type_size=0;
+    int type_size = 0;
     //用于接收可能的全局变量寄存器分配操作str
     std::string register_str = "";
     if(!inst->isAlloca()){
@@ -1565,6 +1626,17 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       register_str = "";
       inst_asm += InstGen::add(inst1_reg,inst2_reg,inst3_reg);
     } else if(inst->isCast()){
+      if (inst->getType()->isFloatTy()) { // int to float 类型转换
+        // 将inst结果存到栈中
+        fp_variable_list.push_back(inst);
+        inst_asm += update_fpvalue_mapping(fp_variable_list);
+
+        inst_asm += generateFunctionCall(inst,operands,"__aeabi_i2f", 0); // sitofp
+      } else {
+        variable_list.push_back(inst);
+        inst_asm += update_value_mapping(variable_list);
+        inst_asm += generateFunctionCall(inst,operands,"__aeabi_f2iz", 0); // fptosi
+      }
 
     } else {
       WARNNING("unrealized %s",inst->getPrintName().c_str());

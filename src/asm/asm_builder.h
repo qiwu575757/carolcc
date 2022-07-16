@@ -124,6 +124,7 @@ public:
   std::string generateFPOperInst (Instruction *inst);
   std::string update_fpvalue_mapping(std::list<Value *> update_v);
   int find_vfpregister(Value *v,std::string &code);
+  int find_vfpregister(Value *v);
   std::string generateLoadInst (Instruction *inst);
   std::string generateStoreInst (Instruction *inst);
 };
