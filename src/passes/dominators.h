@@ -14,7 +14,6 @@ class Dominators : public Analysis {
    public:
     Dominators(Module* m, const std::string& name) : Analysis(m, name) {}
     void run() override;
-    static void analyze(Module* m);
     void createReversePostOrder(Function* f);
     void postOrderVisit(BasicBlock* bb,std::set<BasicBlock*> & visited);
     void createIDoms(Function* f);

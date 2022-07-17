@@ -23,10 +23,10 @@ private:
 public:
   MirSimplifyCFG(Module *m, const std::string &name) : Transform(m,name),_func(nullptr) {}
   void run() override;
-  void removeNoPredecessorBaseBlocks();
-  void mergeSinglePredecessorBaseBlocks();
+  void removeNoPredecessorBasicBlocks();
+  void mergeSinglePredecessorBasicBlocks();
   void eliminateSinglePredecessorPhi();
-  void EliminateSingleUnCondBrBaseBlocks();
+  void eliminateSingleUnCondBrBasicBlocks();
   void RemoveSelfLoopBaseBlocks();
   void deleteCondBr(Function *f);
 };

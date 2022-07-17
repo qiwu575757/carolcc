@@ -35,7 +35,7 @@ void Value::replaceAllUse(Value *new_val) {
 void Value::removeUse(Value *user, unsigned value_no) {
     Use *remove_use;
     for (auto use : _user_list) {
-        // 这里需要检查
+
         if (use->_user == user)
         {
             MyAssert("error ",use->_value_no == value_no);

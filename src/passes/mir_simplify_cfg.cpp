@@ -9,26 +9,26 @@
 #include <vector>
 
 void MirSimplifyCFG::run() {
-    for (auto fun : _m->getFunctions()) {
+    for (auto fun: _m->getFunctions()) {
         if (!fun->isBuiltin()) {
             _func = fun;
-            SIMPLIFY_CFG_LOG("cur fun is %s",_func->getName().c_str());
-            SIMPLIFY_CFG_LOG("removeNoPredecessorBaseBlocks");
+            SIMPLIFY_CFG_LOG("cur fun is %s", _func->getName().c_str());
+            SIMPLIFY_CFG_LOG("removeNoPredecessorBasicBlocks");
             deleteCondBr(fun);
-            removeNoPredecessorBaseBlocks();
+            removeNoPredecessorBasicBlocks();
             eliminateSinglePredecessorPhi();
-            SIMPLIFY_CFG_LOG("mergeSinglePredecessorBaseBlocks");
-            mergeSinglePredecessorBaseBlocks();
-            //              EliminateSingleUnCondBrBaseBlocks();
+            SIMPLIFY_CFG_LOG("mergeSinglePredecessorBasicBlocks");
+            mergeSinglePredecessorBasicBlocks();
+            eliminateSingleUnCondBrBasicBlocks();
             //    RemoveSelfLoopBaseBlocks();
-            //    removeNoPredecessorBaseBlocks();
+            //    removeNoPredecessorBasicBlocks();
             eliminateSinglePredecessorPhi();
         }
     }
 }
 
 void MirSimplifyCFG::RemoveSelfLoopBaseBlocks() {
-    for (auto bb : _func->getBasicBlocks()) {
+    for (auto bb: _func->getBasicBlocks()) {
         if (bb->getPreBasicBlocks().size() == 1) {
             if (*(bb->getPreBasicBlocks().begin()) == bb) {
                 _func->removeBasicBlock(bb);
@@ -37,14 +37,14 @@ void MirSimplifyCFG::RemoveSelfLoopBaseBlocks() {
     }
 }
 
-void MirSimplifyCFG::removeNoPredecessorBaseBlocks() {
-    std::vector<BasicBlock*> wait_delete;
-    for (auto bb : _func->getBasicBlocks()) {
+void MirSimplifyCFG::removeNoPredecessorBasicBlocks() {
+    std::vector<BasicBlock *> wait_delete;
+    for (auto bb: _func->getBasicBlocks()) {
         if (bb->getPreBasicBlocks().empty() && bb != _func->getEntryBlock()) {
             wait_delete.push_back(bb);
-            for (auto next_bb : bb->getSuccBasicBlocks()) {
+            for (auto next_bb: bb->getSuccBasicBlocks()) {
                 next_bb->removePreBasicBlock(bb);
-                for (auto instr : next_bb->getInstructions()) {
+                for (auto instr: next_bb->getInstructions()) {
                     if (instr->isPhi()) {
                         for (int i = 0; i < instr->getOperandNumber(); i++) {
                             if (i % 2 == 1) {
@@ -58,18 +58,19 @@ void MirSimplifyCFG::removeNoPredecessorBaseBlocks() {
             }
         }
     }
-    for (auto bb : wait_delete) {
+    for (auto bb: wait_delete) {
         _func->removeBasicBlock(bb);
     }
 }
 
-void MirSimplifyCFG::mergeSinglePredecessorBaseBlocks() {
-    std::vector<BasicBlock*> wait_delete;
-    for (auto bb : _func->getBasicBlocks()) {
-        SIMPLIFY_CFG_LOG("cur basicblock number is %s",bb->getPrintName().c_str());
+void MirSimplifyCFG::mergeSinglePredecessorBasicBlocks() {
+    std::vector<BasicBlock *> wait_delete;
+    for (auto bb: _func->getBasicBlocks()) {
+        SIMPLIFY_CFG_LOG("cur basicblock number is %s", bb->getPrintName().c_str());
         if (bb->getPreBasicBlocks().size() == 1) {
             auto pre_bb = *(bb->getPreBasicBlocks().begin());
-            SIMPLIFY_CFG_LOG("%s basicblock pre block is %s",bb->getPrintName().c_str(),pre_bb->getPrintName().c_str());
+            SIMPLIFY_CFG_LOG("%s basicblock pre block is %s", bb->getPrintName().c_str(),
+                             pre_bb->getPrintName().c_str());
             auto br = pre_bb->getTerminator();
             SIMPLIFY_CFG_LOG("1");
             MyAssert("null terminator", br != nullptr);
@@ -82,8 +83,8 @@ void MirSimplifyCFG::mergeSinglePredecessorBaseBlocks() {
                 pre_bb->deleteInstr(br);
 
                 // copy instr
-                SIMPLIFY_CFG_LOG("bb has %zu instructions",bb->getInstructions().size());
-                for (auto instr : bb->getInstructions()) {
+                SIMPLIFY_CFG_LOG("bb has %zu instructions", bb->getInstructions().size());
+                for (auto instr: bb->getInstructions()) {
                     SIMPLIFY_CFG_LOG("6");
                     instr->setParent(pre_bb);
                     SIMPLIFY_CFG_LOG("7");
@@ -92,7 +93,7 @@ void MirSimplifyCFG::mergeSinglePredecessorBaseBlocks() {
                 }
 
                 pre_bb->clearSuccBasicBlockList();
-                for (auto next_bb : bb->getSuccBasicBlocks()) {
+                for (auto next_bb: bb->getSuccBasicBlocks()) {
                     pre_bb->addSuccBasicBlock(next_bb);
                     next_bb->getPreBasicBlocks().remove(bb);
                     next_bb->addPreBasicBlock(pre_bb);
@@ -102,7 +103,7 @@ void MirSimplifyCFG::mergeSinglePredecessorBaseBlocks() {
             }
         }
     }
-    for (auto bb : wait_delete) {
+    for (auto bb: wait_delete) {
         _func->removeBasicBlock(bb);
     }
 }
@@ -139,108 +140,106 @@ void MirSimplifyCFG::mergeSinglePredecessorBaseBlocks() {
 //   }
 // }
 
-void MirSimplifyCFG::EliminateSingleUnCondBrBaseBlocks() {
-    //  for (auto bb : _func->getBasicBlocks()) {
-    //    if (bb->getNumOfInstr() == 1 && bb != _func->getEntryBlock()) {
-    //      auto terminator = bb->getTerminator();
-    //      auto next_bb = bb->getSuccBasicBlocks().begin();
-    //      exit_ifnot(_EliminateSingleUnCondBrBB_SimplifyCFG, terminator);
-    //      if (terminator->isBr() && terminator->getNumOperand() == 1) {
-    //        bool bb_delete = true;
-    //        for (auto pre_bb : bb->getPreBasicBlocks()) {
-    //          auto br = static_cast<BranchInst *>(pre_bb->getTerminator());
-    //          if (br->isCondBr()) {
-    //            auto target1 = br->getOperand(1);
-    //            auto target2 = br->getOperand(2);
-    //            auto target3 = static_cast<BranchInst
-    //            *>(terminator)->getOperand(0); if ((target1 == bb && target2
-    //            == target3) ||
-    //                (target2 == bb && target1 == target3)) {
-    //              bb_delete = false;
-    //              break;
-    //            }
-    //          } else if (br->isCmpBr()) {
-    //            auto target1 = br->getOperand(2);
-    //            auto target2 = br->getOperand(3);
-    //            auto target3 = static_cast<BranchInst
-    //            *>(terminator)->getOperand(0); if ((target1 == bb && target2
-    //            == target3) ||
-    //                (target2 == bb && target1 == target3)) {
-    //              bb_delete = false;
-    //              break;
-    //            }
-    //          }
-    //        }
-    //        if (bb_delete) {
-    //          // ssa格式
-    //          for (auto instr : (*next_bb)->getInstructions()) {
-    //            if (instr->isPhi()) {
-    //              for (int i = 0; i < instr->getNumOperand(); i++) {
-    //                if (i % 2 == 1) {
-    //                  if (instr->getOperand(i) == bb) {
-    //                    auto idx = 0;
-    //                    auto val = instr->getOperand(i - 1);
-    //                    for (auto pre_bb : bb->getPreBasicBlocks()) {
-    //                      if (idx == 0) {
-    //                        instr->setOperand(i, pre_bb);
-    //                        bb->removeUse(instr, i);
-    //                      } else {
-    //                        instr->addOperand(val);
-    //                        instr->addOperand(pre_bb);
-    //                      }
-    //                      idx++;
-    //                    }
-    //                  }
-    //                }
-    //              }
-    //            }
-    //          }
-    //          // ssa格式
-    //          for (auto use : bb->getUseList()) {
-    //            auto instr = dynamic_cast<Instruction *>(use.val_);
-    //            if (instr) {
-    //              if (instr->isBr()) {
-    //                static_cast<User *>(use.val_)->setOperand(use.arg_no_,
-    //                *next_bb);
-    //              }
-    //            }
-    //          }
-    //          (*next_bb)->removePreBasicBlock(bb);
-    //          for (auto pre_bb : bb->getPreBasicBlocks()) {
-    //            pre_bb->removeSuccBasicBlock(bb);
-    //            pre_bb->addSuccBasicBlock(*next_bb);
-    //            (*next_bb)->addPreBasicBlock(pre_bb);
-    //          }
-    //          _func->removeBasicBlock(bb);
-    //        }
-    //      }
-    //    }
-    //  }
-}
-void MirSimplifyCFG::eliminateSinglePredecessorPhi() {
-       for(auto bb : _func->getBasicBlocks()){
-           if(bb->getPreBasicBlocks().size() == 1 || bb ==
-           _func->getEntryBlock()){
-               std::vector<Instruction*> wait_delete;
-               for(auto inst: bb->getInstructions()){
-                   if(inst->isPhi()){
-                        MyAssert("error phi oprd number ",inst->getOperandNumber() == 2);
-                        MyAssert("error ",inst->getOperand(1) == _func->getEntryBlock() || (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()));
-                        wait_delete.push_back(inst);
-                        auto var = inst->getOperand(0);
+void MirSimplifyCFG::eliminateSingleUnCondBrBasicBlocks() {
+    std::vector<BasicBlock *> wait_delete;
+    for (auto bb: _func->getBasicBlocks()) {
+        if (bb->getNumOfInstr() == 1 && bb != _func->getEntryBlock()) {
+            bool bb_delete = true;
+            auto terminator_instr = bb->getTerminator();
+            if (terminator_instr->isBr()) {
+                auto branch_instr = dynamic_cast<BranchInst *>(terminator_instr);
+                if (branch_instr->isBranch()) {
+                    auto target_bb = branch_instr->getOperand(0);
+                    for (auto pre_bb: bb->getPreBasicBlocks()) {
+                        auto pre_br_instr = dynamic_cast<BranchInst *>(pre_bb->getTerminator());
+                        if (pre_br_instr->isConBranch()) {
+                            auto true_bb = pre_br_instr->getOperand(1);
+                            auto false_bb = pre_br_instr->getOperand(2);
+                            if ((target_bb == true_bb && bb == false_bb)
+                                || (target_bb == false_bb && bb == true_bb)) {
+                                bb_delete = false;
+                                break;
+                            }
+                        }
+//                        else {
+//                            ERROR("this should be done at mergeSinglePredecessorBasicBlocks()");
+//                        }
+                    }
+                    if (bb_delete) {
+                        auto succ_bb = bb->getSuccBasicBlocks().begin();
+                        for (auto instr: (*succ_bb)->getInstructions()) {
+                            if (instr->isPhi()) {
+                                for (int i = 0; i < instr->getOperandNumber(); i++) {
+                                    if (i % 2 == 1) {
+                                        if (instr->getOperand(i) == bb) {
+                                            bool is_first = true;
+                                            auto val = instr->getOperand(i - 1);
+                                            for (auto pre_bb: bb->getPreBasicBlocks()) {
+                                                if (is_first) {
+                                                    instr->setOperand(i, pre_bb);
+                                                    bb->removeUse(instr, i);
+                                                    is_first = false;
+                                                } else {
+                                                    instr->addOperand(val);
+                                                    instr->addOperand(pre_bb);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+//                        bb->replaceAllUse(*(bb->getSuccBasicBlocks().begin()));
+                        for (auto use: bb->getUseList()) {
+                            auto instr = dynamic_cast<Instruction *>(use->_user);
+                            MyAssert("error type", instr->isBr());
+                            instr->setOperand(use->_value_no, *succ_bb);
+                        }
+                        bb->getUseList().clear();
 
-                        inst->replaceAllUse(var);
-                        inst->removeUseOps();
-                   }
-               }
-               for(auto inst:wait_delete){
-                bb->deleteInstr(inst);
-               }
-           }
-       }
+                        (*succ_bb)->removePreBasicBlock(bb);
+                        for (auto pre_bb: bb->getPreBasicBlocks()) {
+                            pre_bb->removeSuccBasicBlock(bb);
+                            pre_bb->addSuccBasicBlock(*succ_bb);
+                            (*succ_bb)->addPreBasicBlock(pre_bb);
+                        }
+                        wait_delete.push_back(bb);
+                    }
+                }
+            }
+        }
+    }
+    for (auto b: wait_delete) {
+        _func->removeBasicBlock(b);
+    }
 }
+
+void MirSimplifyCFG::eliminateSinglePredecessorPhi() {
+    for (auto bb: _func->getBasicBlocks()) {
+        if (bb->getPreBasicBlocks().size() == 1 || bb ==
+                                                   _func->getEntryBlock()) {
+            std::vector<Instruction *> wait_delete;
+            for (auto inst: bb->getInstructions()) {
+                if (inst->isPhi()) {
+                    MyAssert("error phi oprd number ", inst->getOperandNumber() == 2);
+                    MyAssert("error ", inst->getOperand(1) == _func->getEntryBlock() ||
+                                       (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()));
+                    wait_delete.push_back(inst);
+                    auto var = inst->getOperand(0);
+
+                    inst->replaceAllUse(var);
+                    inst->removeUseOps();
+                }
+            }
+            for (auto inst: wait_delete) {
+                bb->deleteInstr(inst);
+            }
+        }
+    }
+}
+
 void MirSimplifyCFG::deleteCondBr(Function *f) {
-    for (auto bb : f->getBasicBlocks()) {
+    for (auto bb: f->getBasicBlocks()) {
         if (bb->getTerminator()->isBr()) {
             auto br = bb->getTerminator();
             if (dynamic_cast<BranchInst *>(br)->isConBranch()) {
@@ -250,10 +249,10 @@ void MirSimplifyCFG::deleteCondBr(Function *f) {
                 if (cond) {
                     if (cond->getValue() == 0) {
                         bb->deleteInstr(br);
-                        for (auto succ_bb : bb->getSuccBasicBlocks()) {
+                        for (auto succ_bb: bb->getSuccBasicBlocks()) {
                             succ_bb->removePreBasicBlock(bb);
                             if (succ_bb != false_bb) {
-                                for (auto instr : succ_bb->getInstructions()) {
+                                for (auto instr: succ_bb->getInstructions()) {
                                     if (instr->isPhi()) {
                                         for (int i = 0;
                                              i < instr->getOperandNumber();
@@ -270,14 +269,14 @@ void MirSimplifyCFG::deleteCondBr(Function *f) {
                             }
                         }
                         bb->getSuccBasicBlocks().clear();
-                        BranchInst::createBranch(dynamic_cast<BasicBlock*>(false_bb),bb);
+                        BranchInst::createBranch(dynamic_cast<BasicBlock *>(false_bb), bb);
 
                     } else {
                         bb->deleteInstr(br);
-                        for (auto succ_bb : bb->getSuccBasicBlocks()) {
+                        for (auto succ_bb: bb->getSuccBasicBlocks()) {
                             succ_bb->removePreBasicBlock(bb);
                             if (succ_bb != true_bb) {
-                                for (auto instr : succ_bb->getInstructions()) {
+                                for (auto instr: succ_bb->getInstructions()) {
                                     if (instr->isPhi()) {
                                         for (int i = 0;
                                              i < instr->getOperandNumber();
@@ -294,7 +293,7 @@ void MirSimplifyCFG::deleteCondBr(Function *f) {
                             }
                         }
                         bb->getSuccBasicBlocks().clear();
-                        BranchInst::createBranch(dynamic_cast<BasicBlock*>(true_bb),bb);
+                        BranchInst::createBranch(dynamic_cast<BasicBlock *>(true_bb), bb);
                     }
                 }
             }
