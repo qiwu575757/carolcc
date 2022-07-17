@@ -116,6 +116,7 @@ void Dominators::run() {
             continue ;
         }
         DOMINATOR_LOG("dominators cur_func is %s\n",f->getName().c_str());
+        init(f);
         createReversePostOrder(f);
         createIDoms(f);
         printIDom(f);
@@ -157,5 +158,12 @@ void Dominators::printDomTree(Function *f) {
         }
         DOMINATOR_LOG("\n");
 
+    }
+}
+void Dominators::init(Function *pFunction) {
+    for(auto bb:pFunction->getBasicBlocks()){
+        bb->setIDom(nullptr);
+        bb->getDomFrontier().clear();
+        bb->getDomTreeSucc().clear();
     }
 }

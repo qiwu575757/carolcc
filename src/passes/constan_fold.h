@@ -12,9 +12,6 @@ class ConstantFold : public Transform {
     ConstantFold(Module* m,const std::string &name): Transform(m,name){}
     void run() override;
     void constantFold(Function* f);
-    // 删除条件已知的br指令
-    void deleteCondBr(Function*f);
-    void eliminateSinglePredecessorPhi(Function* f);
     Constant* calConstantIntBinary(Instruction* pInstruction);
     Constant* calConstantFloatBinary(Instruction* instr);
 

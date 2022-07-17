@@ -1,6 +1,7 @@
 
 #include "mem2reg.h"
 #include "module.h"
+#include "dominators.h"
 #include "ir/instruction.h"
 #include "ir/basic_block.h"
 #include "ir/constant.h"
@@ -15,6 +16,8 @@
 std::map<Value*,std::vector<Value*> > newest_live_var;
 
 void Mem2Reg::run() {
+    Dominators dom(_m,"dominators");
+    dom.run();
     for(auto f : _m->getFunctions()){
         if(!f->getBasicBlocks().empty()){
             _cur_func = f;

@@ -21,13 +21,12 @@ class BasicBlock;
 #endif
 class Mem2Reg : public  Transform{
    private:
-    Function* _cur_func;
-    BasicBlock* _cur_basic_block;
+    Function* _cur_func{};
+    BasicBlock* _cur_basic_block{};
    public:
     Mem2Reg(Module* m,const std::string &name): Transform(m,name){}
     void run() final ;
     void genPhi() ;
-    void reName(BasicBlock * bb) ;
 };
 
 class RenameData{
