@@ -115,25 +115,22 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
   return asm_code;
 }
 
-std::pair<int, bool> AsmBuilder::get_const_val(Value *val) { // disabled，不需要处理
+std::pair<int, bool> AsmBuilder::get_const_val(Value *val) {
   auto const_int_val = dynamic_cast<ConstantInt *>(val);
   auto const_float_val = dynamic_cast<ConstantFloat *>(val);
   auto inst_val = dynamic_cast<Instruction *>(val);
-  //#### UNDO ####
-  //  NOT SUPPORT FLOAT
-  //#### UNDO ####
 
   if (const_int_val || const_float_val) {
     if(const_float_val){
-      // ERROR("UNDO init float! in asm");
-      // 此处需要转化，但不知道怎么将转化，，，，，，，，，，，，，，，
       float float_data = const_float_val->getValue();
-      // int float_data = *((int*)(&data));
-      return std::make_pair(const_float_val->getValue(), true);
+
+      // 将浮点数转化为十进制
+      int long_data = *((int*)(&float_data));
+      return std::make_pair(long_data, true);
     } else{
       return std::make_pair(const_int_val->getValue(), true);
     }
-  } else if (inst_val && false) {
+  } else if (inst_val && false) { //  已添加常量折叠优化，无需计算
     auto op_list = inst_val->getOperandList();
     if (dynamic_cast<BinaryInst *>(val)) {
       auto val_0 = AsmBuilder::get_const_val(op_list.at(0));
