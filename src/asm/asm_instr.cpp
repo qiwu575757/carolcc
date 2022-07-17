@@ -138,6 +138,22 @@ std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &cond) {
   asm_instr += ", ";
   asm_instr += src.getName();
   asm_instr += newline;
+
+  // notice
+  //asm_instr += vcvt(dst);
+  return asm_instr;
+}
+
+std::string vcvt(const VFPReg &dst) {
+  std::string asm_instr;
+
+  asm_instr += spaces;
+  asm_instr += "vcvt.f32.s32";
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += dst.getName();
+  asm_instr += newline;
   return asm_instr;
 }
 
@@ -192,7 +208,7 @@ std::string setValue(const Reg &dst, const Constant &src) {
   return asm_instr;
 }
 
-std::string setValue(const VFPReg &dst, const Constant &src) {
+std::string setValue(const VFPReg &dst, const ConstantFP &src) {
   std::string asm_instr;
   auto val = src.getValue();
   if (0 <= val && val <= imm_16_max) {
@@ -283,37 +299,11 @@ std::string ldr(const Reg &dst, const Reg &base, const Reg &offset) {
   return ldr(dst, base, offset, Constant(0));
 }
 
-std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset) {
-  return vldr(dst, base, offset, Constant(0));
-}
-
 std::string ldr(const Reg &dst, const Reg &base, const Reg &offset,
                 const Constant &shift) {
   std::string asm_instr;
   asm_instr += spaces;
   asm_instr += "ldr";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += "[";
-  asm_instr += base.getName();
-  asm_instr += ", ";
-  asm_instr += "+";
-  asm_instr += offset.getName();
-  asm_instr += ", ";
-  asm_instr += "lsl";
-  asm_instr += " ";
-  asm_instr += shift.getName();
-  asm_instr += "]";
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset,
-                const Constant &shift) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vldr.32";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -383,37 +373,11 @@ std::string str(const Reg &dst, const Reg &base, const Reg &offset) {
   return str(dst, base, offset, Constant(0));
 }
 
-std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset) {
-  return vstr(dst, base, offset, Constant(0));
-}
-
 std::string str(const Reg &dst, const Reg &base, const Reg &offset,
                 const Constant &shift) {
   std::string asm_instr;
   asm_instr += spaces;
   asm_instr += "str";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += "[";
-  asm_instr += base.getName();
-  asm_instr += ", ";
-  asm_instr += "+";
-  asm_instr += offset.getName();
-  asm_instr += ", ";
-  asm_instr += "lsl";
-  asm_instr += " ";
-  asm_instr += shift.getName();
-  asm_instr += "]";
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset,
-                const Constant &shift) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vstr.32";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -862,9 +826,10 @@ std::string load(const Reg &dst, const Addr &src) {
 std::string vload(const VFPReg &dst, const Addr &src) {
   std::string asm_instr;
   int offset = src.getOffset();
-  if (offset > imm_12_max || offset < -imm_12_max) {
+  if (offset > imm_8_max || offset < -imm_8_max) {
     asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
-    asm_instr += InstGen::vldr(dst, src.getReg(), vinst_temp_reg);
+    asm_instr += InstGen::add(vinst_temp_reg, vinst_temp_reg, src.getReg());
+    asm_instr += InstGen::vldr(dst, Addr(vinst_temp_reg, 0));
   } else {
     asm_instr += InstGen::vldr(dst, src);
   }
@@ -887,9 +852,10 @@ std::string store(const Reg &src, const Addr &dst) {
 std::string vstore(const VFPReg &src, const Addr &dst) {
   std::string asm_instr;
   int offset = dst.getOffset();
-  if (offset > imm_12_max || offset < -imm_12_max) {
+  if (offset > imm_8_max || offset < -imm_8_max) {
     asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
-    asm_instr += InstGen::vstr(src, dst.getReg(), vinst_temp_reg);
+    asm_instr += InstGen::add(vinst_temp_reg,vinst_temp_reg,dst.getReg());
+    asm_instr += InstGen::vstr(src, Addr(vinst_temp_reg, 0));
   } else {
     asm_instr += InstGen::vstr(src, dst);
   }
@@ -1008,11 +974,11 @@ std::string ret(const Constant &src) {
   return asm_instr;
 }
 
-std::string vret(const ConstantFP &src) {
+std::string vret(const Constant &src) {
   const InstGen::VFPReg target_reg = InstGen::VFPReg(0);
   std::string asm_instr;
-  // 未考虑返回值的大小范围
-  asm_instr += vmov(target_reg,src);
+  asm_instr += setValue(vinst_temp_reg, src);
+  asm_instr += vmov(target_reg,vinst_temp_reg);
 
   return asm_instr;
 }

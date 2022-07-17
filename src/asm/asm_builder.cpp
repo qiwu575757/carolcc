@@ -1044,8 +1044,6 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
       return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " cmp "+
                             src_op1->getPrintName(), "");
       variable_list.push_back(inst); // 对于cmp, fcmp结果均为int型
-
-      return_asm += update_value_mapping(variable_list); // 结果保存在int值寄存器中
     } else {
       if (inst->isMul()) {
         return_asm +=  InstGen::comment(inst->getPrintName()+" = "+src_op0->getPrintName() + " * "+
@@ -1069,25 +1067,35 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
         // 给第一个操作数加上名字，用于分配寄存器,建立映射
         std::string reg_name_0 = "_fpimm_"+std::to_string(key++);
         src_value_0 = new Value(Type::getFloatTy(), reg_name_0);
+        /*
+                //这里因为不知道怎么直接将立即数移动到浮点寄存器，所以先将立即数存到 普通寄存器，做一个过渡
+        */
+        variable_list.push_back(src_value_0);
         fp_variable_list.push_back(src_value_0);
 
         if (src_op1->isConstant()) { // vcmp 指令操作数均为reg
           std::string reg_name_1 = "_fpimm_"+std::to_string(key++);
           src_value_1 = new Value(Type::getFloatTy(), reg_name_1);
+          variable_list.push_back(src_value_1);
           fp_variable_list.push_back(src_value_1);
 
           // 寄存器分配
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_fpvalue_mapping(fp_variable_list);
+          return_asm += update_value_mapping(variable_list);
 
           // find分配的寄存器
+          const InstGen::Reg src_reg_0_tmp = InstGen::Reg(find_register(src_value_0,register_str));
+          // 将立即数的值绑定到寄存器中
+          return_asm += InstGen::setValue(src_reg_0_tmp,InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(src_op0))));
           const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
-          // 将立即数的值绑定到寄存器中
-          return_asm += InstGen::vmov(src_reg_0,InstGen::ConstantFP(atof(src_op0->getPrintName().c_str())));
+          return_asm += InstGen::vmov(src_reg_0,src_reg_0_tmp);
 
-          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_value_1,register_str));
+          const InstGen::Reg src_reg_1_tmp = InstGen::Reg(find_register(src_value_1,register_str));
           // 将立即数的值绑定到寄存器中
-          return_asm += InstGen::vmov(src_reg_1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
+          return_asm += InstGen::setValue(src_reg_1_tmp,InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(src_op1))));
+          const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_value_1,register_str));
+          return_asm += InstGen::vmov(src_reg_1,src_reg_1_tmp);
 
           if (inst->isCmp()) {
             return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
@@ -1112,11 +1120,15 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
           // 寄存器分配
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_fpvalue_mapping(fp_variable_list);
+          return_asm += update_value_mapping(variable_list);
 
           // find分配的寄存器
-          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+          const InstGen::Reg src_reg_0_tmp = InstGen::Reg(find_register(src_value_0,register_str));
           // 将立即数的值绑定到寄存器中
-          return_asm += InstGen::vmov(src_reg_0,InstGen::ConstantFP(atof(src_op0->getPrintName().c_str())));
+          return_asm += InstGen::setValue(src_reg_0_tmp,InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(src_op0))));
+          const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+          return_asm += InstGen::vmov(src_reg_0,src_reg_0_tmp);
+
           const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_op1,register_str));
           return_asm += register_str;
           register_str = "";
@@ -1145,18 +1157,22 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
         if (src_op1->isConstant()) { // reg imm
           std::string reg_name_1 = "_fpimm_"+std::to_string(key++);
           src_value_1 = new Value(Type::getFloatTy(), reg_name_1);
+          variable_list.push_back(src_value_1);
           fp_variable_list.push_back(src_value_1);
 
           // 寄存器分配
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_fpvalue_mapping(fp_variable_list);
+          return_asm += update_value_mapping(variable_list);
 
           const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_op0,register_str));
           return_asm += register_str;
           register_str = "";
+
+          const InstGen::Reg src_reg_1_tmp = InstGen::Reg(find_register(src_value_1,register_str));
+          return_asm += InstGen::setValue(src_reg_1_tmp,InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(src_op1))));
           const InstGen::VFPReg src_reg_1 = InstGen::VFPReg(find_vfpregister(src_value_1,register_str));
-          // 将立即数的值绑定到寄存器中
-          return_asm += InstGen::vmov(src_reg_1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
+          return_asm += InstGen::vmov(src_reg_1,src_reg_1_tmp);
 
           if (inst->isCmp()) {
             return_asm += InstGen::vcmp(src_reg_0, src_reg_1);
@@ -1353,7 +1369,6 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
         register_str = "";
         const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
         return_asm += register_str;
-        // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
 
         return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "fp store");
         InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
@@ -1457,7 +1472,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         auto src = operands.at(0);
         if (src->isConstant()) { //存储的值是立即数，需要先将立即数存储到reg
           if (src->getType()->isFloatTy()) {
-            inst_asm += InstGen::vret(InstGen::ConstantFP(atof(src->getPrintName().c_str())));
+            inst_asm += InstGen::vret(InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(src))));
           } else {
             inst_asm += InstGen::ret(InstGen::Constant(atoi(src->getPrintName().c_str())));
           }

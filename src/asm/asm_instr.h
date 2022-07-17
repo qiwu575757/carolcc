@@ -57,6 +57,7 @@ public:
   bool has_shift() const { return false; }
   int getID() const { return this->id; }
   std::string getName() const { return reg_name[id]; }
+  bool is_vfpreg() const { return false; }
   const bool operator<(const Reg &rhs) const { return this->id < rhs.id; }
   const bool operator==(const Reg &rhs) const { return this->id == rhs.id; }
   const bool operator!=(const Reg &rhs) const { return this->id != rhs.id; }
@@ -71,6 +72,7 @@ public:
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }
   int getID() const { return this->id; }
+  bool is_vfpreg() const { return true; }
   std::string getName() const { return vfpreg_name[id]; }
   const bool operator<(const VFPReg &rhs) const { return this->id < rhs.id; }
   const bool operator==(const VFPReg &rhs) const { return this->id == rhs.id; }
@@ -164,7 +166,7 @@ public:
 };
 
 class ConstantFP : public Value {
-  int value;
+  int value; // 浮点数转化为的十进制数
 
 public:
   explicit ConstantFP(float value) : value(value) {}
@@ -251,9 +253,6 @@ std::string push(const std::vector<VFPReg> &reg_list);
 std::string pop(const std::vector<VFPReg> &reg_list);
 std::string vldr(const VFPReg &dst, const Addr &src);
 std::string vldr(const VFPReg &dst, const Label &src);
-std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset);
-std::string vldr(const VFPReg &dst, const Reg &base, const Reg &offset,
-                const Constant &shift);
 std::string vload(const VFPReg &dst, const Addr &src);
 std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &op = NOP);
 std::string vcmp(const VFPReg &lhs, const VFPReg &rhs);
@@ -265,12 +264,10 @@ std::string vmrs();// 将fcmp比较结果置位到CPSR(APSR)
 std::string vstore(const VFPReg &src, const Addr &dst);
 std::string vstr(const VFPReg &src, const Addr &dst);
 std::string vstr(const VFPReg &src, const Label &dst);
-std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset);
-std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset,
-                const Constant &shift);
-std::string vret(const ConstantFP &src);
+std::string vret(const Constant &src);
 std::string vret(const VFPReg &src);
 std::string setValue(const VFPReg &dst, const ConstantFP &src);
+std::string vcvt(const VFPReg &dst);
 
 }; // namespace InstGen
 
