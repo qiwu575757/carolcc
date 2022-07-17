@@ -164,14 +164,14 @@ public:
 };
 
 class ConstantFP : public Value {
-  float value;
+  int value;
 
 public:
   explicit ConstantFP(float value) : value(value) {}
   bool is_reg() const { return false; }
   bool is_constant() const { return true; }
   bool has_shift() const { return false; }
-  float getValue() const { return this->value; }
+  int getValue() const { return this->value; }
   std::string getName() const { return "#" + std::to_string(this->value); }
 };
 
@@ -270,6 +270,7 @@ std::string vstr(const VFPReg &dst, const Reg &base, const Reg &offset,
                 const Constant &shift);
 std::string vret(const ConstantFP &src);
 std::string vret(const VFPReg &src);
+std::string setValue(const VFPReg &dst, const ConstantFP &src);
 
 }; // namespace InstGen
 

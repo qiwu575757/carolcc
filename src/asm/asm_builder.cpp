@@ -92,15 +92,14 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
     bool check_array_init = false;
     printf("array_size : %d\n",init->getType()->getSize());
     for(int i=0;i<init->getType()->getSize()/4;i++){
-      if(array_code.c_str()[i*12+10]!='0'){
-        check_array_init=true;
+      if(array_code.c_str()[i*12+10] != '0'){
+        check_array_init = true;
         break;
       }
     }
     if(check_array_init){
       asm_code += array_code;
-    }
-    else{
+    } else{
       asm_code += InstGen::spaces + ".zero "+std::to_string(init->getType()->getSize())+"\n";
     }
   } else {
@@ -122,11 +121,7 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) {
 
   if (const_int_val || const_float_val) {
     if(const_float_val){
-      float float_data = const_float_val->getValue();
-
-      // 将浮点数转化为十进制
-      int long_data = *((int*)(&float_data));
-      return std::make_pair(long_data, true);
+      return std::make_pair(float2int(const_float_val), true);
     } else{
       return std::make_pair(const_int_val->getValue(), true);
     }
@@ -192,6 +187,13 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) {
   abort();
 }
 
+int AsmBuilder::float2int(ConstantFloat *val) { // 将浮点数转化为十进制表示，便于操作
+  float float_data = val->getValue();
+
+  int long_data = *((int*)(&float_data));
+
+  return long_data;
+}
 
 std::string AsmBuilder::generate_function_code(Function *func){
     stack_cur_size = 0;
@@ -1341,13 +1343,12 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
         ConstantFloat* src_op1 =  dynamic_cast<ConstantFloat *>(operands.at(0));
         std::string reg_name_0 = "_fpimm_"+std::to_string(key++);
         src_value_0 = new Value(Type::getFloatTy(), reg_name_0);
-        fp_variable_list.push_back(src_value_0);
+        variable_list.push_back(src_value_0);
 
         return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-        return_asm += update_fpvalue_mapping(fp_variable_list);
         return_asm += update_value_mapping(variable_list);
 
-        const InstGen::VFPReg src_reg1 = InstGen::VFPReg(find_vfpregister(src_value_0,register_str));
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_value_0,register_str));
         return_asm += register_str;
         register_str = "";
         const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
@@ -1356,10 +1357,9 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
 
         return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "fp store");
         InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
-        return_asm += InstGen::vmov(src_reg1,InstGen::ConstantFP(atof(src_op1->getPrintName().c_str())));
-        return_asm += InstGen::vstore(src_reg1, InstGen::Addr(src_reg2,0));
 
-        // return_asm += erase_value_mapping(variable_list);
+        return_asm += InstGen::setValue(src_reg1,InstGen::Constant(float2int(src_op1)));
+        return_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
 
       } else{ // 需要存储的值是寄存器
         auto src_op1 = operands.at(0);

@@ -192,6 +192,33 @@ std::string setValue(const Reg &dst, const Constant &src) {
   return asm_instr;
 }
 
+std::string setValue(const VFPReg &dst, const Constant &src) {
+  std::string asm_instr;
+  auto val = src.getValue();
+  if (0 <= val && val <= imm_16_max) {
+    asm_instr += vmov(dst, Constant(val));
+  }  else {
+    uint32_t imm = src.getValue();
+    uint32_t imm_low = imm & ((1 << 16) - 1);
+    uint32_t imm_high = imm >> 16;
+    asm_instr += spaces;
+    asm_instr += "movw";
+    asm_instr += " ";
+    asm_instr += dst.getName();
+    asm_instr += ", ";
+    asm_instr += "#" + std::to_string(imm_low);
+    asm_instr += newline;
+    asm_instr += spaces;
+    asm_instr += "movt";
+    asm_instr += " ";
+    asm_instr += dst.getName();
+    asm_instr += ", ";
+    asm_instr += "#" + std::to_string(imm_high);
+    asm_instr += newline;
+  }
+  return asm_instr;
+}
+
 std::string getAddress(const Reg &dst, const Label &src) {
   std::string asm_instr;
   asm_instr += spaces;

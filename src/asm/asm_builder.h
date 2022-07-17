@@ -127,6 +127,9 @@ public:
   int find_vfpregister(Value *v);
   std::string generateLoadInst (Instruction *inst);
   std::string generateStoreInst (Instruction *inst);
+  int float2int(ConstantFloat *val);
+
+
 };
 
 #endif // SRC_ASM_BUILDER_H
