@@ -10,6 +10,7 @@ void ConstantFold::run() {
         if (!f->isBuiltin()) {
             constantFold(f);
             deleteCondBr(f);
+            eliminateSinglePredecessorPhi(f);
         }
     }
 }
@@ -314,4 +315,27 @@ bool ConstantFold::detectCmpConstantFold(CmpInst *pInst) {
     pInst->replaceAllUse(new_constant);
     pInst->removeUseOps();
     return true;
+}
+
+void ConstantFold::eliminateSinglePredecessorPhi(Function* f) {
+       for(auto bb : f->getBasicBlocks()){
+           if(bb->getPreBasicBlocks().size() == 1 || bb ==
+           f->getEntryBlock()){
+               std::vector<Instruction*> wait_delete;
+               for(auto inst: bb->getInstructions()){
+                   if(inst->isPhi()){
+                        MyAssert("error phi oprd number ",inst->getOperandNumber() == 2);
+                        MyAssert("error ",inst->getOperand(1) == f->getEntryBlock() || (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()));
+                        wait_delete.push_back(inst);
+                        auto var = inst->getOperand(0);
+
+                        inst->replaceAllUse(var);
+                        inst->removeUseOps();
+                   }
+               }
+               for(auto inst:wait_delete){
+                bb->deleteInstr(inst);
+               }
+           }
+       }
 }

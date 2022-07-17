@@ -14,6 +14,7 @@ class ConstantFold : public Transform {
     void constantFold(Function* f);
     // 删除条件已知的br指令
     void deleteCondBr(Function*f);
+    void eliminateSinglePredecessorPhi(Function* f);
     Constant* calConstantIntBinary(Instruction* pInstruction);
     Constant* calConstantFloatBinary(Instruction* instr);
 

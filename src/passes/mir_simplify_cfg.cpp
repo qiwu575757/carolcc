@@ -21,7 +21,7 @@ void MirSimplifyCFG::run() {
             //              EliminateSingleUnCondBrBaseBlocks();
             //    RemoveSelfLoopBaseBlocks();
             //    RemoveNoPredecessorBaseBlocks();
-            // EliminateSinglePredecessorPhi();
+            EliminateSinglePredecessorPhi();
         }
     }
 }
@@ -217,16 +217,24 @@ void MirSimplifyCFG::EliminateSingleUnCondBrBaseBlocks() {
     //  }
 }
 void MirSimplifyCFG::EliminateSinglePredecessorPhi() {
-    //    for(auto bb : _func->getBasicBlocks()){
-    //        if(bb->getPreBasicBlocks().size() == 1 || bb ==
-    //        _func->getEntryBlock()){
-    //            std::vector<Instruction*> wait_delete;
-    //            for(auto inst: bb->getInstructions()){
-    //                if(inst->isPhi()){
-    //
-    //                }
-    //
-    //            }
-    //        }
-    //    }
+       for(auto bb : _func->getBasicBlocks()){
+           if(bb->getPreBasicBlocks().size() == 1 || bb ==
+           _func->getEntryBlock()){
+               std::vector<Instruction*> wait_delete;
+               for(auto inst: bb->getInstructions()){
+                   if(inst->isPhi()){
+                        MyAssert("error phi oprd number ",inst->getOperandNumber() == 2);
+                        MyAssert("error ",inst->getOperand(1) == _func->getEntryBlock() || (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()));
+                        wait_delete.push_back(inst);
+                        auto var = inst->getOperand(0);
+
+                        inst->replaceAllUse(var);
+                        inst->removeUseOps();
+                   }
+               }
+               for(auto inst:wait_delete){
+                bb->deleteInstr(inst);
+               }
+           }
+       }
 }

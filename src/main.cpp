@@ -94,21 +94,26 @@ int main(int argc, char **argv) {
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
+    if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
 
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
     // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        // PM.add_pass<EmitIR>("EmitIR");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
     PM.add_pass<Dominators>("Dominators");
     PM.add_pass<Mem2Reg>("Mem2Reg");
     // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
-     PM.add_pass<ConstantFold>("ConstantFold");
+    //     PM.add_pass<EmitIR>("EmitIR");
+
+    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    //  PM.add_pass<ConstantFold>("ConstantFold");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if(is_emit_mir && is_debug)
         PM.add_pass<EmitIR>("EmitIR");
     PM.run();
