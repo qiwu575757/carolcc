@@ -884,7 +884,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
 
             if (arg->isConstant()) {// 若参数直接为立即数
               if (arg->getType()->isFloatTy())  {
-                return_asm += InstGen::vmov(InstGen::VFPReg(vfpreg_index),InstGen::ConstantFP(atof(arg->getPrintName().c_str())));
+                return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(arg))));
+                return_asm += InstGen::vmov(InstGen::VFPReg(vfpreg_index),InstGen::Reg(reg_index));
                 return_asm += InstGen::comment("transfer fp imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
                 return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
               } else {
