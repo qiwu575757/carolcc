@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 PROJECT(compiler)
 SET(CMAKE_BUILD_TYPE "Debug")
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 SET(CMAKE_C_FLAGS " -O0 -Wall -g2 -ggdb")
 SET(CMAKE_CXX_FLAGS " -O0 -Wall -g2 -ggdb")
 SET(CMAKE_C_FLAGS_DEBUG " -O0 -Wall -g2 -ggdb")

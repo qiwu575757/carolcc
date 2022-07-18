@@ -19,6 +19,10 @@ class Dominators : public Analysis {
     void createIDoms(Function* f);
     static void createDominaceFrontier(Function* f);
     static void createDomTree(Function* f);
+    std::list<BasicBlock*>& getReversePostOderList(Function *f){
+        createReversePostOrder(f);
+        return _reverse_post_order;
+    }
 
    private:
     static void printIDom(Function *f);

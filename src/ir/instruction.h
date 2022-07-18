@@ -1,5 +1,7 @@
 #ifndef COMPILER_INSTRUCTION_H
 #define COMPILER_INSTRUCTION_H
+#include <algorithm>
+#include <cctype>
 #include <vector>
 
 #include "basic_block.h"
@@ -54,34 +56,38 @@ class Instruction : public User {
     };
 
     OpKind getInstructionKind() const { return _op_id; }
-    bool isRet()const  { return _op_id == Instruction::RET; }
+    bool isRet() const { return _op_id == Instruction::RET; }
     bool isBr() const { return _op_id == Instruction::BR; }
     //    bool isNeg()const { return _op_id == Instruction::NEG; }
-    bool isNot() const{ return _op_id == Instruction::NOT; }
-    bool isCast() const{ return _op_id == Instruction::CAST; }
-    bool isAdd() const{ return _op_id == Instruction::ADD; }
-    bool isSub() const{ return _op_id == Instruction::SUB; }
-    bool isMul() const{ return _op_id == Instruction::MUL; }
-    bool isDiv() const{ return _op_id == Instruction::DIV; }
-    bool isRem() const{ return _op_id == Instruction::REM; }
-    bool isShl() const{ return _op_id == Instruction::SHL; }
-    bool isLshr() const{ return _op_id == Instruction::LSHR; }
-    bool isAshr() const{ return _op_id == Instruction::ASHR; }
-    bool isAnd() const{ return _op_id == Instruction::AND; }
-    bool isOr() const{ return _op_id == Instruction::OR; }
-    bool isXor() const{ return _op_id == Instruction::XOR; }
-    bool isAlloca() const{ return _op_id == Instruction::ALLOCA; }
-    bool isLoad() const{ return _op_id == Instruction::LOAD; }
-    bool isStore() const{ return _op_id == Instruction::STORE; }
-    bool isCmp() const{ return _op_id == Instruction::CMP; }
-    bool isPhi() const{ return _op_id == Instruction::PHI; }
-    bool isGep() const{ return _op_id == Instruction::GEP; }
-    bool isCall() const{ return _op_id == Instruction::CALL; }
-    bool isZext() const{ return _op_id == Instruction::ZEXT; }
-    bool isBreak() const{ return _op_id == Instruction::BREAK; }
-    bool isContinue() const{ return _op_id == Instruction::CONTINUE; }
-    BasicBlock *getParent() const{ return _parent; }
-    void setParent(BasicBlock* parent) { _parent = parent; }
+    bool isNot() const { return _op_id == Instruction::NOT; }
+    bool isCast() const { return _op_id == Instruction::CAST; }
+
+    bool isAdd() const { return _op_id == Instruction::ADD; }
+    bool isSub() const { return _op_id == Instruction::SUB; }
+    bool isMul() const { return _op_id == Instruction::MUL; }
+    bool isDiv() const { return _op_id == Instruction::DIV; }
+    bool isRem() const { return _op_id == Instruction::REM; }
+    bool isShl() const { return _op_id == Instruction::SHL; }
+    bool isLshr() const { return _op_id == Instruction::LSHR; }
+    bool isAshr() const { return _op_id == Instruction::ASHR; }
+    bool isAnd() const { return _op_id == Instruction::AND; }
+    bool isOr() const { return _op_id == Instruction::OR; }
+    bool isXor() const { return _op_id == Instruction::XOR; }
+    bool isBinary() const {return isAdd() || isSub() || isMul() || isDiv()||isRem()||isShl()||isLshr()||isAnd()||isOr()||isXor()||isCmp();}
+    bool isCommutative() const;
+
+    bool isAlloca() const { return _op_id == Instruction::ALLOCA; }
+    bool isLoad() const { return _op_id == Instruction::LOAD; }
+    bool isStore() const { return _op_id == Instruction::STORE; }
+    bool isCmp() const { return _op_id == Instruction::CMP; }
+    bool isPhi() const { return _op_id == Instruction::PHI; }
+    bool isGep() const { return _op_id == Instruction::GEP; }
+    bool isCall() const { return _op_id == Instruction::CALL; }
+    bool isZext() const { return _op_id == Instruction::ZEXT; }
+    bool isBreak() const { return _op_id == Instruction::BREAK; }
+    bool isContinue() const { return _op_id == Instruction::CONTINUE; }
+    BasicBlock *getParent() const { return _parent; }
+    void setParent(BasicBlock *parent) { _parent = parent; }
 
    protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
@@ -100,11 +106,10 @@ class UnaryInst : public Instruction {
    public:
     //    static UnaryInst *createNeg(Value *v1, BasicBlock *parent);
     static UnaryInst *createNot(Value *v1, BasicBlock *parent);
-    static UnaryInst *createCast(Value *v1,Type* type_cast_to, BasicBlock *parent);
+    static UnaryInst *createCast(Value *v1, Type *type_cast_to,
+                                 BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
-    
 };
-
 
 class BinaryInst : public Instruction {
    private:
@@ -118,10 +123,9 @@ class BinaryInst : public Instruction {
     static BinaryInst *createMul(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createDiv(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createRem(Value *v1, Value *v2, BasicBlock *parent);
-    //    static BinaryInst *createShl(Value *v1, Value *v2, BasicBlock
-    //    *parent); static BinaryInst *createLshr(Value *v1, Value *v2,
-    //    BasicBlock *parent); static BinaryInst *createAshr(Value *v1, Value
-    //    *v2, BasicBlock *parent);
+    static BinaryInst *createShl(Value *v1, Value *v2, BasicBlock *parent);
+    static BinaryInst *createLshr(Value *v1, Value *v2, BasicBlock *parent);
+    static BinaryInst *createAshr(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createAnd(Value *v1, Value *v2, BasicBlock *parent);
     static BinaryInst *createOr(Value *v1, Value *v2, BasicBlock *parent);
     //    static BinaryInst *createXor(Value *v1, Value *v2, BasicBlock
@@ -149,13 +153,14 @@ class CmpInst : public Instruction {
                              BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 
-    bool isEq() { return _cmp_op == CmpInst::EQ; }
-    bool isNeq() { return _cmp_op == CmpInst::NEQ; }
-    bool isGt() { return _cmp_op == CmpInst::GT; }
-    bool isGe() { return _cmp_op == CmpInst::GE; }
-    bool isLt() { return _cmp_op == CmpInst::LT; }
-    bool isLe() { return _cmp_op == CmpInst::LE; }
+    bool isEq()const { return _cmp_op == CmpInst::EQ; }
+    bool isNeq()const { return _cmp_op == CmpInst::NEQ; }
+    bool isGt() const{ return _cmp_op == CmpInst::GT; }
+    bool isGe() const{ return _cmp_op == CmpInst::GE; }
+    bool isLt() const{ return _cmp_op == CmpInst::LT; }
+    bool isLe() const{ return _cmp_op == CmpInst::LE; }
     CmpOp getCmpOp() { return _cmp_op; }
+
    private:
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
@@ -186,7 +191,7 @@ class BranchInst : public Instruction {
     bool isWhile() { return _br_kind == BranchInst::WHILE; }
     bool isIf() { return _br_kind == BranchInst::IF; }
     bool isBranch() { return _br_kind == BranchInst::BRANCH; }
-    bool isConBranch(){return _br_kind == BranchInst::COND_BRANCH;}
+    bool isConBranch() { return _br_kind == BranchInst::COND_BRANCH; }
 
    private:
     BrOp _br_kind;

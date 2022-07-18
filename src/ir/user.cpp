@@ -13,7 +13,9 @@ void User::setOperand(unsigned no, Value *v) {
     v->addUse(this,no);
 }
 Value *User::getOperand(unsigned int no)const {
-    MyAssert("out of index",no>=0&&no<_use_number);
+    if(!(no>=0&&no<_use_number)){
+        ERROR("out of index: expect %d,but only has %d oprands",no,_use_number);
+    }
     return _operands_list.at(no);
 }
 void User::accept(IrVisitorBase *v) {

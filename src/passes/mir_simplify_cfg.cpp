@@ -17,23 +17,27 @@ void MirSimplifyCFG::run() {
             deleteCondBr(fun);
             removeNoPredecessorBasicBlocks();
             eliminateSinglePredecessorPhi();
-            SIMPLIFY_CFG_LOG("mergeSinglePredecessorBasicBlocks");
+            // SIMPLIFY_CFG_LOG("mergeSinglePredecessorBasicBlocks");
             mergeSinglePredecessorBasicBlocks();
             eliminateSingleUnCondBrBasicBlocks();
-            //    RemoveSelfLoopBaseBlocks();
-            //    removeNoPredecessorBasicBlocks();
+            removeSelfLoopBasicBlocks();
+            removeNoPredecessorBasicBlocks();
             eliminateSinglePredecessorPhi();
         }
     }
 }
 
-void MirSimplifyCFG::RemoveSelfLoopBaseBlocks() {
+void MirSimplifyCFG::removeSelfLoopBasicBlocks() {
+    std::vector<BasicBlock*> wait_delete;
     for (auto bb: _func->getBasicBlocks()) {
         if (bb->getPreBasicBlocks().size() == 1) {
             if (*(bb->getPreBasicBlocks().begin()) == bb) {
-                _func->removeBasicBlock(bb);
+                wait_delete.push_back(bb);
             }
         }
+    }
+    for(auto bb:wait_delete){
+        _func->removeBasicBlock(bb);
     }
 }
 

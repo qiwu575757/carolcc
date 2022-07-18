@@ -5,8 +5,8 @@
 #include <unordered_map>
 #include "passes/module.h"
 
-int var_no = 1;
-const std::string head = "%";
+static int var_no = 1;
+static const std::string head = "%";
 void LLVMIrPrinter::NameValue(Value *val) {
     if (seq.find(val) == seq.end() ) {
       if(!val->getName().empty()){

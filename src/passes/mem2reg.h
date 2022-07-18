@@ -19,6 +19,7 @@ class BasicBlock;
 #else
 #define MEM2REG_LOG(format, ...)
 #endif
+
 class Mem2Reg : public  Transform{
    private:
     Function* _cur_func{};

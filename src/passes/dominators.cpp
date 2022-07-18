@@ -112,7 +112,7 @@ void Dominators::createDomTree(Function *f) {
 }
 void Dominators::run() {
     for(auto f :_m->getFunctions()){
-        if(f->getBasicBlocks().empty()){
+        if( f->isBuiltin() || f->getBasicBlocks().empty()){
             continue ;
         }
         DOMINATOR_LOG("dominators cur_func is %s\n",f->getName().c_str());

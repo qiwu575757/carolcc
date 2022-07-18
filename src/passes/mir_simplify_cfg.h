@@ -27,7 +27,7 @@ public:
   void mergeSinglePredecessorBasicBlocks();
   void eliminateSinglePredecessorPhi();
   void eliminateSingleUnCondBrBasicBlocks();
-  void RemoveSelfLoopBaseBlocks();
+  void removeSelfLoopBasicBlocks();
   void deleteCondBr(Function *f);
 };
 #endif

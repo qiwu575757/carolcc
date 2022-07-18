@@ -13,6 +13,7 @@
 #include "passes/dominators.h"
 #include "passes/emit_ir.h"
 #include "passes/constan_fold.h"
+#include "passes/global_value_numbering.h""
 #include "passes/hir_to_mir.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/lower_ir.h"
@@ -101,7 +102,7 @@ int main(int argc, char **argv) {
 
 
     // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
+        // PM.add_pass<EmitIR>("EmitIR"); 
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
     PM.add_pass<Mem2Reg>("Mem2Reg");
@@ -109,10 +110,16 @@ int main(int argc, char **argv) {
     //     PM.add_pass<EmitIR>("EmitIR");
 
     // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-      PM.add_pass<ConstantFold>("ConstantFold");
+
+    PM.add_pass<ConstantFold>("ConstantFold");
      if(is_emit_mir && is_debug)
          PM.add_pass<EmitIR>("EmitIR");
+
      PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    // if(is_emit_mir && is_debug)
+        // PM.add_pass<EmitIR>("EmitIR");
+
+     PM.add_pass<GlobalVariableNumbering>("GVN");
     if(is_emit_mir && is_debug)
         PM.add_pass<EmitIR>("EmitIR");
     PM.run();
