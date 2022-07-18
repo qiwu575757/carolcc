@@ -917,7 +917,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
         return_asm += InstGen::bl(func_name);
         if (dynamic_cast<CallInst *>(inst)->getType()->isFloatTy()) {// 若有返回值
           return_asm += InstGen::vstore(InstGen::VFPReg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
-        } else {
+        } else if (dynamic_cast<CallInst *>(inst)->getType()->isInt32()){
           // stack_mapping[inst] = return_offset;
           return_asm += InstGen::store(InstGen::Reg(return_reg),InstGen::Addr(InstGen::sp,return_offset+caller_regs_size*4));
         }
@@ -931,7 +931,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_fpvalue_mapping(fp_variable_list);
           return_asm += InstGen::vload(InstGen::VFPReg(find_vfpregister(inst)),InstGen::Addr(InstGen::sp,return_offset));
-        } else {
+        } else if (dynamic_cast<CallInst *>(inst)->getType()->isInt32()) {
           variable_list.clear();
           variable_list.push_back(inst);
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
@@ -1198,6 +1198,7 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
           // 寄存器分配
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_fpvalue_mapping(fp_variable_list);
+          return_asm += update_value_mapping(variable_list);
 
           const InstGen::VFPReg src_reg_0 = InstGen::VFPReg(find_vfpregister(src_op0,register_str));
           return_asm += register_str;
@@ -1371,7 +1372,7 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
         const InstGen::Reg src_reg2 = InstGen::Reg(find_register(src_op2,register_str));
         return_asm += register_str;
 
-        return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "fp store");
+        return_asm +=  InstGen::comment(std::to_string(float2int(src_op1))+" store to "+src_reg2.getName(), "fp store");
         InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
 
         return_asm += InstGen::setValue(src_reg1,InstGen::Constant(float2int(src_op1)));

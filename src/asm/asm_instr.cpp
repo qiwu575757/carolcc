@@ -140,7 +140,7 @@ std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &cond) {
   asm_instr += newline;
 
   // notice
-  //asm_instr += vcvt(dst);
+  // asm_instr += vcvt(dst);
   return asm_instr;
 }
 
@@ -208,6 +208,7 @@ std::string setValue(const Reg &dst, const Constant &src) {
   return asm_instr;
 }
 
+// 一般做法是vldr.32	s0, .L4
 std::string setValue(const VFPReg &dst, const ConstantFP &src) {
   std::string asm_instr;
   auto val = src.getValue();
