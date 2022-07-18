@@ -49,8 +49,8 @@ void GlobalVariableNumbering::SVN(BasicBlock* bb,
     pushTableScope();
     _wait_delete.clear();
     LVN(bb);
-    for(auto instr:_wait_delete){
-            bb->deleteInstr(instr);
+    for (auto instr : _wait_delete) {
+        bb->deleteInstr(instr);
     }
 
     for (auto suc_bb : bb->getSuccBasicBlockList()) {
@@ -87,8 +87,18 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
                 if (key_instr && key_instr->isBinary()) {
                     auto lhs2 = lookUpOrAdd(key_instr->getOperand(0));
                     auto rhs2 = lookUpOrAdd(key_instr->getOperand(1));
-                    bool same_op = key_instr->getInstructionKind() ==
-                                   instr->getInstructionKind();
+                    bool same_op = false;
+                    if ((key_instr->getInstructionKind() ==
+                         instr->getInstructionKind()) &&
+                        !key_instr->isCmp()) {
+                        same_op = true;
+                    } else if (key_instr->isCmp() && instr->isCmp()) {
+                        auto cmp1 = dynamic_cast<CmpInst*>(key_instr);
+                        auto cmp2 = dynamic_cast<CmpInst*>(instr);
+                        if(cmp1->getCmpOp() == cmp2->getCmpOp()){
+                            same_op=true;
+                        }
+                    }
                     bool same_oprd = (lhs == lhs2 && rhs == rhs2) ||
                                      (key_instr->isCommutative() &&
                                       (lhs == rhs2 && rhs == lhs2));
@@ -100,14 +110,14 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
             }
         }
     } else {
-            //TODO: 其他种类的指令
+        // TODO: 其他种类的指令
     }
-        return instr;
+    return instr;
 }
 Value* GlobalVariableNumbering::lookUpOrAdd(Value* val) {
     Value* res;
     auto vv = findOnTable(val);
-    if (vv!=nullptr) {
+    if (vv != nullptr) {
         return vv;
     }
     if (val->isConstant()) {
@@ -149,8 +159,8 @@ Value* GlobalVariableNumbering::findOnTable(Value* v) {
     }
     return nullptr;
 }
-void GlobalVariableNumbering::deleteValueFromTable(Value* key_val){
-    for(auto& m:_value_table){
-            m.erase(key_val);
+void GlobalVariableNumbering::deleteValueFromTable(Value* key_val) {
+    for (auto& m : _value_table) {
+        m.erase(key_val);
     }
 }
