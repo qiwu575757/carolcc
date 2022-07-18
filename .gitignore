@@ -1,7 +1,8 @@
 build/
 .vscode/
 .idea
-
+*.png
+*.jpg
 src/frontend/parser.cpp
 src/frontend/parser.h
 src/frontend/token.cpp
