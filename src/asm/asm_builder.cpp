@@ -1514,8 +1514,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
     } else if (inst->isBr()) {
       if (operands.size() == 1){
-          auto src_op0 = operands.at(0)->getName();
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op0)),InstGen::NOP);
+          auto src_op0_name = operands.at(0)->getName();
+          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op0_name)),InstGen::NOP);
       } else if (operands.size() == 2) {
           WARNNING("不太理解 br i1 %1, label %2 形式的跳转指令");
       } else if (operands.size() == 3) {

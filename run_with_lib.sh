@@ -1,4 +1,4 @@
-arm-linux-gnueabihf-gcc test.s -static -c
+arm-linux-gnueabihf-gcc test.s test.o -static -c
 arm-linux-gnueabihf-gcc test.o stdlib/libsysy_float.a -static
 # arm-linux-gnueabi-gcc test.s -static -c
 # arm-linux-gnueabi-gcc test.o stdlib/libsysy_no_float.a -static

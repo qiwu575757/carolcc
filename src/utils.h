@@ -217,10 +217,10 @@ public:
 #define SYSY_BUILDER_
 #ifdef SYSY_BUILDER_
 #define SYSY_BUILDER(format, ...)                                  \
-    do {                                                                             \
-        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-        fflush(stdout);                                                              \
-    } while (0)
+    // do {                                                                             \
+    //     printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+    //     fflush(stdout);                                                              \
+    // } while (0)
 #else
 #define SYSY_BUILDER(format, ...)
 #endif

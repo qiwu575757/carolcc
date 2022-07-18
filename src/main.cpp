@@ -45,13 +45,18 @@ int main(int argc, char **argv) {
     //        return 0;
     //    }
     bool is_emit_hir = false;
-    bool is_emit_mir = true;
+    bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
     bool is_debug = false;
+    bool is_emit_asm = false;
     std::string input_file, output_file;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = std::string(argv[i + 1]);
+            i++;
+        } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
+            output_file = std::string(argv[i + 1]);
+            is_emit_asm = true;
             i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
@@ -116,16 +121,20 @@ int main(int argc, char **argv) {
 
     AsmBuilder asm_builder(builder->getModule(), debug);
     std::string asm_code = asm_builder.generate_asm(input_file.c_str());
-    std::cout<<"################-asm_code-#################"<<std::endl;
-    std::fflush(0);
-    std::cout<<asm_code;
-    std::cout<<"################-asm_code-#################"<<std::endl;
+    // std::cout<<"################-asm_code-#################"<<std::endl;
+    // std::fflush(0);
+    // std::cout<<asm_code;
+    // std::cout<<"################-asm_code-#################"<<std::endl;
 
-    std::string strFileName = "test.s";
-    FILE* fs = fopen(strFileName.c_str(), "w+");
-    fprintf(fs,"%s",asm_code.c_str());
-    fclose(fs);
+    if (is_emit_asm) {
+        std::string strFileName = "test.s";
+        FILE* fs = fopen(strFileName.c_str(), "w+");
+        fprintf(output,"%s",asm_code.c_str());
+        fprintf(fs,"%s",asm_code.c_str());
+        fclose(output);
+        fclose(fs);
+    }
 
-    std::cout<<"ERROR";
+    // std::cout<<"ERROR";
     return 0;
 }
