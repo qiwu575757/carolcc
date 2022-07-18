@@ -891,7 +891,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
               } else {
                 return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(atoi(arg->getPrintName().c_str())));
                 return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-                return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                // reg_index++用于处理多个int参数的系统函数
+                return_asm += InstGen::store(InstGen::Reg(reg_index++%10),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
               }
             } else { // 若参数为变量
               if (arg->getType()->isFloatTy()) {
@@ -909,7 +910,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
                 // register_mapping[arg] = reg_index++;
                 // update_arg_mapping(arg);
                 return_asm += InstGen::comment("transfer val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-                return_asm += InstGen::store(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                return_asm += InstGen::store(InstGen::Reg(reg_index++%10),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
               }
             }
             offset += 4;

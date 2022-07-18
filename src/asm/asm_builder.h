@@ -78,7 +78,7 @@ private:
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   // int stack_size = 65536;//根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
-  int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
+  int stack_size = 131072 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
   int return_offset = stack_size - 4;
   bool debug;
   std::string asm_code;
