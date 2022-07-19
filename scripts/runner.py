@@ -65,7 +65,10 @@ class Runner():
             self.v = ""
         self.on_chip = on_chip
         self.run_cases = run_cases
-        self.scheme = scheme
+        if self.args.asm:
+            self.scheme = npu_npu_scheme["scheme"]
+        else:
+            self.scheme = scheme
         self.testcases = testcases
         if len(self.testcases) == 0:
             self.testcases = self.get_sy_test_cases()
@@ -126,16 +129,26 @@ class Runner():
         self.detector.close()
         self.detector = open(error_log+"error.log", "r")
         if line_ > 1:
-            Print_C().print_line("X",color=BOLD)
-            Print_C().print_error("#[CRASH] not generated: in test "+ case)
-            Print_C().print_line("X",color=BOLD)
+            if self.args.asm:
+                Print_C().print_line("X",color=BOLD)
+                Print_C().print_error("#[CRASH] not generated: in test "+ case)
+                Print_C().print_line("X",color=BOLD)
 
-            for l in self.detector.readlines():
-                Print_C().print_error(l[:-1])
-            std_runner = Runner(clang_llvm_scheme['scheme'])
-            std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], case)
-            std_ir_path = "build/test_results/" + str(case) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
-            Print_C().print_error("std ir path is {}".format(std_ir_path))
+                for l in self.detector.readlines():
+                    Print_C().print_error(l[:-1])
+                npu_ir_path = "build/test_results/" + str(case) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
+                Print_C().print_error("npu ir path is {}".format(npu_ir_path))
+            else:
+                Print_C().print_line("X",color=BOLD)
+                Print_C().print_error("#[CRASH] not generated: in test "+ case)
+                Print_C().print_line("X",color=BOLD)
+
+                for l in self.detector.readlines():
+                    Print_C().print_error(l[:-1])
+                std_runner = Runner(clang_llvm_scheme['scheme'])
+                std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], case)
+                std_ir_path = "build/test_results/" + str(case) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
+                Print_C().print_error("std ir path is {}".format(std_ir_path))
             exit(1)
         self.detector.close()
 
@@ -203,10 +216,7 @@ class Runner():
         if self.args.debug:
             subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), bufsize=1)
         else:
-            if self.scheme == "npu_npu":
-                subprocess.run(frontend_instr.format(sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
-            else:
-                subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
+            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
 
         if self.args.debug:
@@ -247,7 +257,7 @@ class Runner():
         self.check("",testcase)
     def asm_to_obj(self, testcase):
         self.check("",testcase)
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             asm = "build/test_results/" + str(testcase) + "/arm_asm/" + self.scheme + ".s"
             obj = "build/test_results/" + str(testcase) + "/obj/" + self.scheme + ".o"
         else:
@@ -262,7 +272,7 @@ class Runner():
             log_file = open(runner_log_index_path, "w+")
 
         Print_C().print_procedure("Generating {}.o".format(self.scheme))
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             subprocess.run("arm-linux-gnueabihf-gcc -c {asm} -o {obj} -static".format(asm=asm, obj=obj).split(), bufsize=1)
         else:
             if self.args.debug:
@@ -282,7 +292,7 @@ class Runner():
 
     def obj_to_bin(self, testcase):
         self.check("",testcase)
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             obj = "build/test_results/" + str(testcase) + "/obj/" + self.scheme + ".o"
             bin = "build/test_results/" + str(testcase) + "/bin/" + self.scheme + ".out"
         else:
@@ -297,7 +307,7 @@ class Runner():
             log_file = open(runner_log_index_path, "w+")
 
         Print_C().print_procedure("Generating {}".format(self.scheme))
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             subprocess.run(
                         "arm-linux-gnueabihf-gcc {obj} stdlib/libsysy_float.a -o {bin} -static".format(
                             bin=bin, obj=obj).split(), bufsize=1)
@@ -324,7 +334,7 @@ class Runner():
 
     def sy_to_asm(self, frontend_instr, testcase):
         self.check("",testcase)
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             asm = "build/test_results/" + str(testcase) + "/arm_asm/" + self.scheme + ".s"
         else:
             asm = "build/test_results/" + str(testcase) + "/asm/" + self.scheme + ".asm"
@@ -339,7 +349,7 @@ class Runner():
             log_file = open(runner_log_index_path, "w+")
 
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             subprocess.run(frontend_instr.format(asm=asm, sy=sy_path).split(), bufsize=1)
         else:
             if self.args.debug:
@@ -359,9 +369,9 @@ class Runner():
 
     def compile_one_test(self, frontend_instr, emit_llvm_ir, testcase):
         if emit_llvm_ir:
-            if self.scheme == "npu_npu":
+            if self.args.asm:
                 Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
-                self.sy_to_asm(frontend_instr=frontend_instr, testcase=testcase)
+                self.sy_to_asm(frontend_instr=npu_npu_scheme["frontend_instr"], testcase=testcase)
                 self.asm_to_obj(testcase=testcase)
                 self.obj_to_bin(testcase=testcase)
                 self.sy_to_ir(frontend_instr=npu_llvm_scheme["frontend_instr"], testcase=testcase)
@@ -371,32 +381,19 @@ class Runner():
                 self.sy_to_ir(frontend_instr=frontend_instr, testcase=testcase)
                 if self.args.ir: return 0
                 self.ir_to_asm(testcase=testcase)
-                if self.args.asm:
-                    # out_file = open("test.out", "w+")
-                    print("compiling the asm file...")
-                    subprocess.run("./run_obj.sh".split())
-                    # subprocess.run("echo $?".split())
-                    return 0
                 self.asm_to_obj(testcase=testcase)
                 self.obj_to_bin(testcase=testcase)
                 return self.run_single_test(testcase=testcase)
         else:
-            if self.scheme == "npu_npu":
+            if self.args.asm:
                 Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
-                self.sy_to_asm(frontend_instr=frontend_instr, testcase=testcase)
+                self.sy_to_asm(frontend_instr=npu_npu_scheme["frontend_instr"], testcase=testcase)
                 self.asm_to_obj(testcase=testcase)
                 self.obj_to_bin(testcase=testcase)
                 return self.run_single_test(testcase=testcase)
             else:
                 Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))
                 self.sy_to_asm(frontend_instr=frontend_instr, testcase=testcase)
-                if self.args.asm:
-                    # out_file = open("test.out", "w+")
-                    print("compiling the asm file...")
-                    subprocess.run("./run_obj.sh".split())
-                    # subprocess.run("echo $?".split())
-                    # os.su("echo $?")
-                    return 0
                 self.asm_to_obj(testcase=testcase)
                 self.obj_to_bin(testcase=testcase)
                 return self.run_single_test(testcase=testcase)
@@ -437,7 +434,7 @@ class Runner():
 
     def run_single_test(self, testcase):
         global has_error
-        if self.scheme == "npu_npu":
+        if self.args.asm:
             bin = "build/test_results/" + str(testcase) + "/bin/" + self.scheme + ".out"
         else:
             bin = "build/test_results/" + str(testcase) + "/bin/" + self.scheme + ".bin"
