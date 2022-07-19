@@ -443,52 +443,30 @@ int AsmBuilder::find_register(Value *v, std::string &code){
   if(v == nullptr){
     ERROR(" value is nullptr");
   }
-  if(register_mapping.count(v)){
-    if(global){
-      // get label
-      std::list<Value *> variable_list;
-      variable_list.push_back(v);
 
-      // generate label addr reg
-      const std::string reg_name_0 = "LCPI_"+std::to_string(key++);
-      Value *label_reg_addr = new Value(Type::getInt32Ty(), reg_name_0);
-      variable_list.push_back(label_reg_addr);
+  if (global) {
+    // get label
+    std::list<Value *> variable_list;
 
-      code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      update_value_mapping(variable_list);
+    // generate label addr reg
+    const std::string reg_name_0 = "LCPI_"+std::to_string(key++);
+    Value *label_reg_addr = new Value(Type::getInt32Ty(), reg_name_0);
+    variable_list.push_back(label_reg_addr);
 
-      // generate label
-      InstGen::Label src_label = InstGen::Label(".LCPI_"+v->getName());
+    code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+    update_value_mapping(variable_list);
 
-      code += InstGen::getAddress(InstGen::Reg(find_register(label_reg_addr)), src_label);
-      code += InstGen::load(InstGen::Reg(find_register(v)),InstGen::Addr(InstGen::Reg(find_register(label_reg_addr)), 0));
-      return register_mapping[v];
-    }
-    v->getPrintName();
+    // generate label
+    InstGen::Label src_label = InstGen::Label(".LCPI_"+v->getName());
+
+    code += InstGen::getAddress(InstGen::Reg(find_register(label_reg_addr)), src_label);
+    code += InstGen::load(InstGen::Reg(find_register(v)),InstGen::Addr(InstGen::Reg(find_register(label_reg_addr)), 0));
 
     return register_mapping[v];
-  }else{
-    if(global){
-      // get label
-      std::list<Value *> variable_list;
-      variable_list.push_back(v);
-
-      // generate label addr reg
-      const std::string reg_name_0 = "LCPI_"+std::to_string(key++);
-      Value *label_reg_addr = new Value(Type::getInt32Ty(), reg_name_0);
-      variable_list.push_back(label_reg_addr);
-
-      code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      update_value_mapping(variable_list);
-
-      // generate label
-      InstGen::Label src_label = InstGen::Label(".LCPI_"+v->getName());
-
-      code += InstGen::getAddress(InstGen::Reg(find_register(label_reg_addr)), src_label);
-      code += InstGen::load(InstGen::Reg(find_register(v)),InstGen::Addr(InstGen::Reg(find_register(label_reg_addr)), 0));
+  } else {
+    if(register_mapping.count(v)){
       return register_mapping[v];
-    }
-    else {
+    } else {
       ERROR(" not find v in register! %s",v->getPrintName().c_str());
     }
   }
@@ -1241,6 +1219,8 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
 
           // 查找存储立即数的寄存器
           InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0));
+          return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
+
           // 生成constant存储立即数的值
           const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
 
@@ -1254,6 +1234,7 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
 
           // 查找存储立即数的寄存器
           InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_value_0));
+          return_asm += InstGen::setValue(src_reg_0,InstGen::Constant(atoi(src_op0->getPrintName().c_str())));
           const InstGen::Reg src_reg_1 = InstGen::Reg(find_register(src_op1,register_str));
           return_asm += register_str;
           register_str = "";
@@ -1308,22 +1289,7 @@ std::string AsmBuilder::generateLoadInst(Instruction *inst) {
     auto &operands = inst->getOperandList();
 
     auto src_op0 = operands.at(0);
-    if (inst->getType()->isIntegerTy()) {
-      variable_list.push_back(src_op0);
-      variable_list.push_back(inst);
-
-      return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      return_asm += update_value_mapping(variable_list);
-      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
-      return_asm += register_str;
-      register_str = "";
-      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-      return_asm += register_str;
-      register_str = "";
-
-      return_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "");
-      return_asm += InstGen::load(target_reg, InstGen::Addr(src_reg0,0));
-    } else { // load fp element
+    if (inst->getType()->isFloatTy()){ // load fp element
       variable_list.push_back(src_op0);
       fp_variable_list.push_back(inst);
 
@@ -1340,6 +1306,21 @@ std::string AsmBuilder::generateLoadInst(Instruction *inst) {
 
       return_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "fp load");
       return_asm += InstGen::vload(target_reg, InstGen::Addr(src_reg0,0));
+    } else {
+      variable_list.push_back(src_op0);
+      variable_list.push_back(inst);
+
+      return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+      return_asm += update_value_mapping(variable_list);
+      const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+      return_asm += register_str;
+      register_str = "";
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      return_asm += register_str;
+      register_str = "";
+
+      return_asm +=  InstGen::comment(target_reg.getName()+" load from "+src_op0->getPrintName().c_str(), "");
+      return_asm += InstGen::load(target_reg, InstGen::Addr(src_reg0,0));
     }
 
     return return_asm;
@@ -1660,8 +1641,23 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         inst_asm += generateFunctionCall(inst,operands,"__aeabi_f2iz", 0); // fptosi
       }
 
+    } else if (inst->isZext()) {
+      variable_list.push_back(inst);
+      auto src_op1 = operands.at(0);
+      variable_list.push_back(src_op1);
+
+      inst_asm += update_value_mapping(variable_list);
+
+      const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+      inst_asm += register_str;
+      register_str = "";
+      inst_asm += InstGen::mov(target_reg, src_reg1);// 
+
     } else {
-      WARNNING("unrealized %s",inst->getPrintName().c_str());
+      ERROR("Code gen unrealize inst ");
     }
 
     if (type_size < 4) {
