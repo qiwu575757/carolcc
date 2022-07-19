@@ -123,7 +123,7 @@ class Runner():
         self.detector = open(error_log+"error.log", "r")
         line_ = 0
         for l in self.detector.readlines():
-            if l.startswith("TOTAL"):
+            if l.startswith("TOTAL") or l.startswith("qemu: Unsupported syscall: 397"):
                 continue
             line_+=1
         self.detector.close()
@@ -131,7 +131,7 @@ class Runner():
         if line_ > 1:
             if self.args.asm:
                 Print_C().print_line("X",color=BOLD)
-                Print_C().print_error("#[CRASH] not generated: in test "+ case)
+                Print_C().print_error("#[CRASH] asm test error "+ case)
                 Print_C().print_line("X",color=BOLD)
 
                 for l in self.detector.readlines():
@@ -411,14 +411,23 @@ class Runner():
             self.compile_one_test(frontend_instr, emit_llvm_ir, testcase)
             ######## 实际程序结束 ##########
             if has_error:
-                Print_C().print_error("passed testcase number is {}".format(len(time_list)))
-                self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
-                error_ir_path = "build/test_results/" + str(testcase) + "/ir/" + self.scheme + ".ir"
-                std_runner = Runner(clang_llvm_scheme['scheme'])
-                std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], testcase)
-                std_ir_path = "build/test_results/" + str(testcase) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
-                Print_C().print_error("std ir path is {}".format(std_ir_path))
-                Print_C().print_error("error ir path is {}".format(error_ir_path))
+                if self.args.asm:
+                    Print_C().print_error("passed testcase number is {}".format(len(time_list)))
+                    self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
+                    self.sy_to_asm(npu_npu_scheme["frontend_instr"], testcase)
+                    error_asm_path = "build/test_results/" + str(testcase) + "/arm_asm/" + self.scheme + ".s"
+                    Print_C().print_error("error asm path is {}".format(error_asm_path))
+                    std_ir_path = "build/test_results/" + str(testcase) + "/ir/" + npu_llvm_scheme['scheme'] + ".ir"
+                    Print_C().print_error("npu ir path is {}".format(std_ir_path))
+                else:
+                    Print_C().print_error("passed testcase number is {}".format(len(time_list)))
+                    self.sy_to_ir(npu_llvm_scheme["frontend_instr"], testcase)
+                    error_ir_path = "build/test_results/" + str(testcase) + "/ir/" + self.scheme + ".ir"
+                    std_runner = Runner(clang_llvm_scheme['scheme'])
+                    std_runner.sy_to_ir(clang_llvm_scheme['frontend_instr'], testcase)
+                    std_ir_path = "build/test_results/" + str(testcase) + "/ir/" + clang_llvm_scheme['scheme'] + ".ir"
+                    Print_C().print_error("std ir path is {}".format(std_ir_path))
+                    Print_C().print_error("error ir path is {}".format(error_ir_path))
 
                 for l in self.error_log_file.readlines():
                     print(l)
