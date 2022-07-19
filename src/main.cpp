@@ -55,8 +55,9 @@ int main(int argc, char **argv) {
             output_file = std::string(argv[i + 1]);
             i++;
         } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            output_file = std::string(argv[i + 1]);
+            is_emit_mir = true;// 需要给标号命名，后期可以改
             is_emit_asm = true;
+            output_file = std::string(argv[i + 1]);
             i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
@@ -120,13 +121,13 @@ int main(int argc, char **argv) {
     }
 
     AsmBuilder asm_builder(builder->getModule(), debug);
-    std::string asm_code = asm_builder.generate_asm(input_file.c_str());
     // std::cout<<"################-asm_code-#################"<<std::endl;
     // std::fflush(0);
     // std::cout<<asm_code;
     // std::cout<<"################-asm_code-#################"<<std::endl;
 
     if (is_emit_asm) {
+        std::string asm_code = asm_builder.generate_asm(input_file.c_str());
         std::string strFileName = "test.s";
         FILE* fs = fopen(strFileName.c_str(), "w+");
         fprintf(output,"%s",asm_code.c_str());
