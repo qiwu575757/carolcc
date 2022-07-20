@@ -37,6 +37,19 @@ const std::set<InstGen::Reg> caller_save_regs = {
 const std::set<InstGen::Reg> callee_save_regs = {
     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6),  InstGen::Reg(7),
     InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10), InstGen::Reg(11)};
+const std::set<InstGen::VFPReg> caller_save_vfpregs = {
+    InstGen::VFPReg(0), InstGen::VFPReg(1), InstGen::VFPReg(2), InstGen::VFPReg(3),
+    InstGen::VFPReg(4), InstGen::VFPReg(5), InstGen::VFPReg(6),  InstGen::VFPReg(7),
+    InstGen::VFPReg(8), InstGen::VFPReg(9), InstGen::VFPReg(10), InstGen::VFPReg(11),
+    InstGen::VFPReg(12), InstGen::VFPReg(13), InstGen::VFPReg(14), InstGen::VFPReg(15)
+    };
+const std::set<InstGen::VFPReg> callee_save_vfpregs = {
+    InstGen::VFPReg(16), InstGen::VFPReg(17), InstGen::VFPReg(18), InstGen::VFPReg(19),
+    InstGen::VFPReg(20), InstGen::VFPReg(21), InstGen::VFPReg(22), InstGen::VFPReg(23),
+    InstGen::VFPReg(24), InstGen::VFPReg(25), InstGen::VFPReg(26), InstGen::VFPReg(27),
+    InstGen::VFPReg(28), InstGen::VFPReg(29), InstGen::VFPReg(30), InstGen::VFPReg(31)
+    };
+
 const std::set<InstGen::Reg> allocate_regs = {
     InstGen::Reg(0), InstGen::Reg(1), InstGen::Reg(2), InstGen::Reg(3),
     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6), InstGen::Reg(7),
@@ -59,13 +72,14 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<Value *, int> register_mapping; // value - id
+  std::map<Value *, int> vfpregister_mapping; // float value - id
   std::map<Value *, int> stack_mapping; // value - offset
   int stack_cur_size=0;
-  std::list<Value *> lru_list;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
-  int stack_size=1024;
-  int return_offset=1020;
+  // int stack_size = 65536;//131072 32768 16384 根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
+  int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
+  int return_offset = stack_size - 4;
   bool debug;
   std::string asm_code;
 
@@ -78,18 +92,19 @@ public:
   int find_register(Value *v);
   int find_register(Value *v,std::string &code);
   void set_register(Value *v,int data,bool init);
-  // std::string swap_register(InstGen::Reg reg_0, InstGen::Reg reg_1);
   std::string generate_asm(std::map<Value *, int> register_mapping);
   std::string generate_asm(std::string file_name);
   std::string generate_module_header(std::string file_name);
   std::string generate_module_tail();
   std::string generate_function_code(Function *func);
   std::string generate_function_entry_code(Function *func);
-  std::string generate_function_exit_code(Function *func);
+  std::string generate_function_exit_code();
 
   /*LRU list update interval by function code; insert ldr str instr*/
-  std::string update_value_mapping(std::list<Value *>update_v);
+  std::string update_value_mapping(std::list<Value *> update_v);
+  std::string update_arg_mapping(Value *arg);
   std::string erase_value_mapping(std::list<Value*>& erase_v);
+  std::string flushRegs2Stack(std::list<Value*> flush_v1, std::list<Value*> flush_v2);
   std::string generateBasicBlockCode(BasicBlock *bb);
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
@@ -102,9 +117,19 @@ public:
   void show_mapping();
   void erase_register_map(Value * v);
   std::string generateOperInst (Instruction *inst);
-  std::string generateFunctionCall(Instruction *inst, std::vector<Value *>operands,
+  std::string generateFunctionCall(Instruction *inst, std::vector<Value *> operands,
           std::string func_name, int return_reg);
-  std::string generateCmpInst(Instruction *inst, Value *imm_0);
+
+// 浮点运算函数
+  std::string generateFPOperInst (Instruction *inst);
+  std::string update_fpvalue_mapping(std::list<Value *> update_v);
+  int find_vfpregister(Value *v,std::string &code);
+  int find_vfpregister(Value *v);
+  std::string generateLoadInst (Instruction *inst);
+  std::string generateStoreInst (Instruction *inst);
+  int float2int(ConstantFloat *val);
+
+
 };
 
 #endif // SRC_ASM_BUILDER_H

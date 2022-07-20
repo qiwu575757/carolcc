@@ -49,9 +49,15 @@ int main(int argc, char **argv) {
     bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
     bool is_debug = false;
+    bool is_emit_asm = false;
     std::string input_file, output_file;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
+            output_file = std::string(argv[i + 1]);
+            i++;
+        } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
+            is_emit_mir = true;// 需要给标号命名，后期可以改
+            is_emit_asm = true;
             output_file = std::string(argv[i + 1]);
             i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
@@ -95,23 +101,17 @@ int main(int argc, char **argv) {
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
 
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
     // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR"); 
+        // PM.add_pass<EmitIR>("EmitIR");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    PM.add_pass<Mem2Reg>("Mem2Reg");
     // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
-
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-
-    PM.add_pass<ConstantFold>("ConstantFold");
      if(is_emit_mir && is_debug)
          PM.add_pass<EmitIR>("EmitIR");
 
@@ -128,17 +128,22 @@ int main(int argc, char **argv) {
         builder->getModule()->MIRMEMprint(output_file);
     }
 
-    //   AsmBuilder asm_builder(builder->getModule(), debug);
-    //   std::string asm_code = asm_builder.generate_asm(input_file.c_str());
-    //   std::cout<<"################-asm_code-#################"<<std::endl;
-    //   std::fflush(0);
-    //   std::cout<<asm_code;
-    //   std::cout<<"################-asm_code-#################"<<std::endl;
+    // std::cout<<"################-asm_code-#################"<<std::endl;
+    // std::fflush(0);
+    // std::cout<<asm_code;
+    // std::cout<<"################-asm_code-#################"<<std::endl;
 
-    //    std::string strFileName = "test.s";
-    //    FILE* fs = fopen(strFileName.c_str(), "w+");
-    //    fprintf(fs,"%s",asm_code.c_str());
-    //    fclose(fs);
+    if (is_emit_asm) {
+        AsmBuilder asm_builder(builder->getModule(), debug);
+        std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+        std::string strFileName = "test.s";
+        FILE* fs = fopen(strFileName.c_str(), "w+");
+        fprintf(output,"%s",asm_code.c_str());
+        fprintf(fs,"%s",asm_code.c_str());
+        fclose(output);
+        fclose(fs);
+    }
 
+    // std::cout<<"ERROR";
     return 0;
 }

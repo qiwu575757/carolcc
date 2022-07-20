@@ -536,7 +536,6 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
         if (node->getType()->getPointerElementType()->isFloatTy() || node->getType()->getPointerElementType()->isIntegerTy()) {
             output_file << " 0";
         } else if(node->getType()->getPointerElementType()->isArrayTy() ) {
-
             node->getType()->getPointerElementType()->print(output_file);
             output_file<<"zeroinitializer";
         }

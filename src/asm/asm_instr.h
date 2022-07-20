@@ -21,6 +21,14 @@ const std::string reg_name[] = {"r0",  "r1", "r2", "r3", "r4",  "r5",
 
 const int max_reg_id = 15;
 
+const std::string vfpreg_name[] = {"s0",  "s1", "s2", "s3", "s4",  "s5", "s6",  "s7",
+                                "s8", "s9", "s10", "s11", "s12",  "s13", "s14",  "s15",
+                                "s16", "s17", "s18", "s19", "s20",  "s21", "s22",  "s23",
+                                "s24", "s25", "s26", "s27",  "s28", "s29",  "s30", "s31"
+                                };
+const int max_vfpreg_id = 31;
+
+
 enum CmpOp {
   EQ, // ==bx
   NE, // !=
@@ -49,9 +57,26 @@ public:
   bool has_shift() const { return false; }
   int getID() const { return this->id; }
   std::string getName() const { return reg_name[id]; }
+  bool is_vfpreg() const { return false; }
   const bool operator<(const Reg &rhs) const { return this->id < rhs.id; }
   const bool operator==(const Reg &rhs) const { return this->id == rhs.id; }
   const bool operator!=(const Reg &rhs) const { return this->id != rhs.id; }
+};
+
+class VFPReg : public Value {// VFP float registers
+  int id;
+
+public:
+  explicit VFPReg(int id) : id(id){};
+  bool is_reg() const { return true; }
+  bool is_constant() const { return false; }
+  bool has_shift() const { return false; }
+  int getID() const { return this->id; }
+  bool is_vfpreg() const { return true; }
+  std::string getName() const { return vfpreg_name[id]; }
+  const bool operator<(const VFPReg &rhs) const { return this->id < rhs.id; }
+  const bool operator==(const VFPReg &rhs) const { return this->id == rhs.id; }
+  const bool operator!=(const VFPReg &rhs) const { return this->id != rhs.id; }
 };
 
 class RegShift : public Value {
@@ -140,6 +165,18 @@ public:
   std::string getName() const { return "#" + std::to_string(this->value); }
 };
 
+class ConstantFP : public Value {
+  int value; // 浮点数转化为的十进制数
+
+public:
+  explicit ConstantFP(float value) : value(value) {}
+  bool is_reg() const { return false; }
+  bool is_constant() const { return true; }
+  bool has_shift() const { return false; }
+  int getValue() const { return this->value; }
+  std::string getName() const { return "#" + std::to_string(this->value); }
+};
+
 class Label {
   std::string label;
   int offset;
@@ -208,8 +245,29 @@ std::string vvmul(const Reg &sum, const Reg &v1, const Reg &v2, const int len);
 std::tuple<int, int, int> choose_multiplier(int d, int N);
 std::string divConst(const Reg &dst, const Reg &src,
                      const Constant &divisor);
-std::string ret(const Value &src);
+std::string ret(const Constant &src);
+std::string ret(const Reg &src);
 
+// float point instructions
+std::string push(const std::vector<VFPReg> &reg_list);
+std::string pop(const std::vector<VFPReg> &reg_list);
+std::string vldr(const VFPReg &dst, const Addr &src);
+std::string vldr(const VFPReg &dst, const Label &src);
+std::string vload(const VFPReg &dst, const Addr &src);
+std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &op = NOP);
+std::string vcmp(const VFPReg &lhs, const VFPReg &rhs);
+std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vsub(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vmul(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vdiv(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
+std::string vmrs();// 将fcmp比较结果置位到CPSR(APSR)
+std::string vstore(const VFPReg &src, const Addr &dst);
+std::string vstr(const VFPReg &src, const Addr &dst);
+std::string vstr(const VFPReg &src, const Label &dst);
+std::string vret(const Constant &src);
+std::string vret(const VFPReg &src);
+std::string setValue(const VFPReg &dst, const ConstantFP &src);
+std::string vcvt(const VFPReg &dst);
 
 }; // namespace InstGen
 

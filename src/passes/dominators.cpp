@@ -7,10 +7,10 @@
 
 #ifdef _DOMINATOR_LOG
 #define DOMINATOR_LOG(format, ...)                                  \
-    do {                                                                             \
+    /*do {                                                                             \
         printf(YELLOW  format RESET , ##__VA_ARGS__); \
         fflush(stdout);                                                              \
-    } while (0)
+    } while (0)*/
 #else
 #define DOMINATOR_LOG(format, ...)
 #endif
