@@ -1249,7 +1249,9 @@ std::string AsmBuilder::generateFPOperInst(Instruction *inst) {
           return_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
           return_asm += update_value_mapping(variable_list);
 
-          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0));
+          InstGen::Reg src_reg_0 = InstGen::Reg(find_register(src_op0, register_str));
+          return_asm += register_str;
+          register_str = "";
 
           // 生成constant存储立即数的值
           const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
