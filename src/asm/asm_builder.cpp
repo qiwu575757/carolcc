@@ -1503,21 +1503,30 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           WARNNING("不太理解 br i1 %1, label %2 形式的跳转指令");
       } else if (operands.size() == 3) {
           auto src_op0 = operands.at(0);
-          variable_list.push_back(src_op0);
-
-          inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-          inst_asm += update_value_mapping(variable_list);
           auto src_op1_id = operands.at(1)->getName();
           auto src_op2_id = operands.at(2)->getName();
 
-          // 根据reg0指令为0还是1判断跳转条件是否成立, 1 ==> 条件成立
-          const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
-          inst_asm += register_str;
-          register_str = "";
-          inst_asm += InstGen::cmp(src_reg0, InstGen::Constant(1));
+          if (src_op0->isConstant()) {
+            if (atoi(src_op0->getPrintName().c_str()) == 1 ) {
+              inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),InstGen::NOP);
+            } else {
+              inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),InstGen::NOP);
+            }
+          } else {
+            variable_list.push_back(src_op0);
 
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),InstGen::EQ);
-          inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),InstGen::NOP);
+            inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
+            inst_asm += update_value_mapping(variable_list);
+
+            // 根据reg0指令为0还是1判断跳转条件是否成立, 1 ==> 条件成立
+            const InstGen::Reg src_reg0 = InstGen::Reg(find_register(src_op0,register_str));
+            inst_asm += register_str;
+            register_str = "";
+            inst_asm += InstGen::cmp(src_reg0, InstGen::Constant(1));
+
+            inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op1_id)),InstGen::EQ);
+            inst_asm += InstGen::b(InstGen::Label(getLabelName(bb_cur,src_op2_id)),InstGen::NOP);
+          }
 
       } else {
         ERROR("TO many args in br instruction");
@@ -1646,18 +1655,29 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else if (inst->isZext()) {
       variable_list.push_back(inst);
       auto src_op1 = operands.at(0);
-      variable_list.push_back(src_op1);
+      if (src_op1->isConstant()) {
+        inst_asm += update_value_mapping(variable_list);
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        if (atoi(src_op1->getPrintName().c_str()) == 1) {// zext i1 1 to i32
+          inst_asm += InstGen::setValue(target_reg,InstGen::Constant(1));
+        } else {
+          inst_asm += InstGen::setValue(target_reg,InstGen::Constant(0));
+        }
+      } else {
+        variable_list.push_back(src_op1);
 
-      inst_asm += update_value_mapping(variable_list);
+        inst_asm += update_value_mapping(variable_list);
 
-      const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
-      inst_asm += register_str;
-      register_str = "";
-      const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
-      inst_asm += register_str;
-      register_str = "";
-      inst_asm += InstGen::mov(target_reg, src_reg1);// i1 使用32位存储，已经完成了0扩展，直接复制即可
-
+        const InstGen::Reg src_reg1 = InstGen::Reg(find_register(src_op1,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
+        inst_asm += register_str;
+        register_str = "";
+        inst_asm += InstGen::mov(target_reg, src_reg1);// i1 使用32位存储，已经完成了0扩展，直接复制即可
+      }
     } else {
       ERROR("Code gen unrealize inst ");
     }
