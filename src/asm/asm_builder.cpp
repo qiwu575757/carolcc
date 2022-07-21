@@ -13,6 +13,12 @@ std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
 }
 std::string AsmBuilder::generate_asm(std::string file_name){
+    // 建立函数名-栈大小映射
+    for(auto &func: this->module->getFunctions()){
+      allocaStackSpace(func);
+      stack_size_mapping[func->getName()] = this->stack_size;
+    }
+
     asm_code += generate_module_header(file_name);
     WARNNING("module header:\n%s",asm_code.c_str());
     for(auto &func: this->module->getFunctions()){
@@ -118,72 +124,14 @@ std::string AsmBuilder::generate_initializer(Constant *init) {
 std::pair<int, bool> AsmBuilder::get_const_val(Value *val) {
   auto const_int_val = dynamic_cast<ConstantInt *>(val);
   auto const_float_val = dynamic_cast<ConstantFloat *>(val);
-  auto inst_val = dynamic_cast<Instruction *>(val);
 
-  if (const_int_val || const_float_val) {
-    if(const_float_val){
-      return std::make_pair(float2int(const_float_val), true);
-    } else{
-      return std::make_pair(const_int_val->getValue(), true);
-    }
-  } else if (inst_val && false) { //  已添加常量折叠优化，无需计算
-    auto op_list = inst_val->getOperandList();
-    if (dynamic_cast<BinaryInst *>(val)) {
-      auto val_0 = AsmBuilder::get_const_val(op_list.at(0));
-      auto val_1 = AsmBuilder::get_const_val(op_list.at(1));
-      if (val_0.second && val_1.second) {
-        int ret = 0;
-        bool flag = true;
-        switch (inst_val->getInstructionKind()) {
-        case Instruction::ADD:
-          ret = val_0.first + val_1.first;
-          break;
-        case Instruction::SUB:
-          ret = val_0.first - val_1.first;
-          break;
-        case Instruction::AND:
-          ret = val_0.first & val_1.first;
-          break;
-        case Instruction::OR :
-          ret = val_0.first | val_1.first;
-          break;
-        case Instruction::MUL:
-          ret = val_0.first * val_1.first;
-          break;
-        case Instruction::DIV:
-          ret = val_0.first / val_1.first;
-          break;
-        case Instruction::REM:
-          ret = val_0.first % val_1.first;
-          break;
-        default:
-          flag = false;
-          break;
-        }
-        return std::make_pair(ret, flag);
-      } else {
-        return std::make_pair(0, false);
-      }
-    }
-    if (dynamic_cast<UnaryInst *>(val)) {
-      auto val_0 = AsmBuilder::get_const_val(op_list.at(0));
-      if (val_0.second) {
-        int ret = 0;
-        bool flag = true;
-        switch (inst_val->getInstructionKind()) {
-        case Instruction::NOT:
-          ret = !val_0.first;
-          break;
-        default:
-          flag = false;
-          break;
-        }
-        return std::make_pair(ret, flag);
-      } else {
-        return std::make_pair(0, false);
-      }
-    }
+  if(const_float_val){
+    return std::make_pair(float2int(const_float_val), true);
+  } else{
+    return std::make_pair(const_int_val->getValue(), true);
   }
+
+  //  已添加常量折叠优化，无需计算
   std::cerr << "Function getConstIntVal exception!" << std::endl;
   abort();
 }
@@ -201,7 +149,12 @@ std::string AsmBuilder::generate_function_code(Function *func){
     stack_mapping.clear();
     register_mapping.clear();
     std::string func_asm;
+
+    allocaStackSpace(func);
     func_asm += func->getName() + ":" + InstGen::newline;
+    func_asm +=
+        InstGen::comment("stack_size=" + std::to_string(this->stack_size), "");
+
     func_asm += generate_function_entry_code(func);
     WARNNING("func entry %s:\n%s",func->getName().c_str(),func_asm.c_str());
 
@@ -236,22 +189,91 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(this->stack_size));
 
-    int offset = 0;
+    int offset = 0, arg_index = 0;
     for(auto arg: func->getArgs()){
-      // func_head_code += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
-      // func_head_code += update_value_mapping({arg});
-      // int v_offset = stack_mapping[arg];
-      // func_head_code += InstGen::comment("load "+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
-      // func_head_code += InstGen::ldr(InstGen::Reg(reg_index),InstGen::Addr(InstGen::sp,v_offset));
-      //register_mapping[arg] = reg_index++;
-
-      // func_head_code += InstGen::ldr(InstGen::Reg(find_register(arg)),InstGen::Addr(InstGen::sp,offset));
+      // if (arg_index <= 3) {
+      //   func_head_code += InstGen::store(InstGen::Reg(arg_index++),InstGen::Addr(InstGen::sp, offset));
+      // }
       //函数参数以及被提前存储在对应位置
       stack_mapping[arg] = offset;
       offset += 4;
       stack_cur_size += 4;
     }
     return func_head_code;
+}
+
+void AsmBuilder::allocaStackSpace(Function *func) {
+    std::string alloca_asm;
+    stack_mapping.clear(); // 清空前一个函数的映射,同时为当前函数增加映射
+    register_mapping.clear();
+    this->stack_size = 0;
+    this->stack_cur_size = 0;
+
+    this->stack_size += 4;//用来存储返回值
+    for (auto &arg : func->getArgs()) { // 参数分配空间
+      bool extended = false;
+      auto sizeof_arg = arg->getType()->getSize(extended);
+      sizeof_arg = ((sizeof_arg + 3) / 4) * 4;
+      MyAssert("error arg",sizeof_arg == 4);
+      if (!register_mapping.count(arg)) { // 这里不清除主要是为了后面换寄存器分配算法
+        // stack_mapping[arg] = this->stack_size;
+        this->stack_size += sizeof_arg;
+      }
+    }
+
+    // non alloca space and non alloca pointer
+    for (auto &bb : func->getBasicBlocks()) {
+      for (auto &inst : bb->getInstructions()) {
+        // if (this->register_mapping.count(inst)) {
+        //   continue;
+        // }
+        // if (this->stack_mapping.count(inst)) {
+        //   continue;
+        // }
+        if (inst->isAlloca() || inst->isGep() || inst->isLoad() || inst->isCall()) {
+          this->stack_size += 4;
+        }
+        bool extended = false;
+        auto sizeof_arg = inst->getType()->getSize(extended);
+        sizeof_arg = ((sizeof_arg + 3) / 4) * 4;
+        if (sizeof_arg > 0) {
+          // this->stack_mapping[inst] = this->stack_size;
+          this->stack_size += sizeof_arg;
+        }
+      }
+    }
+
+    // alloca space
+    for (auto &bb : func->getBasicBlocks()) {
+      for (auto &inst : bb->getInstructions()) {
+        if (!inst->isAlloca()) {
+          continue;
+        }
+        bool extended = true;
+        auto sizeof_arg = inst->getType()->getSize(extended);
+        sizeof_arg = ((sizeof_arg + 3) / 4) * 4;
+        if (sizeof_arg > 0) {
+          // this->stack_mapping[inst] = this->stack_size;
+          this->stack_size += sizeof_arg;
+        }
+      }
+    }
+
+    this->stack_size += 100;//用于栈操作
+    // // 保持16字节对齐
+    this->thread_stack_bits = cache_line_bits;
+    while ((1 << this->thread_stack_bits) < this->stack_size) {
+      this->thread_stack_bits++;
+    }
+    this->thread_stack_size = 1 << this->thread_stack_bits;
+    this->stack_size = this->thread_stack_size;
+
+    // while ((this->stack_size + 100) % 16 != 0 ) {
+    //   this->stack_size += 4;
+    // }
+    this->stack_size -= 100;//用于栈操作
+
+    this->return_offset = this->stack_size - 4;
 }
 
 std::string AsmBuilder::generate_function_exit_code(){
@@ -860,17 +882,21 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
                         "stack offset = "+std::to_string(stack_mapping[arg]));
             MyAssert("error arg", stack_mapping.count(arg) == 1);
 
+            int callee_stack_size = 512;// for 库函数如putint，无需将参数直接传入栈中
+            if (stack_size_mapping.count(func_name)) {
+              callee_stack_size = stack_size_mapping[func_name];
+            }
             if (arg->isConstant()) {// 若参数直接为立即数
               if (arg->getType()->isFloatTy())  {
                 return_asm += InstGen::setValue(InstGen::Reg(reg_index),InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(arg))));
                 return_asm += InstGen::vmov(InstGen::VFPReg(vfpreg_index%16),InstGen::Reg(reg_index));
-                return_asm += InstGen::comment("transfer fp imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index++%16),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                return_asm += InstGen::comment("transfer fp imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(callee_stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index++%16),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-callee_stack_size));
               } else {
                 return_asm += InstGen::setValue(InstGen::Reg(reg_index%11),InstGen::Constant(atoi(arg->getPrintName().c_str())));
-                return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::comment("transfer imm args:",std::to_string(callee_regs_size+1)+" "+std::to_string(callee_stack_size)+" "+std::to_string(offset));
                 // reg_index++用于处理多个int参数的系统函数
-                return_asm += InstGen::store(InstGen::Reg(reg_index++%11),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                return_asm += InstGen::store(InstGen::Reg(reg_index++%11),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-callee_stack_size));
               }
             } else { // 若参数为变量
               if (arg->getType()->isFloatTy()) {
@@ -878,8 +904,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
                 return_asm += InstGen::comment("load fp arg"+(arg)->getPrintName()+" from sp+"+std::to_string(v_offset),"pop val");
                 return_asm += InstGen::vload(InstGen::VFPReg(vfpreg_index%16),InstGen::Addr(InstGen::sp,v_offset));
 
-                return_asm += InstGen::comment("transfer fp val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index++%16),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                return_asm += InstGen::comment("transfer fp val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(callee_stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::vstore(InstGen::VFPReg(vfpreg_index++%16),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-callee_stack_size));
               }else {
                 // update_value_mapping(arg_list);
                 int v_offset = stack_mapping[arg] + caller_regs_size*4;
@@ -887,8 +913,8 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
                 return_asm += InstGen::load(InstGen::Reg(reg_index%11),InstGen::Addr(InstGen::sp,v_offset));
                 // register_mapping[arg] = reg_index++;
                 // update_arg_mapping(arg);
-                return_asm += InstGen::comment("transfer val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(stack_size)+" "+std::to_string(offset));
-                return_asm += InstGen::store(InstGen::Reg(reg_index++%11),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-stack_size));
+                return_asm += InstGen::comment("transfer val args:",std::to_string(callee_regs_size+1)+" "+std::to_string(callee_stack_size)+" "+std::to_string(offset));
+                return_asm += InstGen::store(InstGen::Reg(reg_index++%11),InstGen::Addr(InstGen::sp,offset-(callee_regs_size+1)*4-callee_stack_size));
               }
             }
             offset += 4;
