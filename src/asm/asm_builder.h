@@ -68,6 +68,9 @@ const int thread_id_reg = 10;
 
 const int clone_flag = CLONE_VM | SIGCHLD;
 
+const int int_reg_number = 11;
+const int float_reg_number = 32;
+
 typedef struct interval{
     int st_id;
     int ed_id;
@@ -147,7 +150,11 @@ public:
   int float2int(ConstantFloat *val);
   // LSRA
   std::vector<interval> live_interval_analysis(Function *func);
-
+  void linear_scan_reg_alloc(std::vector<interval> live_range);
+  bool value_in_reg(Value *v);
+  int int_reg_number_of_value(Value *inst,Value *v);
+  std::vector<interval> virtual_int_regs[50];//虚拟寄存器
+  std::map<Value *,int > linear_map;
 };
 
 #endif // SRC_ASM_BUILDER_H

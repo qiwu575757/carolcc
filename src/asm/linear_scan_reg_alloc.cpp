@@ -13,8 +13,31 @@ bool cmp(interval lhs,interval rhs)//升序
 {
 	return lhs.weight>rhs.weight;
 }
+bool AsmBuilder::value_in_reg(Value *v){ //计算栈空间
+    for(int i=0;i<int_reg_number;i++){
+        for(int j=0;j<virtual_int_regs[i].size();j++){
+            if(virtual_int_regs[i][j].v == v){
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
-void linear_scan_reg_alloc(std::vector<interval> live_range,int reg_allowed_num){
+int AsmBuilder::int_reg_number_of_value(Value *inst,Value *v){
+    int tag = linear_map[inst];
+    for(int i=0;i<int_reg_number;i++){
+        for(int j=0;j<virtual_int_regs[i].size();j++){
+            if(virtual_int_regs[i][j].v == v && tag <= virtual_int_regs[i][j].st_id &&  tag >= virtual_int_regs[i][j].ed_id){
+                return i;
+            }
+        }
+    }
+    ERROR("cant find int value in reg alloc!");
+    return -1;
+}
+
+void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range){
     //cal weight
     for (auto &p : live_range) {
         int total_use_num = p.use_id.size();
@@ -22,57 +45,58 @@ void linear_scan_reg_alloc(std::vector<interval> live_range,int reg_allowed_num)
         p.use_freq = (total_use_num+1e-4)/(sum_range + 1e-4);
         p.weight = sum_range; // 暂时考虑按这个
     }
- 
+    for(int i=0;i<int_reg_number;i++){
+        virtual_int_regs[i].clear();
+    }
     // sort by weight
     std::sort(live_range.begin(),live_range.end(),cmp);
 
-    std::vector<interval> regs[reg_allowed_num];
     for(auto &itv : live_range){
-        for(int i=0;i<reg_allowed_num;i++){
+        for(int i=0;i<int_reg_number;i++){
             bool conflict = false;
             int index = 0;
-            for(int j=0;j<regs[i].size();j++){
+            for(int j=0;j<virtual_int_regs[i].size();j++){
                 conflict = true;
-                if(regs[i][j].ed_id<itv.st_id && j == regs[i].size()-1){ // j 在 itv 前面 并且是最后一个
+                if(virtual_int_regs[i][j].ed_id<itv.st_id && j == virtual_int_regs[i].size()-1){ // j 在 itv 前面 并且是最后一个
                     conflict = false;
                     index = j+1;
                     break;
                 } 
-                else if(regs[i][j].st_id > itv.ed_id && j == 0){ // j 在 itv 后面 并且是第一个
+                else if(virtual_int_regs[i][j].st_id > itv.ed_id && j == 0){ // j 在 itv 后面 并且是第一个
                     conflict = false;
                     index = j;
                     break;
                 }
-                else if(j != regs[i].size()-1 && regs[i][j+1].st_id > itv.ed_id && regs[i][j].ed_id<itv.st_id){ // j 在 itv 后面 并且是第一个
+                else if(j != virtual_int_regs[i].size()-1 && virtual_int_regs[i][j+1].st_id > itv.ed_id && virtual_int_regs[i][j].ed_id<itv.st_id){ // j 在 itv 后面 并且是第一个
                     conflict = false;
                     index = j+1;
                     break;
                 }  
             }
             if(!conflict){
-                regs[i].insert(regs[i].begin()+index,itv);
+                virtual_int_regs[i].insert(virtual_int_regs[i].begin()+index,itv);
                 break;
             }
         }
     }
     LSRA_WARNNING(" LSRA REG ALLOC");
     // debug
-    for(int i=0;i<reg_allowed_num;i++){
-        for(int j=0;j<regs[i].size();j++){
-            LSRA_WARNNING("[reg %d] [%d,%d] v:%s w:%lf",i,regs[i][j].st_id,regs[i][j].ed_id,regs[i][j].v->getPrintName().c_str(),regs[i][j].weight);
+    for(int i=0;i<int_reg_number;i++){
+        for(int j=0;j<virtual_int_regs[i].size();j++){
+            LSRA_WARNNING("[reg %d] [%d,%d] v:%s w:%lf",i,virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,virtual_int_regs[i][j].v->getPrintName().c_str(),virtual_int_regs[i][j].weight);
         }
     }
     LSRA_SHOW("-- [reg alloc graph] --\n");
-    for(int i=0;i<reg_allowed_num;i++){
+    for(int i=0;i<int_reg_number;i++){
         int t=0;
-        if(regs[i].size()==0)continue;
+        if(virtual_int_regs[i].size()==0)continue;
         LSRA_SHOW("[reg %02d] ",i);
-        for(int j=0;j<regs[i].size();j++){
-            while(t<regs[i][j].st_id){
+        for(int j=0;j<virtual_int_regs[i].size();j++){
+            while(t<virtual_int_regs[i][j].st_id){
                 LSRA_SHOW(" ");
                 t++;
             }
-            while(t<=regs[i][j].ed_id){
+            while(t<=virtual_int_regs[i][j].ed_id){
                 LSRA_SHOW("#");
                 t++;
             }
@@ -88,7 +112,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
     std::map<Value *,interval>  live_map;
     std::map<BasicBlock *, std::set<Value *>> live_in, live_out;
     std::set<Value *> values;
-    std::map<Value *,int > linear_map;
+    linear_map.clear();
     std::map<BasicBlock *,int > bb_map;
     std::vector<interval> loop_set;
     std::vector<interval>  live_res;// 对于结果进行后处理
@@ -180,12 +204,10 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
                     live_map[op].use_id.insert(linear_map[inst]);
                 }
             }
-            
         }
     }
     // 如果有一个变量，在循环外侧被定义，但在循环内被使用，则将它的生命周期选为循环下界和它自身右界的最大值
     
-
     //对于结果后处理全局变量立即数处理
     for (auto &p : live_map) {
         if(p.second.def){
@@ -212,7 +234,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
     // for (auto &p : live_res) {
     //     LSRA_WARNNING(" %%%s [%d,%d] def?%d",p.v->getName().c_str(),p.st_id,p.ed_id,p.def);
     // }
-    linear_scan_reg_alloc(live_res,25);
+    linear_scan_reg_alloc(live_res);
     return live_res;
 }
 
