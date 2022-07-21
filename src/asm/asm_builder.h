@@ -68,6 +68,16 @@ const int thread_id_reg = 10;
 
 const int clone_flag = CLONE_VM | SIGCHLD;
 
+typedef struct interval{
+    int st_id;
+    int ed_id;
+    bool def=false;
+    std::set<int>use_id;
+    Value *v;
+    float use_freq;
+    float weight;
+};
+
 class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
@@ -128,7 +138,8 @@ public:
   std::string generateLoadInst (Instruction *inst);
   std::string generateStoreInst (Instruction *inst);
   int float2int(ConstantFloat *val);
-
+  // LSRA
+  std::vector<interval> live_interval_analysis(Function *func);
 
 };
 

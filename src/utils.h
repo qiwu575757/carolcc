@@ -18,7 +18,9 @@
 #define __ASSERT
 
 #define __DEBUG
-//#define __WARN
+#define __LSRA_WARN
+#define __LSRA_SHOW
+// #define __WARN
 //#define __TRACE
 //#define __INFO
 
@@ -55,6 +57,26 @@
 #define WARNNING(format, ...)
 #endif
 
+
+#ifdef __LSRA_WARN
+#define LSRA_WARNNING(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW "[LSRA:%d]" format RESET "\n", __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define LSRA_WARNNING(format, ...)
+#endif
+
+#ifdef __LSRA_SHOW
+#define LSRA_SHOW(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW  format RESET , ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define LSRA_SHOW(format, ...)
+#endif
 
 #ifdef __INFO
 #define INFO(format, ...)                                                            \

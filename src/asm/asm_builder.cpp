@@ -18,6 +18,7 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     for(auto &func: this->module->getFunctions()){
         if(func->getBasicBlocks().size() != 0){
             WARNNING("coding func %s ...",func->getName().c_str());
+            live_interval_analysis(func);
             asm_code += generate_function_code(func);
             WARNNING("func %s:\n%s",func->getName().c_str(),asm_code.c_str());
         }
@@ -199,7 +200,6 @@ std::string AsmBuilder::generate_function_code(Function *func){
     stack_cur_size = 0;
     stack_mapping.clear();
     register_mapping.clear();
-
     std::string func_asm;
     func_asm += func->getName() + ":" + InstGen::newline;
     func_asm += generate_function_entry_code(func);
