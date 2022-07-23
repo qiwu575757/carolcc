@@ -16,6 +16,7 @@ public:
         : User(ty, name, num_ops) {}
     // virtual void print() override;
     void accept(IrVisitorBase *v) override;
+    bool isZero();
 };
 
 class ConstantInt : public Constant {

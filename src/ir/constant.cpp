@@ -142,3 +142,16 @@ void Constant::accept(IrVisitorBase *v) {
 void GlobalValue::accept(IrVisitorBase *v) {
     v->visit(this);
 }
+bool Constant::isZero() {
+    if(this->isConstant()){
+        auto float_val = dynamic_cast<ConstantFloat*>(this);
+        if(float_val!=nullptr && float_val->getValue()==0){
+            return true;
+        }
+        auto int_val = dynamic_cast<ConstantInt*>(this);
+        if(int_val!=nullptr && int_val->getValue()== 0){
+            return true;
+        }
+    }
+    return false;
+}

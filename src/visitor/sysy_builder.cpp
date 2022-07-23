@@ -481,10 +481,18 @@ void SYSYBuilder::visit(tree_const_def &node) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0), CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
+                    if(G_array_init[i]->isConstant()){
+                        auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
+                        if(constant_val->isZero()){
+                            continue;
+                        }
+                    }
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
+                        G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());
                         builder->createStore(G_array_init[i], p);
                     } else {
+                        G_array_init[i] = checkAndCast(G_array_init[i],ptr->getType()->getPointerElementType());
                         builder->createStore(G_array_init[i], ptr);
                     }
                 }
@@ -550,6 +558,13 @@ void SYSYBuilder::visit(tree_var_def &node) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0), CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
+                    // zero_jump
+                    // if(G_array_init[i]->isConstant()){
+                    //     auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
+                    //     if(constant_val->isZero()){
+                    //         continue;
+                    //     }
+                    // }
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
                         G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());
