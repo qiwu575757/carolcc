@@ -88,7 +88,7 @@ private:
   std::map<Value *, int> vfpregister_mapping; // float value - id
   std::map<Value *, int> stack_mapping; // value - offset
   std::map<std::string, int> stack_size_mapping;// func_name - size
-  
+
   int stack_cur_size = 0;
   int thread_stack_bits;
   int thread_stack_size;
@@ -152,9 +152,11 @@ public:
   std::vector<interval> live_interval_analysis(Function *func);
   void linear_scan_reg_alloc(std::vector<interval> live_range);
   bool value_in_reg(Value *v);
-  int int_reg_number_of_value(Value *inst,Value *v);
+  int getRegIndexOfValue(Value *inst,Value *v);
+  std::pair<int, bool> askForReg(Instruction *inst);
   std::vector<interval> virtual_int_regs[50];//虚拟寄存器
   std::map<Value *,int > linear_map;
+  
 };
 
 #endif // SRC_ASM_BUILDER_H
