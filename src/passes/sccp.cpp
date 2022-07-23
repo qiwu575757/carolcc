@@ -384,6 +384,7 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
     } else if (instr->isPhi()) {
         int certain_pre_number = 0;
         Constant *a_val = nullptr;
+        bool is_different_val_same = true;
         for (int i = 0; i < instr->getOperandNumber(); i = i + 2) {
             auto pre_val = instr->getOperand(i);
             auto pre_bb = dynamic_cast<BasicBlock *>(instr->getOperand(i + 1));
@@ -412,12 +413,13 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                             isValueHasDefiniteValue(instr))
                             _value_work_list.push_back(instr);
                         _instr_assign_table[instr] = &uncertainValue;
+                        is_different_val_same=false;
                         break;
                     }
                 }
             }
         }
-        if (certain_pre_number == 1) {
+        if (certain_pre_number == 1 || (certain_pre_number > 1 && is_different_val_same)) {
             if (isValueNeverAssigned(instr)) {
                 _value_work_list.push_back(instr);
                 MyAssert("a_val is not a constant", a_val->isConstant());
@@ -556,6 +558,7 @@ void SCCP::replaceConstant(Function *f) {
         auto key_instr = dynamic_cast<Instruction *>(vv.first);
         auto val_instr = vv.second;
         if (key_instr && isValueHasDefiniteValue(key_instr)) {
+            SCCP_LOG("replacing instr(%s)",key_instr->getPrintName().c_str());
             key_instr->replaceAllUse(val_instr);
             key_instr->removeUseOps();
             if (key_instr->getParent() == nullptr) {
