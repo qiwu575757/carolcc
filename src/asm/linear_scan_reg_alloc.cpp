@@ -13,6 +13,7 @@ bool cmp(interval lhs,interval rhs)//升序
 {
 	return lhs.weight>rhs.weight;
 }
+
 bool AsmBuilder::value_in_reg(Value *v){ //计算栈空间
     for(int i=0;i<int_reg_number;i++){
         for(int j=0;j<virtual_int_regs[i].size();j++){
@@ -24,11 +25,12 @@ bool AsmBuilder::value_in_reg(Value *v){ //计算栈空间
     return false;
 }
 
-int AsmBuilder::int_reg_number_of_value(Value *inst,Value *v){
+int AsmBuilder::getRegIndexOfValue(Value *inst,Value *v){
     int tag = linear_map[inst];
+    LSRA_WARNNING("inst %d",tag);
     for(int i=0;i<int_reg_number;i++){
         for(int j=0;j<virtual_int_regs[i].size();j++){
-            if(virtual_int_regs[i][j].v == v && tag <= virtual_int_regs[i][j].st_id &&  tag >= virtual_int_regs[i][j].ed_id){
+            if(virtual_int_regs[i][j].v == v && tag >= virtual_int_regs[i][j].st_id &&  tag <= virtual_int_regs[i][j].ed_id){
                 return i;
             }
         }
@@ -49,7 +51,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range){
         virtual_int_regs[i].clear();
     }
     // sort by weight
-    std::sort(live_range.begin(),live_range.end(),cmp);
+    std:LSRA:sort(live_range.begin(),live_range.end(),cmp);
 
     for(auto &itv : live_range){
         for(int i=0;i<int_reg_number;i++){
@@ -61,7 +63,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range){
                     conflict = false;
                     index = j+1;
                     break;
-                } 
+                }
                 else if(virtual_int_regs[i][j].st_id > itv.ed_id && j == 0){ // j 在 itv 后面 并且是第一个
                     conflict = false;
                     index = j;
@@ -71,7 +73,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range){
                     conflict = false;
                     index = j+1;
                     break;
-                }  
+                }
             }
             if(!conflict){
                 virtual_int_regs[i].insert(virtual_int_regs[i].begin()+index,itv);
@@ -146,8 +148,8 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
     for (auto &bb : func->getBasicBlocks()) {
         for(auto &pb : bb->getPreBasicBlocks()){
             if(bb_map[pb]>=bb_map[bb]){
-                // LSRA_WARNNING(" LOOP BLOCK CHECK: bb %d -- bb %d",bb_map[bb],bb_map[pb]);
-                // LSRA_WARNNING(" LOOP CHECK: from %d to %d",linear_map[bb->getInstructions().front()],linear_map[pb->getInstructions().back()]);
+                LSRA_WARNNING(" LOOP BLOCK CHECK: bb %d -- bb %d",bb_map[bb],bb_map[pb]);
+                LSRA_WARNNING(" LOOP CHECK: from %d to %d",linear_map[bb->getInstructions().front()],linear_map[pb->getInstructions().back()]);
                 interval itv;
                 itv.st_id = linear_map[bb->getInstructions().front()];
                 itv.ed_id = linear_map[pb->getInstructions().back()];
@@ -207,7 +209,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
         }
     }
     // 如果有一个变量，在循环外侧被定义，但在循环内被使用，则将它的生命周期选为循环下界和它自身右界的最大值
-    
+
     //对于结果后处理全局变量立即数处理
     for (auto &p : live_map) {
         if(p.second.def){
@@ -237,4 +239,3 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
     linear_scan_reg_alloc(live_res);
     return live_res;
 }
-
