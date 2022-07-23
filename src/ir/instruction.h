@@ -40,7 +40,9 @@ class Instruction : public User {
         ALLOCA,
         LOAD,
         STORE,
-
+        //
+        STORE_OFFSET,
+        LOAD_OFFSET,
         // other instructions
         CMP,
         PHI,
@@ -220,6 +222,24 @@ class StoreInst : public Instruction {
     Value *getLVal() { return getOperand(1); }
     Value *getRVal() { return getOperand(0); }
 };
+// DYB DEFINE
+class StoreOffset : public Instruction {
+   private:
+    StoreOffset(Value *value,int offset, BasicBlock *parent);
+   public:
+    int offset;
+    static StoreOffset *createStoreOffset(Value *value,int offset, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+};
+class LoadOffset : public Instruction {
+   private:
+    LoadOffset(Value *value,int offset, BasicBlock *parent);
+   public:
+    int offset;
+    static LoadOffset *createLoadOffset(Value *value,int offset, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+};
+//
 class LoadInst : public Instruction {
    private:
     LoadInst(Value *ptr, BasicBlock *parent);

@@ -31,31 +31,31 @@ const int op_reg_0 = 12;
 const int op_reg_1 = 14; // lr
 const int op_reg_2 = vinst_temp_reg.getID();
 
-const std::set<InstGen::Reg> caller_save_regs = {
-    InstGen::Reg(0), InstGen::Reg(1),  InstGen::Reg(2),
-    InstGen::Reg(3), InstGen::Reg(12), InstGen::Reg(14)};
-const std::set<InstGen::Reg> callee_save_regs = {
-    InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6),  InstGen::Reg(7),
-    InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10), InstGen::Reg(11)};
-const std::set<InstGen::VFPReg> caller_save_vfpregs = {
-    InstGen::VFPReg(0), InstGen::VFPReg(1), InstGen::VFPReg(2), InstGen::VFPReg(3),
-    InstGen::VFPReg(4), InstGen::VFPReg(5), InstGen::VFPReg(6),  InstGen::VFPReg(7),
-    InstGen::VFPReg(8), InstGen::VFPReg(9), InstGen::VFPReg(10), InstGen::VFPReg(11),
-    InstGen::VFPReg(12), InstGen::VFPReg(13), InstGen::VFPReg(14), InstGen::VFPReg(15)
-    };
-const std::set<InstGen::VFPReg> callee_save_vfpregs = {
-    InstGen::VFPReg(16), InstGen::VFPReg(17), InstGen::VFPReg(18), InstGen::VFPReg(19),
-    InstGen::VFPReg(20), InstGen::VFPReg(21), InstGen::VFPReg(22), InstGen::VFPReg(23),
-    InstGen::VFPReg(24), InstGen::VFPReg(25), InstGen::VFPReg(26), InstGen::VFPReg(27),
-    InstGen::VFPReg(28), InstGen::VFPReg(29), InstGen::VFPReg(30), InstGen::VFPReg(31)
-    };
+// const std::set<InstGen::Reg> caller_save_regs = {
+//     InstGen::Reg(0), InstGen::Reg(1),  InstGen::Reg(2),
+//     InstGen::Reg(3), InstGen::Reg(12), InstGen::Reg(14)};
+// const std::set<InstGen::Reg> callee_save_regs = {
+//     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6),  InstGen::Reg(7),
+//     InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10), InstGen::Reg(11)};
+// const std::set<InstGen::VFPReg> caller_save_vfpregs = {
+//     InstGen::VFPReg(0), InstGen::VFPReg(1), InstGen::VFPReg(2), InstGen::VFPReg(3),
+//     InstGen::VFPReg(4), InstGen::VFPReg(5), InstGen::VFPReg(6),  InstGen::VFPReg(7),
+//     InstGen::VFPReg(8), InstGen::VFPReg(9), InstGen::VFPReg(10), InstGen::VFPReg(11),
+//     InstGen::VFPReg(12), InstGen::VFPReg(13), InstGen::VFPReg(14), InstGen::VFPReg(15)
+//     };
+// const std::set<InstGen::VFPReg> callee_save_vfpregs = {
+//     InstGen::VFPReg(16), InstGen::VFPReg(17), InstGen::VFPReg(18), InstGen::VFPReg(19),
+//     InstGen::VFPReg(20), InstGen::VFPReg(21), InstGen::VFPReg(22), InstGen::VFPReg(23),
+//     InstGen::VFPReg(24), InstGen::VFPReg(25), InstGen::VFPReg(26), InstGen::VFPReg(27),
+//     InstGen::VFPReg(28), InstGen::VFPReg(29), InstGen::VFPReg(30), InstGen::VFPReg(31)
+//     };
 
-const std::set<InstGen::Reg> allocate_regs = {
-    InstGen::Reg(0), InstGen::Reg(1), InstGen::Reg(2), InstGen::Reg(3),
-    InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6), InstGen::Reg(7),
-    InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10)};
-const std::set<InstGen::Reg> temp_regs = {
-    InstGen::Reg(op_reg_0), InstGen::Reg(op_reg_1), InstGen::Reg(op_reg_2)};
+// const std::set<InstGen::Reg> allocate_regs = {
+//     InstGen::Reg(0), InstGen::Reg(1), InstGen::Reg(2), InstGen::Reg(3),
+//     InstGen::Reg(4), InstGen::Reg(5), InstGen::Reg(6), InstGen::Reg(7),
+//     InstGen::Reg(8), InstGen::Reg(9), InstGen::Reg(10)};
+// const std::set<InstGen::Reg> temp_regs = {
+//     InstGen::Reg(op_reg_0), InstGen::Reg(op_reg_1), InstGen::Reg(op_reg_2)};
 
 const int cache_line_bits = 7;
 const int cache_line_size = 1 << cache_line_bits;
@@ -71,14 +71,29 @@ const int clone_flag = CLONE_VM | SIGCHLD;
 const int int_reg_number = 11;
 const int float_reg_number = 32;
 
+enum interval_value_type{
+  int_local_var,
+  int_global_var,
+  int_global_var_label,
+  int_imm_var,
+  int_arg_var,
+  int_spill_var,
+};
+
 typedef struct interval{
     int st_id;
     int ed_id;
     bool def=false;
+    bool spilled;
+    bool is_allocated=false;
+    bool is_data=false;
     std::set<int>use_id;
     Value *v;
     float use_freq;
     float weight;
+    interval_value_type type;
+    int specific_reg_idx;
+    int offset;
 };
 
 class AsmBuilder {
@@ -87,7 +102,7 @@ private:
   std::map<Value *, int> register_mapping; // value - id
   std::map<Value *, int> vfpregister_mapping; // float value - id
   std::map<Value *, int> stack_mapping; // value - offset
-  std::map<std::string, int> stack_size_mapping;// func_name - size
+  std::map<std::string, int> stintervalack_size_mapping;// func_name - size
 
   int stack_cur_size = 0;
   int thread_stack_bits;
@@ -97,7 +112,6 @@ private:
   // int stack_size = 65536;//131072 32768 16384 根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
   // int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
   int stack_size;
-  int return_offset;
   bool debug;
   std::string asm_code;
 
@@ -150,13 +164,22 @@ public:
   int float2int(ConstantFloat *val);
   // LSRA
   std::vector<interval> live_interval_analysis(Function *func);
-  void linear_scan_reg_alloc(std::vector<interval> live_range);
+  void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func);
   bool value_in_reg(Value *v);
   int getRegIndexOfValue(Value *inst,Value *v);
-  std::pair<int, bool> askForReg(Instruction *inst);
-  std::vector<interval> virtual_int_regs[50];//虚拟寄存器
-  std::map<Value *,int > linear_map;
+  bool force_reg_alloc(interval itv,int reg_idx);
+  bool op_in_inst_is_spilled(Value *inst,Value *op);
+  int give_int_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
+  Value * value_in_int_reg_at(Value *inst,int reg_idx);
+  int get_int_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
+
+  std::vector<interval> virtual_int_regs[500];//虚拟寄存器
+  std::vector<interval> stack_map;//args spill alloc return
+  std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
+  std::map<Value *,int > linear_map;//指令列表
   
+  int op_save[4];// 栈溢出时的保存寄存器
+  int return_offset;//返回地址
 };
 
-#endif // SRC_ASM_BUILDER_H
+#endif // SRC_ASM_BUILDER_H;
