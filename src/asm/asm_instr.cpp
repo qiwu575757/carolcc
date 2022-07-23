@@ -1,4 +1,5 @@
 #include "asm_instr.h"
+#include "asm_builder.h"
 
 #include <cmath>
 #include <tuple>
@@ -35,76 +36,85 @@ std::string condCode(const CmpOp &cond) {
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
   bool flag = false;
-  asm_instr += spaces;
-  asm_instr += "push";
-  asm_instr += " ";
-  asm_instr += "{";
-  for (auto &i : reg_list) {
-    if (flag) {
-      asm_instr += ", ";
-    }
-    asm_instr += i.getName();
-    flag = true;
-  }
-  asm_instr += "}";
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string push(const std::vector<VFPReg> &reg_list) {
-  std::string asm_instr;
-  bool flag = false;
+  int total_push = 0;
   asm_instr += spaces;
   asm_instr += "vpush";
   asm_instr += " ";
   asm_instr += "{";
   for (auto &i : reg_list) {
-    if (flag) {
-      asm_instr += ", ";
+    if (i.is_fp()) {
+      if (flag) {
+        asm_instr += ", ";
+      }
+      asm_instr += i.getName();
+      flag = true;
+      total_push++;
     }
-    asm_instr += i.getName();
-    flag = true;
   }
   asm_instr += "}";
   asm_instr += newline;
+  if (total_push < reg_list.size()) {
+    bool flag = false;
+    asm_instr += spaces;
+    asm_instr += "push";
+    asm_instr += " ";
+    asm_instr += "{";
+    for (auto &i : reg_list) {
+      if (!i.is_fp()) {
+        if (flag) {
+          asm_instr += ", ";
+        }
+        asm_instr += i.getName();
+        flag = true;
+      }
+    }
+    asm_instr += "}";
+    asm_instr += newline;
+  }
+
   return asm_instr;
 }
 
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
   bool flag = false;
+  int total_pop = 0;
   asm_instr += spaces;
   asm_instr += "pop";
   asm_instr += " ";
   asm_instr += "{";
   for (auto &i : reg_list) {
-    if (flag) {
-      asm_instr += ", ";
+    if (!i.is_fp()) {
+      if (flag) {
+        asm_instr += ", ";
+      }
+      asm_instr += i.getName();
+      flag = true;
+      total_pop++;
     }
-    asm_instr += i.getName();
-    flag = true;
   }
   asm_instr += "}";
   asm_instr += newline;
-  return asm_instr;
-}
 
-std::string pop(const std::vector<VFPReg> &reg_list) {
-  std::string asm_instr;
-  bool flag = false;
-  asm_instr += spaces;
-  asm_instr += "vpop";
-  asm_instr += " ";
-  asm_instr += "{";
-  for (auto &i : reg_list) {
-    if (flag) {
-      asm_instr += ", ";
+  if (total_pop < reg_list.size()) {
+    bool flag = false;
+    asm_instr += spaces;
+    asm_instr += "vpop";
+    asm_instr += " ";
+    asm_instr += "{";
+    for (auto &i : reg_list) {
+      if (i.is_fp()) {
+        if (flag) {
+          asm_instr += ", ";
+        }
+        asm_instr += i.getName();
+        flag = true;
+      }
     }
-    asm_instr += i.getName();
-    flag = true;
+    asm_instr += "}";
+    asm_instr += newline;
   }
-  asm_instr += "}";
-  asm_instr += newline;
+
   return asm_instr;
 }
 
@@ -114,7 +124,10 @@ std::string mov(const Reg &dst, const Value &src, const CmpOp &cond) {
     return asm_instr;
   }
   asm_instr += spaces;
-  asm_instr += "mov";
+  if (dst.is_fp())
+    asm_instr += "vmov.f32";
+  else
+    asm_instr += "mov";
   asm_instr += condCode(cond);
   asm_instr += " ";
   asm_instr += dst.getName();
@@ -124,28 +137,9 @@ std::string mov(const Reg &dst, const Value &src, const CmpOp &cond) {
   return asm_instr;
 }
 
-// 没有考虑立即数的范围
-std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &cond) {
+std::string vcvt(const Reg &dst) {
   std::string asm_instr;
-  if (src.is_reg() && dst.getName() == src.getName()) {
-    return asm_instr;
-  }
-  asm_instr += spaces;
-  asm_instr += "vmov.f32";
-  asm_instr += condCode(cond);
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += src.getName();
-  asm_instr += newline;
-
-  // notice
-  // asm_instr += vcvt(dst);
-  return asm_instr;
-}
-
-std::string vcvt(const VFPReg &dst) {
-  std::string asm_instr;
+  MyAssert("Use vcvt error", dst.is_fp());
 
   asm_instr += spaces;
   asm_instr += "vcvt.f32.s32";
@@ -179,42 +173,15 @@ std::string comment(std::string str1, std::string str2) {
   asm_instr += newline;
   return asm_instr;
 }
+
 std::string setValue(const Reg &dst, const Constant &src) {
   std::string asm_instr;
   auto val = src.getValue();
   if (0 <= val && val <= imm_16_max) {
-    asm_instr += mov(dst, Constant(val));
+    asm_instr += mov(dst, Constant(val, false));
   } else if (-imm_8_max <= val && val <= 0) {
-    asm_instr += mvn(dst, Constant(-val - 1));
+    asm_instr += mvn(dst, Constant(-val - 1, false));
   } else {
-    uint32_t imm = src.getValue();
-    uint32_t imm_low = imm & ((1 << 16) - 1);
-    uint32_t imm_high = imm >> 16;
-    asm_instr += spaces;
-    asm_instr += "movw";
-    asm_instr += " ";
-    asm_instr += dst.getName();
-    asm_instr += ", ";
-    asm_instr += "#" + std::to_string(imm_low);
-    asm_instr += newline;
-    asm_instr += spaces;
-    asm_instr += "movt";
-    asm_instr += " ";
-    asm_instr += dst.getName();
-    asm_instr += ", ";
-    asm_instr += "#" + std::to_string(imm_high);
-    asm_instr += newline;
-  }
-  return asm_instr;
-}
-
-// 一般做法是vldr.32	s0, .L4
-std::string setValue(const VFPReg &dst, const ConstantFP &src) {
-  std::string asm_instr;
-  auto val = src.getValue();
-  if (0 <= val && val <= imm_16_max) {
-    asm_instr += vmov(dst, Constant(val));
-  }  else {
     uint32_t imm = src.getValue();
     uint32_t imm_low = imm & ((1 << 16) - 1);
     uint32_t imm_high = imm >> 16;
@@ -251,19 +218,11 @@ std::string getAddress(const Reg &dst, const Label &src) {
 std::string ldr(const Reg &dst, const Addr &src) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "ldr";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += src.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vldr(const VFPReg &dst, const Addr &src) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vldr.32";
+  if (dst.is_fp()) {
+    asm_instr += "vldr.32";
+  } else {
+    asm_instr += "ldr";
+  }
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -284,20 +243,8 @@ std::string ldr(const Reg &dst, const Label &src) {
   return asm_instr;
 }
 
-std::string vldr(const VFPReg &dst, const Label &src) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vldr.32";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += src.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
 std::string ldr(const Reg &dst, const Reg &base, const Reg &offset) {
-  return ldr(dst, base, offset, Constant(0));
+  return ldr(dst, base, offset, Constant(0, false));
 }
 
 std::string ldr(const Reg &dst, const Reg &base, const Reg &offset,
@@ -325,19 +272,11 @@ std::string ldr(const Reg &dst, const Reg &base, const Reg &offset,
 std::string str(const Reg &src, const Addr &dst) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "str";
-  asm_instr += " ";
-  asm_instr += src.getName();
-  asm_instr += ", ";
-  asm_instr += dst.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vstr(const VFPReg &src, const Addr &dst) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vstr.32";
+  if (src.is_fp()) {
+    asm_instr += "vstr.32";
+  } else {
+    asm_instr += "str";
+  }
   asm_instr += " ";
   asm_instr += src.getName();
   asm_instr += ", ";
@@ -349,19 +288,11 @@ std::string vstr(const VFPReg &src, const Addr &dst) {
 std::string str(const Reg &src, const Label &dst) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "str";
-  asm_instr += " ";
-  asm_instr += src.getName();
-  asm_instr += ", ";
-  asm_instr += dst.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vstr(const VFPReg &src, const Label &dst) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vstr.32";
+  if (src.is_fp()) {
+    asm_instr += "vstr.32";
+  } else {
+    asm_instr += "str";
+  }
   asm_instr += " ";
   asm_instr += src.getName();
   asm_instr += ", ";
@@ -371,7 +302,7 @@ std::string vstr(const VFPReg &src, const Label &dst) {
 }
 
 std::string str(const Reg &dst, const Reg &base, const Reg &offset) {
-  return str(dst, base, offset, Constant(0));
+  return str(dst, base, offset, Constant(0, false));
 }
 
 std::string str(const Reg &dst, const Reg &base, const Reg &offset,
@@ -409,21 +340,10 @@ std::string bl(const std::string &dst_func_name) {
 std::string add(const Reg &dst, const Reg &op1, const Value &op2) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "add";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += op1.getName();
-  asm_instr += ", ";
-  asm_instr += op2.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vadd.f32";
+  if (dst.is_fp())
+    asm_instr += "vadd.f32";
+  else
+    asm_instr += "add";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -437,21 +357,10 @@ std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
 std::string sub(const Reg &dst, const Reg &op1, const Value &op2) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "sub";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += op1.getName();
-  asm_instr += ", ";
-  asm_instr += op2.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vsub(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vsub.f32";
+  if (dst.is_fp())
+    asm_instr += "vsub.f32";
+  else
+    asm_instr += "sub";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -589,21 +498,10 @@ std::string asr(const Reg &dst, const Reg &op1, const Value &op2) {
 std::string mul(const Reg &dst, const Reg &op1, const Reg &op2) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "mul";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += op1.getName();
-  asm_instr += ", ";
-  asm_instr += op2.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vmul(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vmul.f32";
+  if (dst.is_fp())
+    asm_instr += "vmul.f32";
+  else
+    asm_instr += "mul";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -699,21 +597,10 @@ std::string smull(const Reg &dst, const Reg &op1, const Reg &op2,
 std::string sdiv(const Reg &dst, const Reg &op1, const Reg &op2) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "sdiv";
-  asm_instr += " ";
-  asm_instr += dst.getName();
-  asm_instr += ", ";
-  asm_instr += op1.getName();
-  asm_instr += ", ";
-  asm_instr += op2.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vdiv(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vdiv.f32";
+  if (dst.is_fp())
+    asm_instr += "vdiv.f32";
+  else
+    asm_instr += "sdiv";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
@@ -739,19 +626,10 @@ std::string cmp(const Reg &lhs, const Value &rhs) {
 std::string cmp(const Reg &lhs, const Reg &rhs) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "cmp";
-  asm_instr += " ";
-  asm_instr += lhs.getName();
-  asm_instr += ", ";
-  asm_instr += rhs.getName();
-  asm_instr += newline;
-  return asm_instr;
-}
-
-std::string vcmp(const VFPReg &lhs, const VFPReg &rhs) {
-  std::string asm_instr;
-  asm_instr += spaces;
-  asm_instr += "vcmp.f32";
+  if (lhs.is_fp())
+    asm_instr += "vcmp.f32";
+  else
+    asm_instr += "cmp";
   asm_instr += " ";
   asm_instr += lhs.getName();
   asm_instr += ", ";
@@ -785,7 +663,7 @@ std::string b(const Label &dst, const CmpOp &cond) {
 
 std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
                                           const Value &op2),
-                      const Reg &dst, const Reg &op1, const Constant &op2) {
+                      const Reg &dst, const Reg &op1, const Constant &op2, Instruction *instruction) {
   std::string asm_instr;
   int val = op2.getValue();
   if (dst == op1 && op2.getValue() == 0 && (inst == add || inst == sub)) {
@@ -793,6 +671,8 @@ std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
   } else if (0 <= val && val <= imm_8_max) {
     asm_instr += inst(dst, op1, op2);
   } else {
+    // std::pair<int, bool> reg = AsmBuilder::acquireForReg(instruction);
+    // const InstGen::Reg vinst_temp_reg = InstGen::Reg(reg.first,reg.second);
     asm_instr += setValue(vinst_temp_reg, op2);
     asm_instr += inst(dst, op1, vinst_temp_reg);
   }
@@ -800,7 +680,7 @@ std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
 }
 
 std::string instConst(std::string (*inst)(const Reg &op1, const Value &op2),
-                      const Reg &op1, const Constant &op2) {
+                  const Reg &op1, const Constant &op2, Instruction *instruction) {
   std::string asm_instr;
   int val = op2.getValue();
   if (0 <= val && val <= imm_8_max) {
@@ -815,50 +695,32 @@ std::string instConst(std::string (*inst)(const Reg &op1, const Value &op2),
 std::string load(const Reg &dst, const Addr &src) {
   std::string asm_instr;
   int offset = src.getOffset();
-  if (offset > imm_12_max || offset < -imm_12_max) {
-    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
+  if (!dst.is_fp() && (offset > imm_12_max || offset < -imm_12_max)) {
+    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
     asm_instr += InstGen::ldr(dst, src.getReg(), vinst_temp_reg);
-  } else {
+  } else if (dst.is_fp() && (offset > imm_8_max || offset < -imm_8_max)) {
+    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
+    asm_instr += InstGen::add(vinst_temp_reg, vinst_temp_reg, src.getReg());
+    asm_instr += InstGen::ldr(dst, Addr(vinst_temp_reg, 0));
+  }
+  else {
     asm_instr += InstGen::ldr(dst, src);
   }
   return asm_instr;
 }
 
-std::string vload(const VFPReg &dst, const Addr &src) {
-  std::string asm_instr;
-  int offset = src.getOffset();
-  if (offset > imm_8_max || offset < -imm_8_max) {
-    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
-    asm_instr += InstGen::add(vinst_temp_reg, vinst_temp_reg, src.getReg());
-    asm_instr += InstGen::vldr(dst, Addr(vinst_temp_reg, 0));
-  } else {
-    asm_instr += InstGen::vldr(dst, src);
-  }
-  return asm_instr;
-}
-
 std::string store(const Reg &src, const Addr &dst) {
-  assert(src != vinst_temp_reg); //这可能只是之前的调用约定
   std::string asm_instr;
   int offset = dst.getOffset();
-  if (offset > imm_12_max || offset < -imm_12_max) {
-    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
+  if (!src.is_fp() && (offset > imm_12_max || offset < -imm_12_max)) {
+    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
     asm_instr += InstGen::str(src, dst.getReg(), vinst_temp_reg);
+  } else if (src.is_fp() && (offset > imm_8_max || offset < -imm_8_max)) {
+    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
+    asm_instr += InstGen::add(vinst_temp_reg,vinst_temp_reg,dst.getReg());
+    asm_instr += InstGen::str(src, Addr(vinst_temp_reg, 0));
   } else {
     asm_instr += InstGen::str(src, dst);
-  }
-  return asm_instr;
-}
-
-std::string vstore(const VFPReg &src, const Addr &dst) {
-  std::string asm_instr;
-  int offset = dst.getOffset();
-  if (offset > imm_8_max || offset < -imm_8_max) {
-    asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset));
-    asm_instr += InstGen::add(vinst_temp_reg,vinst_temp_reg,dst.getReg());
-    asm_instr += InstGen::vstr(src, Addr(vinst_temp_reg, 0));
-  } else {
-    asm_instr += InstGen::vstr(src, dst);
   }
   return asm_instr;
 }
@@ -876,7 +738,7 @@ std::string swi(const Constant &id) {
 std::string bic(const Reg &dst, const Reg &v1, const Reg &v2,
                 const Reg &v3) {
   std::string asm_instr;
-  asm_instr += mov(vinst_temp_reg, Constant(1));
+  asm_instr += mov(vinst_temp_reg, Constant(1, false));
   asm_instr += spaces + "bic" + " " + vinst_temp_reg.getName() + ", " +
               v1.getName() + ", " + vinst_temp_reg.getName() + ", " + "lsl" +
               " " + v2.getName() + newline;
@@ -939,75 +801,31 @@ std::string divConst(const Reg &dst, const Reg &src,
     asm_instr += mov(dst, src);
   } else if (abs(d) == (1 << l)) {
     // q = SRA(n + SRL(SRA(n, l - 1), N - l), l);
-    asm_instr += asr(vinst_temp_reg, src, Constant(l - 1));
-    asm_instr += lsr(vinst_temp_reg, vinst_temp_reg, Constant(N - l));
+    asm_instr += asr(vinst_temp_reg, src, Constant(l - 1, false));
+    asm_instr += lsr(vinst_temp_reg, vinst_temp_reg, Constant(N - l, false));
     asm_instr += add(vinst_temp_reg, vinst_temp_reg, src);
-    asm_instr += asr(dst, vinst_temp_reg, Constant(l));
+    asm_instr += asr(dst, vinst_temp_reg, Constant(l, false));
   } else if (m >= 0) {
     // q = SRA(MULSH(m, n), sh_post) - XSIGN(n);
-    asm_instr += setValue(vinst_temp_reg, Constant(m));
+    asm_instr += setValue(vinst_temp_reg, Constant(m, false));
     asm_instr += smmul(vinst_temp_reg, vinst_temp_reg, src);
-    asm_instr += asr(vinst_temp_reg, vinst_temp_reg, Constant(sh_post));
+    asm_instr += asr(vinst_temp_reg, vinst_temp_reg, Constant(sh_post, false));
     asm_instr +=
         add(dst, vinst_temp_reg,
             RegShift(src.getID(), 31, InstGen::RegShift::ShiftType::lsr));
   } else {
     // q = SRA(n + MULSH(m - 2^N , n), sh_post) - XSIGN(n);
-    asm_instr += setValue(vinst_temp_reg, Constant(m));
+    asm_instr += setValue(vinst_temp_reg, Constant(m, false));
     asm_instr += smmla(vinst_temp_reg, vinst_temp_reg, src, src);
-    asm_instr += asr(vinst_temp_reg, vinst_temp_reg, Constant(sh_post));
+    asm_instr += asr(vinst_temp_reg, vinst_temp_reg, Constant(sh_post, false));
     asm_instr +=
         add(dst, vinst_temp_reg,
             RegShift(src.getID(), 31, InstGen::RegShift::ShiftType::lsr));
   }
   if (d < 0) {
-    asm_instr += rsb(dst, dst, Constant(0));
+    asm_instr += rsb(dst, dst, Constant(0, false));
   }
   return asm_instr;
 }
-
-std::string ret(const Constant &src) {
-  const InstGen::Reg target_reg = InstGen::Reg(0);
-  std::string asm_instr;
-  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
-  asm_instr += setValue(target_reg,src);
-
-  return asm_instr;
-}
-
-std::string vret(const Constant &src) {
-  const InstGen::VFPReg target_reg = InstGen::VFPReg(0);
-  std::string asm_instr;
-  asm_instr += setValue(vinst_temp_reg, src);
-  asm_instr += vmov(target_reg,vinst_temp_reg);
-
-  return asm_instr;
-}
-
-std::string ret(const Reg &src) {
-  const InstGen::Reg target_reg = InstGen::Reg(0);
-  std::string asm_instr;
-  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
-  asm_instr += mov(target_reg,src, cmpop);
-
-  return asm_instr;
-}
-
-std::string vret(const VFPReg &src) {
-  const InstGen::VFPReg target_reg = InstGen::VFPReg(0);
-  std::string asm_instr;
-  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
-  asm_instr += vmov(target_reg,src, cmpop);
-
-  return asm_instr;
-}
-
-std::string br(const Reg &target) {
-  std::string asm_instr;
-  asm_instr += spaces+"b "+newline;
-
-  return asm_instr;
-}
-
 
 }; // namespace InstGen

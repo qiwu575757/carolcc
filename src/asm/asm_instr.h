@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include "passes/module.h"
 
 const int imm_16_max = 65535;
 const int imm_12_max = 4095;
@@ -49,35 +50,26 @@ public:
 
 class Reg : public Value {
   int id;
+  bool is_fp;
 
 public:
-  explicit Reg(int id) : id(id){};
+  explicit Reg(int id, bool is_vfpreg) : id(id), is_fp(is_fp){};
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }
   int getID() const { return this->id; }
-  std::string getName() const { return reg_name[id]; }
-  bool is_vfpreg() const { return false; }
+  bool is_fp() const { return this->is_fp; }
+  std::string getName() const {
+    if (this->is_fp)
+      return vfpreg_name[id];
+
+    return reg_name[id];
+  }
   const bool operator<(const Reg &rhs) const { return this->id < rhs.id; }
   const bool operator==(const Reg &rhs) const { return this->id == rhs.id; }
   const bool operator!=(const Reg &rhs) const { return this->id != rhs.id; }
 };
 
-class VFPReg : public Value {// VFP float registers
-  int id;
-
-public:
-  explicit VFPReg(int id) : id(id){};
-  bool is_reg() const { return true; }
-  bool is_constant() const { return false; }
-  bool has_shift() const { return false; }
-  int getID() const { return this->id; }
-  bool is_vfpreg() const { return true; }
-  std::string getName() const { return vfpreg_name[id]; }
-  const bool operator<(const VFPReg &rhs) const { return this->id < rhs.id; }
-  const bool operator==(const VFPReg &rhs) const { return this->id == rhs.id; }
-  const bool operator!=(const VFPReg &rhs) const { return this->id != rhs.id; }
-};
 
 class RegShift : public Value {
 public:
@@ -135,9 +127,10 @@ public:
   }
 };
 
-const Reg sp = Reg(13);
-const Reg lr = Reg(14);
-const Reg pc = Reg(15);
+const Reg fp = Reg(12, false);
+const Reg sp = Reg(13, false);
+const Reg lr = Reg(14, false);
+const Reg pc = Reg(15, false);
 
 class Addr {
   Reg reg;
@@ -154,26 +147,16 @@ public:
 };
 
 class Constant : public Value {
-  int value;
+  int value; // 浮点数转化为的十进制数 || 整型数
+  bool is_fp;
 
 public:
-  explicit Constant(int value) : value(value) {}
+  explicit Constant(int value, bool is_fp) : value(value), is_fp(is_fp) {}
   bool is_reg() const { return false; }
   bool is_constant() const { return true; }
   bool has_shift() const { return false; }
   int getValue() const { return this->value; }
-  std::string getName() const { return "#" + std::to_string(this->value); }
-};
-
-class ConstantFP : public Value {
-  int value; // 浮点数转化为的十进制数
-
-public:
-  explicit ConstantFP(float value) : value(value) {}
-  bool is_reg() const { return false; }
-  bool is_constant() const { return true; }
-  bool has_shift() const { return false; }
-  int getValue() const { return this->value; }
+  bool is_fp() const { return this->is_fp; }
   std::string getName() const { return "#" + std::to_string(this->value); }
 };
 
@@ -234,9 +217,9 @@ std::string cmp(const Reg &lhs, const Value &rhs);
 std::string b(const Label &dst, const CmpOp &op = NOP);
 std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
                                           const Value &op2),
-                      const Reg &dst, const Reg &op1, const Constant &op2);
+                const Reg &dst, const Reg &op1, const Constant &op2, Instruction *instruction);
 std::string instConst(std::string (*inst)(const Reg &op1, const Value &op2),
-                      const Reg &op1, const Constant &op2);
+                      const Reg &op1, const Constant &op2, Instruction *instruction);
 std::string load(const Reg &dst, const Addr &src);
 std::string store(const Reg &src, const Addr &dst);
 std::string swi(const Constant &id);
@@ -245,32 +228,12 @@ std::string vvmul(const Reg &sum, const Reg &v1, const Reg &v2, const int len);
 std::tuple<int, int, int> choose_multiplier(int d, int N);
 std::string divConst(const Reg &dst, const Reg &src,
                      const Constant &divisor);
-std::string ret(const Constant &src);
-std::string ret(const Reg &src);
 
-// float point instructions
-std::string push(const std::vector<VFPReg> &reg_list);
-std::string pop(const std::vector<VFPReg> &reg_list);
-std::string vldr(const VFPReg &dst, const Addr &src);
-std::string vldr(const VFPReg &dst, const Label &src);
-std::string vload(const VFPReg &dst, const Addr &src);
-std::string vmov(const VFPReg &dst, const Value &src, const CmpOp &op = NOP);
-std::string vcmp(const VFPReg &lhs, const VFPReg &rhs);
-std::string vadd(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
-std::string vsub(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
-std::string vmul(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
-std::string vdiv(const VFPReg &dst, const VFPReg &op1, const VFPReg &op2);
 std::string vmrs();// 将fcmp比较结果置位到CPSR(APSR)
-std::string vstore(const VFPReg &src, const Addr &dst);
-std::string vstr(const VFPReg &src, const Addr &dst);
-std::string vstr(const VFPReg &src, const Label &dst);
-std::string vret(const Constant &src);
-std::string vret(const VFPReg &src);
-std::string setValue(const VFPReg &dst, const ConstantFP &src);
-std::string vcvt(const VFPReg &dst);
+std::string vcvt(const Reg &dst);
 
 }; // namespace InstGen
 
-const InstGen::Reg vinst_temp_reg = InstGen::Reg(11);
+const InstGen::Reg vinst_temp_reg = InstGen::Reg(11, false);
 
 #endif
