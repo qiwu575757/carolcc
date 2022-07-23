@@ -236,7 +236,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 before_inst.first = inst_iter;
                 after_inst.first = inst_iter;
                 after_inst.first++;
-                if(op_in_inst_is_spilled(inst,inst)) // inst冲突考虑
+                if(op_in_inst_is_spilled(inst,inst)) // inst冲突考虑 左值
                 {  
                     int reg_get = give_int_reg_at(inst);
                     if(reg_get==-1){
@@ -268,7 +268,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 }
                 op_idx+=1;
                 for(auto &op : inst->getOperandList()){
-                    if(op_in_inst_is_spilled(inst,op)){ // 冲突
+                    if(op_in_inst_is_spilled(inst,op)){ // 冲突 右值
                         int reg_get = give_int_reg_at(inst);
                         if(reg_get==-1){
                             ERROR("can't give any reg because all the reg is using");
@@ -302,8 +302,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                                 int offset = get_int_value_sp_offset(inst,op);
                                 before_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,offset,bb));
                                 //---------------------------
-                                // store reg_get to stack_map
-                                after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
+                                // store reg_get to stack_map 不需要！
+                                // after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
                                 // load reg_get from reg_save
                                 after_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,op_save[op_idx],bb));
                             }
@@ -312,8 +312,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                                 int offset = get_int_value_sp_offset(inst,op);
                                 before_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,offset,bb));
                                 //---------------------------
-                                // store reg_get to stack_map
-                                after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
+                                // store reg_get to stack_map 不需要！
+                                // after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
                             }
                         }
                         interval itv;
@@ -329,8 +329,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 
                 //debug begin
                 if(!before_inst.second.empty()){
-                    LSRA_WARNNING("-- insert inst --");
-                    LSRA_WARNNING(" before instr %s ",(*before_inst.first)->getPrintName().c_str());
+                    // LSRA_WARNNING("-- insert inst --");
+                    // LSRA_WARNNING(" before instr %s ",(*before_inst.first)->getPrintName().c_str());
                     for(auto &inst : before_inst.second){
                         auto inststore = dynamic_cast<StoreOffset *>(inst);
                         if(inststore)
@@ -345,8 +345,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                     }
                 }
                 if(!after_inst.second.empty()){
-                    LSRA_WARNNING("-- insert inst --");
-                    LSRA_WARNNING(" after instr %s ",(*after_inst.first)->getPrintName().c_str());
+                    // LSRA_WARNNING("-- insert inst --");
+                    // LSRA_WARNNING(" after instr %s ",(*after_inst.first)->getPrintName().c_str());
                     for(auto &inst : after_inst.second){
                         auto inststore = dynamic_cast<StoreOffset *>(inst);
                         if(inststore)
