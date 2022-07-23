@@ -100,7 +100,7 @@ class Instruction : public User {
 
 class UnaryInst : public Instruction {
    private:
-    UnaryInst(Type *type, OpKind op_id, Value *v1);
+    // UnaryInst(Type *type, OpKind op_id, Value *v1);
     UnaryInst(Type *type, OpKind op_id, Value *v1, BasicBlock *parent);
 
    public:
@@ -113,7 +113,7 @@ class UnaryInst : public Instruction {
 
 class BinaryInst : public Instruction {
    private:
-    BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
+    // BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
     BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2,
                BasicBlock *parent);
 
@@ -162,15 +162,15 @@ class CmpInst : public Instruction {
     CmpOp getCmpOp() { return _cmp_op; }
 
    private:
-    CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
+    // CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
 };
 class ReturnInst : public Instruction {
    private:
     ReturnInst(Type *type, BasicBlock *parent);
-    ReturnInst(Type *type, Value *v);
+    // ReturnInst(Type *type, Value *v);
     ReturnInst(Type *type, Value *v, BasicBlock *parent);
-    ReturnInst(Type *type, OpKind op_id, Value *v);
+    // ReturnInst(Type *type, OpKind op_id, Value *v);
 
    public:
     static ReturnInst *createRet(Value *v, BasicBlock *parent);
@@ -299,6 +299,7 @@ class PhiInstr : public Instruction {
 
     PhiInstr(Type *ty, unsigned num_ops, BasicBlock *parent)
         : Instruction(ty, Instruction::PHI, num_ops) {
+        this->setParent(parent);
         parent->getInstructions().push_front(this);
     };
 

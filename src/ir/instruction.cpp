@@ -31,10 +31,10 @@ bool Instruction::isCommutative()const{
      }
      return res;
 }
-UnaryInst::UnaryInst(Type *type, OpKind op_id, Value *v1)
-    : Instruction(type, op_id, 1) {
-    setOperand(0, v1);
-}
+// UnaryInst::UnaryInst(Type *type, OpKind op_id, Value *v1)
+//     : Instruction(type, op_id, 1) {
+//     setOperand(0, v1);
+// }
 UnaryInst::UnaryInst(Type *type, Instruction::OpKind op_id, Value *v1,
                      BasicBlock *parent)
     : Instruction(type, op_id, 1, parent) {
@@ -58,12 +58,12 @@ UnaryInst *UnaryInst::createCast(Value *v1, Type *type_cast_to,
     return new UnaryInst(type_cast_to, Instruction::CAST, v1, parent);
 }
 
-BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1,
-                       Value *v2)
-    : Instruction(type, op_id, 2) {
-    setOperand(0, v1);
-    setOperand(1, v2);
-}
+// BinaryInst::BinaryInst(Type *type, Instruction::OpKind op_id, Value *v1,
+//                        Value *v2)
+//     : Instruction(type, op_id, 2) {
+//     setOperand(0, v1);
+//     setOperand(1, v2);
+// }
 // BinaryInst *BinaryInst::createAdd(Value *v1, Value *v2) {
 //     //fixme: 类型没设置好
 //     return new BinaryInst(v1->getType(), Instruction::ADD, v1, v2);
@@ -195,14 +195,14 @@ std::string BinaryInst::getOperatorString() const {
             ERROR("error binary op kind");
     }
 }
-ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v)
-    : Instruction(type, op_id, 1) {
-    setOperand(0, v);
-}
-ReturnInst::ReturnInst(Type *type, Value *v)
-    : Instruction(type, Instruction::RET, 1) {
-    setOperand(0, v);
-}
+// ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v)
+//     : Instruction(type, op_id, 1) {
+//     setOperand(0, v);
+// }
+// ReturnInst::ReturnInst(Type *type, Value *v)
+//     : Instruction(type, Instruction::RET, 1) {
+//     setOperand(0, v);
+// }
 ReturnInst *ReturnInst::createRet(Value *v, BasicBlock *parent) {
     return new ReturnInst(Type::getVoidTy(), v, parent);
 }
@@ -224,11 +224,11 @@ CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2,
     setOperand(0, v1);
     setOperand(1, v2);
 }
-CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2)
-    : Instruction(type, Instruction::CMP, 2), _cmp_op(op_id) {
-    setOperand(0, v1);
-    setOperand(1, v2);
-}
+// CmpInst::CmpInst(Type *type, CmpInst::CmpOp op_id, Value *v1, Value *v2)
+//     : Instruction(type, Instruction::CMP, 2), _cmp_op(op_id) {
+//     setOperand(0, v1);
+//     setOperand(1, v2);
+// }
 // CmpInst *CmpInst::createCmp(Type *type, CmpInst::CmpOp op_id, Value *v1,
 // Value *v2) {
 //     return new CmpInst(type, op_id, v1, v2);
@@ -449,6 +449,7 @@ PhiInstr::PhiInstr(Type *ty, std::vector<Value *> vals,
                    std::vector<BasicBlock *> val_bbs, BasicBlock *parent)
     : Instruction(ty, Instruction::PHI, 2 * vals.size()) {
     parent->getInstructions().push_front(this);
+    this->setParent(parent);
     for (int i = 0; i < vals.size(); i++) {
         setOperand(2 * i, vals[i]);
         setOperand(2 * i + 1, val_bbs[i]);

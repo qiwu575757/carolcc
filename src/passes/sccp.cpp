@@ -1,17 +1,33 @@
 #include "sccp.h"
 
+#include <list>
+#include <vector>
+
+#include "ir/base_block.h"
 #include "ir/basic_block.h"
-#include "ir/constant.h"
-#include "ir/instruction.h"
+#include "ir/function.h"
 #include "module.h"
+#include "syntax_tree.h"
+#include "utils.h"
 static const bool EXCUTABLE = true;
 static const bool NEVER_EXCUTATED = false;
+static int ffflag;
 void SCCP::run() {
     for (auto f : _m->getFunctions()) {
         if (!f->isBuiltin()) {
-            constantFoldAndPropagation(f);
+            SCCP_LOG("run number is %d", ffflag);
+            if (ffflag == 0) {
+                SCCP_LOG("first pass only run constant fold");
+                constantFoldAndPropagation(f);
+                SCCP_LOG("finish constantFoldAndPropagation");
+            } else {
+                SCCP_LOG("second pass only run constant fold");
+                sparseConditionalConstantPropagation(f);
+                SCCP_LOG("finish sparseConditionalConstantPropagation");
+            }
         }
     }
+    ffflag++;
 }
 
 bool SCCP::detectBinaryConstantFold(BinaryInst *inst) {
@@ -62,6 +78,7 @@ void SCCP::constantFoldAndPropagation(Function *f) {
                             ConstantInt::create(constant_int->getValue());
                         zext_inst->replaceAllUse(new_constant);
                         zext_inst->removeUseOps();
+                        wait_delete.push_back(zext_inst);
                     }
                 }
                 continue;
@@ -269,22 +286,26 @@ void SCCP::sparseConditionalConstantPropagation(Function *f) {
     _value_work_list.clear();
     _block_work_list.push_back(f->getEntryBlock());
     _block_excutable_table[f->getEntryBlock()] = EXCUTABLE;
-    while (!_block_work_list.empty()) {
-        auto bb = _block_work_list.front();
-        _block_work_list.pop_front();
-        sccpOnBasicBlock(bb);
+    while (!_block_work_list.empty() || !_value_work_list.empty()) {
+        while (!_block_work_list.empty()) {
+            auto bb = _block_work_list.front();
+            _block_work_list.pop_front();
+            sccpOnBasicBlock(bb);
+        }
+        while (!_value_work_list.empty()) {
+            auto instr = dynamic_cast<Instruction *>(_value_work_list.front());
+            _value_work_list.pop_front();
+            MyAssert("error", instr);
+            sccpOnInstrution(instr);
+        }
     }
-    while(!_value_work_list.empty()){
-        auto  instr = dynamic_cast<Instruction*>(_value_work_list.front());
-        _value_work_list.pop_front();
-        MyAssert("error" ,instr);
-        sccpOnInstrution(instr);
-    }
+    printDebugInfo(f);
+    replaceConstant(f);
 }
 bool SCCP::isBlockExcutable(BasicBlock *bb) {
-    auto it = _block_excutable_table.find(bb);
-    if (it != _block_excutable_table.end()) {
-        return it->second;
+    auto it_bb = _block_excutable_table.find(bb);
+    if (it_bb != _block_excutable_table.end()) {
+        return it_bb->second;
     }
     return false;
 }
@@ -347,6 +368,8 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
             auto new_constant = calConstantBinary(
                 instr, _instr_assign_table[oprd1], _instr_assign_table[oprd2]);
             if (isValueNeverAssigned(instr)) _value_work_list.push_back(instr);
+            MyAssert("new_constant is not a constant",
+                     new_constant->isConstant());
             _instr_assign_table[instr] = new_constant;
         } else if (isValueHasMultiValue(oprd1) || isValueHasMultiValue(oprd2)) {
             if (isValueNeverAssigned(instr) || isValueHasDefiniteValue(instr))
@@ -365,6 +388,9 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
             auto pre_val = instr->getOperand(i);
             auto pre_bb = dynamic_cast<BasicBlock *>(instr->getOperand(i + 1));
             MyAssert("error", pre_val != nullptr && pre_bb != nullptr);
+            if (pre_val->isConstant()) {
+                _instr_assign_table[pre_val] = pre_val;
+            }
             if (isValueHasMultiValue(pre_val) && isBlockExcutable(pre_bb)) {
                 if (isValueNeverAssigned(instr) ||
                     isValueHasDefiniteValue(instr))
@@ -373,11 +399,14 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 break;
             }
             if (isValueHasDefiniteValue(pre_val) && isBlockExcutable(pre_bb)) {
-                if (certain_pre_number == 0) {
-                    a_val = dynamic_cast<Constant *>(pre_val);
-                    MyAssert("error", a_val != nullptr);
+                certain_pre_number++;
+                if (certain_pre_number == 1) {
+                    a_val =
+                        dynamic_cast<Constant *>(_instr_assign_table[pre_val]);
+                    MyAssert("a_val is null ptr", a_val != nullptr);
                 } else {
-                    auto another_val = dynamic_cast<Constant *>(pre_val);
+                    auto another_val =
+                        dynamic_cast<Constant *>(_instr_assign_table[pre_val]);
                     if (a_val->getPrintName() != another_val->getPrintName()) {
                         if (isValueNeverAssigned(instr) ||
                             isValueHasDefiniteValue(instr))
@@ -386,12 +415,14 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                         break;
                     }
                 }
-                certain_pre_number++;
             }
         }
-        if (certain_pre_number > 0) {
-            if (isValueNeverAssigned(instr)) _value_work_list.push_back(instr);
-            _instr_assign_table[instr] = a_val;
+        if (certain_pre_number == 1) {
+            if (isValueNeverAssigned(instr)) {
+                _value_work_list.push_back(instr);
+                MyAssert("a_val is not a constant", a_val->isConstant());
+                _instr_assign_table[instr] = a_val;
+            }
         }
 
     } else if (instr->isBr()) {
@@ -406,9 +437,28 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 auto val = _instr_assign_table[cond_val];
                 auto bool_res = dynamic_cast<ConstantInt *>(val)->getValue();
                 if (bool_res) {
-                    _block_excutable_table[true_bb] = EXCUTABLE;
+                    if (!isBlockExcutable(true_bb)) {
+                        _block_excutable_table[true_bb] = EXCUTABLE;
+                        _block_work_list.push_back(true_bb);
+                        for (auto true_bb_suc :
+                             true_bb->getSuccBasicBlockList()) {
+                            if (isBlockExcutable(true_bb_suc)) {
+                                _block_work_list.push_back(true_bb_suc);
+                            }
+                        }
+                    }
+
                 } else {
-                    _block_excutable_table[false_bb] = EXCUTABLE;
+                    if (!isBlockExcutable(false_bb)) {
+                        _block_excutable_table[false_bb] = EXCUTABLE;
+                        _block_work_list.push_back(false_bb);
+                        for (auto false_bb_suc :
+                             false_bb->getSuccBasicBlockList()) {
+                            if (isBlockExcutable(false_bb_suc)) {
+                                _block_work_list.push_back(false_bb_suc);
+                            }
+                        }
+                    }
                 }
             } else {
                 _block_excutable_table[true_bb] = EXCUTABLE;
@@ -463,20 +513,63 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
 }
 
 void SCCP::sccpOnBasicBlock(BasicBlock *bb) {
-
-    _block_work_list.pop_front();
     if (isBlockExcutable(bb) && bb->getSuccBasicBlocks().size() == 1) {
         auto suc_bb = bb->getSuccBasicBlocks().front();
         if (!isBlockExcutable(suc_bb)) {
             _block_excutable_table[suc_bb] = EXCUTABLE;
+            _block_work_list.push_back(suc_bb);
             for (auto suc_suc_bb : suc_bb->getSuccBasicBlocks()) {
                 if (isBlockExcutable(suc_suc_bb)) {
-                    _block_excutable_table[suc_suc_bb] = EXCUTABLE;
+                    _block_work_list.push_back(suc_suc_bb);
                 }
             }
         }
     }
-    for(auto instr:bb->getInstructions()){
+    for (auto instr : bb->getInstructions()) {
         sccpOnInstrution(instr);
     }
+}
+
+void SCCP::printDebugInfo(Function *f) {
+    SCCP_LOG("[var table]:");
+    for (auto vv : _instr_assign_table) {
+        if (vv.second == &uncertainValue) {
+            SCCP_LOG(" %s -> uncertain", vv.first->getPrintName().c_str());
+        } else {
+            SCCP_LOG(" %s -> %s", vv.first->getPrintName().c_str(),
+                     vv.second->getPrintName().c_str());
+        }
+    }
+    SCCP_LOG("[block table]:");
+    for (auto bb : f->getBasicBlocks()) {
+        if (isBlockExcutable(bb)) {
+            SCCP_LOG("%s : excutable", bb->getPrintName().c_str());
+        } else {
+            SCCP_LOG("%s : not excutable", bb->getPrintName().c_str());
+        }
+    }
+}
+void SCCP::replaceConstant(Function *f) {
+    std::map<BasicBlock *, std::list<Instruction *> > wait_delete;
+    // delete instruction
+    for (auto vv : _instr_assign_table) {
+        auto key_instr = dynamic_cast<Instruction *>(vv.first);
+        auto val_instr = vv.second;
+        if (key_instr && isValueHasDefiniteValue(key_instr)) {
+            key_instr->replaceAllUse(val_instr);
+            key_instr->removeUseOps();
+            if (key_instr->getParent() == nullptr) {
+                ERROR("key_instr(%s) should have parent!",
+                      key_instr->getPrintName().c_str());
+            }
+            wait_delete[key_instr->getParent()].push_back(key_instr);
+        }
+    }
+    for (auto bb_map : wait_delete) {
+        for (auto instr : bb_map.second) {
+            bb_map.first->deleteInstr(instr);
+        }
+    }
+
+    // delete blocks
 }

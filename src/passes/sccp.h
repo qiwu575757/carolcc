@@ -5,10 +5,24 @@
 #include "ir/constant.h"
 #include "ir/instruction.h"
 #include "pass.h"
-
+#include <map>
 #include <list>
+
+
+#define SCCP_LOG_
+#ifdef SCCP_LOG_
+#define SCCP_LOG(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define SCCP_LOG(format, ...)
+#endif // SCCP_LOG_
+
 class Function;
 class BinaryInst;
+class Instruction;
 /**
  * sparse conditional constant propagation
  */
@@ -35,7 +49,9 @@ class SCCP : public Transform {
 
 
     // for sparse conditional constant propagation
+    void printDebugInfo(Function *f);
     void sparseConditionalConstantPropagation(Function* f);
+    void replaceConstant(Function * f);
     void sccpOnInstrution(Instruction* instr);
     void sccpOnBasicBlock(BasicBlock* bb);
     std::map<Value* ,Value*> _instr_assign_table;

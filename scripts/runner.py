@@ -88,7 +88,8 @@ class Runner():
     def remake(self):
         os.chdir('build')
         os.system('cmake ..')
-        os.system('make -j8')
+        os.system('make clean')
+        os.system('make -j20')
         os.chdir('..')
     
     def open_ir(self,test):
