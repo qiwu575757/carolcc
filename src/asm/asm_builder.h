@@ -141,27 +141,41 @@ public:
 
   void allocaStackSpace(Function *func);
 
-// 浮点运算函数
+  // 浮点运算函数
   int float2int(ConstantFloat *val);
   // LSRA
   std::vector<interval> live_interval_analysis(Function *func);
   void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func);
   bool value_in_reg(Value *v);
-  std::vector<interval> virtual_int_regs[50];//虚拟寄存器
-  std::map<Value *,int > linear_map;
+  bool force_reg_alloc(interval itv,int reg_idx);
+  bool op_in_inst_is_spilled(Value *inst,Value *op);
+  int give_int_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
+  Value * value_in_int_reg_at(Value *inst,int reg_idx);
+  int get_int_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
+
+  std::vector<interval> virtual_int_regs[500];//虚拟寄存器
+  std::vector<interval> stack_map;//args spill alloc return
+  std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
+  std::map<Value *,int > linear_map;//指令列表
+
+  int op_save[4];// 栈溢出时的保存寄存器
+  int return_offset;//返回地址
+
 
   std::vector<InstGen::Reg> getCalleeSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getCallerSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getAllRegisters(Function *func);
   std::pair<int, int> getUsedRegisterNum(Function *func);
   std::string assignToTargetReg(Instruction *inst, Value *val, int target, int offset = 0);
-  int getAllocaSpOffset(Instruction *inst);
-  int acquireForReg(Instruction *inst, int val_pos, std::string str);
-  std::string popValue(Instruction *inst, int index, int val_pos);
+  int getAllocaSpOffset(Value *inst);
+  int acquireForReg(Value *inst, int val_pos, std::string str);
+  std::string popValue(Value *inst, int reg_idx, int val_pos);
   // 一般指令(除call/gep)无论该值在栈中还是寄存器中
-  int getRegIndexOfValue(Value *inst, Value *val, bool label = false);
+  int getRegIndexOfValue(Value *inst, Value *val, bool global_label = false);
   //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
   std::pair<int, bool> getValuePosition(Value *inst, Value *val);
+
+
 
 };
 
