@@ -956,6 +956,21 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       } else { // 结果为int
         return_asm += InstGen::load(InstGen::Reg(find_register(inst)),InstGen::Addr(InstGen::sp,return_offset));
       }
+    } else if (inst->isAlloca()) {
+      std::vector<Value *> args(operands.begin(), operands.end());
+      for (int i = 0; i < 3; i++ ) { //对于memset函数，需要三个参数
+        if (operands.at(i)->isConstant()) { //直接将立即数传入传参寄存器
+          return_asm += InstGen::setValue(InstGen::Reg(i),InstGen::Constant(atoi(args[i]->getPrintName().c_str())));
+        } else {
+          return_asm += InstGen::mov(InstGen::Reg(i), InstGen::Reg(find_register(args[i])));
+        }
+      }
+      return_asm += InstGen::add(InstGen::Reg(0),InstGen::Reg(0),InstGen::sp);
+      return_asm += InstGen::add(InstGen::Reg(0),InstGen::Reg(0),InstGen::Constant(caller_regs_size*4));
+      return_asm += InstGen::bl(func_name);
+      return_asm += InstGen::pop(caller_vfpreg_list);
+      return_asm += InstGen::pop(caller_reg_list);
+
     } else {
       std::vector<Value *> args(operands.begin(), operands.end());
       for (int i = 0; i < 2; i++ ) { //对于除法函数,取余函数，只有两个参数
@@ -1566,6 +1581,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       variable_list.push_back(inst); // inst 对应栈位置存储的值是地址
       inst_asm += InstGen::comment(__FILE__+std::to_string(__LINE__),"");
       inst_asm += update_value_mapping(variable_list);
+
+      if (inst->getType()->getPointerElementType()->isArrayTy()) {
+        std::vector<Value *> args = {
+            ConstantInt::get(stack_cur_size+4), ConstantInt::get(0),
+            ConstantInt::get(type_size-4)};
+        inst_asm += generateFunctionCall(inst, args, "memset",  -1);
+      }
 
       const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
       inst_asm += InstGen::comment(" alloc "+inst->getPrintName()+" to sp + " + std::to_string(stack_cur_size),

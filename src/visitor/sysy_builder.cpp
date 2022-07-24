@@ -559,12 +559,12 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
                     // zero_jump
-                    // if(G_array_init[i]->isConstant()){
-                    //     auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
-                    //     if(constant_val->isZero()){
-                    //         continue;
-                    //     }
-                    // }
+                    if(G_array_init[i]->isConstant()){
+                        auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
+                        if(constant_val->isZero()){
+                            continue;
+                        }
+                    }
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
                         G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());

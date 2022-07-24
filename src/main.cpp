@@ -94,8 +94,8 @@ int main(int argc, char **argv) {
 
     pass_manager PM(builder->getModule().get());
 
-    if(is_emit_hir )
-        PM.add_pass<EmitHir>("EmitHir");
+    // if(is_emit_hir )
+    //     PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
@@ -126,8 +126,8 @@ int main(int argc, char **argv) {
     //     PM.add_pass<EmitIR>("EmitIR");
 
     // PM.add_pass<GlobalVariableNumbering>("GVN");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // if(is_emit_mir && is_debug)
+    //     PM.add_pass<EmitIR>("EmitIR");
     PM.run();
 
     if(is_emit_mir && !is_debug){
