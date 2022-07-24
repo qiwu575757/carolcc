@@ -156,8 +156,8 @@ public:
   std::pair<int, int> getUsedRegisterNum(Function *func);
   std::string assignToTargetReg(Instruction *inst, Value *val, int target, int offset = 0);
   int getAllocaSpOffset(Instruction *inst);
-  int acquireForReg(Instruction *inst, std::string str);
-  std::string popValue(Instruction *inst, int index);
+  int acquireForReg(Instruction *inst, int val_pos, std::string str);
+  std::string popValue(Instruction *inst, int index, int val_pos);
   // 一般指令(除call/gep)无论该值在栈中还是寄存器中
   int getRegIndexOfValue(Value *inst, Value *val, bool label = false);
   //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack

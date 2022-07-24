@@ -41,7 +41,7 @@ class Instruction : public User {
         LOAD,
         STORE,
         //
-        STORE_OFFSET,
+        STORE_OFFSET,//自定义指令
         LOAD_OFFSET,
         // other instructions
         CMP,
@@ -88,6 +88,8 @@ class Instruction : public User {
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
+    bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
+    bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
     Function *Instruction::getFunction() const { return getParent()->getParentFunc(); }
