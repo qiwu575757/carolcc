@@ -90,6 +90,7 @@ class Instruction : public User {
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
+    Function *Instruction::getFunction() const { return getParent()->getParentFunc(); }
 
    protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);

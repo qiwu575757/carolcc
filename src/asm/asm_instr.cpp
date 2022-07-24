@@ -663,7 +663,7 @@ std::string b(const Label &dst, const CmpOp &cond) {
 
 std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
                                           const Value &op2),
-                      const Reg &dst, const Reg &op1, const Constant &op2, Instruction *instruction) {
+                      const Reg &dst, const Reg &op1, const Constant &op2) {
   std::string asm_instr;
   int val = op2.getValue();
   if (dst == op1 && op2.getValue() == 0 && (inst == add || inst == sub)) {
@@ -680,7 +680,7 @@ std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
 }
 
 std::string instConst(std::string (*inst)(const Reg &op1, const Value &op2),
-                  const Reg &op1, const Constant &op2, Instruction *instruction) {
+                  const Reg &op1, const Constant &op2) {
   std::string asm_instr;
   int val = op2.getValue();
   if (0 <= val && val <= imm_8_max) {
