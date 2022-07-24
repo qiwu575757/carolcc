@@ -9,6 +9,93 @@
 #include "utils.h"
 #include <memory.h>
 
+std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func){
+    live_interval_analysis(func);
+    int use_int_reg_num = 0;
+    for(int i=0;i<500;i++){
+        if(virtual_int_regs[i].size()==0){
+            use_int_reg_num = i;
+            break;
+        };
+    }
+    return std::pair<int,int>(use_int_reg_num,0);
+}
+
+int AsmBuilder::getAllocaSpOffset(Value *inst){ // 值的栈偏移
+    for(int i=0;i<stack_map.size();i++){
+        if(stack_map[i].v == inst && stack_map[i].is_data){
+            return stack_map[i].offset;
+        }
+    }
+    ERROR("can't give any reg because all the reg is using");
+    return -1;
+}
+
+int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string str){
+    int int_reg = give_int_reg_at(inst);
+    std::string insert_inst="";
+    if(val_pos>=4){
+        ERROR("overwrite op_idx");
+    }
+    int reg_get = give_int_reg_at(inst);
+    if(reg_get==-1){
+        ERROR("can't give any reg because all the reg is using");
+    }
+    Value *reg_v = value_in_int_reg_at(inst,reg_get);
+    if(reg_v != nullptr){ // 说明占用了寄存器
+        //!! 插入一条冲突寄存器分配到virtual_int_regs
+        //!! 做好冲突维护
+        // store reg_get to reg_save
+        insert_inst += InstGen::store(InstGen::Reg(reg_get,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
+    }
+   
+    if(int_reg == -1)ERROR("cant alloc any int reg now!");
+    return int_reg;
+}
+std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos){
+    std::string insert_inst="";
+    if(val_pos>=4){
+        ERROR("overwrite op_idx");
+    }
+    insert_inst = InstGen::load(InstGen::Reg(reg_idx,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
+    return insert_inst;
+}
+// 一般指令(除call/gep)无论该值在栈中还是寄存器中
+int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label = false){
+    int tag = linear_map[inst];
+    if(global_label){
+        for(int i=0;i<int_reg_number;i++){
+            for(int j=0;j<virtual_int_regs[i].size();j++){
+                if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
+                tag <= virtual_int_regs[i][j].ed_id && virtual_int_regs[i][j].type == interval_value_type::int_global_var_label){
+                    return i;
+                }
+            }
+        }
+    }
+    else{
+        for(int i=0;i<int_reg_number;i++){
+            for(int j=0;j<virtual_int_regs[i].size();j++){
+                if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
+                tag <= virtual_int_regs[i][j].ed_id){
+                    return i;
+                }
+            }
+        }
+    }
+    // ERROR("cant find this value in reg alloc!");
+    return -1;
+}
+//获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
+std::pair<int, bool> AsmBuilder::getValuePosition(Value *inst, Value *val){ // 全局变量？
+    int get_int_reg = getRegIndexOfValue(inst,val);
+    if(get_int_reg == -1){
+        int offset = get_int_value_sp_offset(inst,val);
+        return std::pair<int,bool>(offset,false);
+    }
+    return std::pair<int,bool>(get_int_reg,true);
+}
+
 bool cmp(interval lhs,interval rhs)//升序
 {
 	return lhs.weight>rhs.weight;
@@ -54,19 +141,6 @@ bool AsmBuilder::force_reg_alloc(interval itv,int reg_idx){ // 当出现绝对�
     return false;
 }
 
-int AsmBuilder::getRegIndexOfValue(Value *inst,Value *v){
-    int tag = linear_map[inst];
-    LSRA_WARNNING("inst %d",tag);
-    for(int i=0;i<int_reg_number;i++){
-        for(int j=0;j<virtual_int_regs[i].size();j++){
-            if(virtual_int_regs[i][j].v == v && tag >= virtual_int_regs[i][j].st_id &&  tag <= virtual_int_regs[i][j].ed_id){
-                return i;
-            }
-        }
-    }
-    ERROR("cant find int value in reg alloc!");
-    return -1;
-}
 
 void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function *func){
     //reset
@@ -208,6 +282,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
             interval itv_data;
             itv_data.st_id = itv.st_id;
             itv_data.ed_id = itv.ed_id;
+            itv_data.type = itv.type;
             itv_data.v = itv.v;
             itv_data.is_data = true;
             itv_data.offset = stack_size;
@@ -260,14 +335,17 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                     else{
                         // load reg_get from stack_map
                         int offset = get_int_value_sp_offset(inst,inst);
-                        before_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,offset,bb));
+                        before_inst.second.push_back(LoadOffset::createLoadOffset(inst,offset,bb));//?
                         //---------------------------
                         // store reg_get to stack_map
-                        after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
+                        after_inst.second.push_back(StoreOffset::createStoreOffset(inst,offset,bb));
                     }
                 }
                 op_idx+=1;
                 for(auto &op : inst->getOperandList()){
+                    if(op_idx>=4){
+                        ERROR("overwrite op_idx");
+                    }
                     if(op_in_inst_is_spilled(inst,op)){ // 冲突 右值
                         int reg_get = give_int_reg_at(inst);
                         if(reg_get==-1){
@@ -310,10 +388,10 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                             else{
                                 // load reg_get from stack_map
                                 int offset = get_int_value_sp_offset(inst,op);
-                                before_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,offset,bb));
+                                before_inst.second.push_back(LoadOffset::createLoadOffset(op,offset,bb));
                                 //---------------------------
                                 // store reg_get to stack_map 不需要！
-                                // after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,bb));
+                                // after_inst.second.push_back(StoreOffset::createStoreOffset(op,offset,bb));
                             }
                         }
                         interval itv;
@@ -323,43 +401,44 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                         virtual_int_regs[reg_get].push_back(itv);
                     }
                     op_idx+=1;
+                    
                 }
                 insert_instrs.push_back(before_inst);
                 insert_instrs.push_back(after_inst);
                 
                 //debug begin
-                if(!before_inst.second.empty()){
-                    // LSRA_WARNNING("-- insert inst --");
-                    // LSRA_WARNNING(" before instr %s ",(*before_inst.first)->getPrintName().c_str());
-                    for(auto &inst : before_inst.second){
-                        auto inststore = dynamic_cast<StoreOffset *>(inst);
-                        if(inststore)
-                            LSRA_WARNNING("store, v : %s , offset : %d",
-                            inststore->getOperandList()[0]->getPrintName().c_str(),
-                            inststore->offset);
-                        auto instload = dynamic_cast<LoadOffset *>(inst);
-                        if(instload)
-                            LSRA_WARNNING("load, v : %s , offset : %d",
-                            instload->getOperandList()[0]->getPrintName().c_str(),
-                            instload->offset);
-                    }
-                }
-                if(!after_inst.second.empty()){
-                    // LSRA_WARNNING("-- insert inst --");
-                    // LSRA_WARNNING(" after instr %s ",(*after_inst.first)->getPrintName().c_str());
-                    for(auto &inst : after_inst.second){
-                        auto inststore = dynamic_cast<StoreOffset *>(inst);
-                        if(inststore)
-                            LSRA_WARNNING("store, v : %s , offset : %d",
-                            inststore->getOperandList()[0]->getPrintName().c_str(),
-                            inststore->offset);
-                        auto instload = dynamic_cast<LoadOffset *>(inst);
-                        if(instload)
-                            LSRA_WARNNING("load, v : %s , offset : %d",
-                            instload->getOperandList()[0]->getPrintName().c_str(),
-                            instload->offset);
-                    }
-                }
+                // if(!before_inst.second.empty()){
+                //     // LSRA_WARNNING("-- insert inst --");
+                //     // LSRA_WARNNING(" before instr %s ",(*before_inst.first)->getPrintName().c_str());
+                //     for(auto &inst : before_inst.second){
+                //         auto inststore = dynamic_cast<StoreOffset *>(inst);
+                //         if(inststore)
+                //             LSRA_WARNNING("store, v : %s , offset : %d",
+                //             inststore->getOperandList()[0]->getPrintName().c_str(),
+                //             inststore->offset);
+                //         auto instload = dynamic_cast<LoadOffset *>(inst);
+                //         if(instload)
+                //             LSRA_WARNNING("load, v : %s , offset : %d",
+                //             instload->getOperandList()[0]->getPrintName().c_str(),
+                //             instload->offset);
+                //     }
+                // }
+                // if(!after_inst.second.empty()){
+                //     // LSRA_WARNNING("-- insert inst --");
+                //     LSRA_WARNNING(" after instr %s ",(*after_inst.first)->getPrintName().c_str());
+                //     for(auto &inst : after_inst.second){
+                //         auto inststore = dynamic_cast<StoreOffset *>(inst);
+                //         if(inststore)
+                //             LSRA_WARNNING("store, v : %s , offset : %d",
+                //             inststore->getOperandList()[0]->getPrintName().c_str(),
+                //             inststore->offset);
+                //         auto instload = dynamic_cast<LoadOffset *>(inst);
+                //         if(instload)
+                //             LSRA_WARNNING("load, v : %s , offset : %d",
+                //             instload->getOperandList()[0]->getPrintName().c_str(),
+                //             instload->offset);
+                //     }
+                // }
                
                 //debug end
             }
