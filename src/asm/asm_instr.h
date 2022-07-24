@@ -217,9 +217,9 @@ std::string cmp(const Reg &lhs, const Value &rhs);
 std::string b(const Label &dst, const CmpOp &op = NOP);
 std::string instConst(std::string (*inst)(const Reg &dst, const Reg &op1,
                                           const Value &op2),
-                const Reg &dst, const Reg &op1, const Constant &op2, Instruction *instruction);
+                const Reg &dst, const Reg &op1, const Constant &op2);
 std::string instConst(std::string (*inst)(const Reg &op1, const Value &op2),
-                      const Reg &op1, const Constant &op2, Instruction *instruction);
+                      const Reg &op1, const Constant &op2);
 std::string load(const Reg &dst, const Addr &src);
 std::string store(const Reg &src, const Addr &dst);
 std::string swi(const Constant &id);
