@@ -67,14 +67,29 @@ const int clone_flag = CLONE_VM | SIGCHLD;
 const int int_reg_number = 11;
 const int float_reg_number = 32;
 
+enum interval_value_type{
+  int_local_var,
+  int_global_var,
+  int_global_var_label,
+  int_imm_var,
+  int_arg_var,
+  int_spill_var,
+};
+
 typedef struct interval{
     int st_id;
     int ed_id;
     bool def=false;
+    bool spilled;
+    bool is_allocated=false;
+    bool is_data=false;
     std::set<int>use_id;
     Value *v;
     float use_freq;
     float weight;
+    interval_value_type type;
+    int specific_reg_idx;
+    int offset;
 };
 
 class AsmBuilder {
@@ -130,7 +145,7 @@ public:
   int float2int(ConstantFloat *val);
   // LSRA
   std::vector<interval> live_interval_analysis(Function *func);
-  void linear_scan_reg_alloc(std::vector<interval> live_range);
+  void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func);
   bool value_in_reg(Value *v);
   std::vector<interval> virtual_int_regs[50];//虚拟寄存器
   std::map<Value *,int > linear_map;
@@ -150,4 +165,4 @@ public:
 
 };
 
-#endif // SRC_ASM_BUILDER_H
+#endif // SRC_ASM_BUILDER_H;

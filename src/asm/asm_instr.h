@@ -50,17 +50,17 @@ public:
 
 class Reg : public Value {
   int id;
-  bool is_fp;
+  bool is_fp_;
 
 public:
-  explicit Reg(int id, bool is_vfpreg) : id(id), is_fp(is_fp){};
+  explicit Reg(int id, bool is_vfpreg) : id(id), is_fp_(is_vfpreg){};
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }
   int getID() const { return this->id; }
-  bool is_fp() const { return this->is_fp; }
+  bool is_fp() const { return this->is_fp_; }
   std::string getName() const {
-    if (this->is_fp)
+    if (this->is_fp_)
       return vfpreg_name[id];
 
     return reg_name[id];
@@ -148,15 +148,15 @@ public:
 
 class Constant : public Value {
   int value; // 浮点数转化为的十进制数 || 整型数
-  bool is_fp;
+  bool is_fp_;
 
 public:
-  explicit Constant(int value, bool is_fp) : value(value), is_fp(is_fp) {}
+  explicit Constant(int value, bool is_fp) : value(value), is_fp_(is_fp) {}
   bool is_reg() const { return false; }
   bool is_constant() const { return true; }
   bool has_shift() const { return false; }
   int getValue() const { return this->value; }
-  bool is_fp() const { return this->is_fp; }
+  bool is_fp() const { return this->is_fp_; }
   std::string getName() const { return "#" + std::to_string(this->value); }
 };
 

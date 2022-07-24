@@ -381,7 +381,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     if (operands.size() == 1) {
       asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[0]->getName())),
                             InstGen::NOP);
-    } else if (operands.size() == 3) { 
+    } else if (operands.size() == 3) {
       if (operands[0]->isConstant()) {
           if (atoi(operands[0]->getPrintName().c_str()) > 0 ) {
           asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),

@@ -337,6 +337,29 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr,
     return new StoreInst(value, ptr, parent);
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
+
+// DYB
+StoreOffset::StoreOffset(Value *value,int offset, BasicBlock *parent)
+    : Instruction(Type::getVoidTy(), Instruction::STORE_OFFSET, 2, parent) {
+    setOperand(0, value);
+    this->offset = offset;
+}
+StoreOffset *StoreOffset::createStoreOffset(Value *value,int offset,BasicBlock *parent) {
+    return new StoreOffset(value, offset, parent);
+}
+void StoreOffset::accept(IrVisitorBase *v) { v->visit(this); }
+
+LoadOffset::LoadOffset(Value *value,int offset, BasicBlock *parent)
+    : Instruction(Type::getVoidTy(), Instruction::LOAD_OFFSET, 2, parent) {
+    setOperand(0, value);
+    this->offset = offset;
+}
+LoadOffset *LoadOffset::createLoadOffset(Value *value,int offset,BasicBlock *parent) {
+    return new LoadOffset(value, offset, parent);
+}
+void LoadOffset::accept(IrVisitorBase *v) { v->visit(this); }
+// DYB
+
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
