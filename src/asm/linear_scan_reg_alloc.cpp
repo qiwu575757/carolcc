@@ -32,7 +32,7 @@ int AsmBuilder::getAllocaSpOffset(Value *inst){ // 值的栈偏移
 }
 
 int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str){
-    LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
+    // LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
     if(val_pos>=4){
         ERROR("overwrite op_idx");
     }
@@ -70,7 +70,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label){
             for(int j=0;j<virtual_int_regs[i].size();j++){
                 if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
                 tag <= virtual_int_regs[i][j].ed_id && virtual_int_regs[i][j].type == interval_value_type::int_global_var_label){
-                    LSRA_WARNNING("give reg %d",i);
+                    // LSRA_WARNNING("give reg %d",i);
                     return i;
                 }
             }
@@ -79,9 +79,10 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label){
     else{
         for(int i=0;i<int_reg_number;i++){
             for(int j=0;j<virtual_int_regs[i].size();j++){
+                LSRA_WARNNING("check same ? %d start %d end %d reg %d",virtual_int_regs[i][j].v == val,virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,i);
                 if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
                 tag <= virtual_int_regs[i][j].ed_id){
-                    LSRA_WARNNING("give reg %d",i);
+                    // LSRA_WARNNING("give reg %d",i);
                     return i;
                 }
             }
@@ -92,6 +93,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label){
 }
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
 std::pair<int, bool> AsmBuilder::getValuePosition(Value *inst, Value *val){ // 全局变量？
+    LSRA_WARNNING("ask pos of value %s",val->getPrintName().c_str());
     int get_int_reg = getRegIndexOfValue(inst,val);
     if(get_int_reg == -1){
         int offset = get_int_value_sp_offset(inst,val);
@@ -464,7 +466,7 @@ Value * AsmBuilder::value_in_int_reg_at(Value *inst,int reg_idx){ // 查看当�
     int tag = linear_map[inst];
     for(int j=0;j<virtual_int_regs[reg_idx].size();j++){
         if(tag >= virtual_int_regs[reg_idx][j].st_id &&  tag <= virtual_int_regs[reg_idx][j].ed_id){
-            LSRA_WARNNING("replace %s",virtual_int_regs[reg_idx][j].v->getPrintName().c_str());;
+            // LSRA_WARNNING("replace %s",virtual_int_regs[reg_idx][j].v->getPrintName().c_str());;
             return virtual_int_regs[reg_idx][j].v;
         }
     }
@@ -495,6 +497,7 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst,Value *op){
 }
 
 int AsmBuilder::get_int_value_sp_offset(Value *inst,Value *op){ // 查看变量在栈上的偏移
+    LSRA_WARNNING("ask stack offset of %s",op->getPrintName().c_str());
     int tag = linear_map[inst];
     for(int i=0;i<stack_map.size();i++){
         if(stack_map[i].v == op && tag >= stack_map[i].st_id &&  tag <= stack_map[i].ed_id){

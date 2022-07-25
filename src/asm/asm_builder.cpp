@@ -217,8 +217,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
   bool operands_global[operands.size()];
   memset(operands_global,false,operands.size());
 
-  // 增加对全局变量的处理
   for (int i = 0; i < operands.size(); i++) {
+    // 增加对全局变量的处理
     if(dynamic_cast<GlobalVariable *>(operands[i])) {
       int label_reg = getRegIndexOfValue(inst,operands[i],true);
       int value_reg = getRegIndexOfValue(inst,operands[i],false);
@@ -230,7 +230,18 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       // asm_code += InstGen::add(InstGen::Reg(label_reg,false),InstGen::pc,InstGen::Reg(label_reg,false));
       // asm_code += InstGen::sub(InstGen::Reg(label_reg,false),InstGen::Reg(label_reg,false),InstGen::Constant(4,false));
     }
+
+    // 增加对立即数的赋值处理
+    int imm_reg = getRegIndexOfValue(inst,operands[i]);
+    if (operands[i]->isConstant()&&imm_reg!=-1) {
+      bool is_fp = operands[i]->getType()->isFloatTy();
+      int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(operands[0])) :
+                        atoi(operands[0]->getPrintName().c_str());
+      asm_code += InstGen::setValue(InstGen::Reg(imm_reg,is_fp),InstGen::Constant(int_value,false));
+    }
   }
+
+
 
   if (inst->isRet()) {
     if (!operands.empty()) { // 有返回值
@@ -272,9 +283,9 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(operands[0])) :
                 atoi(operands[0]->getPrintName().c_str());
       if (is_fp) { // vmov sx, #? 类型会溢出，需要使用整型寄存器做中介
-        std::string str;
         tmp_reg_index = acquireForReg(inst, 1, str);
         asm_code += str;
+        str = "";
       }
       op1_reg_index = is_fp ? tmp_reg_index : getRegIndexOfValue(inst,operands[0]);
       asm_code += InstGen::setValue(InstGen::Reg(op1_reg_index,false),InstGen::Constant(int_value,false));
@@ -316,9 +327,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       std::pair<int, bool> op_pos = getValuePosition(inst,operands[i]);
       int op_reg = operands_global[i] ? getRegIndexOfValue(inst,operands[i],true)
                           : op_pos.second ? op_pos.first : allocaed[i];
-      if (!op_pos.second&&!operands_global[i])
+      if (!op_pos.second&&!operands_global[i]) {
         asm_code += InstGen::load(InstGen::Reg(op_reg,false),
-                        InstGen::Addr(InstGen::sp,op_pos.first));
+                  InstGen::Addr(InstGen::sp,op_pos.first));
+      }
 
         asm_code += InstGen::mla(InstGen::Reg(target_reg,false), InstGen::Reg(allocaed[0],false),
                                 InstGen::Reg(op_reg,false),InstGen::Reg(target_reg,false));
@@ -354,7 +366,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       int target = getRegIndexOfValue(inst,inst);
       int op0 = getRegIndexOfValue(inst,operands[0]);
       bool is_fp = inst->getType()->isFloatTy() || operands[0]->getType()->isFloatTy();
-      int op1 = is_fp || !operands[1]->isConstant() ? getRegIndexOfValue(inst,operands[1]) : -2;
+      int op1 = (is_fp || !operands[1]->isConstant()) ? getRegIndexOfValue(inst,operands[1]) : -2;
       int tmp; // 作为向浮点寄存器传值的中介
 
       if (inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp()) {
@@ -467,8 +479,11 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   int callee_stack_size = stack_size_mapping[func->getName().c_str()];
   auto saved_registers = getCallerSavedRegisters(func);
 
-  std::pair<int, bool> inst_pos = getValuePosition(inst,inst);
+  WARNNING("calleer saved regs size: %d", saved_registers.size());
   bool has_return_value = (return_reg >= 0) && (inst->getType()->getSize() > 0);
+  std::pair<int, bool> inst_pos;
+  if (has_return_value) inst_pos = getValuePosition(inst,inst);
+
   if (has_return_value && inst_pos.second) {
     auto returned_reg = InstGen::Reg(inst_pos.first, inst->getType()->isFloatTy());
     decltype(saved_registers) new_save_registers;
@@ -503,8 +518,23 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           }
         } else {
           std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
-          if (arg_pos.second)// 参数在寄存器中
-            func_asm += InstGen::mov(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Reg(arg_pos.first,is_fp));
+          bool is_conflict = arg_pos.second&&(arg_pos.first < i);
+          if (arg_pos.second) {// 参数在寄存器中
+            if (is_conflict) {
+                int offset = -1;// 发生冲突的寄存器的原值在栈中的偏移
+                for (int k = 0; k < saved_registers.size(); k++) {
+                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
+                    offset = 4 * k;
+                    break;
+                  }
+                }
+                MyAssert("Conflict reg not in stack.", offset != -1);
+                func_asm += InstGen::load(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Addr(InstGen::sp,offset));
+            }
+            else{
+              func_asm += InstGen::mov(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Reg(arg_pos.first,is_fp));
+            }
+          }
           else {
             func_asm += InstGen::load(InstGen::Reg(11,false),
                   InstGen::Addr(InstGen::sp,arg_pos.first));
@@ -530,11 +560,11 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           if (arg_pos.second)// 参数在寄存器中
             func_asm += InstGen::store(InstGen::Reg(arg_pos.first,is_fp),
                 InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
-          else // 将浮点数与整型数统一处理，有问题吗----可以注意 vload sx
-            func_asm += InstGen::load(InstGen::Reg(11,false),
-                  InstGen::Addr(InstGen::sp,arg_pos.first));
+          else { // 将浮点数与整型数统一处理，有问题吗----可以注意 vload sx
+            func_asm += InstGen::load(InstGen::Reg(11,false),InstGen::Addr(InstGen::sp,arg_pos.first));
             func_asm += InstGen::store(InstGen::Reg(11,false),
                 InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
+          }
         }
         offset += 4;
       }
@@ -545,12 +575,14 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   if (inst->isAlloca()) {
     func_asm += InstGen::add(InstGen::Reg(0,false),InstGen::Reg(0,false),InstGen::sp);
   }
-
+  WARNNING("enter func: %s",func_name.c_str());
   func_asm += InstGen::bl(func_name);
   if (has_return_value) {
-    bool is_fp = dynamic_cast<CallInst *>(inst)->getType()->isFloatTy();
+    bool is_fp = (inst)->getType()->isFloatTy(); // 只有 call指令返回值可能会用 s0
+    bool is_call = inst->isCall();
+
     if (inst_pos.second) { // inst value in reg
-      func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,is_fp));
+      func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,is_fp&&is_call));
     } else { // inst value in stack
       func_asm += InstGen::store(InstGen::Reg(return_reg,is_fp),
               InstGen::Addr(InstGen::sp,inst_pos.first+saved_registers.size()*4));
@@ -617,9 +649,11 @@ std::vector<InstGen::Reg> AsmBuilder::getAllRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
 
   std::pair<int, int> n = getUsedRegisterNum(func);// 返回整型寄存器、浮点寄存器各用多少个
-  if (n.first > 13)
+  if (n.first > 13) {
     registers.insert(InstGen::lr);
     n.first -= 1;
+  }
+
   for (int i = 0; i < n.first; i++ ) {
     registers.insert(InstGen::Reg(i,false));
   }

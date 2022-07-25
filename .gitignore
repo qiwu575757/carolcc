@@ -236,3 +236,4 @@ cython_debug/
 
 *.s
 *.asm
+*.ir
