@@ -18,7 +18,7 @@
 #include "ir/global_variable.h"
 #include "ir/instruction.h"
 #include "asm/asm_instr.h"
-#include "ir/user.h"Reg
+#include "ir/user.h"
 #include "ir/value.h"
 #include "passes/module.h"
 const int reg_num = 10;
@@ -64,7 +64,7 @@ const int thread_id_reg = 10;
 
 const int clone_flag = CLONE_VM | SIGCHLD;
 
-const int int_reg_number = 11;
+const int int_reg_number = 14;
 const int float_reg_number = 32;
 
 enum interval_value_type{
@@ -107,7 +107,12 @@ private:
   int stack_size;
   int return_offset; // 注意维护
   bool debug;
-  std::string asm_code;
+
+  std::vector<interval> virtual_int_regs[500];//虚拟寄存器
+  std::vector<interval> stack_map;//args spill alloc return
+  std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
+  std::map<Value *,int > linear_map;//指令列表
+  int op_save[4];// 栈溢出时的保存寄存器
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -139,7 +144,7 @@ public:
   std::string generateFunctionCall(Instruction *inst, std::vector<Value *> args,
           std::string func_name, int return_reg);
 
-  void allocaStackSpace(Function *func);
+  // void allocaStackSpace(Function *func);
 
   // 浮点运算函数
   int float2int(ConstantFloat *val);
@@ -153,28 +158,19 @@ public:
   Value * value_in_int_reg_at(Value *inst,int reg_idx);
   int get_int_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
 
-  std::vector<interval> virtual_int_regs[500];//虚拟寄存器
-  std::vector<interval> stack_map;//args spill alloc return
-  std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
-  std::map<Value *,int > linear_map;//指令列表
-
-  int op_save[4];// 栈溢出时的保存寄存器
-  int return_offset;//返回地址
-
-
   std::vector<InstGen::Reg> getCalleeSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getCallerSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getAllRegisters(Function *func);
   std::pair<int, int> getUsedRegisterNum(Function *func);
   std::string assignToTargetReg(Instruction *inst, Value *val, int target, int offset = 0);
   int getAllocaSpOffset(Value *inst);
-  int acquireForReg(Value *inst, int val_pos, std::string str);
+  int acquireForReg(Value *inst, int val_pos, std::string &str);
   std::string popValue(Value *inst, int reg_idx, int val_pos);
   // 一般指令(除call/gep)无论该值在栈中还是寄存器中
   int getRegIndexOfValue(Value *inst, Value *val, bool global_label = false);
   //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
   std::pair<int, bool> getValuePosition(Value *inst, Value *val);
-
+  InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
 
 
 };

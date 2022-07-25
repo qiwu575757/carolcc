@@ -60,8 +60,10 @@ public:
   int getID() const { return this->id; }
   bool is_fp() const { return this->is_fp_; }
   std::string getName() const {
-    if (this->is_fp_)
+    // WARNNING("The fp reg id: %d", id);
+    if (this->is_fp_) {
       return vfpreg_name[id];
+    }
 
     return reg_name[id];
   }

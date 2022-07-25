@@ -31,9 +31,8 @@ int AsmBuilder::getAllocaSpOffset(Value *inst){ // 值的栈偏移
     return -1;
 }
 
-int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string str){
-    int int_reg = give_int_reg_at(inst);
-    std::string insert_inst="";
+int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str){
+    LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
     if(val_pos>=4){
         ERROR("overwrite op_idx");
     }
@@ -46,28 +45,32 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string str){
         //!! 插入一条冲突寄存器分配到virtual_int_regs
         //!! 做好冲突维护
         // store reg_get to reg_save
-        insert_inst += InstGen::store(InstGen::Reg(reg_get,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
+        str += InstGen::comment("insert str","");
+        str += InstGen::store(InstGen::Reg(reg_get,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
     }
-   
-    if(int_reg == -1)ERROR("cant alloc any int reg now!");
-    return int_reg;
+    return reg_get;
 }
 std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos){
     std::string insert_inst="";
     if(val_pos>=4){
         ERROR("overwrite op_idx");
     }
-    insert_inst = InstGen::load(InstGen::Reg(reg_idx,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
+    Value *reg_v = value_in_int_reg_at(inst,reg_idx);
+    if(reg_v != nullptr){ // 说明占用了寄存器
+        insert_inst += InstGen::comment("insert ldr","");
+        insert_inst += InstGen::load(InstGen::Reg(reg_idx,false),InstGen::Addr(InstGen::sp,op_save[val_pos]));
+    }
     return insert_inst;
 }
 // 一般指令(除call/gep)无论该值在栈中还是寄存器中
-int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label = false){
+int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label){
     int tag = linear_map[inst];
     if(global_label){
         for(int i=0;i<int_reg_number;i++){
             for(int j=0;j<virtual_int_regs[i].size();j++){
                 if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
                 tag <= virtual_int_regs[i][j].ed_id && virtual_int_regs[i][j].type == interval_value_type::int_global_var_label){
+                    LSRA_WARNNING("give reg %d",i);
                     return i;
                 }
             }
@@ -78,6 +81,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label = 
             for(int j=0;j<virtual_int_regs[i].size();j++){
                 if(virtual_int_regs[i][j].v == val && tag >= virtual_int_regs[i][j].st_id &&
                 tag <= virtual_int_regs[i][j].ed_id){
+                    LSRA_WARNNING("give reg %d",i);
                     return i;
                 }
             }
@@ -161,13 +165,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
         }
     }
     //cal weight
+    //栈溢出处理 检查
     for (auto &p : live_range) {
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
         p.use_freq = (total_use_num+1e-4)/(sum_range + 1e-4);
         p.weight = sum_range; // 暂时考虑按这个
     }
-    
+
     // sort by weight
     std:LSRA:sort(live_range.begin(),live_range.end(),cmp);
 
@@ -236,7 +241,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
             virtual_int_reg_use[i].insert(virtual_int_regs[i][j].use_id.begin(),virtual_int_regs[i][j].use_id.end());
         }
     }
-    //debug 
+    //debug
     LSRA_WARNNING("-- reg set --");
     for(int i=0;i<int_reg_number;i++){
         LSRA_SHOW("[reg %02d]",i);
@@ -269,7 +274,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 virtual_int_regs[i][j].spilled = true;
                 stack_map.push_back(virtual_int_regs[i][j]);
             }
-            stack_size += 4; 
+            stack_size += 4;
         }
     }
 
@@ -293,7 +298,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
     // 分配 ret
     return_offset = stack_size;
     stack_size += 4;
-    //debug 
+    //debug
     LSRA_SHOW("-- stack size %d --\n",stack_size);
     for(auto &itv : stack_map){
         LSRA_WARNNING("type: %d V: %s -> sp + %d ",itv.is_data,itv.v->getPrintName().c_str(),itv.offset);
@@ -312,7 +317,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 after_inst.first = inst_iter;
                 after_inst.first++;
                 if(op_in_inst_is_spilled(inst,inst)) // inst冲突考虑 左值
-                {  
+                {
                     int reg_get = give_int_reg_at(inst);
                     if(reg_get==-1){
                         ERROR("can't give any reg because all the reg is using");
@@ -401,11 +406,11 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                         virtual_int_regs[reg_get].push_back(itv);
                     }
                     op_idx+=1;
-                    
+
                 }
                 insert_instrs.push_back(before_inst);
                 insert_instrs.push_back(after_inst);
-                
+
                 //debug begin
                 // if(!before_inst.second.empty()){
                 //     // LSRA_WARNNING("-- insert inst --");
@@ -439,7 +444,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
                 //             instload->offset);
                 //     }
                 // }
-               
+
                 //debug end
             }
         }
@@ -448,17 +453,18 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,Function
             bb->_instructions.insert(insert_inst.first,insert_inst.second.begin(),insert_inst.second.end());
         }
 
-        
-        
+
+
     }
 
-    
+    LSRA_WARNNING("Lsra finish.");
 }
 
 Value * AsmBuilder::value_in_int_reg_at(Value *inst,int reg_idx){ // 查看当前寄存器分配的变量
     int tag = linear_map[inst];
     for(int j=0;j<virtual_int_regs[reg_idx].size();j++){
         if(tag >= virtual_int_regs[reg_idx][j].st_id &&  tag <= virtual_int_regs[reg_idx][j].ed_id){
+            LSRA_WARNNING("replace %s",virtual_int_regs[reg_idx][j].v->getPrintName().c_str());;
             return virtual_int_regs[reg_idx][j].v;
         }
     }
@@ -530,7 +536,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
                 live_map[args].type = interval_value_type::int_arg_var;
                 live_map[args].specific_reg_idx = arg_idx++;
                 live_map[args].spilled = true;
-                
+
             }
             // 还要考虑
         }
@@ -578,7 +584,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
                     continue;
                 }
                 auto &op = inst->getOperandList()[0];
-                // 
+                //
                 auto global = dynamic_cast<GlobalVariable *>(op);
                 auto const_int = dynamic_cast<ConstantInt *>(op);
                 if(global){
@@ -587,7 +593,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func){
                 else if(op->isConstant()){
                     live_map[op].type = interval_value_type::int_imm_var;
                 }
-                // 
+                //
                 if(!live_map.count(op)) // first time
                 {
                     live_map[op].st_id = linear_map[inst];

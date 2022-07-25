@@ -35,24 +35,32 @@ std::string condCode(const CmpOp &cond) {
 
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
-  bool flag = false;
+  bool flag = false, has_fp = false;
   int total_push = 0;
-  asm_instr += spaces;
-  asm_instr += "vpush";
-  asm_instr += " ";
-  asm_instr += "{";
   for (auto &i : reg_list) {
     if (i.is_fp()) {
-      if (flag) {
-        asm_instr += ", ";
-      }
-      asm_instr += i.getName();
-      flag = true;
-      total_push++;
+      has_fp = true;
+      break;
     }
   }
-  asm_instr += "}";
-  asm_instr += newline;
+  if (has_fp) {
+    asm_instr += spaces;
+    asm_instr += "vpush";
+    asm_instr += " ";
+    asm_instr += "{";
+    for (auto &i : reg_list) {
+      if (i.is_fp()) {
+        if (flag) {
+          asm_instr += ", ";
+        }
+        asm_instr += i.getName();
+        flag = true;
+        total_push++;
+      }
+    }
+    asm_instr += "}";
+    asm_instr += newline;
+  }
   if (total_push < reg_list.size()) {
     bool flag = false;
     asm_instr += spaces;

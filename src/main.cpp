@@ -13,7 +13,7 @@
 #include "passes/dominators.h"
 #include "passes/emit_ir.h"
 #include "passes/constan_fold.h"
-#include "passes/global_value_numbering.h""
+#include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/lower_ir.h"
@@ -95,7 +95,7 @@ int main(int argc, char **argv) {
     pass_manager PM(builder->getModule().get());
 
     // if(is_emit_hir )
-        // PM.add_pass<EmitHir>("EmitHir");
+    //     PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
     //     PM.add_pass<EmitIR>("EmitIR");
     PM.run();
 
-    if(is_emit_mir && !is_debug){
+    if(is_emit_mir && !is_debug && !is_emit_asm){
         builder->getModule()->MIRMEMprint(output_file);
     }
 
