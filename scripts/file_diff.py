@@ -21,12 +21,12 @@ def is_two_file_same(std_out_file_path, our_out_path):
         j +=1
     for i in range(len(std_out_lines)):
         if std_out_lines[i] != our_out_lines[j]:
-            if i == len(std_out_lines)-1:
+            if i == len(std_out_lines)-1 and j < len(our_out_lines)-1:
                 j +=1
                 if std_out_lines[i] ==our_out_lines[j]:
                     return True
             Print_C().print_error("expected line {}: {}".format(i, std_out_lines[i]))
-            Print_C().print_error("but get line {}: {}".format(i, our_out_lines[i]))
+            Print_C().print_error("but get line {}: {}".format(i, our_out_lines[j]))
             std_out_file.close()
             our_out_file.close()
             return False
