@@ -15,6 +15,7 @@ static int ffflag;
 void SCCP::run() {
     for (auto f : _m->getFunctions()) {
         if (!f->isBuiltin()) {
+            SCCP_LOG("visiting function : %s",f->getPrintName().c_str());
             SCCP_LOG("run number is %d", ffflag);
             if (ffflag == 0) {
                 SCCP_LOG("first pass only run constant fold");
@@ -246,8 +247,8 @@ bool SCCP::detectCastConstantFold(UnaryInst *pInst) {
         } else {
             ERROR("unsupported type");
         }
-        pInst->replaceAllUse(new_constant);
         pInst->removeUseOps();
+        pInst->replaceAllUse(new_constant);
         return true;
     } else {
         return false;
@@ -276,12 +277,14 @@ bool SCCP::detectCmpConstantFold(CmpInst *pInst) {
         ERROR("error type");
         return false;
     }
-    pInst->replaceAllUse(new_constant);
     pInst->removeUseOps();
+    pInst->replaceAllUse(new_constant);
     return true;
 }
 
 void SCCP::sparseConditionalConstantPropagation(Function *f) {
+    _instr_assign_table.clear();
+    _block_excutable_table.clear();
     _block_work_list.clear();
     _value_work_list.clear();
     _block_work_list.push_back(f->getEntryBlock());
@@ -559,8 +562,8 @@ void SCCP::replaceConstant(Function *f) {
         auto val_instr = vv.second;
         if (key_instr && isValueHasDefiniteValue(key_instr)) {
             SCCP_LOG("replacing instr(%s)",key_instr->getPrintName().c_str());
-            key_instr->replaceAllUse(val_instr);
             key_instr->removeUseOps();
+            key_instr->replaceAllUse(val_instr);
             if (key_instr->getParent() == nullptr) {
                 ERROR("key_instr(%s) should have parent!",
                       key_instr->getPrintName().c_str());
