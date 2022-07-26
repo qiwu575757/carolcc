@@ -9,7 +9,7 @@
 #include <list>
 
 
-#define SCCP_LOG_
+// #define SCCP_LOG_
 #ifdef SCCP_LOG_
 #define SCCP_LOG(format, ...)                                  \
     do {                                                                             \
@@ -28,7 +28,7 @@ class Instruction;
  */
 class SCCP : public Transform {
    public:
-    SCCP(Module* m,const std::string &name): Transform(m,name), uncertainValue(Type::getVoidTy(),"uncertainValue"){
+    SCCP(Module* m,const std::string &name): Transform(m,name), uncertainValue(Value::getUncertainValue()){
 
     }
     void run() override;
@@ -63,7 +63,7 @@ class SCCP : public Transform {
     bool isValueNeverAssigned(Value* value);
     bool isValueHasDefiniteValue(Value* value);
     bool isValueHasMultiValue(Value* value);
-    Value uncertainValue;
+    Value* uncertainValue;
 
 };
 

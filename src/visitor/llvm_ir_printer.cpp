@@ -549,14 +549,25 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
 void LLVMIrPrinter::visit(PhiInstr *node) {
     output_file<<node->getPrintName()<<" = phi ";
     node->getType()->print(output_file);
+    bool has_uncertain=false;
     for(int i=0;i<node->getOperandNumber();i++){
-        output_file<<"[ "
-        << node->getOperand(i++)->getPrintName()
-        << ", "
+        output_file<<"[ ";
+        auto val = node->getOperand(i++);
+        if(val == Value::getUncertainValue()){
+            has_uncertain = true;
+            output_file<<"0";
+        }
+        else {
+            output_file<<val->getPrintName();
+        }
+        output_file<< ", "
         << node->getOperand(i)->getPrintName()
         << "] ";
         if( i !=node->getOperandNumber()-1)
             output_file<<",";
+    }
+    if(has_uncertain){
+        output_file<<"\t\t; has uncertain";
     }
     output_file<<std::endl;
 }

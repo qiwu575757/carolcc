@@ -1,4 +1,6 @@
 #include "value.h"
+#include "ir/constant.h"
+#include "ir/type.h"
 #include "user.h"
 #include "utils.h"
 #include "visitor/ir_visitor_base.h"
@@ -12,6 +14,10 @@ Type *Value::getType() const{
     return _type;
 }
 
+Value * Value::getUncertainValue() {
+    static auto  a = Value(Type::getInt32Ty(),"uncertainValue");
+    return &a;
+};
 /**
  * 用 new_val 替换掉使用自己的地方
  * @param new_val

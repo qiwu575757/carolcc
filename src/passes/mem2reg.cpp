@@ -102,7 +102,7 @@ void Mem2Reg::genPhi() {
     for (int i = 0; i < allocas.size(); i++) {
         //      values.add(new UndefValue());
         if(allocas.at(i)->getAllocaType()->isIntegerTy()){
-            values.push_back(ConstantInt::create(0));
+            values.push_back(Value::getUncertainValue());
         }else if (allocas.at(i)->getAllocaType()->isFloatTy()) {
             values.push_back(ConstantFloat::create(0));
         }
@@ -129,7 +129,9 @@ void Mem2Reg::genPhi() {
                 continue;
             }
 //            auto  predIndex = data._bb->getPreBasicBlockList().indexOf(data.pred);
-            phiInst->setParams(data->_values.at(phiToAllocaMap.find(phiInst)->second), data->_pred);
+            phiInst->setParams(
+                data->_values.at(phiToAllocaMap.find(phiInst)->second),
+                data->_pred);
         }
 
         // 已经删除过 alloca/load/store，但是可能有来自其他前驱基本块的 incomingVals，所以在这里才 `continue;`
