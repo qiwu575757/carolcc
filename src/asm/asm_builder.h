@@ -61,10 +61,10 @@ const int L1_cache_size = 32 * (1 << 10); // 32KiB per core
 const int L2_cache_size = 1 * (1 << 20);  // 1MB shared
 
 const int thread_id_reg = 10;
-
+const int op_save_stack_num = 8;
 const int clone_flag = CLONE_VM | SIGCHLD;
 
-const int int_reg_number = 14;
+const int int_reg_number = 13;
 const int float_reg_number = 32;
 
 enum interval_value_type{
@@ -149,8 +149,8 @@ public:
   // 浮点运算函数
   int float2int(ConstantFloat *val);
   // LSRA
-  std::vector<interval> live_interval_analysis(Function *func);
-  void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func);
+  std::vector<interval> live_interval_analysis(Function *fun,bool insert = false);
+  void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func, bool insert = false);
   bool value_in_reg(Value *v);
   bool force_reg_alloc(interval itv,int reg_idx);
   bool op_in_inst_is_spilled(Value *inst,Value *op);

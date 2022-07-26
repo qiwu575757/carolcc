@@ -340,7 +340,7 @@ void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
 
 // DYB
 StoreOffset::StoreOffset(Value *value,int offset, BasicBlock *parent)
-    : Instruction(Type::getVoidTy(), Instruction::STORE_OFFSET, 2, parent) {
+    : Instruction(Type::getVoidTy(), Instruction::STORE_OFFSET, 1, parent) {
     setOperand(0, value);
     this->offset = offset;
 }
@@ -350,7 +350,7 @@ StoreOffset *StoreOffset::createStoreOffset(Value *value,int offset,BasicBlock *
 void StoreOffset::accept(IrVisitorBase *v) { v->visit(this); }
 
 LoadOffset::LoadOffset(Value *value,int offset, BasicBlock *parent)
-    : Instruction(Type::getVoidTy(), Instruction::LOAD_OFFSET, 2, parent) {
+    : Instruction(Type::getVoidTy(), Instruction::LOAD_OFFSET, 1, parent) {
     setOperand(0, value);
     this->offset = offset;
 }

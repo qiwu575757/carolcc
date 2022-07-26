@@ -72,6 +72,7 @@ std::string push(const std::vector<Reg> &reg_list) {
         if (flag) {
           asm_instr += ", ";
         }
+        MyAssert("[push]Reg name is null",i.getName().size() != 0);
         asm_instr += i.getName();
         flag = true;
       }
