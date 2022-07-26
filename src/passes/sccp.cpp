@@ -11,22 +11,21 @@
 #include "syntax_tree.h"
 #include "utils.h"
 static const bool EXCUTABLE = true;
-static const bool NEVER_EXCUTATED = false;
 static int ffflag;
 void SCCP::run() {
     for (auto f : _m->getFunctions()) {
         if (!f->isBuiltin()) {
-            SCCP_LOG("visiting function : %s",f->getPrintName().c_str());
-            SCCP_LOG("run number is %d", ffflag);
-            if (ffflag == 0) {
-                SCCP_LOG("first pass only run constant fold");
+            // SCCP_LOG("visiting function : %s",f->getPrintName().c_str());
+            // SCCP_LOG("run number is %d", ffflag);
+            // if (ffflag == 0) {
+            //     SCCP_LOG("first pass only run constant fold");
                 constantFoldAndPropagation(f);
-                SCCP_LOG("finish constantFoldAndPropagation");
-            } else {
-                SCCP_LOG("second pass only run constant fold");
+            //     SCCP_LOG("finish constantFoldAndPropagation");
+            // } else {
+            //     SCCP_LOG("second pass only run constant fold");
                 sparseConditionalConstantPropagation(f);
-                SCCP_LOG("finish sparseConditionalConstantPropagation");
-            }
+                // SCCP_LOG("finish sparseConditionalConstantPropagation");
+            // }
         }
     }
     ffflag++;
@@ -283,6 +282,7 @@ bool SCCP::detectCmpConstantFold(CmpInst *pInst) {
     return true;
 }
 
+// TODO:把指令提升到work list里封装成函数
 void SCCP::sparseConditionalConstantPropagation(Function *f) {
     _instr_assign_table.clear();
     _block_excutable_table.clear();
@@ -349,6 +349,11 @@ bool SCCP::isValueHasDefiniteValue(Value *value) {
             return true;
         }
     }
+    if(value->isConstant()){
+        _instr_assign_table[value] = value;
+        return true;
+    }
+
     return false;
 }
 bool SCCP::isValueHasMultiValue(Value *value) {
@@ -506,6 +511,8 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
             _instr_assign_table[oprd] = oprd;
         }
         if (isValueHasMultiValue(oprd) || isValueNeverAssigned(oprd)) {
+            if(isValueNeverAssigned(instr) || isValueHasDefiniteValue(instr))
+                _value_work_list.push_back(instr);
             _instr_assign_table[instr] = uncertainValue;
         } else if (isValueHasDefiniteValue(oprd)) {
             Constant *new_constant;
@@ -515,12 +522,17 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                     dynamic_cast<ConstantFloat *>(_instr_assign_table[oprd])
                         ->getValue();
                 new_constant = ConstantInt::create(static_cast<int>(val));
+                if(isValueNeverAssigned(instr))
+                    _value_work_list.push_back(instr);
+                _instr_assign_table[instr] = new_constant;
             } else if (instr->getType()->isFloatTy() &&
                        instr->getOperand(0)->getType()->isIntegerTy()) {
                 auto val =
                     dynamic_cast<ConstantInt *>(_instr_assign_table[oprd])
                         ->getValue();
                 new_constant = ConstantFloat::create(static_cast<float>(val));
+                if(isValueNeverAssigned(instr))
+                    _value_work_list.push_back(instr);
                 _instr_assign_table[instr] = new_constant;
             }
         }
@@ -530,6 +542,8 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
             _instr_assign_table[oprd] = oprd;
         }
         if (isValueHasMultiValue(oprd) || isValueNeverAssigned(oprd)) {
+            if(isValueNeverAssigned(instr) || isValueHasDefiniteValue(instr))
+                _value_work_list.push_back(instr);
             _instr_assign_table[instr] = uncertainValue;
         } else if (isValueHasDefiniteValue(oprd)) {
             MyAssert("error type", instr->getType()->isInt32());
@@ -537,6 +551,8 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 dynamic_cast<ConstantInt *>(_instr_assign_table[oprd]);
             MyAssert("error", constant_int != nullptr);
             auto new_constant = ConstantInt::create(constant_int->getValue());
+            if(isValueNeverAssigned(instr) )
+                _value_work_list.push_back(instr);
             _instr_assign_table[instr] = new_constant;
         }
     }
