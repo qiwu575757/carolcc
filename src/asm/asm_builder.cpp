@@ -47,6 +47,7 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
         }
     }
     module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
+    module_header_code += ".macro mov32, cond, reg, val \n \tmovw\\cond \\reg, #:lower16:\\val\n \tmovt\\cond \\reg, #:upper16:\\val \n.endm" + InstGen::newline;
     return module_header_code;
 }
 
