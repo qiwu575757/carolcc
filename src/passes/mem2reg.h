@@ -9,8 +9,8 @@ class Module;
 class Function;
 class BasicBlock;
 
-// #define __MEM2REG_LOG
-#ifdef __MEM2REG_LOG
+// #define MEM2REG_LOG_
+#ifdef MEM2REG_LOG_
 #define MEM2REG_LOG(format, ...)                                                            \
     do {                                                                             \
         printf(BLUE "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
@@ -33,8 +33,8 @@ class Mem2Reg : public  Transform{
 class RenameData{
    public :
     BasicBlock* _bb; //所属基本块
-    BasicBlock* _pred;
-    std::vector<Value*> _values;// 当前基本块末尾的alloca对应的value
+    BasicBlock* _pred; // 来自哪个前驱基本块
+    std::vector<Value*> _values;// 从此前驱来的alloca的值
     RenameData(BasicBlock* bb,BasicBlock* pred,std::vector<Value*>values):_bb(bb),
     _pred(pred),_values(std::move(values)){
 

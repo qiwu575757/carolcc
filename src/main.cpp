@@ -5,6 +5,16 @@
 #include <iostream>
 #include <string>
 
+#include "asm/asm_builder.h"
+#include "passes/dominators.h"
+#include "passes/emit_ir.h"
+#include "passes/global_value_numbering.h"
+#include "passes/hir_to_mir.h"
+#include "passes/lower_ir.h"
+#include "passes/mem2reg.h"
+#include "passes/mir_simplify_cfg.h"
+#include "passes/pass_manager.h"
+#include "passes/sccp.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
@@ -111,13 +121,16 @@ int main(int argc, char **argv) {
         // PM.add_pass<EmitIR>("EmitIR");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    // PM.add_pass<Mem2Reg>("Mem2Reg");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+    PM.add_pass<Mem2Reg>("Mem2Reg");
+    if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
 
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    PM.add_pass<ConstantFold>("ConstantFold");
+    PM.add_pass<SCCP>("SCCP");
+     if(is_emit_mir && is_debug)
+         PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<SCCP>("SCCP");
     //  if(is_emit_mir && is_debug)
     //      PM.add_pass<EmitIR>("EmitIR");
 

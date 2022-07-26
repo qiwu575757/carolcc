@@ -28,8 +28,6 @@ void Mem2Reg::run() {
 }
 
 void Mem2Reg::genPhi() {
-    std::set<Value *> globals;
-    std::map<Value *, std::set<BasicBlock *>> var_blocks;
     std::vector<std::vector<BasicBlock*>> defBlocks ;
     std::vector<AllocaInst*> allocas ;
    std::map<AllocaInst*, int> allocaLookup ;
@@ -85,22 +83,26 @@ void Mem2Reg::genPhi() {
 
         while (!W.empty()) {
             auto bb = W.front();W.pop();
+            // 对每一个支配者边界
             for (auto y : bb->getDomFrontier()) {
+                // 如果之前没有在这个支配着边界里里插入与此alloca相关的phi指令
                 if ( visited.find(y)==visited.end()) {
                     visited.insert(y);
                     auto phiInst = PhiInstr::createPhi(alloca_type, y);
                     phiToAllocaMap[phiInst]= index;
-                    if (std::find(defBlocks.at(index).begin(), defBlocks.at(index).end(), y)== defBlocks.at(index).end()){
-                        W.push(y);
+                    // 插入DF(DF(bb)); 
+                    if (std::find(defBlocks.at(index).begin(), defBlocks.at(index).end(), y)== defBlocks.at(index).end()){ W.push(y);
                     }
                 }
             }
         }
     }
+    // TODO: 把这里的默认是0修改成undefValue来方便后续优化
     std::vector<Value*> values ;
     for (int i = 0; i < allocas.size(); i++) {
         //      values.add(new UndefValue());
         if(allocas.at(i)->getAllocaType()->isIntegerTy()){
+            // values.push_back(Value::getUncertainValue());
             values.push_back(ConstantInt::create(0));
         }else if (allocas.at(i)->getAllocaType()->isFloatTy()) {
             values.push_back(ConstantFloat::create(0));
@@ -128,7 +130,9 @@ void Mem2Reg::genPhi() {
                 continue;
             }
 //            auto  predIndex = data._bb->getPreBasicBlockList().indexOf(data.pred);
-            phiInst->setParams(data->_values.at(phiToAllocaMap.find(phiInst)->second), data->_pred);
+            phiInst->setParams(
+                data->_values.at(phiToAllocaMap.find(phiInst)->second),
+                data->_pred);
         }
 
         // 已经删除过 alloca/load/store，但是可能有来自其他前驱基本块的 incomingVals，所以在这里才 `continue;`
@@ -141,6 +145,7 @@ void Mem2Reg::genPhi() {
         std::vector<Instruction*> wait_delete;
         for (auto inst : data->_bb->getInstructions()) {
             // AllocaInst
+                MEM2REG_LOG("visiting instr %s",inst->getPrintName().c_str());
             if(inst->isRet()){
                 MEM2REG_LOG("get ret");
             }
@@ -164,8 +169,8 @@ void Mem2Reg::genPhi() {
                     MEM2REG_LOG("using phi ");
                 }
                 loadInst->replaceAllUse(currValues.at(allocaIndex));
-                wait_delete.push_back(loadInst);
                 inst->removeUseOps();
+                wait_delete.push_back(loadInst);
             }
                 // StoreInst
             else if (inst->isStore()) {
@@ -182,11 +187,12 @@ void Mem2Reg::genPhi() {
                 MEM2REG_LOG("cur alloca index is %d",allocaIndex);
                 MEM2REG_LOG("cur value size is %d",currValues.size());
                 currValues[allocaIndex] = storeInst->getOperand(0);
-                wait_delete.push_back(inst);
-                inst->removeUseOps();
+                // 不应该有指令用到了store
                 inst->replaceAllUse(nullptr);
+                inst->removeUseOps();
+                wait_delete.push_back(inst);
            }
-           // Phi
+        //    // Phi
            else if (inst->isPhi()) {
                auto phiInst = static_cast<PhiInstr*>( inst);
                auto allocaIndex = phiToAllocaMap.find(phiInst)->second;
