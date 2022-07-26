@@ -337,6 +337,9 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr,
     return new StoreInst(value, ptr, parent);
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
+    std::string StoreInst::getPrintName(){
+        return getOperand(0)->getPrintName()+"_"+getOperand(1)->getPrintName();
+    }
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {

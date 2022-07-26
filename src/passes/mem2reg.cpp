@@ -102,7 +102,8 @@ void Mem2Reg::genPhi() {
     for (int i = 0; i < allocas.size(); i++) {
         //      values.add(new UndefValue());
         if(allocas.at(i)->getAllocaType()->isIntegerTy()){
-            values.push_back(Value::getUncertainValue());
+            // values.push_back(Value::getUncertainValue());
+            values.push_back(ConstantInt::create(0));
         }else if (allocas.at(i)->getAllocaType()->isFloatTy()) {
             values.push_back(ConstantFloat::create(0));
         }
@@ -144,6 +145,7 @@ void Mem2Reg::genPhi() {
         std::vector<Instruction*> wait_delete;
         for (auto inst : data->_bb->getInstructions()) {
             // AllocaInst
+                MEM2REG_LOG("visiting instr %s",inst->getPrintName().c_str());
             if(inst->isRet()){
                 MEM2REG_LOG("get ret");
             }
@@ -185,9 +187,9 @@ void Mem2Reg::genPhi() {
                 MEM2REG_LOG("cur alloca index is %d",allocaIndex);
                 MEM2REG_LOG("cur value size is %d",currValues.size());
                 currValues[allocaIndex] = storeInst->getOperand(0);
-                inst->removeUseOps();
                 // 不应该有指令用到了store
                 inst->replaceAllUse(nullptr);
+                inst->removeUseOps();
                 wait_delete.push_back(inst);
            }
         //    // Phi

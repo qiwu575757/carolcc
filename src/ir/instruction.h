@@ -217,6 +217,7 @@ class StoreInst : public Instruction {
    public:
     static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
+    std::string getPrintName() override;
     Value *getLVal() { return getOperand(1); }
     Value *getRVal() { return getOperand(0); }
 };

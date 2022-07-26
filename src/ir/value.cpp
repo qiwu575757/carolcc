@@ -39,16 +39,26 @@ void Value::replaceAllUse(Value *new_val) {
  * @param value_no
  */
 void Value::removeUse(Value *user, unsigned value_no) {
-    Use *remove_use;
+    Use *remove_use=nullptr;
+
+    // printf("%s 被使用的记录：",this->getPrintName().c_str());
+    // for(auto use:_user_list){
+    //     printf("(%d,%s)",use->_value_no,use->_user->getPrintName().c_str());
+    // }
+    //     printf("\n");
+
     for (auto use : _user_list) {
 
-        if (use->_user == user)
+        if (use->_value_no == value_no && use->_user==user)
         {
-            MyAssert("error ",use->_value_no == value_no);
+            // if(){
+            //     MyAssert("can't get right use record ", use->_user == user);
+            // }
             remove_use = use;
             break;
         }
     }
+    MyAssert("can't get right use record ", remove_use!=nullptr);
     auto iter = std::find(_user_list.begin(), _user_list.end(), remove_use);
 
     _user_list.erase(iter);
