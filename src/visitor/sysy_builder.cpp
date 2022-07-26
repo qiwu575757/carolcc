@@ -481,6 +481,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0), CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
+                    // FIXME: 这里暂时关闭
                     if(G_array_init[i]->isConstant()){
                         auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
                         if(constant_val->isZero()){
@@ -558,7 +559,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                     ptr = builder->createGEP(ptr, {CONST_INT(0), CONST_INT(0)});
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
-                    // zero_jump
+                    // FIXME:
                     if(G_array_init[i]->isConstant()){
                         auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
                         if(constant_val->isZero()){

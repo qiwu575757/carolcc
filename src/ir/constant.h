@@ -23,10 +23,10 @@ class ConstantInt : public Constant {
 private:
 public:
     void accept(IrVisitorBase *v) override;
+    ConstantInt(Type *ty, long value) : Constant(ty, "", 0), _value(value) {}
 
 private:
     long _value;
-    ConstantInt(Type *ty, long value) : Constant(ty, "", 0), _value(value) {}
 
 public:
 

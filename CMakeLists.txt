@@ -37,7 +37,7 @@ FILE(GLOB_RECURSE source_files "src/*.cpp")
 ADD_COMPILE_OPTIONS(-g -std=c++17 -O2)
 
 MESSAGE("source is ${source_files}")
-SET(INCLUDE_DIRECTORIES ./ )
+SET(INCLUDE_DIRECTORIES ./src )
 INCLUDE_DIRECTORIES(src/)
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${source_files} ${BISONOUTPUT} ${FLEXOUTPUT})

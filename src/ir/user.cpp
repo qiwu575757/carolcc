@@ -1,5 +1,6 @@
 
 #include "user.h"
+#include <cstdio>
 #include "visitor/ir_visitor_base.h"
 #include "utils.h"
 User::User(Type *type, const std::string &name, unsigned int use_number) : Value(name,type),_use_number(use_number){
@@ -26,6 +27,12 @@ void User::accept(IrVisitorBase *v) {
  */
 void User::removeUseOps() {
     int i = 0;
+    // printf("指令%s的oprand :", this->getPrintName().c_str());
+    // for(auto op : _operands_list){
+    //     printf("(%d,%s)",i,op->getPrintName().c_str());
+    // }
+    // printf("\n");
+    // i = 0;
     for ( auto op : _operands_list) {
         op->removeUse(this, i);
         i++;

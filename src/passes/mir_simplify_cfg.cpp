@@ -112,38 +112,6 @@ void MirSimplifyCFG::mergeSinglePredecessorBasicBlocks() {
     }
 }
 
-// void MirSimplifyCFG::eliminateSinglePredecessorPhi() {
-//   for (auto bb : _func->getBasicBlocks()) {
-//     if (bb->getPreBasicBlocks().size() == 1 || bb == _func->getEntryBlock())
-//     {
-//       std::vector<Instruction *> wait_delete;
-//       for (auto instr : bb->getInstructions()) {
-//         if (instr->isPhi()) {
-//           if (instr->getOperand(1) != *(bb->getPreBasicBlocks().begin()) &&
-//               bb != _func->getEntryBlock()) {
-//             std::cerr << "error in eliminateSinglePredecessorPhi" <<
-//             std::endl; std::cerr << instr->getOperand(1)->getName() << "  #"
-//                       << (*(bb->getPreBasicBlocks().begin()))->getName()
-//                       << std::endl;
-//             exit(_EliminateSinglePredecessorPhi_SimplifyCFG);
-//           }
-//           // instr->replaceAllUseWith(instr->getOperand(0));
-//           for (auto use : instr->getUseList()) {
-//             static_cast<User *>(use.val_)->setOperand(use.arg_no_,
-//                                                       instr->getOperand(0));
-//             // bb->removeUse(use.val_);
-//           }
-
-//           wait_delete.push_back(instr);
-//         }
-//       }
-//       for (auto instr : wait_delete) {
-//         bb->deleteInstr(instr);
-//       }
-//     }
-//   }
-// }
-
 void MirSimplifyCFG::eliminateSingleUnCondBrBasicBlocks() {
     std::vector<BasicBlock *> wait_delete;
     for (auto bb: _func->getBasicBlocks()) {
@@ -196,7 +164,9 @@ void MirSimplifyCFG::eliminateSingleUnCondBrBasicBlocks() {
 //                        bb->replaceAllUse(*(bb->getSuccBasicBlocks().begin()));
                         for (auto use: bb->getUseList()) {
                             auto instr = dynamic_cast<Instruction *>(use->_user);
-                            MyAssert("error type", instr->isBr());
+                            if(!instr->isBr()){
+                                MyAssert("error type", instr->isBr());
+                            }
                             instr->setOperand(use->_value_no, *succ_bb);
                         }
                         bb->getUseList().clear();
