@@ -94,7 +94,7 @@ void Module::MIRMEMprint(const std::string &file_name) {
     }
 }
 void Module::MIRMEMIndex() {
-    LLVMIrIndexer indexer();
+    LLVMIrIndexer indexer;
     indexer.ir_level = MIR_MEM;
     INFO("visiting func");
     WARNNING("_function_list num: %d\n",_function_list.size());
@@ -102,4 +102,3 @@ void Module::MIRMEMIndex() {
         func->accept(&indexer);
     }
 }
-

@@ -18,28 +18,39 @@
 
 class LLVMIrIndexer : public IrVisitorBase {
 public:
-    explicit LLVMIrIndexer(){
+    explicit LLVMIrIndexer():depth(0) {
     }
     ~LLVMIrIndexer(){
     }
     Module::IRLevel ir_level;
 
 private:
+    void visit(UnaryInst *node){};
+    void visit(BinaryInst *node){};
+    void visit(AllocaInst *node){};
+    void visit(StoreInst *node){};
     //  ---------
+    void visit(Value *node){};
+    void visit(CmpInst *node){};
+    void visit(ReturnInst *node){};
+    void visit(BranchInst *node){};
+    void visit(LoadInst *node){};
+    void visit(GetElementPtrInst *node){};
+    void visit(CallInst *node){};
+    void visit(ZExtInst *node){};
+    void visit(HIR *node){};
     void visit(Function *node) final;
+    void visit(Argument *node){};
+    void visit(BaseBlock *node){};
+    void visit(GlobalVariable *node){};
+    void visit(ConstantInt *node){};
+    void visit(ConstantFloat *node){};
+    void visit(ConstantArray *node){};
+    void visit(PhiInstr *node) {};
 
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);
     void NameInstr(Instruction *instr);
-    void add_tab(){
-        depth+=4;
-    }
-    void delete_tab(){
-        if(depth>=4)
-            depth-=4;
-        else
-            WARNNING("too many right shift tabs");
-    }
 
     int depth;
     std::unordered_map<Value *, int> seq;
