@@ -34,11 +34,11 @@ clang_llvm_scheme = {"scheme": "clang_llvm",
                      "frontend_instr": "clang{v} -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
-                   "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
+                  "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "build/compiler" + " -s {asm} {sy}",
+                  "frontend_instr": "build/compiler" + " -S  -o {asm} {sy}",
                   "emit_llvm_ir": True}
 
 

@@ -57,6 +57,7 @@ int main(int argc, char **argv) {
     bool is_emit_hir = false;
     bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
+    bool is_O2 = false;
     bool is_debug = false;
     bool is_emit_asm = false;
     std::string input_file, output_file;
@@ -64,11 +65,10 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = std::string(argv[i + 1]);
             i++;
-        } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            is_emit_mir = true;// 需要给标号命名，后期可以改
+        } else if (strcmp(argv[i], "-S") == 0 && i + 1 < argc) {
             is_emit_asm = true;
-            output_file = std::string(argv[i + 1]);
-            i++;
+            // output_file = std::string(argv[i + 1]);
+            // i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
         } else if (strcmp(argv[i], "-emit-mir") == 0) {
@@ -77,6 +77,8 @@ int main(int argc, char **argv) {
             is_debug = true;
         } else if (strcmp(argv[i], "-pad") == 0) {
             is_show_hir_pad_graph = true;
+        } else if (strcmp(argv[i], "-O2") == 0) {
+            is_O2 = true;
         } else if (strcmp(argv[i], "-h") == 0 ||
                    strcmp(argv[i], "--help") == 0) {
             print_help(argv[0]);
@@ -112,34 +114,36 @@ int main(int argc, char **argv) {
     PM.add_pass<HIRToMIR>("HIRToMIR");
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
+    if(is_O2 && !is_debug){
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-
-    // if(is_emit_mir && is_debug)
+        // if(is_emit_mir && is_debug)
         // PM.add_pass<EmitIR>("EmitIR");
-    // if(is_show_hir_pad_graph && is_debug)
-    //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    PM.add_pass<Mem2Reg>("Mem2Reg");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+        // if(is_show_hir_pad_graph && is_debug)
+        //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        PM.add_pass<Mem2Reg>("Mem2Reg");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    PM.add_pass<SCCP>("SCCP");
-     if(is_emit_mir && is_debug)
-         PM.add_pass<EmitIR>("EmitIR");
-    // PM.add_pass<SCCP>("SCCP");
-    //  if(is_emit_mir && is_debug)
-    //      PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<SCCP>("SCCP");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+        // PM.add_pass<SCCP>("SCCP");
+        //  if(is_emit_mir && is_debug)
+        //      PM.add_pass<EmitIR>("EmitIR");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // if(is_emit_mir && is_debug)
+        //     PM.add_pass<EmitIR>("EmitIR");
 
-    PM.add_pass<GlobalVariableNumbering>("GVN");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        // if(is_emit_mir && is_debug)
+        //     PM.add_pass<EmitIR>("EmitIR");
+
+    }
     PM.run();
 
     if(is_emit_mir && !is_debug){
