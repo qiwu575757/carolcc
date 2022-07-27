@@ -186,7 +186,8 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(this->stack_size));
 
-    int offset = 0, arg_index = 0;
+    int offset = 0;
+    //  int arg_index = 0;
     for(auto arg: func->getArgs()){
       // if (arg_index <= 3) {
       //   func_head_code += InstGen::store(InstGen::Reg(arg_index++),InstGen::Addr(InstGen::sp, offset));
@@ -296,7 +297,7 @@ std::string AsmBuilder::generate_function_exit_code(){
 }
 
 void AsmBuilder::show_mapping(){
-  int index = 0;
+  // int index = 0;
 
   for(auto& iter:register_mapping){
       std::cout << "REGISTER " << iter.second << " : " << iter.first->getPrintName() << std::endl;
@@ -421,7 +422,7 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
 }
 
 int AsmBuilder::find_register(Value *v){
-  auto global = dynamic_cast<GlobalVariable *>(v);
+  // auto global = dynamic_cast<GlobalVariable *>(v);
 
   if(v==nullptr){
     ERROR(" value is nullptr");
@@ -435,7 +436,7 @@ int AsmBuilder::find_register(Value *v){
 }
 
 int AsmBuilder::find_vfpregister(Value *v, std::string &code){
-  auto global = dynamic_cast<GlobalVariable *>(v);
+  // auto global = dynamic_cast<GlobalVariable *>(v);
 
   if(v == nullptr){
     ERROR(" value is nullptr");
@@ -446,7 +447,7 @@ int AsmBuilder::find_vfpregister(Value *v, std::string &code){
 }
 
 int AsmBuilder::find_vfpregister(Value *v){
-  auto global = dynamic_cast<GlobalVariable *>(v);
+  // auto global = dynamic_cast<GlobalVariable *>(v);
 
   if(v == nullptr){
     ERROR(" value is nullptr");
@@ -803,7 +804,7 @@ std::string AsmBuilder::generateOperInst (Instruction *inst) {
 
             const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
             return_asm += register_str;
-            const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
+            // const InstGen::Constant src_const_1 = InstGen::Constant(atoi(src_op1->getPrintName().c_str()));
 
             if (inst->isMul()) {
               return_asm += InstGen::mul(target_reg,src_reg_0,src_reg_1);
@@ -1371,7 +1372,8 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
     std::string register_str = "";
     auto &operands = inst->getOperandList();
 
-    Value *src_value_0, *src_value_1;//NOTICE
+    Value *src_value_0;
+    // Value *src_value_1;//NOTICE
     std::string reg_name_0, reg_name_1;
 
     auto src = operands.at(0);
@@ -1395,7 +1397,7 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
         return_asm += register_str;
 
         return_asm +=  InstGen::comment(std::to_string(float2int(src_op1))+" store to "+src_reg2.getName(), "fp store");
-        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+        // InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
 
         return_asm += InstGen::setValue(src_reg1,InstGen::Constant(float2int(src_op1)));
         return_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
@@ -1433,7 +1435,7 @@ std::string AsmBuilder::generateStoreInst(Instruction *inst) {
         // const InstGen::Reg target_reg = InstGen::Reg(find_register(inst,register_str));
 
         return_asm +=  InstGen::comment(src->getPrintName()+" store to "+src_reg2.getName(), "");
-        InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
+        // InstGen::CmpOp cmpop = InstGen::CmpOp(InstGen::NOP);
         return_asm += InstGen::setValue(src_reg1,InstGen::Constant(atoi(src_op1->getPrintName().c_str())));
         return_asm += InstGen::store(src_reg1, InstGen::Addr(src_reg2,0));
 

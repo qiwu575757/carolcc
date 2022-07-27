@@ -5,7 +5,7 @@
 #include "user.h"
 
 Argument::Argument(Type *type, const std::string &name, Function *parent, unsigned int arg_no)
-    : Value(name, type), _arg_no(arg_no), _parent(parent) {
+    : Value(name, type), _parent(parent), _arg_no(arg_no) {
 }
 void Argument::accept(IrVisitorBase *v) {
     v->visit(this);

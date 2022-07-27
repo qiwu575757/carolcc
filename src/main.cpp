@@ -105,8 +105,8 @@ int main(int argc, char **argv) {
 
     pass_manager PM(builder->getModule().get());
 
-    // if(is_emit_hir )
-    //     PM.add_pass<EmitHir>("EmitHir");
+    if(is_emit_hir )
+        PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
@@ -120,8 +120,8 @@ int main(int argc, char **argv) {
 
         // if(is_emit_mir && is_debug)
         // PM.add_pass<EmitIR>("EmitIR");
-        // if(is_show_hir_pad_graph && is_debug)
-        //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        if(is_show_hir_pad_graph && is_debug)
+            PM.add_pass<EmitPadGraph>("EmitPadGraph");
         PM.add_pass<Mem2Reg>("Mem2Reg");
         if(is_emit_mir && is_debug)
             PM.add_pass<EmitIR>("EmitIR");

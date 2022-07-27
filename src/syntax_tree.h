@@ -64,10 +64,12 @@ class syntax_tree_node {
 public:
     virtual void accept(tree_visitor_base &v);
     int _line_no=-1;
+    virtual ~syntax_tree_node() = default;
 };
 
 class tree_comp_unit : public syntax_tree_node {
 public:
+    ~tree_comp_unit()override = default;
     void accept(tree_visitor_base &v) final;
 
     std::vector<std::shared_ptr<tree_func_def>> functions;
@@ -77,6 +79,7 @@ public:
 class tree_decl : public syntax_tree_node {
 public:
     void accept(tree_visitor_base &v) final;
+     ~tree_decl() override = default;
 
     std::shared_ptr<tree_const_decl> const_decl;
     std::shared_ptr<tree_var_decl> var_decl;

@@ -52,6 +52,7 @@ class Reg : public Value {
 
 public:
   explicit Reg(int id) : id(id){};
+  virtual ~Reg() = default;
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }
@@ -68,6 +69,7 @@ class VFPReg : public Value {// VFP float registers
 
 public:
   explicit VFPReg(int id) : id(id){};
+  virtual ~VFPReg()=default;
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }

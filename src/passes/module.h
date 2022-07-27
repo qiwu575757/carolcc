@@ -63,6 +63,7 @@ public:
                 return func;
             }
         }
+        return nullptr;
     }
     Function *getFunction(std::string func_name) {
         for (auto func: _function_list) {

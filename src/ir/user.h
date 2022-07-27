@@ -9,7 +9,7 @@ public:
     Value *_user;
     Value *_value;
     unsigned _value_no;// 作为第几个参数使用
-    Use(Value *value, unsigned value_no, Value *user) : _value(value), _user(user), _value_no(value_no) {}
+    Use(Value *value, unsigned value_no, Value *user) : _user(user), _value(value), _value_no(value_no) {}
 };
 class User : public Value {
 public:

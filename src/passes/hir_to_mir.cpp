@@ -33,11 +33,11 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         BasicBlock *this_bb = dynamic_cast<BasicBlock *>(base_bb);
         if (next_bb == nullptr && this_bb->getTerminator()==nullptr && basic_bbs.empty()) {
             if (func->getResultType()->isInt32()) {
-                auto ret = ReturnInst::createRet(CONST_INT(0), this_bb);
+                 ReturnInst::createRet(CONST_INT(0), this_bb);
             } else if (func->getResultType()->isFloatTy()) {
-                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), this_bb);
+                 ReturnInst::createRet(CONST_FLOAT(0.0), this_bb);
             } else {
-                auto ret = ReturnInst::createVoidRet(this_bb);
+                 ReturnInst::createVoidRet(this_bb);
             }
         } else if (this_bb->getTerminator() == nullptr) {
             auto inst = this_bb->getInstructions().back();
@@ -51,7 +51,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
                     this_bb->deleteInstr(inst);
                 }
             }
-            auto branch = BranchInst::createBranch(target, this_bb);
+             BranchInst::createBranch(target, this_bb);
         }
         basic_bbs.push_front(this_bb);
         return this_bb;
@@ -69,11 +69,11 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             bb->setFunction(func);
             func->addBasicBlock(bb);
             if (func->getResultType()->isInt32()) {
-                auto ret = ReturnInst::createRet(CONST_INT(0), bb);
+                 ReturnInst::createRet(CONST_INT(0), bb);
             } else if (func->getResultType()->isFloatTy()) {
-                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), bb);
+                 ReturnInst::createRet(CONST_FLOAT(0.0), bb);
             } else {
-                auto ret = ReturnInst::createVoidRet(bb);
+                 ReturnInst::createVoidRet(bb);
             }
             next_bb = bb;
         }
@@ -94,7 +94,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         // if_cond 中的list只有一个baseblock
         auto cond_bb = dynamic_cast<BasicBlock *>((*if_cond).back());
         auto cond = cond_bb->getInstructions().back();
-        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
+         BranchInst::createCondBr(cond, if_true_block, if_false_block, cond_bb);
         basic_bbs.push_front(cond_bb);
         if(if_cond->size()==1){
             return cond_bb;
@@ -122,11 +122,11 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             bb->setFunction(func);
             func->addBasicBlock(bb);
             if (func->getResultType()->isInt32()) {
-                auto ret = ReturnInst::createRet(CONST_INT(0), bb);
+                 ReturnInst::createRet(CONST_INT(0), bb);
             } else if (func->getResultType()->isFloatTy()) {
-                auto ret = ReturnInst::createRet(CONST_FLOAT(0.0), bb);
+                 ReturnInst::createRet(CONST_FLOAT(0.0), bb);
             } else {
-                auto ret = ReturnInst::createVoidRet(bb);
+                 ReturnInst::createVoidRet(bb);
             }
             next_bb = bb;
         }
@@ -142,7 +142,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
 
         auto last_cond_bb = dynamic_cast<BasicBlock *>((*while_cond).back());
         auto cond = last_cond_bb->getInstructions().back();
-        auto branch = BranchInst::createCondBr(cond, if_true_block, if_false_block, last_cond_bb);
+         BranchInst::createCondBr(cond, if_true_block, if_false_block, last_cond_bb);
         basic_bbs.push_front(last_cond_bb);
         if(while_cond->size()==1){
             return last_cond_bb;

@@ -311,7 +311,7 @@ class PhiInstr : public Instruction {
         return new PhiInstr(ty, num_ops, parent);
     };
     Value *getLVal() { return getOperand(0); }
-    void *setLVal(Value *v) { setOperand(0, v); }
+    void setLVal(Value *v) { setOperand(0, v); }
     void setParams(Value *val, Value *pre_bb) {
         this->addOperand(val);
         this->addOperand(pre_bb);

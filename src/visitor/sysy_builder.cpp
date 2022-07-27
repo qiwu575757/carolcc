@@ -872,9 +872,9 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         }
     } else {
         SYSY_BUILDER(" unary exp 719");
-        auto val = G_tmp_val;
-        int vi;
-        float vf;
+        // auto val = G_tmp_val;
+        // int vi;
+        // float vf;
         if (node.primary_exp != nullptr) {
             SYSY_BUILDER("primary");
             node.primary_exp->accept(*this);

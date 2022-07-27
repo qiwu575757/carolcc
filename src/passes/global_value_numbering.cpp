@@ -115,7 +115,6 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
     return instr;
 }
 Value* GlobalVariableNumbering::lookUpOrAdd(Value* val) {
-    Value* res;
     auto vv = findOnTable(val);
     if (vv != nullptr) {
         return vv;

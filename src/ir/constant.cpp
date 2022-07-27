@@ -4,7 +4,7 @@
 #include <list>
 #include <vector>
 #include <cstring>
-static bool is_constant_debug =false;
+// static bool is_constant_debug =false;
 long ConstantInt::getValue() const {
     return _value;
 }

@@ -190,8 +190,8 @@ std::string setValue(const Reg &dst, const Constant &src) {
     asm_instr += mvn(dst, Constant(-val - 1));
   } else {
     uint32_t imm = src.getValue();
-    uint32_t imm_low = imm & ((1 << 16) - 1);
-    uint32_t imm_high = imm >> 16;
+    // uint32_t imm_low = imm & ((1 << 16) - 1);
+    // uint32_t imm_high = imm >> 16;
     asm_instr += spaces;
     #if 0
     asm_instr += "movw";
@@ -988,7 +988,7 @@ std::string divConst(const Reg &dst, const Reg &src,
 std::string ret(const Constant &src) {
   const InstGen::Reg target_reg = InstGen::Reg(0);
   std::string asm_instr;
-  InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
+  // InstGen::CmpOp cmpop = InstGen::CmpOp(NOP);
   asm_instr += setValue(target_reg,src);
 
   return asm_instr;
