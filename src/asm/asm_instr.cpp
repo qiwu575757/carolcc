@@ -175,11 +175,13 @@ std::string mvn(const Reg &dst, const Value &src, const CmpOp &cond) {
 
 std::string comment(std::string str1, std::string str2) {
   std::string asm_instr;
+  #if 0
   asm_instr += "@ ";
   asm_instr += str1;
   asm_instr += ", ";
   asm_instr += str2;
   asm_instr += newline;
+  #endif
   return asm_instr;
 }
 
@@ -215,11 +217,20 @@ std::string setValue(const Reg &dst, const Constant &src) {
 std::string getAddress(const Reg &dst, const Label &src) {
   std::string asm_instr;
   asm_instr += spaces;
+  #if 0
   asm_instr += "adrl";
   asm_instr += " ";
   asm_instr += dst.getName();
   asm_instr += ", ";
   asm_instr += src.getName();
+  #else
+  asm_instr += "mov32";
+  asm_instr += ", ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += src.getName();
+  #endif
+
   asm_instr += newline;
   return asm_instr;
 }

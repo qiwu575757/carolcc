@@ -64,7 +64,7 @@ const int thread_id_reg = 10;
 const int op_save_stack_num = 8;
 const int clone_flag = CLONE_VM | SIGCHLD;
 
-const int int_reg_number = 13;
+const int int_reg_number = 12;
 const int float_reg_number = 32;
 
 enum interval_value_type{
@@ -112,6 +112,7 @@ private:
   std::vector<interval> stack_map;//args spill alloc return
   std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
   std::map<Value *,int > linear_map;//指令列表
+  std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   int op_save[4];// 栈溢出时的保存寄存器
 
 public:
@@ -164,15 +165,16 @@ public:
   std::pair<int, int> getUsedRegisterNum(Function *func);
   std::string assignToTargetReg(Instruction *inst, Value *val, int target, int offset = 0);
   int getAllocaSpOffset(Value *inst);
-  int acquireForReg(Value *inst, int val_pos, std::string &str);
-  std::string popValue(Value *inst, int reg_idx, int val_pos);
+  int acquireForReg(Value *inst, int val_pos, std::string &str); // 外部函数
+  std::string popValue(Value *inst, int reg_idx, int val_pos); // 外部函数
   // 一般指令(除call/gep)无论该值在栈中还是寄存器中
-  int getRegIndexOfValue(Value *inst, Value *val, bool global_label = false);
+  int getRegIndexOfValue(Value *inst, Value *val, bool global_label = false); // 外部函数
   //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
-  std::pair<int, bool> getValuePosition(Value *inst, Value *val);
+  std::pair<int, bool> getValuePosition(Value *inst, Value *val); // 外部函数
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
 
 
 };
 
+const InstGen::Reg temp_reg = InstGen::Reg(11, false);
 #endif // SRC_ASM_BUILDER_H;

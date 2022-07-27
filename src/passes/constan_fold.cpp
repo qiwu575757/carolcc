@@ -69,7 +69,7 @@ Constant *ConstantFold::calConstantIntBinary(Instruction *pInstruction) {
     auto oprt1_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(0));
     auto oprt2_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(1));
     MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
-    Constant *res;
+    Constant *res = nullptr;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
     switch (pInstruction->getInstructionKind()) {
@@ -252,4 +252,3 @@ bool ConstantFold::detectCmpConstantFold(CmpInst *pInst) {
     pInst->removeUseOps();
     return true;
 }
-

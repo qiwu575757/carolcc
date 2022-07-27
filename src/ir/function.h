@@ -106,7 +106,7 @@ public:
     void setBuiltin(bool flag){_is_builtin = flag;}
 
 private:
-    Instruction* _alloca_end;
+    Instruction* _alloca_end = nullptr;
     std::vector<Argument *> _args;
     std::list<BaseBlock *> _base_block_list;
     Module *_parent;

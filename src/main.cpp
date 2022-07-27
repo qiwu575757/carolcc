@@ -4,6 +4,8 @@
 #include <cstring>
 #include <iostream>
 #include <string>
+#include <sys/time.h>
+#include <sys/resource.h>
 
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
@@ -45,6 +47,16 @@ int main(int argc, char **argv) {
     //        yyparse();
     //        return 0;
     //    }
+    const rlim_t kStackSize = 128L * 1024L * 1024L; // min stack size = 64 Mb
+    struct rlimit rl;
+    int result;
+    result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0) {
+        if (rl.rlim_cur < kStackSize) {
+            rl.rlim_cur = kStackSize;
+            setrlimit(RLIMIT_STACK, &rl);
+        }
+    }
     bool is_emit_hir = false;
     bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
@@ -104,7 +116,7 @@ int main(int argc, char **argv) {
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
 
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
     // if(is_emit_mir && is_debug)
@@ -117,7 +129,7 @@ int main(int argc, char **argv) {
 
     // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    PM.add_pass<ConstantFold>("ConstantFold");
+    // PM.add_pass<ConstantFold>("ConstantFold");
     //  if(is_emit_mir && is_debug)
     //      PM.add_pass<EmitIR>("EmitIR");
 
