@@ -60,11 +60,11 @@ const int mt_num_threads = 4;
 const int L1_cache_size = 32 * (1 << 10); // 32KiB per core
 const int L2_cache_size = 1 * (1 << 20);  // 1MB shared
 
-const int thread_id_reg = 10;
+const int thread_id_reg = 13;
 const int op_save_stack_num = 8;
 const int clone_flag = CLONE_VM | SIGCHLD;
 
-const int int_reg_number = 12;
+const int int_reg_number = 10;
 const int float_reg_number = 32;
 
 enum interval_value_type{

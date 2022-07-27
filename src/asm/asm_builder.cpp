@@ -482,7 +482,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     auto returned_reg = InstGen::Reg(inst_pos.first, inst->getType()->isFloatTy());
     decltype(saved_registers) new_save_registers;
     for (auto &reg : saved_registers) {
-      if (reg.getID() != returned_reg.getID()) {
+      if (reg.getID() != returned_reg.getID() || reg.getID() == 14) { // lr寄存器
         new_save_registers.push_back(reg);
       }
     }
@@ -593,7 +593,11 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     bool is_call = inst->isCall();
 
     if (inst_pos.second) { // inst value in reg
-      func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,is_fp&&is_call));
+      if (inst_pos.first == 14) { // lr寄存器必须被保存和恢复
+        func_asm += InstGen::mov(temp_reg, InstGen::Reg(return_reg,is_fp&&is_call));
+      } else {
+        func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,is_fp&&is_call));
+      }
     } else { // inst value in stack
       func_asm += InstGen::store(InstGen::Reg(return_reg,is_fp),
               InstGen::Addr(InstGen::sp,inst_pos.first+saved_registers.size()*4));
@@ -601,6 +605,10 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   if (!saved_registers.empty()) {
     func_asm += InstGen::pop(saved_registers);
+  }
+
+  if (inst_pos.second&&inst_pos.first==14) {
+    func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,false), temp_reg);
   }
 
   return func_asm;
@@ -638,8 +646,12 @@ std::string AsmBuilder::assignToTargetReg(Instruction *inst, Value *val, int tar
 std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
   for (auto &reg : getAllRegisters(func)) {
-    if (caller_save_regs.count(reg)) {
-      registers.insert(reg);
+    // WARNNING("===================================Caller Find Reg: %d",reg.getID());
+    for (auto r : caller_save_regs) {
+      if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
+        registers.insert(reg);
+      }
+      // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
@@ -648,8 +660,11 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
 std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
   for (auto &reg : AsmBuilder::getAllRegisters(func)) {
-    if (callee_save_regs.count(reg)) {
-      registers.insert(reg);
+    for (auto r : callee_save_regs) {
+      if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
+        registers.insert(reg);
+      }
+      // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
@@ -668,7 +683,7 @@ std::vector<InstGen::Reg> AsmBuilder::getAllRegisters(Function *func) {
     registers.insert(InstGen::fp);
   }
 
-  for (int i = 0; i < std::min(n.first, 11); i++ ) {
+  for (int i = 0; i < std::min((size_t)n.first, (size_t)11); i++ ) {
     registers.insert(InstGen::Reg(i,false));
   }
   // 可能有问题

@@ -20,7 +20,7 @@
 #define __DEBUG
 #define __LSRA_WARN
 #define __LSRA_SHOW
-// #define __WARN
+#define __WARN
 //#define __TRACE
 //#define __INFO
 
@@ -50,7 +50,7 @@
 #ifdef __WARN
 #define WARNNING(format, ...)                                  \
     do {                                                                             \
-        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        printf(BLUE "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
         fflush(stdout);                                                              \
     } while (0)
 #else
