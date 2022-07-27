@@ -64,7 +64,7 @@ const int thread_id_reg = 13;
 const int op_save_stack_num = 8;
 const int clone_flag = CLONE_VM | SIGCHLD;
 
-const int int_reg_number = 10;
+const int int_reg_number = 12;
 const int float_reg_number = 32;
 
 enum interval_value_type{
@@ -172,7 +172,7 @@ public:
   //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
   std::pair<int, bool> getValuePosition(Value *inst, Value *val); // 外部函数
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
-
+  std::string getGlobalValAddress(int op_reg, Value *val);
 
 };
 

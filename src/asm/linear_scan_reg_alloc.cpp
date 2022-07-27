@@ -33,11 +33,11 @@ int AsmBuilder::getAllocaSpOffset(Value *inst) {  // 值的栈偏移
 
 int vir2real(int reg_idx){
     if(reg_idx == 11){
-        LSRA_WARNNING("@@@@@@@@@@@@@@@@@ use r12");
+        // LSRA_WARNNING("@@@@@@@@@@@@@@@@@ use r12");
         return 12;
     }
     if(reg_idx == 12){
-        LSRA_WARNNING("@@@@@@@@@@@@@@@@@ use r14");
+        // LSRA_WARNNING("@@@@@@@@@@@@@@@@@ use r14");
         return 14;
     }
     return reg_idx;
@@ -54,7 +54,17 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     }
     int reg_get = give_int_reg_at(inst);  // LVAL REG NUM
     if (reg_get == -1) {
-        ERROR("can't give any reg because all the reg is using");
+        // debug
+        LSRA_WARNNING("-- reg set --");
+        for (int i = 0; i < int_reg_number; i++) {
+            LSRA_SHOW("[reg %02d]", i);
+            for (auto &reg : virtual_int_reg_use[i]) {
+                LSRA_SHOW(" %02d ", reg);
+            }
+            LSRA_SHOW("[reg %02d]\n", i);
+        }
+        ERROR("can't give any reg because all the reg is using at inst %d %s"
+        ,linear_map[inst],inst->getPrintName().c_str());
     }
     Value *reg_v = value_in_int_reg_at(inst, reg_get);
     if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -84,6 +94,7 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 // 一般指令(除call/gep)无论该值在栈中还是寄存器中
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
+    // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
     if (global_label) {
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
@@ -122,9 +133,14 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
 std::pair<int, bool> AsmBuilder::getValuePosition(Value *inst,
                                                   Value *val) {  // 全局变量？
-    // LSRA_WARNNING("ask pos of value %s", val->getPrintName().c_str());
+    LSRA_WARNNING("inst lval is %s, ask pos of value %s",inst->getPrintName().c_str(), val->getPrintName().c_str());
     int get_int_reg = getRegIndexOfValue(inst, val);
-    if (get_int_reg == -1) {
+
+    if(get_int_reg == -1 && (dynamic_cast<GlobalVariable *>(val) || dynamic_cast<Constant *>(val))){
+        LSRA_WARNNING("global value or constant value split which is not solved here return with offset -1");
+        return std::pair<int, bool>(-1, false);
+    }
+    else if (get_int_reg == -1) {
         int offset = get_int_value_sp_offset(inst, val);
         return std::pair<int, bool>(offset, false);
     }
@@ -385,6 +401,9 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                  inst_iter != bb->getInstructions().end(); inst_iter++) {
                 auto &inst = *inst_iter;
                 if (!inst->isCall() && !inst->isGep() && !inst->isBr()) {
+                    // call 主要是需要pop push 寄存器mov参数个数不定 ，
+                    // gep 参数个数不定 转成多个新的指令
+                    // br 插入前后需要CFG分析
                     int op_idx = 0;
                     std::pair<int, std::list<Instruction *>> before_inst;
                     std::pair<int, std::list<Instruction *>> after_inst;

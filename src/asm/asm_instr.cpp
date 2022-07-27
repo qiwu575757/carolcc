@@ -175,7 +175,7 @@ std::string mvn(const Reg &dst, const Value &src, const CmpOp &cond) {
 
 std::string comment(std::string str1, std::string str2) {
   std::string asm_instr;
-  #if 0
+  #if 1
   asm_instr += "@ ";
   asm_instr += str1;
   asm_instr += ", ";

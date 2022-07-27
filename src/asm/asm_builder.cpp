@@ -227,6 +227,15 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     return bb_asm;
 }
 
+std::string AsmBuilder::getGlobalValAddress(int op_reg, Value *val) {
+    std::string str;
+    InstGen::Label src_label = InstGen::Label(".LCPI_"+val->getName());
+    str += InstGen::getAddress(temp_reg, src_label);
+    str += InstGen::load(InstGen::Reg(op_reg,false),InstGen::Addr(temp_reg,0));
+
+    return str;
+}
+
 std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
   std::string asm_code;
   std::string str;
@@ -238,11 +247,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     // 增加对全局变量的处理
     if(dynamic_cast<GlobalVariable *>(operands[i])) {
       int value_reg = getRegIndexOfValue(inst,operands[i]);
-      // generate label
-      InstGen::Label src_label = InstGen::Label(".LCPI_"+operands[i]->getName());
-      asm_code += InstGen::getAddress(temp_reg, src_label);
-      // asm_code += InstGen::mov(InstGen::Reg(addr_reg,false),temp_reg);
-      asm_code += InstGen::load(InstGen::Reg(value_reg,false),InstGen::Addr(temp_reg,0));
+      if (value_reg != -1){
+        asm_code += getGlobalValAddress(value_reg,operands[i]);
+      }
+      operands_global[i] = true;
+      if (value_reg == -1 && !inst->isCall() &&!inst->isGep()) {
+        ERROR("Get wrong reg.");
+      }
     } else if(!inst->isBr()&&!inst->isCall()){
       // 增加对立即数的赋值处理
       int imm_reg = getRegIndexOfValue(inst,operands[i]);
@@ -279,10 +290,16 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
   } else if (inst->isStore()) {
     bool is_fp = operands[0]->getType()->isFloatTy();
+    std::pair<int, bool> inst_pos = getValuePosition(inst,operands[0]);
 
+    // 0号操作数可能在栈中，如函数参数
+    if (!inst_pos.second) { // 浮点数？
+      asm_code += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,inst_pos.first));
+    }
+    int op0_reg = inst_pos.second ? inst_pos.first : 11;
     InstGen::Reg op2_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
 
-    asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
+    asm_code += InstGen::store(InstGen::Reg(op0_reg,is_fp&&inst_pos.second),
                         InstGen::Addr(op2_reg,0));
   } else if (inst->isCall()) {
     std::string func_name = operands.at(0)->getName();
@@ -305,18 +322,19 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     auto array_ty = operands[0]->getType()->getPointerElementType();
     for (int i = 1; i < operands.size(); i++) {
       auto element_size = array_ty->getSize();
-      int index = 0;// 每次从已分配的第一个寄存器开始使用
 
       asm_code += InstGen::comment(" gep += "+operands[i]->getPrintName()+" * "+std::to_string(element_size),"");
       if (!operands[i]->isConstant()) { // 该操作数为变量
-        asm_code += InstGen::setValue(InstGen::Reg(index++,false),InstGen::Constant(element_size,false));
+        asm_code += InstGen::setValue(InstGen::Reg(allocaed[0],false),InstGen::Constant(element_size,false));
 
         std::pair<int, bool> op_pos = getValuePosition(inst,operands[i]);
-        int op_reg =  op_pos.second ? op_pos.first : allocaed[i];
+        int op_reg =  op_pos.second ? op_pos.first : allocaed[1];
 
-        if (!op_pos.second&&!operands_global[i]) {
+        if (!op_pos.second&&!operands_global[i]) { // 从栈中取出对应值
           asm_code += InstGen::load(InstGen::Reg(op_reg,false),
                     InstGen::Addr(InstGen::sp,op_pos.first));
+        } else if (!op_pos.second&&operands_global[i]) { // 全局变量
+          asm_code += getGlobalValAddress(op_reg,operands[i]);
         }
 
         asm_code += InstGen::mla(InstGen::Reg(target_reg,false), InstGen::Reg(allocaed[0],false),
@@ -331,9 +349,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::pair<int, bool> op_pos = getValuePosition(inst,operands[0]);
     int op_reg = op_pos.second ? op_pos.first : allocaed[0];
 
-    if (!op_pos.second&&!operands_global[0])
+    if (!op_pos.second&&!operands_global[0]) {
       asm_code += InstGen::load(InstGen::Reg(op_reg,false),
                       InstGen::Addr(InstGen::sp,op_pos.first));
+    }else if (!op_pos.second&&op_pos.first == -1) { // 全局变量
+      asm_code += getGlobalValAddress(op_reg,operands[0]);
+    }
 
     asm_code += InstGen::add(InstGen::Reg(target_reg,false),InstGen::Reg(target_reg,false),
                     InstGen::Reg(op_reg,false));
@@ -425,11 +446,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else if (operands.size() == 3) {
       if (operands[0]->isConstant()) {
           if (atoi(operands[0]->getPrintName().c_str()) > 0 ) {
-          asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),
-                                    InstGen::NOP);
+            asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),
+                                      InstGen::NOP);
           } else {
-          asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[2]->getName())),
-                                    InstGen::NOP);
+            asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[2]->getName())),
+                                      InstGen::NOP);
           }
       } else {
         std::pair<int, bool> br_pos = getValuePosition(inst,operands[0]);
