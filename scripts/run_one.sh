@@ -5,7 +5,10 @@ cd build
 make -j20
 cd ..
 rm test/*.ir*
-./build/compiler -debug -emit-hir -emit-mir $1
+rm test/*.s
+rm test/*.hir
+
+./build/compiler -debug -emit-hir -emit-mir  -O2 $1
 # ./build/compiler -emit-hir -emit-mir $1
 # cd ../test
 # ./test.sh
