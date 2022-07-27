@@ -2,6 +2,7 @@
 #include "module.h"
 #include "ir/type.h"
 #include "visitor/llvm_ir_printer.h"
+#include "visitor/llvm_ir_index.h"
 #include "visitor/hir_shower.h"
 /// SCOPE DEFINE ///
 void Scope::enter() {
@@ -92,3 +93,13 @@ void Module::MIRMEMprint(const std::string &file_name) {
         func->accept(&printer);
     }
 }
+void Module::MIRMEMIndex() {
+    LLVMIrIndexer indexer();
+    indexer.ir_level = MIR_MEM;
+    INFO("visiting func");
+    WARNNING("_function_list num: %d\n",_function_list.size());
+    for (auto func: _function_list) {
+        func->accept(&indexer);
+    }
+}
+

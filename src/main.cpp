@@ -156,6 +156,7 @@ int main(int argc, char **argv) {
     // std::cout<<"################-asm_code-#################"<<std::endl;
 
     if (is_emit_asm) {
+        builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);
         std::string asm_code = asm_builder.generate_asm(input_file.c_str());
         fprintf(output,"%s",asm_code.c_str());
