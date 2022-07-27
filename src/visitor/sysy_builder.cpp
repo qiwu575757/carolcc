@@ -47,11 +47,6 @@ auto TyFloatPtr = Type::getFloatPtrTy();  // 改
 // 用于实现短路求值
 BaseBlock *G_true_bb;
 BaseBlock *G_false_bb;
-static int G_cond_type ;
-// 丑陋的临时变量
-static const int IF_STMT = 1;
-static const int IF_THEN_ELSE = 2;
-static const int WHILE_STMT = 2;
 // store temporary value
 Value *G_tmp_val = nullptr;
 // 暂存类型
