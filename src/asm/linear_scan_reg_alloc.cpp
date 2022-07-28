@@ -96,35 +96,17 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
     // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
-    if (global_label) {
-        for (int i = 0; i < int_reg_number; i++) {
-            for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                if (virtual_int_regs[i][j].v == val &&
-                    tag >= virtual_int_regs[i][j].st_id &&
-                    tag <= virtual_int_regs[i][j].ed_id &&
-                    virtual_int_regs[i][j].type ==
-                        interval_value_type::int_global_var_label) {
-                    // LSRA_WARNNING("%s label give reg %d",
-                    //               val->getPrintName().c_str(), i);
-                    return vir2real(i);
-                }
-            }
-        }
-    } else {
-        for (int i = 0; i < int_reg_number; i++) {
-            for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                // LSRA_WARNNING("check same ? %d start %d end %d reg
-                // %d",virtual_int_regs[i][j].v ==
-                // val,virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,i);
-                if (virtual_int_regs[i][j].v == val &&
-                    tag >= virtual_int_regs[i][j].st_id &&
-                    tag <= virtual_int_regs[i][j].ed_id &&
-                    virtual_int_regs[i][j].type !=
-                        interval_value_type::int_global_var_label) {
-                    // LSRA_WARNNING("%s value give reg %d",
-                                //   val->getPrintName().c_str(), i);
-                    return vir2real(i);
-                }
+    for (int i = 0; i < int_reg_number; i++) {
+        for (int j = 0; j < virtual_int_regs[i].size(); j++) {
+            // LSRA_WARNNING("check same ? %d start %d end %d reg
+            // %d",virtual_int_regs[i][j].v ==
+            // val,virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,i);
+            if (virtual_int_regs[i][j].v == val &&
+                tag >= virtual_int_regs[i][j].st_id &&
+                tag <= virtual_int_regs[i][j].ed_id) {
+                // LSRA_WARNNING("%s value give reg %d",
+                            //   val->getPrintName().c_str(), i);
+                return vir2real(i);
             }
         }
     }
@@ -350,9 +332,6 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     interval_value_type::int_global_var)
                     continue;
                 if (virtual_int_regs[i][j].type ==
-                    interval_value_type::int_global_var_label)
-                    continue;
-                if (virtual_int_regs[i][j].type ==
                     interval_value_type::int_imm_var)
                     continue;
                 virtual_int_regs[i][j].offset = stack_size;
@@ -465,30 +444,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                     "can't give any reg because all the reg is "
                                     "using");
                             }
-                            if (dynamic_cast<GlobalVariable *>(op)) {
-                                int reg_get_label = give_int_reg_at(inst);
-                                if (reg_get_label == -1) {
-                                    ERROR(
-                                        "can't give any reg because all the "
-                                        "reg is using");
-                                }
-                                Value *reg_v2 =
-                                    value_in_int_reg_at(inst, reg_get_label);
-                                before_inst.second.push_back(
-                                    StoreOffset::createStoreOffset(
-                                        reg_v2, op_save[op_idx], tmpBB));
-                                after_inst.second.push_back(
-                                    LoadOffset::createLoadOffset(
-                                        reg_v2, op_save[op_idx], tmpBB));
-                                op_idx += 1;
-                                interval itv;
-                                itv.st_id = linear_map[inst];
-                                itv.ed_id = linear_map[inst];
-                                itv.v = op;
-                                itv.type =
-                                    interval_value_type::int_global_var_label;
-                                virtual_int_regs[reg_get_label].push_back(itv);
-                            }
+            
                             auto global = dynamic_cast<GlobalVariable *>(op);
                             if (global ||
                                 op->isConstant()) {  // 全局变量，给一个寄存器，并把值存栈
@@ -739,6 +695,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
             live_map[args].st_id = -1;
             live_map[args].ed_id = -1;
             live_map[args].def = true;
+            live_map[args].is_float = args->getType()->isFloatTy();
             if (arg_idx < 4) {
                 live_map[args].type = interval_value_type::int_arg_var;
                 live_map[args].specific_reg_idx = arg_idx++;
@@ -765,6 +722,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     live_map[inst].def = true;
                     live_map[inst].st_id = linear_index;
                     live_map[inst].ed_id = linear_index;
+                    live_map[inst].is_float = inst->getType()->isFloatTy();
                 }
                 values.insert(inst);
                 // LSRA_WARNNING(" [%d:%s]
@@ -815,6 +773,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 {
                     live_map[op].st_id = linear_map[inst];
                     live_map[op].ed_id = linear_map[inst];
+                    live_map[op].is_float = op->getType()->isFloatTy();
                 } else {
                     if (linear_map[inst] > live_map[op].ed_id) {
                         live_map[op].ed_id = linear_map[inst];
@@ -922,21 +881,6 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 itv.use_id = p.second.use_id;
                 itv.v = p.first;
                 live_res.push_back(itv);
-            }
-            if (p.second.type == interval_value_type::int_global_var) {
-                for (auto id : p.second.use_id) {
-                    interval itv;
-                    itv.st_id = id;
-                    itv.ed_id = id;
-                    itv.type = interval_value_type::int_global_var_label;
-                    itv.def = p.second.def;
-                    itv.spilled = p.second.spilled;
-                    itv.is_allocated = p.second.is_allocated;
-                    itv.specific_reg_idx = p.second.specific_reg_idx;
-                    itv.use_id = p.second.use_id;
-                    itv.v = p.first;
-                    live_res.push_back(itv);
-                }
             }
         }
     }

@@ -70,7 +70,6 @@ const int float_reg_number = 32;
 enum interval_value_type{
   int_local_var,
   int_global_var,
-  int_global_var_label,
   int_imm_var,
   int_arg_var,
   int_spill_var,
@@ -90,6 +89,8 @@ typedef struct interval{
     interval_value_type type;
     int specific_reg_idx;
     int offset;
+    bool is_float = false;
+    std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
 class AsmBuilder {
