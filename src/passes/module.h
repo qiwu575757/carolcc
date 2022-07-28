@@ -47,6 +47,7 @@ public:
     void HighIRprint(const std::string &file_name);
     void HIRSHOW(const std::string &file_name);
     void MIRMEMprint(const std::string &file_name);
+    void MIRMEMIndex();
     void setIRLevel(IRLevel ir_level) {
         _ir_level = ir_level;
     }
@@ -63,6 +64,7 @@ public:
                 return func;
             }
         }
+        return nullptr;
     }
     Function *getFunction(std::string func_name) {
         for (auto func: _function_list) {

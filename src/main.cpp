@@ -4,9 +4,16 @@
 #include <cstring>
 #include <iostream>
 #include <string>
-#include <sys/time.h>
-#include <sys/resource.h>
 
+#include "asm/asm_builder.h"
+#include "passes/dominators.h"
+#include "passes/emit_ir.h"
+#include "passes/global_value_numbering.h"
+#include "passes/hir_to_mir.h"
+#include "passes/lower_ir.h"
+#include "passes/mem2reg.h"
+#include "passes/mir_simplify_cfg.h"
+#include "passes/pass_manager.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
@@ -14,7 +21,6 @@
 #include "visitor/tree_visitor_base.h"
 #include "passes/dominators.h"
 #include "passes/emit_ir.h"
-#include "passes/constan_fold.h"
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/mir_simplify_cfg.h"
@@ -47,19 +53,10 @@ int main(int argc, char **argv) {
     //        yyparse();
     //        return 0;
     //    }
-    const rlim_t kStackSize = 128L * 1024L * 1024L; // min stack size = 64 Mb
-    struct rlimit rl;
-    int result;
-    result = getrlimit(RLIMIT_STACK, &rl);
-    if (result == 0) {
-        if (rl.rlim_cur < kStackSize) {
-            rl.rlim_cur = kStackSize;
-            setrlimit(RLIMIT_STACK, &rl);
-        }
-    }
     bool is_emit_hir = false;
     bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
+    bool is_O2 = false;
     bool is_debug = false;
     bool is_emit_asm = false;
     std::string input_file, output_file;
@@ -67,11 +64,10 @@ int main(int argc, char **argv) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
             output_file = std::string(argv[i + 1]);
             i++;
-        } else if (strcmp(argv[i], "-s") == 0 && i + 1 < argc) {
-            is_emit_mir = true;// 需要给标号命名，后期可以改
+        } else if (strcmp(argv[i], "-S") == 0 && i + 1 < argc) {
             is_emit_asm = true;
-            output_file = std::string(argv[i + 1]);
-            i++;
+            // output_file = std::string(argv[i + 1]);
+            // i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
         } else if (strcmp(argv[i], "-emit-mir") == 0) {
@@ -80,6 +76,8 @@ int main(int argc, char **argv) {
             is_debug = true;
         } else if (strcmp(argv[i], "-pad") == 0) {
             is_show_hir_pad_graph = true;
+        } else if (strcmp(argv[i], "-O2") == 0) {
+            is_O2 = true;
         } else if (strcmp(argv[i], "-h") == 0 ||
                    strcmp(argv[i], "--help") == 0) {
             print_help(argv[0]);
@@ -106,8 +104,8 @@ int main(int argc, char **argv) {
 
     pass_manager PM(builder->getModule().get());
 
-    // if(is_emit_hir )
-    //     PM.add_pass<EmitHir>("EmitHir");
+    if(is_emit_hir )
+        PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
@@ -115,34 +113,39 @@ int main(int argc, char **argv) {
     PM.add_pass<HIRToMIR>("HIRToMIR");
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
+    if(is_O2 && !is_debug){
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-
-    // if(is_emit_mir && is_debug)
+        // if(is_emit_mir && is_debug)
         // PM.add_pass<EmitIR>("EmitIR");
-    // if(is_show_hir_pad_graph && is_debug)
-    //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-    // PM.add_pass<Mem2Reg>("Mem2Reg");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        if(is_show_hir_pad_graph && is_debug)
+            PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        PM.add_pass<Mem2Reg>("Mem2Reg");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-    // PM.add_pass<ConstantFold>("ConstantFold");
-    //  if(is_emit_mir && is_debug)
-    //      PM.add_pass<EmitIR>("EmitIR");
+        // PM.add_pass<SCCP>("SCCP");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+        // PM.add_pass<SCCP>("SCCP");
+        //  if(is_emit_mir && is_debug)
+        //      PM.add_pass<EmitIR>("EmitIR");
 
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // if(is_emit_mir && is_debug)
+        //     PM.add_pass<EmitIR>("EmitIR");
 
-    // PM.add_pass<GlobalVariableNumbering>("GVN");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        // if(is_emit_mir && is_debug)
+        //     PM.add_pass<EmitIR>("EmitIR");
+
+    }
     PM.run();
 
-    if(is_emit_mir && !is_debug && !is_emit_asm){
+    if(is_emit_mir && !is_debug){
         builder->getModule()->MIRMEMprint(output_file);
     }
 
@@ -152,7 +155,7 @@ int main(int argc, char **argv) {
     // std::cout<<"################-asm_code-#################"<<std::endl;
 
     if (is_emit_asm) {
-        builder->getModule()->MIRMEMprint("tmp.ir");
+        builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);
         std::string asm_code = asm_builder.generate_asm(input_file.c_str());
         fprintf(output,"%s",asm_code.c_str());
