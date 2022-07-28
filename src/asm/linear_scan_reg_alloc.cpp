@@ -554,6 +554,16 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     stack_size += 4;
     // 扩大栈空间
     // stack_size += 128;
+    // 参数栈表示
+    for (auto &p : live_range) {
+        if (p.type == interval_value_type::arg_var && p.spilled) {
+            if(p.is_float){
+                virtual_float_regs[499].push_back(p);
+            }else{
+                virtual_int_regs[499].push_back(p);
+            }
+        }
+    }
     // debug
     LSRA_SHOW("-- stack size %d --\n", stack_size);
     for (auto &itv : stack_map) {
@@ -880,6 +890,8 @@ int AsmBuilder::give_used_reg_at(Value *inst) {  // 分配使用过的寄存器
 }
 
 bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
+    // LSRA_WARNNING("op_in_inst_is_spilled");
+    
     int tag = linear_map[inst];
     if(inst->getType()->isFloatTy()){
         for (int i = float_reg_number; i < 500; i++) {
@@ -895,6 +907,10 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
     else{
         for (int i = int_reg_number; i < 500; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
+                // if(virtual_int_regs[i][j].v == op){
+                    // LSRA_WARNNING("inst %s op %s, itv[%d,%d] tag:%d",inst->getPrintName().c_str(),virtual_int_regs[i][j].v->getPrintName().c_str(),
+                    // virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,tag);
+                // }
                 if (virtual_int_regs[i][j].v == op &&
                     tag >= virtual_int_regs[i][j].st_id &&
                     tag <= virtual_int_regs[i][j].ed_id) {
