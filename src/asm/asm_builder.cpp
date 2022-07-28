@@ -309,6 +309,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     std::vector<Value *> args(operands.begin()+1, operands.end());
     asm_code += generateFunctionCall(inst,args,func_name, 0);
   } else if (inst->isGep()) {
+    asm_code += InstGen::comment(" gep inst lval is: ", (inst->getName().c_str()));
     std::vector<int> allocaed;
     std::pair<int, bool> inst_pos = getValuePosition(inst,inst);
     int target_reg = inst_pos.second ? inst_pos.first : acquireForReg(inst,0, str);
@@ -549,15 +550,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           bool is_conflict = arg_pos.second&&(arg_pos.first < i);
           if (arg_pos.second) {// 参数在寄存器中
             if (is_conflict) {
-                int offset = -1;// 发生冲突的寄存器的原值在栈中的偏移
+                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
                   if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    offset = 4 * k;
+                    off = 4 * k;
                     break;
                   }
                 }
-                MyAssert("Conflict reg not in stack.", offset != -1);
-                func_asm += InstGen::load(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Addr(InstGen::sp,offset));
+                MyAssert("Conflict reg not in stack.", off != -1);
+                func_asm += InstGen::load(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Addr(InstGen::sp,off));
             }
             else{
               func_asm += InstGen::mov(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Reg(arg_pos.first,is_fp));
@@ -591,15 +592,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
 
           if (arg_pos.second) {// 参数在寄存器中
             if (is_conflict) {
-                int offset = -1;// 发生冲突的寄存器的原值在栈中的偏移
+                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
                   if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    offset = 4 * k;
+                    off = 4 * k;
                     break;
                   }
                 }
-                MyAssert("Conflict reg not in stack.", offset != -1);
-                func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,offset));
+                MyAssert("Conflict reg not in stack.", off != -1);
+                func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
                     InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
             } else {
