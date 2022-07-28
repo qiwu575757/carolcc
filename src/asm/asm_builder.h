@@ -97,6 +97,7 @@ private:
   std::shared_ptr<Module> module;
   std::map<std::string, int> stack_size_mapping;// func_name - stack size
   std::map<std::string, int> callee_saved_regs_size_mapping;// func_name - callee saved reg size
+  std::map<std::string, Function*> name_func_mapping;// func_name - func
   int stack_cur_size = 0;
   int thread_stack_bits;
   int thread_stack_size;
@@ -156,6 +157,7 @@ public:
   bool force_reg_alloc(interval itv,int reg_idx);
   bool op_in_inst_is_spilled(Value *inst,Value *op);
   int give_int_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
+  int give_used_int_reg_at(Value *inst);
   Value * value_in_int_reg_at(Value *inst,int reg_idx);
   int get_int_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
 

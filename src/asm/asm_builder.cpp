@@ -14,6 +14,9 @@ std::string AsmBuilder::generate_asm(std::string file_name){
       live_interval_analysis(func);
       // allocaStackSpace(func);
       stack_size_mapping[func->getName()] = this->stack_size;
+      std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
+      callee_saved_regs_size_mapping[func->getName()] = 8 + regs.size() * 4;
+      name_func_mapping[func->getName()] = func;
     }
     for(auto &func: this->module->getFunctions()){
       if(func->getBasicBlocks().size() != 0) {
@@ -171,7 +174,7 @@ std::string AsmBuilder::generate_function_code(Function *func){
     func_asm += generate_function_entry_code(func);
 
     for (auto &bb : func->getBasicBlocks()) {
-        WARNNING("Enter basicblock: %s", bb->getName().c_str());
+        // WARNNING("Enter basicblock: %s", bb->getName().c_str());
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
@@ -220,7 +223,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func) {
 std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
     std::string bb_asm;
     for (auto &inst : bb->getInstructions()) {
-        WARNNING("use instr: %s", inst->getPrintName().c_str());
+        // WARNNING("use instr: %s", inst->getPrintName().c_str());
         bb_asm += AsmBuilder::generateInstructionCode(inst);
     }
 
@@ -489,10 +492,19 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Value *>args,
             std::string func_name, int return_reg) {
   std::string func_asm;
-  auto func = inst->getFunction();
-  int callee_saved_regs_size = 4*callee_saved_regs_size_mapping[func->getName().c_str()];
-  int callee_stack_size = stack_size_mapping[func->getName().c_str()];
-  auto saved_registers = getCallerSavedRegisters(func);
+
+  // 系统函数最多两个参数，仅通过寄存器传参
+  int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
+  int callee_stack_size = stack_size_mapping[func_name];
+  std::vector<InstGen::Reg> saved_registers;
+  if (inst->isCall()) {
+    saved_registers = getCallerSavedRegisters(name_func_mapping[func_name]);
+  } else { // 对于系统函数、abi的处理
+      for (auto r : caller_save_regs) {
+        if (!r.is_fp())
+          saved_registers.push_back(r);
+      }
+  }
 
   WARNNING("calleer saved regs size: %d", saved_registers.size());
   bool has_return_value = (return_reg >= 0) && (inst->getType()->getSize() > 0);
@@ -564,13 +576,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     {
       int offset = 0;
       for (int i = 4; i < args.size(); i++) {
+        func_asm += InstGen::comment("regs size: "+std::to_string(callee_saved_regs_size),"stack size: "+std::to_string(callee_stack_size));
+
         bool is_fp = args[i]->getType()->isFloatTy();
         if (args[i]->isConstant()) {
           int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(args[i])) :
                     atoi((args[i])->getPrintName().c_str());
           func_asm += InstGen::setValue(temp_reg,InstGen::Constant(int_value,false));
           func_asm += InstGen::store(temp_reg,//这里 -4 不理解
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
+                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
         } else {
           std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
           bool is_conflict = arg_pos.second&&(arg_pos.first < 4);// r0 r1 r2 r3
@@ -587,15 +601,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
                 MyAssert("Conflict reg not in stack.", offset != -1);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,offset));
                 func_asm += InstGen::store(temp_reg,
-                    InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
+                    InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
             } else {
               func_asm += InstGen::store(InstGen::Reg(arg_pos.first,is_fp),
-                  InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
+                  InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
             }
            } else { // 将浮点数与整型数统一处理，有问题吗----可以注意 vload sx
             func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
             func_asm += InstGen::store(temp_reg,
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-4-callee_stack_size));
+                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
           }
         }
         offset += 4;
@@ -666,6 +680,9 @@ std::string AsmBuilder::assignToTargetReg(Instruction *inst, Value *val, int tar
 
 std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
+
+  #if 0
+  // 对于系统函数的处理
   for (auto &reg : getAllRegisters(func)) {
     // WARNNING("===================================Caller Find Reg: %d",reg.getID());
     for (auto r : caller_save_regs) {
@@ -675,19 +692,33 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
       // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
+  #else
+  for (auto r : caller_save_regs) {
+    if (!r.is_fp())
+      registers.insert(r);
+  }
+  #endif
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
 }
 
 std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
+
+  #if 0
   for (auto &reg : AsmBuilder::getAllRegisters(func)) {
     for (auto r : callee_save_regs) {
       if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
         registers.insert(reg);
       }
-      // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
+  #else
+  for (auto r : callee_save_regs) {
+    if (!r.is_fp())
+      registers.insert(r);
+  }
+  #endif
+
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
 }
 
@@ -696,6 +727,7 @@ std::vector<InstGen::Reg> AsmBuilder::getAllRegisters(Function *func) {
   std::set<InstGen::Reg> registers;
 
   std::pair<int, int> n = getUsedRegisterNum(func);// 返回整型寄存器、浮点寄存器各用多少个
+  WARNNING("====================================Func %s use %d rergs",func->getPrintName().c_str(),n.first);
   MyAssert("Use reg num is 0.", n.first != 0);
   if (n.first == 13) {
     registers.insert(InstGen::lr);

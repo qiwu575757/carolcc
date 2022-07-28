@@ -47,6 +47,7 @@ int real2vir(int reg_idx){
     if(reg_idx == 14) return 12;
     return reg_idx;
 }
+
 int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     // LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
     if (val_pos >= op_save_stack_num) {
@@ -660,6 +661,19 @@ int AsmBuilder::give_int_reg_at(Value *inst) {  // 请求分配寄存器
         if (virtual_int_reg_use[i].find(tag) ==
             virtual_int_reg_use[i]
                 .end()) {  // 没找到使用点说明，不冲突，暂时如下
+            virtual_int_reg_use[i].insert(
+                tag);  //表示此处已经有使用需求了，防止再次请求
+            return i;
+        }
+    }
+    return -1;
+}
+
+int AsmBuilder::give_used_int_reg_at(Value *inst) {  // 分配使用过的寄存器
+    int tag = linear_map[inst];
+    for (int i = 0; i < int_reg_number; i++) {
+        if (virtual_int_reg_use[i].size()>0 && virtual_int_reg_use[i].find(tag) ==
+            virtual_int_reg_use[i].end()) {  // 没找到使用点说明，不冲突，暂时如下
             virtual_int_reg_use[i].insert(
                 tag);  //表示此处已经有使用需求了，防止再次请求
             return i;
