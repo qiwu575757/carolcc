@@ -17,7 +17,7 @@ std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
     //     LSRA_WARNNING("#####%s %d",it->first.c_str(),it->second.first);
     // }
     // LSRA_WARNNING("#####%s",func->getPrintName().c_str());
-    MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
+    // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
     return func_used_reg_map[func->getPrintName()];
 }
 
@@ -444,7 +444,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                     "can't give any reg because all the reg is "
                                     "using");
                             }
-            
+
                             auto global = dynamic_cast<GlobalVariable *>(op);
                             if (global ||
                                 op->isConstant()) {  // 全局变量，给一个寄存器，并把值存栈

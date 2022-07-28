@@ -634,12 +634,19 @@ std::string sdiv(const Reg &dst, const Reg &op1, const Reg &op2) {
 std::string cmp(const Reg &lhs, const Value &rhs) {
   std::string asm_instr;
   asm_instr += spaces;
-  asm_instr += "cmp";
+  if (lhs.is_fp())
+    asm_instr += "vcmp.f32";
+  else
+    asm_instr += "cmp";
   asm_instr += " ";
   asm_instr += lhs.getName();
   asm_instr += ", ";
   asm_instr += rhs.getName();
   asm_instr += newline;
+  if (lhs.is_fp()) {
+    asm_instr += vmrs();
+  }
+
   return asm_instr;
 }
 
@@ -655,6 +662,10 @@ std::string cmp(const Reg &lhs, const Reg &rhs) {
   asm_instr += ", ";
   asm_instr += rhs.getName();
   asm_instr += newline;
+  if (lhs.is_fp()) {
+    asm_instr += vmrs();
+  }
+
   return asm_instr;
 }
 
@@ -730,12 +741,15 @@ std::string load(const Reg &dst, const Addr &src) {
 }
 
 std::string store(const Reg &src, const Addr &dst) {
+
   std::string asm_instr;
   int offset = dst.getOffset();
   if (!src.is_fp() && (offset > imm_12_max || offset < -imm_12_max)) {
+    assert(src != vinst_temp_reg);
     asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
     asm_instr += InstGen::str(src, dst.getReg(), vinst_temp_reg);
   } else if (src.is_fp() && (offset > imm_8_max || offset < -imm_8_max)) {
+    assert(src != vinst_temp_reg);
     asm_instr += InstGen::setValue(vinst_temp_reg, Constant(offset, false));
     asm_instr += InstGen::add(vinst_temp_reg,vinst_temp_reg,dst.getReg());
     asm_instr += InstGen::str(src, Addr(vinst_temp_reg, 0));

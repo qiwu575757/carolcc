@@ -27,7 +27,7 @@ const int arch_version = 7;
 const bool enlarge_stack = true;
 const int enlarge_stack_size = 256 * (1 << 20); // 256MB
 
-const std::set<InstGen::Reg> caller_save_regs = {
+const std::vector<InstGen::Reg> caller_save_regs = {
     InstGen::Reg(0, false), InstGen::Reg(1, false),  InstGen::Reg(2, false),
     InstGen::Reg(3, false), InstGen::Reg(12, false), InstGen::Reg(14, false),
     InstGen::Reg(0, true),  InstGen::Reg(1, true),   InstGen::Reg(2, true),
@@ -36,7 +36,7 @@ const std::set<InstGen::Reg> caller_save_regs = {
     InstGen::Reg(9, true),  InstGen::Reg(10, true),  InstGen::Reg(11, true),
     InstGen::Reg(12, true), InstGen::Reg(13, true), InstGen::Reg(14, true),
     InstGen::Reg(15, true)};
-const std::set<InstGen::Reg> callee_save_regs = {
+const std::vector<InstGen::Reg> callee_save_regs = {
     InstGen::Reg(4, false), InstGen::Reg(5, false), InstGen::Reg(6, false),  InstGen::Reg(7, false),
     InstGen::Reg(8, false), InstGen::Reg(9, false), InstGen::Reg(10, false), InstGen::Reg(11, false),
     InstGen::Reg(16, true), InstGen::Reg(17, true), InstGen::Reg(18, true),  InstGen::Reg(19, true),
@@ -46,12 +46,12 @@ const std::set<InstGen::Reg> callee_save_regs = {
     };
 
 // notice
-const std::set<InstGen::Reg> allocate_regs = {
+const std::vector<InstGen::Reg> allocate_regs = {
     InstGen::Reg(0, false), InstGen::Reg(1, false), InstGen::Reg(2, false), InstGen::Reg(3, false),
     InstGen::Reg(4, false), InstGen::Reg(5, false), InstGen::Reg(6, false), InstGen::Reg(7, false),
     InstGen::Reg(8, false), InstGen::Reg(9, false), InstGen::Reg(10, false), InstGen::Reg(11, false),
     InstGen::Reg(12, false), InstGen::Reg(14, false) };
-const std::set<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
+const std::vector<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
 
 const int cache_line_bits = 7;
 const int cache_line_size = 1 << cache_line_bits;
@@ -176,6 +176,9 @@ public:
   std::pair<int, bool> getValuePosition(Value *inst, Value *val); // 外部函数
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
   std::string getGlobalValAddress(int op_reg, Value *val);
+  std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
+          std::string func_name,std::vector<InstGen::Reg> saved_registers); 
+
 
 };
 

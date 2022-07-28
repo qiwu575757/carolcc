@@ -207,7 +207,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func) {
   std::string func_tail_code;
   int func_stack_size = stack_size_mapping[func->getName()];
 
-  func_tail_code += InstGen::comment("function return", "");
+  func_tail_code += InstGen::comment("function return: ", func->getName());
   func_tail_code += InstGen::instConst(InstGen::add, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(func_stack_size, false));
   // restore callee-save registers and pc
@@ -243,7 +243,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
   std::string asm_code;
   std::string str;
   auto &operands = inst->getOperandList();
-  bool operands_global[operands.size()]; // 可定义寄存器号数组
+  bool operands_global[operands.size()]; // 操作数全局变量判断
   memset(operands_global,false,operands.size());
 
   for (int i = 0; i < operands.size(); i++) {
@@ -254,17 +254,22 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
         asm_code += getGlobalValAddress(value_reg,operands[i]);
       }
       operands_global[i] = true;
-      if (value_reg == -1 && !inst->isCall() &&!inst->isGep()) {
+      if (value_reg == -1 && !inst->isCall() && !inst->isGep()) {
         ERROR("Get wrong reg.");
       }
-    } else if(!inst->isBr()&&!inst->isCall()){
-      // 增加对立即数的赋值处理
+    } else if(!inst->isBr()&&!inst->isCall()){ // 增加对立即数的赋值处理
+      // 若没有分配寄存器，应该返回 -1；分配了就赋值
       int imm_reg = getRegIndexOfValue(inst,operands[i]);
       if (operands[i]->isConstant()&&imm_reg!=-1) {
         bool is_fp = operands[i]->getType()->isFloatTy();
         int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(operands[i])) :
                           atoi(operands[i]->getPrintName().c_str());
-        asm_code += InstGen::setValue(InstGen::Reg(imm_reg,is_fp),InstGen::Constant(int_value,false));
+        if (is_fp) {
+          asm_code += InstGen::setValue(temp_reg,InstGen::Constant(int_value,false));
+          asm_code += InstGen::mov(InstGen::Reg(imm_reg,is_fp),temp_reg);
+        } else {
+          asm_code += InstGen::setValue(InstGen::Reg(imm_reg,is_fp),InstGen::Constant(int_value,false));
+        }
       }
     }
   }
@@ -295,16 +300,17 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     bool is_fp = operands[0]->getType()->isFloatTy();
     std::pair<int, bool> inst_pos = getValuePosition(inst,operands[0]);
 
-    // 0号操作数可能在栈中，如函数参数
+    // 0号操作数可能在栈中，如函数参数---------------------------------------
     if (!inst_pos.second) { // 浮点数？
       asm_code += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,inst_pos.first));
     }
     int op0_reg = inst_pos.second ? inst_pos.first : 11;
     InstGen::Reg op2_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
 
-    asm_code += InstGen::store(InstGen::Reg(op0_reg,is_fp&&inst_pos.second),
+    asm_code += InstGen::store(InstGen::Reg(op0_reg,is_fp),
                         InstGen::Addr(op2_reg,0));
   } else if (inst->isCall()) {
+    // 被调用函数的名字
     std::string func_name = operands.at(0)->getName();
     std::vector<Value *> args(operands.begin()+1, operands.end());
     asm_code += generateFunctionCall(inst,args,func_name, 0);
@@ -379,7 +385,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       int op0 = getRegIndexOfValue(inst,operands[0]);
       bool is_fp = inst->getType()->isFloatTy() || operands[0]->getType()->isFloatTy();
       int op1 = (is_fp || (operands.size()>1&&!operands[1]->isConstant()) || inst->isMul()) ? getRegIndexOfValue(inst,operands[1]) : -2;
-      int tmp; // 作为向浮点寄存器传值的中介
 
       if (inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp()) {
         bool need_reg = is_fp && operands[1]->isConstant();
@@ -397,15 +402,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             asm_code += InstGen::instConst(InstGen::cmp, InstGen::Reg(op0,false),
                           InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
           }
-        } else {
-          if (need_reg) { // 默认浮点的值有没有存到对应寄存器？
-            tmp = acquireForReg(inst,2, str);
-            asm_code += str;
-            str = "";
-            asm_code += InstGen::setValue(InstGen::Reg(tmp,false),
-                  InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(operands[1])),false));
-            asm_code += InstGen::mov(InstGen::Reg(op1,is_fp),InstGen::Reg(tmp,false));
-          }
+        } else { // 默认浮点的值以及存到了寄存器中
           if (inst->isAdd()) {
             asm_code += InstGen::add(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isSub()){
@@ -418,9 +415,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           } else if (inst->isCmp()) { // 注意命令
             asm_code += InstGen::cmp(InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           }
-
-          if (need_reg)
-            asm_code += popValue(inst,tmp, 2);
         }
 
         if (inst->isCmp()) {
@@ -437,7 +431,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           WARNNING("use zext");
           asm_code += InstGen::mov(InstGen::Reg(target,false),InstGen::Reg(op0,false));
       }
-  } else if (inst->isCast()) { //
+  } else if (inst->isCast()) {
     bool is_fp = inst->getType()->isFloatTy();
     if (is_fp)
       asm_code += generateFunctionCall(inst,operands,"__aeabi_i2f", 0); // sitofp
@@ -449,6 +443,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                             InstGen::NOP);
     } else if (operands.size() == 3) {
       if (operands[0]->isConstant()) {
+          MyAssert("Cmp instr operands 0 imm is not int.", operands[0]->getType()->isIntegerTy());
           if (atoi(operands[0]->getPrintName().c_str()) > 0 ) {
             asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),
                                       InstGen::NOP);
@@ -471,7 +466,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else {
       ERROR("TO many args in br instruction");
     }
-  } else if (inst->isLOAD_OFFSET()) {
+  } else if (inst->isLOAD_OFFSET()) { // 需要将对应指令中变量的类型设置好
     MyAssert("LOAD_OFFSET operands error", operands.size() == 1);
     bool is_fp = operands[0]->getType()->isFloatTy();
     asm_code += InstGen::comment("insert load offset ","");
@@ -494,16 +489,12 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
             std::string func_name, int return_reg) {
   std::string func_asm;
 
-  // 系统函数最多两个参数，仅通过寄存器传参
-  int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
-  int callee_stack_size = stack_size_mapping[func_name];
   std::vector<InstGen::Reg> saved_registers;
   if (inst->isCall()) {
     saved_registers = getCallerSavedRegisters(name_func_mapping[func_name]);
   } else { // 对于系统函数、abi的处理
       for (auto r : caller_save_regs) {
-        if (!r.is_fp())
-          saved_registers.push_back(r);
+        saved_registers.push_back(r);
       }
   }
 
@@ -512,11 +503,13 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   std::pair<int, bool> inst_pos;
   if (has_return_value) inst_pos = getValuePosition(inst,inst);
 
+  // 这里对于浮点寄存器的保存需要注意，好像时以 d 为单位
   if (has_return_value && inst_pos.second) {
     auto returned_reg = InstGen::Reg(inst_pos.first, inst->getType()->isFloatTy());
     decltype(saved_registers) new_save_registers;
     for (auto &reg : saved_registers) {
-      if (reg.getID() != returned_reg.getID() || reg.getID() == 14) { // lr寄存器
+      if (reg.getID() != returned_reg.getID() || reg.is_fp() != returned_reg.is_fp()//浮点寄存器都保存
+                || (reg.getID() == 14 && !reg.is_fp()) ) { // lr寄存器
         new_save_registers.push_back(reg);
       }
     }
@@ -529,94 +522,9 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     func_asm += InstGen::push(saved_registers);
   }
   func_asm += InstGen::comment(" call " + func_name, "");
-  {
-    // FOR args 0 - 3
-    {
-      for (int i = 0; i < std::min(args.size(), (size_t)4); i++) {
-        bool is_fp = args[i]->getType()->isFloatTy();
-        if (args[i]->isConstant()) {
-          if (is_fp) {
-            func_asm += InstGen::setValue(temp_reg,InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(args[i])),false));
-            // 对于类型转化abi函数，传参只用 r0
-            func_asm += InstGen::mov(InstGen::Reg(i,!inst->isCast()),temp_reg);
-          } else {
-            func_asm += InstGen::setValue(InstGen::Reg(i,false),
-                      InstGen::Constant(atoi(args[i]->getPrintName().c_str())+
-                          (inst->isAlloca()&&(i==0) ? saved_registers.size()*4 : 0),false));
-          }
-        } else {
-          // 若变量在栈中，返回的offset是push之前的offset
-          std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
-          bool is_conflict = arg_pos.second&&(arg_pos.first < i);
-          if (arg_pos.second) {// 参数在寄存器中
-            if (is_conflict) {
-                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
-                for (int k = 0; k < saved_registers.size(); k++) {
-                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    off = 4 * k;
-                    break;
-                  }
-                }
-                MyAssert("Conflict reg not in stack.", off != -1);
-                func_asm += InstGen::load(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Addr(InstGen::sp,off));
-            }
-            else{
-              func_asm += InstGen::mov(InstGen::Reg(i,is_fp&!inst->isCast()),InstGen::Reg(arg_pos.first,is_fp));
-            }
-          }
-          else {
-            func_asm += InstGen::load(temp_reg,
-                  InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size() * 4));
-            func_asm += InstGen::mov(InstGen::Reg(i,is_fp&!inst->isCast()),temp_reg);
-          }
 
-        }
-      }
-    }
-    // for args >= 4
-    {
-      int offset = 0;
-      for (int i = 4; i < args.size(); i++) {
-        func_asm += InstGen::comment("regs size: "+std::to_string(callee_saved_regs_size),"stack size: "+std::to_string(callee_stack_size));
-
-        bool is_fp = args[i]->getType()->isFloatTy();
-        if (args[i]->isConstant()) {
-          int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(args[i])) :
-                    atoi((args[i])->getPrintName().c_str());
-          func_asm += InstGen::setValue(temp_reg,InstGen::Constant(int_value,false));
-          func_asm += InstGen::store(temp_reg,//这里 -4 不理解
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
-        } else {
-          std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
-          bool is_conflict = arg_pos.second&&(arg_pos.first < 4);// r0 r1 r2 r3
-
-          if (arg_pos.second) {// 参数在寄存器中
-            if (is_conflict) {
-                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
-                for (int k = 0; k < saved_registers.size(); k++) {
-                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    off = 4 * k;
-                    break;
-                  }
-                }
-                MyAssert("Conflict reg not in stack.", off != -1);
-                func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
-                func_asm += InstGen::store(temp_reg,
-                    InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
-            } else {
-              func_asm += InstGen::store(InstGen::Reg(arg_pos.first,is_fp),
-                  InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
-            }
-           } else { // 将浮点数与整型数统一处理，有问题吗----可以注意 vload sx
-            func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
-            func_asm += InstGen::store(temp_reg,
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
-          }
-        }
-        offset += 4;
-      }
-    }
-  }
+  // pass func args
+  func_asm += passFunctionArgs(inst,args,func_name,saved_registers);
 
   // for memset call
   if (inst->isAlloca()) {
@@ -624,18 +532,19 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   WARNNING("enter func: %s",func_name.c_str());
   func_asm += InstGen::bl(func_name);
+
   if (has_return_value) {
-    bool is_fp = (inst)->getType()->isFloatTy(); // 只有 call指令返回值可能会用 s0
-    bool is_call = inst->isCall();
+    bool is_fp = (inst)->getType()->isFloatTy();
+    bool use_fp = is_fp && inst->isCall();// 只有 call指令返回值可能会用 s0,如 cast指令
 
     if (inst_pos.second) { // inst value in reg
       if (inst_pos.first == 14) { // lr寄存器必须被保存和恢复
-        func_asm += InstGen::mov(temp_reg, InstGen::Reg(return_reg,is_fp&&is_call));
+        func_asm += InstGen::mov(temp_reg, InstGen::Reg(return_reg,use_fp));
       } else {
-        func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,is_fp&&is_call));
+        func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,use_fp));
       }
     } else { // inst value in stack
-      func_asm += InstGen::store(InstGen::Reg(return_reg,is_fp),
+      func_asm += InstGen::store(InstGen::Reg(return_reg,use_fp),
               InstGen::Addr(InstGen::sp,inst_pos.first+saved_registers.size()*4));
     }
   }
@@ -650,7 +559,119 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   return func_asm;
 }
 
-// std::string AsmBuilder::getFromSpecificReg(Instruction *inst, );
+std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>args,
+                std::string func_name, std::vector<InstGen::Reg> saved_registers) {
+  std::string func_asm;
+  // 系统函数最多两个参数，仅通过寄存器传参
+  int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
+  int callee_stack_size = stack_size_mapping[func_name];
+
+  {
+    int int_args = 0, float_args = 0; // 记录已当前扫描到的整型/浮点参数的个数
+    for (int i = 0; i < args.size(); i++) {
+      // 是否是浮点数==》当前是否可能占用浮点寄存器
+      bool is_fp = args[i]->getType()->isFloatTy();
+       // 对于类型转化abi函数，传参只用 r0(对于abi函数均使用r传参，目前仅cast abi参数是浮点)
+      bool use_fp = is_fp && !inst->isCast(); // 传参时是否使用浮点寄存器
+
+      if ((!use_fp && int_args <= 3) || (use_fp && float_args <= 15)) {
+      // 使用寄存器传参
+        int used_reg = use_fp ? float_args : int_args; // 具体使用的寄存器号
+
+        if (args[i]->isConstant()) {
+          if (is_fp) { // 若参数是浮点数
+            func_asm += InstGen::setValue(temp_reg,
+              InstGen::Constant(float2int(dynamic_cast<ConstantFloat *>(args[i])),false));
+
+            func_asm += InstGen::mov(InstGen::Reg(used_reg,use_fp),temp_reg);
+          } else {
+            func_asm += InstGen::setValue(InstGen::Reg(used_reg,false),
+                    InstGen::Constant(atoi(args[i]->getPrintName().c_str())+
+                    (inst->isAlloca()&&(i==0) ? saved_registers.size()*4 : 0),false));
+          }
+        } else {
+          // 若变量在栈中，返回的offset是push之前的offset
+          std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
+
+          if (arg_pos.second) {// 参数在寄存器中
+            // 判断是否发生寄存器冲突
+            bool int_reg_conflict =  (arg_pos.first < int_args && !is_fp);
+            bool float_reg_conflict = (arg_pos.first < float_args && is_fp);
+
+            if (int_reg_conflict || float_reg_conflict) {
+                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
+                for (int k = 0; k < saved_registers.size(); k++) {
+                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
+                    off = 4 * k;
+                    break;
+                  }
+                }
+                MyAssert("Conflict reg not in stack.", off != -1);
+                func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
+                                        InstGen::Addr(InstGen::sp,off));
+            } else {
+              func_asm += InstGen::mov(InstGen::Reg(used_reg,use_fp),
+                                        InstGen::Reg(arg_pos.first,is_fp));
+            }
+          } else { // 参数在栈中
+            func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp),
+                  InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size() * 4));
+            // func_asm += InstGen::mov(InstGen::Reg(used_reg,use_fp),temp_reg);
+          }
+        }
+      } else if ((!use_fp && int_args > 3) || (use_fp && float_args > 15)){
+      // 使用栈传递参数
+        // 参数在调用函数栈的位置偏移
+        int offset = (std::max(float_args, 16)-16)*4 + (std::max(int_args,4)-4)*4;
+
+        if (args[i]->isConstant()) {
+          int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(args[i])) :
+                    atoi((args[i])->getPrintName().c_str());
+          func_asm += InstGen::setValue(temp_reg,InstGen::Constant(int_value,false));
+          func_asm += InstGen::store(temp_reg,
+            InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+        } else {
+          std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
+
+          if (arg_pos.second) { // 参数在寄存器中
+            bool int_reg_conflict =  (arg_pos.first < int_args && !is_fp);
+            bool float_reg_conflict = (arg_pos.first < float_args && is_fp);
+
+            if (int_reg_conflict || float_reg_conflict){
+                int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
+                for (int k = 0; k < saved_registers.size(); k++) {
+                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
+                    off = 4 * k;
+                    break;
+                  }
+                }
+                // MyAssert("Conflict reg not in stack.", off != -1);
+                func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
+                func_asm += InstGen::store(temp_reg,
+                  InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+            } else {
+              func_asm += InstGen::store(InstGen::Reg(arg_pos.first,is_fp),
+                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+            }
+           } else {
+            func_asm += InstGen::load(temp_reg,
+              InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
+            func_asm += InstGen::store(temp_reg,
+                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+          }
+        }
+      } else {
+        ERROR("Pass function args error.");
+      }
+
+      if (use_fp) float_args++;
+      else int_args++;
+    }
+  }
+
+  return func_asm;
+}
+
 std::string AsmBuilder::assignToTargetReg(Instruction *inst, Value *val, int target, int offset) {
   std::string assign_code;
   auto val_int_const = dynamic_cast<ConstantInt *>(val);
@@ -694,10 +715,16 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
     }
   }
   #else
+  std::pair<int, int> n = getUsedRegisterNum(func);
+
   for (auto r : caller_save_regs) {
-    if (!r.is_fp())
+    if (!r.is_fp()){
       registers.insert(r);
+    } else if (r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
+      registers.insert(r);
+    }
   }
+
   #endif
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
 }
@@ -714,10 +741,15 @@ std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
     }
   }
   #else
+  std::pair<int, int> n = getUsedRegisterNum(func);
   for (auto r : callee_save_regs) {
-    if (!r.is_fp())
+    if (!r.is_fp()) {
       registers.insert(r);
+    } else if (r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
+      registers.insert(r);
+    }
   }
+
   #endif
 
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
