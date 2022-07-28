@@ -68,11 +68,11 @@ const int int_reg_number = 13;
 const int float_reg_number = 32;
 
 enum interval_value_type{
-  int_local_var,
-  int_global_var,
-  int_imm_var,
-  int_arg_var,
-  int_spill_var,
+  local_var,
+  global_var,
+  imm_var,
+  arg_var,
+  spill_var,
 };
 
 typedef struct interval{
@@ -90,7 +90,7 @@ typedef struct interval{
     int specific_reg_idx;
     int offset;
     bool is_float = false;
-    std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
+    // std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
 class AsmBuilder {
@@ -104,6 +104,7 @@ private:
   int thread_stack_size;
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
+  std::string getType(interval_value_type t);
   // int stack_size = 65536;//131072 32768 16384 根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
   // int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
   int stack_size;
@@ -111,8 +112,10 @@ private:
   bool debug;
 
   std::vector<interval> virtual_int_regs[500];//虚拟寄存器
+  std::vector<interval> virtual_float_regs[500];//虚拟寄存器
   std::vector<interval> stack_map;//args spill alloc return
-  std::set<int> virtual_int_reg_use[500];// 每个寄存器的使用点
+  std::set<int> virtual_int_reg_use[500];// 每个整型寄存器的使用点
+  std::set<int> virtual_float_reg_use[500];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
   std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   int op_save[4];// 栈溢出时的保存寄存器
@@ -157,10 +160,10 @@ public:
   bool value_in_reg(Value *v);
   bool force_reg_alloc(interval itv,int reg_idx);
   bool op_in_inst_is_spilled(Value *inst,Value *op);
-  int give_int_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
-  int give_used_int_reg_at(Value *inst);
-  Value * value_in_int_reg_at(Value *inst,int reg_idx);
-  int get_int_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
+  int give_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
+  int give_used_reg_at(Value *inst);
+  Value * value_in_reg_at(Value *inst,int reg_idx);
+  int get_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
 
   std::vector<InstGen::Reg> getCalleeSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getCallerSavedRegisters(Function *func);
