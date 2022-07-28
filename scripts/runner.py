@@ -34,11 +34,11 @@ clang_llvm_scheme = {"scheme": "clang_llvm",
                      "frontend_instr": "clang{v} -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
-                   "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
+                  "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "build/compiler" + " -s {asm} {sy}",
+                  "frontend_instr": "build/compiler" + " -S  -o {asm} {sy}",
                   "emit_llvm_ir": True}
 
 
@@ -89,7 +89,8 @@ class Runner():
     def remake(self):
         os.chdir('build')
         os.system('cmake ..')
-        os.system('make -j8')
+        os.system('make clean')
+        os.system('make -j20')
         os.chdir('..')
 
     def open_ir(self,test):
@@ -214,9 +215,9 @@ class Runner():
             log_file = open(runner_log_index_path, "w+")
         Print_C().print_procedure("Generating {}/{}.ir".format(testcase, self.scheme))
         if self.args.debug:
-            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split())
+            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), bufsize=1)
         else:
-            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file )
+            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
 
         if self.args.debug:
@@ -240,18 +241,18 @@ class Runner():
             if self.on_chip:
                 subprocess.run(
                     "llc{v} -O0 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(v=self.v,asm=asm,
-                                                                                                            ir=ir).split() )
+                                                                                                            ir=ir).split(), bufsize=1)
             else:
-                subprocess.run("llc{v} -O0  -filetype=asm {ir} -o {asm} ".format(v=self.v,asm=asm, ir=ir).split(), stdout=log_file )
+                subprocess.run("llc{v} -O0  -filetype=asm {ir} -o {asm} ".format(v=self.v,asm=asm, ir=ir).split(), stdout=log_file, bufsize=1)
         else:
             if self.on_chip:
                 subprocess.run(
                     "llc{v} -O0 -march=arm -mcpu=cortex-a72 -float-abi=hard -filetype=asm {ir} -o {asm}".format(v=self.v,asm=asm,
                                                                                                             ir=ir).split(),
-                    stdout=log_file, stderr=self.error_log_file )
+                    stdout=log_file, stderr=self.error_log_file, bufsize=1)
             else:
                 subprocess.run("llc{v} -O0  -filetype=asm {ir} -o {asm} ".format(v=self.v,asm=asm, ir=ir).split(), stdout=log_file,
-                            stderr=self.error_log_file )
+                            stderr=self.error_log_file, bufsize=1)
 
         log_file.close()
         self.check("",testcase)
@@ -273,20 +274,20 @@ class Runner():
 
         Print_C().print_procedure("Generating {}.o".format(self.scheme))
         if self.args.asm:
-            subprocess.run("arm-linux-gnueabihf-gcc -c {asm} -o {obj} -static".format(asm=asm, obj=obj).split() )
+            subprocess.run("arm-linux-gnueabihf-gcc -c {asm} -o {obj} -static".format(asm=asm, obj=obj).split(), bufsize=1)
         else:
             if self.args.debug:
                 if self.on_chip:
-                    subprocess.run("as -march=armv7-a -mfloat-abi=hard {asm} -o {obj}".format(asm=asm, obj=obj).split() )
+                    subprocess.run("as -march=armv7-a -mfloat-abi=hard {asm} -o {obj}".format(asm=asm, obj=obj).split(), bufsize=1)
                 else:
-                    subprocess.run("as {asm} -o {obj} ".format(asm=asm, obj=obj).split() )
+                    subprocess.run("as {asm} -o {obj} ".format(asm=asm, obj=obj).split(), bufsize=1)
             else:
                 if self.on_chip:
                     subprocess.run("as -march=armv7-a -mfloat-abi=hard {asm} -o {obj}".format(asm=asm, obj=obj).split(),
-                                stdout=log_file, stderr=self.error_log_file )
+                                stdout=log_file, stderr=self.error_log_file, bufsize=1)
                 else:
                     subprocess.run("as {asm} -o {obj} ".format(asm=asm, obj=obj).split(), stdout=log_file, stderr=self.error_log_file,
-                            )
+                                bufsize=1)
         log_file.close()
         self.check("",testcase)
 
@@ -310,24 +311,24 @@ class Runner():
         if self.args.asm:
             subprocess.run(
                         "arm-linux-gnueabihf-gcc {obj} stdlib/libsysy_float.a -o {bin} -static".format(
-                            bin=bin, obj=obj).split() )
+                            bin=bin, obj=obj).split(), bufsize=1)
         else:
             if self.args.debug:
                 if self.on_chip:
                     subprocess.run(
                         "clang{v} -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
-                            v=self.v,  bin=bin, obj=obj).split() )
+                            v=self.v,  bin=bin, obj=obj).split(), bufsize=1)
                 else:
                     subprocess.run("clang{v} -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(v=self.v,bin=bin, obj=obj).split(),
-                           )
+                            bufsize=1)
             else:
                 if self.on_chip:
                     subprocess.run(
                         "clang{v} -O0 -marm -march=armv7-a -mfpu=neon -mfloat-abi=hard {obj} stdlib/libsysy_x86.a -o {bin}".format(
-                            v=self.v,  bin=bin, obj=obj).split(), stdout=log_file, stderr=self.error_log_file )
+                            v=self.v,  bin=bin, obj=obj).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
                 else:
                     subprocess.run("clang{v} -O0 {obj} stdlib/libsysy_x86.a -o {bin} -no-pie".format(v=self.v,bin=bin, obj=obj).split(),
-                                    stdout=log_file, stderr=self.error_log_file )
+                                    stdout=log_file, stderr=self.error_log_file, bufsize=1)
 
         log_file.close()
         self.check("",testcase)
@@ -350,20 +351,20 @@ class Runner():
 
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
         if self.args.asm:
-            subprocess.run(frontend_instr.format(asm=asm, sy=sy_path).split() )
+            subprocess.run(frontend_instr.format(asm=asm, sy=sy_path).split(), bufsize=1)
         else:
             if self.args.debug:
                 if self.on_chip:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split() )
+                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), bufsize=1)
                 else:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split() )
+                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), bufsize=1)
             else:
                 if self.on_chip:
                     subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
-                                    stderr=self.error_log_file )
+                                    stderr=self.error_log_file, bufsize=1)
                 else:
                     subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
-                                    stderr=self.error_log_file )
+                                    stderr=self.error_log_file, bufsize=1)
         log_file.close()
         self.check("",testcase)
 
@@ -469,21 +470,21 @@ class Runner():
         if self.args.debug:
             if os.path.exists(stdin):
                 stdin_file = open(stdin, "r+")
-                p = subprocess.run(bin.split(), stdin=stdin_file )
+                p = subprocess.run(bin.split(), stdin=stdin_file, bufsize=1)
             else:
-                p = subprocess.run(bin.split() )
+                p = subprocess.run(bin.split(), bufsize=1)
 
             subprocess.run("echo".split(),bufsize=1)
-            subprocess.run(("echo " + str(p.returncode)).split() )
+            subprocess.run(("echo " + str(p.returncode)).split(), bufsize=1)
 
         if os.path.exists(stdin):
             stdin_file = open(stdin, "r+")
-            p = subprocess.run(bin.split(), stdin=stdin_file, stdout=our_out_file, stderr=self.error_log_file )
+            p = subprocess.run(bin.split(), stdin=stdin_file, stdout=our_out_file, stderr=self.error_log_file, bufsize=1)
         else:
-            p = subprocess.run(bin.split(), stdout=our_out_file, stderr=self.error_log_file )
+            p = subprocess.run(bin.split(), stdout=our_out_file, stderr=self.error_log_file, bufsize=1)
 
-        subprocess.run("echo".split(), stdout=our_out_file )
-        subprocess.run(("echo " + str(p.returncode)).split(), stdout=our_out_file )
+        subprocess.run("echo".split(), stdout=our_out_file, bufsize=1)
+        subprocess.run(("echo " + str(p.returncode)).split(), stdout=our_out_file, bufsize=1)
         Print_C().print_procedure("Return {}".format(p.returncode))
         Print_C().print_pass(pass_file=testcase)
 
