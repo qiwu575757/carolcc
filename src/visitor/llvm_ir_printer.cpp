@@ -333,37 +333,37 @@ void LLVMIrPrinter::visit(CmpInst *node) {
     if(node->isEq()){
         if(!is_float)
             output_file<<"eq";
-        else 
+        else
             output_file<<"oeq";
     }
     else if(node->isNeq()){
         if(!is_float)
             output_file<<"ne";
-        else 
+        else
             output_file<<"one";
     }
     else if(node->isGe()){
         if(!is_float)
             output_file<<"sge";
-        else 
+        else
             output_file<<"oge";
     }
     else if(node->isGt()){
         if(!is_float)
             output_file<<"sgt";
-        else 
+        else
             output_file<<"ogt";
     }
     else if(node->isLt()){
         if(!is_float)
             output_file<<"slt";
-        else 
+        else
             output_file<<"olt";
     }
     else if(node->isLe()){
         if(!is_float)
             output_file<<"sle";
-        else 
+        else
             output_file<<"ole";
     }
     output_file<<" ";
@@ -393,6 +393,7 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
     node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
+    MyAssert("ele",node->getOperandNumber() == 3);
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
         if(i!=0){

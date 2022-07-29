@@ -177,6 +177,7 @@ std::string condCode(const CmpOp &cond);
 std::string push(const std::vector<Reg> &reg_list);
 std::string pop(const std::vector<Reg> &reg_list);
 std::string mov(const Reg &dst, const Value &src, const CmpOp &op = NOP);
+std::string mov(const Reg &dst, const Reg &src, const CmpOp &op = NOP);
 std::string mvn(const Reg &dst, const Value &src, const CmpOp &op = NOP);
 std::string setValue(const Reg &dst, const Constant &src);
 std::string getAddress(const Reg &dst, const Label &src);

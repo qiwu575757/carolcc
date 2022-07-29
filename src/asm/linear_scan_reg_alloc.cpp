@@ -13,10 +13,10 @@
 #include "utils.h"
 
 std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
-    // for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
-    //     LSRA_WARNNING("#####%s %d",it->first.c_str(),it->second.first);
-    // }
-    // LSRA_WARNNING("#####%s",func->getPrintName().c_str());
+    for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
+        LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
+    }
+    LSRA_WARNNING("#####%s",func->getPrintName().c_str());
     // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
     return func_used_reg_map[func->getPrintName()];
 }
@@ -117,12 +117,16 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
     if(val->getType()->isFloatTy()){
-    // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
+    LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
+    val->getPrintName().c_str(),tag);
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
-                // LSRA_WARNNING("check same ? %d start %d end %d reg
-                // %d",virtual_float_regs[i][j].v ==
-                // val,virtual_float_regs[i][j].st_id,virtual_float_regs[i][j].ed_id,i);
+                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                // virtual_float_regs[i][j].v->getPrintName().c_str(),
+                // virtual_float_regs[i][j].v == val,
+                // virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
+                // virtual_float_regs[i][j].st_id,
+                // virtual_float_regs[i][j].ed_id,i);
                 if (virtual_float_regs[i][j].v == val &&
                     tag >= virtual_float_regs[i][j].st_id &&
                     tag <= virtual_float_regs[i][j].ed_id) {
@@ -134,11 +138,15 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         }
     }
     else{
-        // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
+    LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
+    val->getPrintName().c_str(),tag);
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                // LSRA_WARNNING("check same ? %d start %d end %d reg %d",
-                // virtual_int_regs[i][j].v ==val,virtual_int_regs[i][j].st_id,
+                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                // virtual_int_regs[i][j].v->getPrintName().c_str(),
+                // virtual_int_regs[i][j].v == val,
+                // virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
+                // virtual_int_regs[i][j].st_id,
                 // virtual_int_regs[i][j].ed_id,i);
                 if (virtual_int_regs[i][j].v == val &&
                     tag >= virtual_int_regs[i][j].st_id &&
@@ -270,7 +278,7 @@ bool AsmBuilder::force_reg_alloc(
 void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                        Function *func, bool insert) {
     // reset
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         virtual_int_regs[i].clear();
         virtual_int_reg_use[i].clear();
         virtual_float_regs[i].clear();
@@ -308,7 +316,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             continue;
         }
         if(itv.is_float){
-            for (int i = 0; i < 500; i++) {
+            for (int i = 0; i < virtual_reg_max; i++) {
                 bool conflict = false;
                 int index = 0;
                 for (int j = 0; j < virtual_float_regs[i].size(); j++) {
@@ -341,7 +349,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             }
         }
         else{
-               for (int i = 0; i < 500; i++) {
+               for (int i = 0; i < virtual_reg_max; i++) {
                 bool conflict = false;
                 int index = 0;
                 for (int j = 0; j < virtual_int_regs[i].size(); j++) {
@@ -377,14 +385,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
 
     int use_int_reg_num = 0;
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         if (virtual_int_regs[i].size() == 0) {
             use_int_reg_num = i;
             break;
         };
     }
     int use_float_reg_num = 0;
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         if (virtual_float_regs[i].size() == 0) {
             use_float_reg_num = i;
             break;
@@ -397,24 +405,24 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 
     LSRA_WARNNING(" LSRA REG ALLOC");
     // debug
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         for (int j = 0; j < virtual_int_regs[i].size(); j++) {
             LSRA_WARNNING(
-                "[reg %d] [%d,%d] v:%s w:%lf type:%s", i,
+                "[Ireg %d] [%d,%d] v:%s w:%lf type:%s", i,
                 virtual_int_regs[i][j].st_id, virtual_int_regs[i][j].ed_id,
                 virtual_int_regs[i][j].v->getPrintName().c_str(),
                 virtual_int_regs[i][j].weight, getType(virtual_int_regs[i][j].type).c_str());
         }
         for (int j = 0; j < virtual_float_regs[i].size(); j++) {
             LSRA_WARNNING(
-                "[reg %d] [%d,%d] v:%s w:%lf type:%s", i,
+                "[Freg %d] [%d,%d] v:%s w:%lf type:%s", i,
                 virtual_float_regs[i][j].st_id, virtual_float_regs[i][j].ed_id,
                 virtual_float_regs[i][j].v->getPrintName().c_str(),
                 virtual_float_regs[i][j].weight, getType(virtual_float_regs[i][j].type).c_str());
         }
     }
     LSRA_SHOW("-- [reg alloc int graph] --\n");
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         int t = 0;
         if (virtual_int_regs[i].size() == 0) continue;
         LSRA_SHOW("[reg %02d] ", i);
@@ -431,7 +439,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
         LSRA_SHOW("\n");
     }
     LSRA_SHOW("-- [reg alloc float graph] --\n");
-    for (int i = 0; i < 500; i++) {
+    for (int i = 0; i < virtual_reg_max; i++) {
         int t = 0;
         if (virtual_float_regs[i].size() == 0) continue;
         LSRA_SHOW("[reg %02d] ", i);
@@ -493,7 +501,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     stack_size += op_save_stack_num * 4;  //压入四个保护位置
     //计算变量栈溢出空间
     int use_reg_num = 0;
-    for (int i = int_reg_number; i < 500; i++) {
+    for (int i = int_reg_number; i < virtual_reg_max; i++) {
         if (virtual_int_regs[i].size() == 0) {
             break;
         } else {
@@ -511,7 +519,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             stack_size += 4;
         }
     }
-    for (int i = float_reg_number; i < 500; i++) {
+    for (int i = float_reg_number; i < virtual_reg_max; i++) {
         if (virtual_float_regs[i].size() == 0) {
             break;
         } else {
@@ -558,9 +566,9 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     for (auto &p : live_range) {
         if (p.type == interval_value_type::arg_var && p.spilled) {
             if(p.is_float){
-                virtual_float_regs[499].push_back(p);
+                virtual_float_regs[virtual_reg_max-1].push_back(p);
             }else{
-                virtual_int_regs[499].push_back(p);
+                virtual_int_regs[virtual_reg_max-1].push_back(p);
             }
         }
     }
@@ -894,7 +902,7 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
 
     int tag = linear_map[inst];
     if(op->getType()->isFloatTy()){
-        for (int i = float_reg_number; i < 500; i++) {
+        for (int i = float_reg_number; i < virtual_reg_max; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
                 if (virtual_float_regs[i][j].v == op &&
                     tag >= virtual_float_regs[i][j].st_id &&
@@ -905,7 +913,7 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
         }
     }
     else{
-        for (int i = int_reg_number; i < 500; i++) {
+        for (int i = int_reg_number; i < virtual_reg_max; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
                 // if(virtual_int_regs[i][j].v == op){
                     // LSRA_WARNNING("inst %s op %s, itv[%d,%d] tag:%d",inst->getPrintName().c_str(),virtual_int_regs[i][j].v->getPrintName().c_str(),
@@ -1083,12 +1091,12 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                         continue;
                     }
                     if((inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp())
-                     && op_id == 1 && op->isConstant() && op->getType()->isFloatTy()) {
+                     && op_id == 1 && op->isConstant() && !op->getType()->isFloatTy()) {
                         op_id++;
                         continue;
                     }
                     if((inst->isRem()) && (op_id == 0 || op_id == 1 )
-                    && op->isConstant() && op->getType()->isFloatTy() ) {
+                    && op->isConstant() && !op->getType()->isFloatTy() ) {
                         op_id++;
                         continue;
                     }
@@ -1110,6 +1118,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     {
                         live_map[op].st_id = linear_map[inst];
                         live_map[op].ed_id = linear_map[inst];
+                        live_map[op].is_float = op->getType()->isFloatTy();
                     } else {
                         if (linear_map[inst] > live_map[op].ed_id) {
                             live_map[op].ed_id = linear_map[inst];
@@ -1179,7 +1188,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
     // debug
     LSRA_WARNNING(" LIVE INTERVAL");
     for (auto &p : live_res) {
-        LSRA_WARNNING(" %%%s [%d,%d] float ? %d type: %s",p.v->getName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
+        LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
     }
 
     linear_scan_reg_alloc(live_res, func, insert);

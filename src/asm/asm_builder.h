@@ -67,6 +67,8 @@ const int clone_flag = CLONE_VM | SIGCHLD;
 const int int_reg_number = 13;
 const int float_reg_number = 32;
 
+const int virtual_reg_max = 200;
+
 enum interval_value_type{
   local_var,
   global_var,
@@ -111,11 +113,11 @@ private:
   int return_offset; // 注意维护
   bool debug;
 
-  std::vector<interval> virtual_int_regs[500];//虚拟寄存器
-  std::vector<interval> virtual_float_regs[500];//虚拟寄存器
+  std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
+  std::vector<interval> virtual_float_regs[virtual_reg_max];//虚拟寄存器
   std::vector<interval> stack_map;//args spill alloc return
-  std::set<int> virtual_int_reg_use[500];// 每个整型寄存器的使用点
-  std::set<int> virtual_float_reg_use[500];// 每个浮点寄存器的使用点 冲突识别
+  std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
+  std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
   std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   int op_save[4];// 栈溢出时的保存寄存器
@@ -180,7 +182,7 @@ public:
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
   std::string getGlobalValAddress(int op_reg, Value *val);
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
-          std::string func_name,std::vector<InstGen::Reg> saved_registers); 
+          std::string func_name,std::vector<InstGen::Reg> saved_registers);
 
 
 };

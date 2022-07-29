@@ -35,6 +35,8 @@ std::string condCode(const CmpOp &cond) {
 
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
+  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
+
   bool has_fp = false;
   int total_push = 0;
   for (auto &i : reg_list) {
@@ -99,6 +101,7 @@ std::string push(const std::vector<Reg> &reg_list) {
 
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
+  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
 
   bool flag = false;
   int total_pop = 0;
@@ -120,9 +123,10 @@ std::string pop(const std::vector<Reg> &reg_list) {
   asm_instr += newline;
 
   if (total_pop < reg_list.size()) {
-    std::string tmp_asm[10]; //用来存储生成的pop汇编，然后反向输出
+    std::vector<std::string> tmp_asm;//用来存储生成的pop汇编，然后反向输出
     int ptr = 0;
 
+    tmp_asm.push_back(std::string());
     tmp_asm[ptr] += spaces;
     tmp_asm[ptr] += "vpop";
     tmp_asm[ptr] += " ";
@@ -134,6 +138,7 @@ std::string pop(const std::vector<Reg> &reg_list) {
         if (flag&&pre_index!=i.getID()-1) {
           tmp_asm[ptr] += "}";
           tmp_asm[ptr++] += newline;
+          tmp_asm.push_back(std::string());
           tmp_asm[ptr] += spaces;
           tmp_asm[ptr] += "vpop";
           tmp_asm[ptr] += " ";
@@ -167,6 +172,25 @@ std::string mov(const Reg &dst, const Value &src, const CmpOp &cond) {
   }
   asm_instr += spaces;
   if (dst.is_fp())
+    asm_instr += "vmov.f32";
+  else
+    asm_instr += "mov";
+  asm_instr += condCode(cond);
+  asm_instr += " ";
+  asm_instr += dst.getName();
+  asm_instr += ", ";
+  asm_instr += src.getName();
+  asm_instr += newline;
+  return asm_instr;
+}
+
+std::string mov(const Reg &dst, const Reg &src, const CmpOp &cond) {
+  std::string asm_instr;
+  if (src.is_reg() && dst.getName() == src.getName()) {
+    return asm_instr;
+  }
+  asm_instr += spaces;
+  if (dst.is_fp() || src.is_fp())
     asm_instr += "vmov.f32";
   else
     asm_instr += "mov";
