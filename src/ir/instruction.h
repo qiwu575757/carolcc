@@ -52,6 +52,7 @@ class Instruction : public User {
         CONTINUE,
         //
         CAST
+        
 
     };
 
@@ -61,7 +62,7 @@ class Instruction : public User {
     //    bool isNeg()const { return _op_id == Instruction::NEG; }
     bool isNot() const { return _op_id == Instruction::NOT; }
     bool isCast() const { return _op_id == Instruction::CAST; }
-
+    // binary
     bool isAdd() const { return _op_id == Instruction::ADD; }
     bool isSub() const { return _op_id == Instruction::SUB; }
     bool isMul() const { return _op_id == Instruction::MUL; }
@@ -99,7 +100,7 @@ class Instruction : public User {
 };
 
 class UnaryInst : public Instruction {
-   private:
+   public:
     // UnaryInst(Type *type, OpKind op_id, Value *v1);
     UnaryInst(Type *type, OpKind op_id, Value *v1, BasicBlock *parent);
 
@@ -112,7 +113,7 @@ class UnaryInst : public Instruction {
 };
 
 class BinaryInst : public Instruction {
-   private:
+   public:
     // BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
     BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2,
                BasicBlock *parent);
@@ -161,7 +162,7 @@ class CmpInst : public Instruction {
     bool isLe() const{ return _cmp_op == CmpInst::LE; }
     CmpOp getCmpOp() { return _cmp_op; }
 
-   private:
+   public:
     // CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
 };

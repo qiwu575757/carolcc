@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <set>
 
 class Value;
 class Function;
@@ -53,6 +54,7 @@ public:
     void addAlloca(AllocaInst*);
     void setAllocaEnd(AllocaInst*);
     Function(FunctionType *type, const std::string &name, Module *parent);
+    Function(FunctionType *type, const std::string &name );
     static Function *create(FunctionType *type, const std::string &name, Module *parent);
     void accept(IrVisitorBase *v) override;
     FunctionType *getFunctionType() const;
@@ -104,6 +106,10 @@ public:
 
     bool isBuiltin() const {return _is_builtin;}
     void setBuiltin(bool flag){_is_builtin = flag;}
+    std::set<Function*>& getCalleeSet() {return _callee_list;}
+    std::set<Function*>& getCallerSet() {return _caller_list;}
+    void addCaller(Function* caller){_caller_list.insert(caller);}
+    void addCallee(Function* callee){_caller_list.insert(callee);}
 
 private:
     Instruction* _alloca_end;
@@ -112,7 +118,10 @@ private:
     Module *_parent;
     std::list<BasicBlock *> _basic_block_list;
     bool  _is_builtin;
-
+    // 此函数调用的函数
+    std::set<Function*> _callee_list;
+    // 此函数被哪些函数调用
+    std::set<Function*> _caller_list;
 private:
     void buildArgs();
 };

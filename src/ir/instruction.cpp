@@ -1,5 +1,6 @@
 #include "instruction.h"
 
+#include "basic_block.h"
 #include "function.h"
 #include "passes/module.h"
 #include "type.h"
@@ -408,6 +409,8 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
     }
+    parent->getParentFunc()->addCallee(func);
+    func->addCaller(parent->getFunction());
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args,
                                BasicBlock *parent) {
