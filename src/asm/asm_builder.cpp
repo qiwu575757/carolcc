@@ -192,7 +192,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     auto saved_registers = getCalleeSavedRegisters(func);
     saved_registers.push_back(InstGen::fp);
     saved_registers.push_back(InstGen::lr);
-    std::sort(saved_registers.begin(), saved_registers.end());
+     std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
     func_head_code += InstGen::comment("save callee-save registers, lr and fp", "");
     func_head_code += InstGen::push(saved_registers);
@@ -215,7 +215,7 @@ std::string AsmBuilder::generate_function_exit_code(Function *func) {
   auto saved_registers = getCalleeSavedRegisters(func);
   saved_registers.push_back(InstGen::fp);
   saved_registers.push_back(InstGen::pc); // 相当与 bl lr
-  std::sort(saved_registers.begin(), saved_registers.end());
+   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
   func_tail_code += InstGen::pop(saved_registers);
 
   return func_tail_code;
@@ -524,7 +524,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
 
   // saved_registers.push_back(temp_reg); // used as tmp reg
-  std::sort(saved_registers.begin(), saved_registers.end());
+   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
   if (!saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
@@ -567,6 +567,13 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
   // 系统函数最多两个参数，仅通过寄存器传参
   int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
   int callee_stack_size = stack_size_mapping[func_name];
+  int saved_fp_regs = 0; // 调用者保存的浮点寄存器的个数，用于计算保存寄存器偏移
+  for (auto i : saved_registers ) {
+    if (i.is_fp()) {
+      saved_fp_regs++;
+    }
+  }
+  int saved_int_regs = saved_registers.size() - saved_fp_regs;
 
   {
     int int_args = 0, float_args = 0; // 记录已当前扫描到的整型/浮点参数的个数
@@ -604,7 +611,11 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
                   if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    off = 4 * k;
+                    if (is_fp) {
+                      off = 4 * (k - saved_int_regs);
+                    } else {
+                      off = 4 * (k + saved_fp_regs);
+                    }
                     break;
                   }
                 }
@@ -644,7 +655,11 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 for (int k = 0; k < saved_registers.size(); k++) {
                   WARNNING("%d == %d ", saved_registers[k].getID(), arg_pos.first);
                   if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
-                    off = 4 * k;
+                    if (is_fp) {
+                      off = 4 * (k - saved_int_regs);
+                    } else {
+                      off = 4 * (k + saved_fp_regs);
+                    }
                     break;
                   }
                 }
@@ -735,10 +750,13 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
     } else if (r.getID() < n.second) { // 保存的浮点寄存器
       registers.push_back(r);
     }
+
+    if (r.is_fp()) {
+      WARNNING("id = %d, id2 = %d",r.getID(), n.second);
+    }
   }
-
+  WARNNING("func: %s use %d iregs.", func->getPrintName(), registers.size());
   #endif
-
 
   return registers;
 }
@@ -869,7 +887,7 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
 
 bool cmp(const InstGen::Reg reg1, const InstGen::Reg reg2) {
     if (reg1.is_fp() == reg2.is_fp()) {
-      return reg1.getID() > reg2.getID();
+      return reg1.getID() < reg2.getID();
     } else {
       return reg1.is_fp() < reg2.is_fp();
     }

@@ -13,10 +13,10 @@
 #include "utils.h"
 
 std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
-    // for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
-    //     LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
-    // }
-    // LSRA_WARNNING("#####%s",func->getPrintName().c_str());
+    for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
+        LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
+    }
+    LSRA_WARNNING("#####%s",func->getPrintName().c_str());
     // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
     return func_used_reg_map[func->getPrintName()];
 }

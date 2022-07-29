@@ -39,6 +39,26 @@ std::string push(const std::vector<Reg> &reg_list) {
 
   bool has_fp = false;
   int total_push = 0;
+
+  bool flag = false;
+  asm_instr += spaces;
+  asm_instr += "push";
+  asm_instr += " ";
+  asm_instr += "{";
+  for (auto &i : reg_list) {
+    if (!i.is_fp()) {
+      if (flag) {
+        asm_instr += ", ";
+      }
+      MyAssert("[push]Reg name is null",i.getName().size() != 0);
+      asm_instr += i.getName();
+      flag = true;
+    }
+  }
+  asm_instr += "}";
+  asm_instr += newline;
+
+
   for (auto &i : reg_list) {
     if (i.is_fp()) {
       has_fp = true;
@@ -76,25 +96,6 @@ std::string push(const std::vector<Reg> &reg_list) {
     asm_instr += newline;
   }
 
-  if (total_push < reg_list.size()) {
-    bool flag = false;
-    asm_instr += spaces;
-    asm_instr += "push";
-    asm_instr += " ";
-    asm_instr += "{";
-    for (auto &i : reg_list) {
-      if (!i.is_fp()) {
-        if (flag) {
-          asm_instr += ", ";
-        }
-        MyAssert("[push]Reg name is null",i.getName().size() != 0);
-        asm_instr += i.getName();
-        flag = true;
-      }
-    }
-    asm_instr += "}";
-    asm_instr += newline;
-  }
 
   return asm_instr;
 }
@@ -102,27 +103,15 @@ std::string push(const std::vector<Reg> &reg_list) {
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
   asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
+  bool has_fp = false;
 
-  bool flag = false;
-  int total_pop = 0;
-  asm_instr += spaces;
-  asm_instr += "pop";
-  asm_instr += " ";
-  asm_instr += "{";
   for (auto &i : reg_list) {
-    if (!i.is_fp()) {
-      if (flag) {
-        asm_instr += ", ";
-      }
-      asm_instr += i.getName();
-      flag = true;
-      total_pop++;
+    if (i.is_fp()) {
+      has_fp = true;
+      break;
     }
   }
-  asm_instr += "}";
-  asm_instr += newline;
-
-  if (total_pop < reg_list.size()) {
+  if (has_fp) {
     std::vector<std::string> tmp_asm;//用来存储生成的pop汇编，然后反向输出
     int ptr = 0;
 
@@ -161,6 +150,25 @@ std::string pop(const std::vector<Reg> &reg_list) {
       asm_instr += tmp_asm[i];
     }
   }
+
+  bool flag = false;
+  int total_pop = 0;
+  asm_instr += spaces;
+  asm_instr += "pop";
+  asm_instr += " ";
+  asm_instr += "{";
+  for (auto &i : reg_list) {
+    if (!i.is_fp()) {
+      if (flag) {
+        asm_instr += ", ";
+      }
+      asm_instr += i.getName();
+      flag = true;
+      total_pop++;
+    }
+  }
+  asm_instr += "}";
+  asm_instr += newline;
 
   return asm_instr;
 }
