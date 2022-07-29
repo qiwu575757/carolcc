@@ -66,10 +66,10 @@ std::string push(const std::vector<Reg> &reg_list) {
           if (flag) {
             asm_instr += ", ";
           }
-          pre_index = i.getID();
           asm_instr += i.getName();
         }
         flag = true;
+        pre_index = i.getID();
       }
     }
     asm_instr += "}";
@@ -148,10 +148,10 @@ std::string pop(const std::vector<Reg> &reg_list) {
           if (flag) {
             tmp_asm[ptr] += ", ";
           }
-          pre_index = i.getID();
           tmp_asm[ptr] += i.getName();
         }
         flag = true;
+        pre_index = i.getID();
       }
     }
     tmp_asm[ptr] += "}";

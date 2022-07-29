@@ -13,10 +13,10 @@
 #include "utils.h"
 
 std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
-    for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
-        LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
-    }
-    LSRA_WARNNING("#####%s",func->getPrintName().c_str());
+    // for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
+    //     LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
+    // }
+    // LSRA_WARNNING("#####%s",func->getPrintName().c_str());
     // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
     return func_used_reg_map[func->getPrintName()];
 }
@@ -75,7 +75,7 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
         ERROR("can't give any reg because all the reg is using at inst %d %s"
         ,linear_map[inst],inst->getPrintName().c_str());
     }
-    Value *reg_v = value_in_reg_at(inst, reg_get);
+    Value *reg_v = value_in_reg_at(inst, reg_get, inst->getType()->isFloatTy());
     if (reg_v != nullptr) {  // 说明占用了寄存器
         //!! 插入一条冲突寄存器分配到virtual_int_regs
         //!! 做好冲突维护
@@ -100,10 +100,10 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
     }
     Value *reg_v = nullptr;
     if(inst->getType()->isFloatTy()){
-        reg_v = value_in_reg_at(inst, (reg_idx));
+        reg_v = value_in_reg_at(inst, (reg_idx),inst->getType()->isFloatTy());
     }
     else{
-        reg_v = value_in_reg_at(inst, real2vir(reg_idx));
+        reg_v = value_in_reg_at(inst, real2vir(reg_idx),inst->getType()->isFloatTy());
     }
     if (reg_v != nullptr) {  // 说明占用了寄存器
         insert_inst += InstGen::comment("insert ldr", "");
@@ -117,8 +117,8 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
     if(val->getType()->isFloatTy()){
-    LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
-    val->getPrintName().c_str(),tag);
+    // LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
+    // val->getPrintName().c_str(),tag);
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
                 // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
@@ -138,8 +138,8 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         }
     }
     else{
-    LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
-    val->getPrintName().c_str(),tag);
+    // LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
+    // val->getPrintName().c_str(),tag);
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
                 // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
@@ -603,7 +603,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                 "can't give any reg because all the reg is "
                                 "using");
                         }
-                        Value *reg_v = value_in_reg_at(inst, reg_get);
+                        Value *reg_v = value_in_reg_at(inst, reg_get,inst->getType()->isFloatTy());
                         if (reg_v != nullptr) {  // 说明占用了寄存器
                             //!! 插入一条冲突寄存器分配到virtual_int_regs
                             //!! 做好冲突维护
@@ -662,7 +662,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                             if (global ||
                                 op->isConstant()) {  // 全局变量，给一个寄存器，并把值存栈
                                 Value *reg_v =
-                                    value_in_reg_at(inst, reg_get);
+                                    value_in_reg_at(inst, reg_get,op->getType()->isFloatTy());
                                 if (reg_v != nullptr) {  // 说明占用了寄存器
                                     //!!
                                     //!插入一条冲突寄存器分配到virtual_int_regs
@@ -684,7 +684,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                 }
                             } else {
                                 Value *reg_v =
-                                    value_in_reg_at(inst, reg_get);
+                                    value_in_reg_at(inst, reg_get,op->getType()->isFloatTy());
                                 if (reg_v != nullptr) {  // 说明占用了寄存器
                                     //!!
                                     //!插入一条冲突寄存器分配到virtual_int_regs
@@ -817,9 +817,9 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 }
 
 Value *AsmBuilder::value_in_reg_at(
-    Value *inst, int reg_idx) {  // 查看当前寄存器分配的变量
+    Value *inst, int reg_idx, bool is_fp) {  // 查看当前寄存器分配的变量
     int tag = linear_map[inst];
-    if(inst->getType()->isFloatTy()){
+    if(is_fp){
         for (int j = 0; j < virtual_float_regs[reg_idx].size(); j++) {
             if (tag >= virtual_float_regs[reg_idx][j].st_id &&
                 tag <= virtual_float_regs[reg_idx][j].ed_id) {

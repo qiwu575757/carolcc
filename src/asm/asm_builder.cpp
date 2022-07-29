@@ -2,6 +2,7 @@
 #include "asm_instr.h"
 #include "utils.h"
 #include <memory.h>
+bool cmp(const InstGen::Reg reg1, const InstGen::Reg reg2);
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
     ERROR("UNDO");
@@ -469,13 +470,16 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
   } else if (inst->isLOAD_OFFSET()) { // 需要将对应指令中变量的类型设置好
     MyAssert("LOAD_OFFSET operands error", operands.size() == 1);
     bool is_fp = operands[0]->getType()->isFloatTy();
-    asm_code += InstGen::comment("insert load offset ","");
+    if (is_fp)
+      asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
+    else
+      asm_code += InstGen::comment("insert load offset",operands[0]->getPrintName());
     asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
   } else if (inst->isSTORE_OFFSET()) {
     MyAssert("STORE_OFFSET operands error", operands.size() == 1);
     bool is_fp = operands[0]->getType()->isFloatTy();
-    asm_code += InstGen::comment("insert store offset ","");
+    asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
   } else {
@@ -501,17 +505,14 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
         saved_registers.push_back(r);
       }
   }
-  WARNNING("1");
   WARNNING("calleer saved regs size: %d", saved_registers.size());
   bool has_return_value = (return_reg >= 0) && (inst->getType()->getSize() > 0);
   std::pair<int, bool> inst_pos;
   if (has_return_value) inst_pos = getValuePosition(inst,inst);
-  WARNNING("2");
 
   // 这里对于浮点寄存器的保存需要注意，需要保持连续
   if (has_return_value && inst_pos.second) {
     auto returned_reg = InstGen::Reg(inst_pos.first, is_fp);
-  WARNNING("3");
     decltype(saved_registers) new_save_registers;
     for (auto &reg : saved_registers) {
       if (reg.getID() != returned_reg.getID() || reg.is_fp() != is_fp//浮点寄存器都保存
@@ -519,26 +520,22 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
         new_save_registers.push_back(reg);
       }
     }
-  WARNNING("4");
     saved_registers = new_save_registers;
   }
+
   // saved_registers.push_back(temp_reg); // used as tmp reg
   std::sort(saved_registers.begin(), saved_registers.end());
-  WARNNING("5");
 
   if (!saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
   }
   func_asm += InstGen::comment(" call " + func_name, "");
-  WARNNING("6");
 
   // pass func args
   func_asm += passFunctionArgs(inst,args,func_name,saved_registers);
-  WARNNING("7");
 
   WARNNING("enter func: %s",func_name.c_str());
   func_asm += InstGen::bl(func_name);
-  WARNNING("8");
 
   if (has_return_value) {
     if (inst_pos.second) { // inst value in reg
@@ -552,16 +549,13 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
               InstGen::Addr(InstGen::sp,inst_pos.first+saved_registers.size()*4));
     }
   }
-  WARNNING("9");
   if (!saved_registers.empty()) {
     func_asm += InstGen::pop(saved_registers);
   }
-  WARNNING("11");
 
   if (inst_pos.second&&inst_pos.first==14) {
     func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,false), temp_reg);
   }
-  WARNNING("10");
 
   saved_registers.clear();
   return func_asm;
@@ -872,3 +866,11 @@ std::string AsmBuilder::getLabelName(Function *func, int type) {
   const std::vector<std::string> name_list = {"pre", "post"};
   return InstGen::spaces + "." + func->getName() + "_" + name_list.at(type);
 }
+
+bool cmp(const InstGen::Reg reg1, const InstGen::Reg reg2) {
+    if (reg1.is_fp() == reg2.is_fp()) {
+      return reg1.getID() > reg2.getID();
+    } else {
+      return reg1.is_fp() < reg2.is_fp();
+    }
+  }
