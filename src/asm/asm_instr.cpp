@@ -35,7 +35,7 @@ std::string condCode(const CmpOp &cond) {
 
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
-  bool flag = false, has_fp = false;
+  bool has_fp = false;
   int total_push = 0;
   for (auto &i : reg_list) {
     if (i.is_fp()) {
@@ -48,19 +48,32 @@ std::string push(const std::vector<Reg> &reg_list) {
     asm_instr += "vpush";
     asm_instr += " ";
     asm_instr += "{";
+    bool flag = false;
+    int pre_index = -1;
     for (auto &i : reg_list) {
       if (i.is_fp()) {
-        if (flag) {
-          asm_instr += ", ";
+        if (flag&&pre_index!=i.getID()-1) {
+          asm_instr += "}";
+          asm_instr += newline;
+          asm_instr += spaces;
+          asm_instr += "vpush";
+          asm_instr += " ";
+          asm_instr += "{";
+          asm_instr += i.getName();
+        } else {
+          if (flag) {
+            asm_instr += ", ";
+          }
+          pre_index = i.getID();
+          asm_instr += i.getName();
         }
-        asm_instr += i.getName();
         flag = true;
-        total_push++;
       }
     }
     asm_instr += "}";
     asm_instr += newline;
   }
+
   if (total_push < reg_list.size()) {
     bool flag = false;
     asm_instr += spaces;
@@ -86,6 +99,7 @@ std::string push(const std::vector<Reg> &reg_list) {
 
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
+
   bool flag = false;
   int total_pop = 0;
   asm_instr += spaces;
@@ -106,22 +120,41 @@ std::string pop(const std::vector<Reg> &reg_list) {
   asm_instr += newline;
 
   if (total_pop < reg_list.size()) {
+    std::string tmp_asm[10]; //用来存储生成的pop汇编，然后反向输出
+    int ptr = 0;
+
+    tmp_asm[ptr] += spaces;
+    tmp_asm[ptr] += "vpop";
+    tmp_asm[ptr] += " ";
+    tmp_asm[ptr] += "{";
     bool flag = false;
-    asm_instr += spaces;
-    asm_instr += "vpop";
-    asm_instr += " ";
-    asm_instr += "{";
+    int pre_index = -1;
     for (auto &i : reg_list) {
       if (i.is_fp()) {
-        if (flag) {
-          asm_instr += ", ";
+        if (flag&&pre_index!=i.getID()-1) {
+          tmp_asm[ptr] += "}";
+          tmp_asm[ptr++] += newline;
+          tmp_asm[ptr] += spaces;
+          tmp_asm[ptr] += "vpop";
+          tmp_asm[ptr] += " ";
+          tmp_asm[ptr] += "{";
+          tmp_asm[ptr] += i.getName();
+        } else {
+          if (flag) {
+            tmp_asm[ptr] += ", ";
+          }
+          pre_index = i.getID();
+          tmp_asm[ptr] += i.getName();
         }
-        asm_instr += i.getName();
         flag = true;
       }
     }
-    asm_instr += "}";
-    asm_instr += newline;
+    tmp_asm[ptr] += "}";
+    tmp_asm[ptr] += newline;
+
+    for (int i = ptr; i >= 0; i--) {
+      asm_instr += tmp_asm[i];
+    }
   }
 
   return asm_instr;

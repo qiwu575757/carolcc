@@ -710,28 +710,19 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
       // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
-  bool flag = false;
-  int fp_start = 0;
-  for (auto r : caller_save_regs) {
-    if (!r.is_fp()){
-      registers.insert(r);
-    } else if (!flag && r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
-      flag = true;
-      fp_start = r.getID();
-    }
-  }
-
-  for (int i = fp_start; i < n.second; i++ ){
-    registers.insert(InstGen::Reg(i,true));
-  }
-  #else
-  std::pair<int, int> n = getUsedRegisterNum(func);
   for (auto r : caller_save_regs) {
     if (!r.is_fp())
       registers.insert(r);
   }
-
-
+  #else
+  std::pair<int, int> n = getUsedRegisterNum(func);
+  for (auto r : caller_save_regs) {
+    if (!r.is_fp()){
+      registers.insert(r);
+    } else if (r.getID() < n.second) { // 保存的浮点寄存器
+      registers.insert(r);
+    }
+  }
 
   #endif
 
@@ -751,24 +742,19 @@ std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
     }
   }
   std::pair<int, int> n = getUsedRegisterNum(func);
-  bool flag = false;
+  for (auto r : callee_save_regs) {
+    if (!r.is_fp())
+      registers.insert(r);
+  }
+  #else
+  std::pair<int, int> n = getUsedRegisterNum(func);
   int fp_start = 0;
   for (auto r : callee_save_regs) {
     if (!r.is_fp()){
       registers.insert(r);
-    } else if (!flag && r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
-      flag = true;
-      fp_start = r.getID();
-    }
-  }
-  for (int i = fp_start; i < n.second; i++ ){
-    registers.insert(InstGen::Reg(i,true));
-  }
-  #else
-  std::pair<int, int> n = getUsedRegisterNum(func);
-  for (auto r : callee_save_regs) {
-    if (!r.is_fp())
+    } else if (r.getID() < n.second) { // 保存的浮点寄存器
       registers.insert(r);
+    }
   }
 
   #endif
