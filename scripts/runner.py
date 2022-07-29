@@ -274,7 +274,7 @@ class Runner():
 
         Print_C().print_procedure("Generating {}.o".format(self.scheme))
         if self.args.asm:
-            subprocess.run("arm-linux-gnueabi-gcc -c {asm} -o {obj} -static".format(asm=asm, obj=obj).split(), bufsize=1)
+            subprocess.run("arm-linux-gnueabihf-gcc -c {asm} -o {obj} -static".format(asm=asm, obj=obj).split(), bufsize=1)
         else:
             if self.args.debug:
                 if self.on_chip:
@@ -310,7 +310,7 @@ class Runner():
         Print_C().print_procedure("Generating {}".format(self.scheme))
         if self.args.asm:
             subprocess.run(
-                        "arm-linux-gnueabi-gcc {obj} stdlib/libsysy_float.a -o {bin} -static".format(
+                        "arm-linux-gnueabihf-gcc {obj} stdlib/libsysy_float.a -o {bin} -static".format(
                             bin=bin, obj=obj).split(), bufsize=1)
         else:
             if self.args.debug:

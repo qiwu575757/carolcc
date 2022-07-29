@@ -298,16 +298,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
 
   } else if (inst->isStore()) {
     bool is_fp = operands[0]->getType()->isFloatTy();
-    std::pair<int, bool> inst_pos = getValuePosition(inst,operands[0]);
 
-    // 0号操作数可能在栈中，如函数参数---------------------------------------
-    if (!inst_pos.second) { // 浮点数？
-      asm_code += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,inst_pos.first));
-    }
-    int op0_reg = inst_pos.second ? inst_pos.first : 11;
     InstGen::Reg op2_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
 
-    asm_code += InstGen::store(InstGen::Reg(op0_reg,is_fp),
+    asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                         InstGen::Addr(op2_reg,0));
   } else if (inst->isCall()) {
     // 被调用函数的名字
@@ -503,12 +497,12 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   std::pair<int, bool> inst_pos;
   if (has_return_value) inst_pos = getValuePosition(inst,inst);
 
-  // 这里对于浮点寄存器的保存需要注意，好像时以 d 为单位
+  // 这里对于浮点寄存器的保存需要注意，需要保持连续
   if (has_return_value && inst_pos.second) {
     auto returned_reg = InstGen::Reg(inst_pos.first, inst->getType()->isFloatTy());
     decltype(saved_registers) new_save_registers;
     for (auto &reg : saved_registers) {
-      if (reg.getID() != returned_reg.getID() || reg.is_fp() != returned_reg.is_fp()//浮点寄存器都保存
+      if (reg.getID() != returned_reg.getID() || reg.is_fp() //浮点寄存器都保存
                 || (reg.getID() == 14 && !reg.is_fp()) ) { // lr寄存器
         new_save_registers.push_back(reg);
       }
@@ -526,10 +520,6 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   // pass func args
   func_asm += passFunctionArgs(inst,args,func_name,saved_registers);
 
-  // for memset call
-  if (inst->isAlloca()) {
-    func_asm += InstGen::add(InstGen::Reg(0,false),InstGen::Reg(0,false),InstGen::sp);
-  }
   WARNNING("enter func: %s",func_name.c_str());
   func_asm += InstGen::bl(func_name);
 
@@ -595,8 +585,8 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
 
           if (arg_pos.second) {// 参数在寄存器中
             // 判断是否发生寄存器冲突
-            bool int_reg_conflict =  (arg_pos.first < int_args && !is_fp);
-            bool float_reg_conflict = (arg_pos.first < float_args && is_fp);
+            bool int_reg_conflict =  (arg_pos.first < int_args && int_args < 4 && !is_fp);
+            bool float_reg_conflict = (arg_pos.first < float_args && float_args < 16 && is_fp);
 
             if (int_reg_conflict || float_reg_conflict) {
                 int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
@@ -634,18 +624,19 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
           std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
 
           if (arg_pos.second) { // 参数在寄存器中
-            bool int_reg_conflict =  (arg_pos.first < int_args && !is_fp);
-            bool float_reg_conflict = (arg_pos.first < float_args && is_fp);
+            bool int_reg_conflict =  (arg_pos.first <  4 && !is_fp);
+            bool float_reg_conflict = (arg_pos.first < 16 && is_fp);
 
             if (int_reg_conflict || float_reg_conflict){
                 int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
+                  WARNNING("%d == %d ", saved_registers[k].getID(), arg_pos.first);
                   if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
                     off = 4 * k;
                     break;
                   }
                 }
-                // MyAssert("Conflict reg not in stack.", off != -1);
+                MyAssert("Conflict reg not in stack.", off != -1);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
                   InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
@@ -667,6 +658,11 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
       if (use_fp) float_args++;
       else int_args++;
     }
+
+    // for memset call
+    if (inst->isAlloca()) {
+      func_asm += InstGen::add(InstGen::Reg(0,false),InstGen::Reg(0,false),InstGen::sp);
+  }
   }
 
   return func_asm;
@@ -714,18 +710,32 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
       // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
-  #else
-  std::pair<int, int> n = getUsedRegisterNum(func);
-
+  bool flag = false;
+  int fp_start = 0;
   for (auto r : caller_save_regs) {
     if (!r.is_fp()){
       registers.insert(r);
-    } else if (r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
-      registers.insert(r);
+    } else if (!flag && r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
+      flag = true;
+      fp_start = r.getID();
     }
   }
 
+  for (int i = fp_start; i < n.second; i++ ){
+    registers.insert(InstGen::Reg(i,true));
+  }
+  #else
+  std::pair<int, int> n = getUsedRegisterNum(func);
+  for (auto r : caller_save_regs) {
+    if (!r.is_fp())
+      registers.insert(r);
+  }
+
+
+
   #endif
+
+
   return std::vector<InstGen::Reg>(registers.begin(), registers.end());
 }
 
@@ -740,14 +750,25 @@ std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
       }
     }
   }
+  std::pair<int, int> n = getUsedRegisterNum(func);
+  bool flag = false;
+  int fp_start = 0;
+  for (auto r : callee_save_regs) {
+    if (!r.is_fp()){
+      registers.insert(r);
+    } else if (!flag && r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
+      flag = true;
+      fp_start = r.getID();
+    }
+  }
+  for (int i = fp_start; i < n.second; i++ ){
+    registers.insert(InstGen::Reg(i,true));
+  }
   #else
   std::pair<int, int> n = getUsedRegisterNum(func);
   for (auto r : callee_save_regs) {
-    if (!r.is_fp()) {
+    if (!r.is_fp())
       registers.insert(r);
-    } else if (r.getID() < n.second && r.is_fp()) { // 保存的浮点寄存器
-      registers.insert(r);
-    }
   }
 
   #endif

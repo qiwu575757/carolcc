@@ -116,7 +116,7 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 // 一般指令(除call/gep)无论该值在栈中还是寄存器中
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
-    if(inst->getType()->isFloatTy()){
+    if(val->getType()->isFloatTy()){
     // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
@@ -137,9 +137,9 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         // LSRA_WARNNING("%s label inst idx %d",inst->getPrintName().c_str(),tag);
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                // LSRA_WARNNING("check same ? %d start %d end %d reg
-                // %d",virtual_int_regs[i][j].v ==
-                // val,virtual_int_regs[i][j].st_id,virtual_int_regs[i][j].ed_id,i);
+                // LSRA_WARNNING("check same ? %d start %d end %d reg %d",
+                // virtual_int_regs[i][j].v ==val,virtual_int_regs[i][j].st_id,
+                // virtual_int_regs[i][j].ed_id,i);
                 if (virtual_int_regs[i][j].v == val &&
                     tag >= virtual_int_regs[i][j].st_id &&
                     tag <= virtual_int_regs[i][j].ed_id) {
@@ -150,14 +150,14 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
             }
         }
     }
-    
+
     // ERROR("cant find this value in reg alloc!");
     return -1;
 }
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
 std::pair<int, bool> AsmBuilder::getValuePosition(Value *inst,
                                                   Value *val) {  // 全局变量？
-    LSRA_WARNNING("inst lval is %s, ask pos of value %s",inst->getPrintName().c_str(), val->getPrintName().c_str());
+    // LSRA_WARNNING("inst lval is %s, ask pos of value %s",inst->getPrintName().c_str(), val->getPrintName().c_str());
     int get_reg = getRegIndexOfValue(inst, val);
 
     if(get_reg == -1 && (dynamic_cast<GlobalVariable *>(val) || dynamic_cast<Constant *>(val))){
@@ -184,7 +184,7 @@ bool AsmBuilder::value_in_reg(Value *v) {  //计算栈空间
                     return true;
                 }
             }
-        } 
+        }
     }
     else{
         for (int i = 0; i < int_reg_number; i++) {
@@ -193,9 +193,9 @@ bool AsmBuilder::value_in_reg(Value *v) {  //计算栈空间
                     return true;
                 }
             }
-        }    
+        }
     }
-    
+
     return false;
 }
 
@@ -263,7 +263,7 @@ bool AsmBuilder::force_reg_alloc(
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -338,7 +338,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                             itv);
                     break;
                 }
-            } 
+            }
         }
         else{
                for (int i = 0; i < 500; i++) {
@@ -371,9 +371,9 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                             itv);
                     break;
                 }
-            } 
+            }
         }
-        
+
     }
 
     int use_int_reg_num = 0;
@@ -385,7 +385,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     int use_float_reg_num = 0;
     for (int i = 0; i < 500; i++) {
-        if (virtual_int_regs[i].size() == 0) {
+        if (virtual_float_regs[i].size() == 0) {
             use_float_reg_num = i;
             break;
         };
@@ -715,7 +715,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                             itv.ed_id = linear_map[inst];
                             itv.v = op;
                             itv.type = interval_value_type::local_var;
-                            if(inst->getType()->isFloatTy()){
+                            if(op->getType()->isFloatTy()){
                                 itv.is_float = true;
                                 virtual_float_regs[reg_get].push_back(itv);
                             }
@@ -831,7 +831,7 @@ Value *AsmBuilder::value_in_reg_at(
             }
         }
     }
-    
+
     return nullptr;
 }
 
@@ -859,7 +859,7 @@ int AsmBuilder::give_reg_at(Value *inst) {  // 请求分配寄存器
             }
         }
     }
-    
+
     return -1;
 }
 
@@ -885,15 +885,15 @@ int AsmBuilder::give_used_reg_at(Value *inst) {  // 分配使用过的寄存器
             }
         }
     }
-    
+
     return -1;
 }
 
 bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
     // LSRA_WARNNING("op_in_inst_is_spilled");
-    
+
     int tag = linear_map[inst];
-    if(inst->getType()->isFloatTy()){
+    if(op->getType()->isFloatTy()){
         for (int i = float_reg_number; i < 500; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
                 if (virtual_float_regs[i][j].v == op &&
@@ -975,12 +975,12 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
             else if(float_arg_idx<16 && live_map[args].is_float){
                 live_map[args].type = interval_value_type::arg_var;
                 live_map[args].specific_reg_idx = float_arg_idx++;
-            } 
+            }
             else {  // 放在栈上
                 live_map[args].type = interval_value_type::arg_var;
-                
+
                 live_map[args].specific_reg_idx = stack_arg_idx++;
-                
+
                 live_map[args].spilled = true;
             }
             // 还要考虑
@@ -1082,11 +1082,13 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                         op_id++;
                         continue;
                     }
-                    if((inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp()) && op_id == 1 && op->isConstant()) {
+                    if((inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp())
+                     && op_id == 1 && op->isConstant() && op->getType()->isFloatTy()) {
                         op_id++;
                         continue;
                     }
-                    if((inst->isRem()) && (op_id == 0 || op_id == 1 ) && op->isConstant()) {
+                    if((inst->isRem()) && (op_id == 0 || op_id == 1 )
+                    && op->isConstant() && op->getType()->isFloatTy() ) {
                         op_id++;
                         continue;
                     }
@@ -1187,10 +1189,10 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
 std::string AsmBuilder::getType(interval_value_type t){
     if(t == interval_value_type::local_var){
         return "local_var";
-    }    
+    }
     if(t == interval_value_type::global_var){
         return "global_var";
-    }    
+    }
     if(t == interval_value_type::imm_var){
         return "imm_var";
     }

@@ -20,7 +20,7 @@
 #define __DEBUG
 #define __LSRA_WARN
 #define __LSRA_SHOW
-// #define __WARN
+#define __WARN
 //#define __TRACE
 //#define __INFO
 
