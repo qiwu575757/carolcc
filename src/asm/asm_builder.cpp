@@ -5,7 +5,7 @@
 bool cmp(const InstGen::Reg reg1, const InstGen::Reg reg2);
 
 std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
-    ERROR("UNDO");
+    ERROR("UNDO",EXIT_CODE_ERROR_425);
 }
 
 std::string AsmBuilder::generate_asm(std::string file_name){
@@ -146,7 +146,7 @@ std::pair<int, bool> AsmBuilder::get_const_val(Value *val) {
   } else if (const_int_val){
     return std::make_pair(const_int_val->getValue(), true);
   } else {
-    ERROR("error const value");
+    ERROR("error const value",EXIT_CODE_ERROR_426);
   }
 
   //  已添加常量折叠优化，无需计算
@@ -256,7 +256,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       }
       operands_global[i] = true;
       if (value_reg == -1 && !inst->isCall() && !inst->isGep()) {
-        ERROR("Get wrong reg.");
+        ERROR("Get wrong reg.",EXIT_CODE_ERROR_427);
       }
     } else if(!inst->isBr()&&!inst->isCall()){ // 增加对立即数的赋值处理
       // 若没有分配寄存器，应该返回 -1；分配了就赋值
@@ -619,7 +619,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
-                MyAssert("Conflict reg not in stack.", off != -1);
+                MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
                                         InstGen::Addr(InstGen::sp,off));
             } else {
@@ -663,7 +663,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
-                MyAssert("Conflict reg not in stack.", off != -1);
+                MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
                   InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
@@ -679,7 +679,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
           }
         }
       } else {
-        ERROR("Pass function args error.");
+        ERROR("Pass function args error.", PassArgsError);
       }
 
       if (use_fp) float_args++;
@@ -799,7 +799,7 @@ std::vector<InstGen::Reg> AsmBuilder::getAllRegisters(Function *func) {
 
   std::pair<int, int> n = getUsedRegisterNum(func);// 返回整型寄存器、浮点寄存器各用多少个
   WARNNING("====================================Func %s use %d rergs",func->getPrintName().c_str(),n.first);
-  MyAssert("Use reg num is 0.", n.first != 0);
+  MyAssert("Use reg num is 0.", n.first != 0, GetIntRegsIsZero);
   if (n.first == 13) {
     registers.insert(InstGen::lr);
   }
@@ -842,7 +842,7 @@ InstGen::CmpOp AsmBuilder::cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse) {
       asmCmpOp = InstGen::CmpOp::LE;
       break;
     default:
-      ERROR("CmpOp type not valid");
+      ERROR("CmpOp type not valid",CmpOpInValid);
     }
   } else {
     switch (myCmpOp) {
@@ -865,7 +865,7 @@ InstGen::CmpOp AsmBuilder::cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse) {
       asmCmpOp = InstGen::CmpOp::GT;
       break;
     default:
-      ERROR("CmpOp type not valid");
+      ERROR("CmpOp type not valid",CmpOpInValid);
     }
   }
 

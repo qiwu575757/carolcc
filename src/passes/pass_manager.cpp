@@ -14,7 +14,7 @@ void pass_manager::run() {
     auto i = 0;
     for (pass* ps : passes) {
         i++;
-        MyAssert("passes is nullptr",ps != nullptr);
+        MyAssert("passes is nullptr",ps != nullptr,EXIT_CODE_ERROR_350);
         try {
             printf("running pass [%s]\n",ps->getName().c_str());
             ps->run();

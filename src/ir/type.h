@@ -131,7 +131,7 @@ public:
         while(ty->isArrayTy()){
             ty = static_cast<ArrayType*>(ty)->getElementType();
         }
-        MyAssert("error type",ty->isFloatTy() || ty->isIntegerTy());
+        MyAssert("error type",ty->isFloatTy() || ty->isIntegerTy(),EXIT_CODE_ERROR_326);
         return ty;
     }
 

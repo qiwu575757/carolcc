@@ -23,7 +23,7 @@ void NamingValue::NameBasicBlock(BasicBlock *base_block) {
             NameInstr(instr);
         }
     } else {
-        ERROR("error base block type");
+        ERROR("error base block type",EXIT_CODE_ERROR_349);
     }
 }
 void NamingValue::NameInstr(Instruction *instr) {
@@ -41,7 +41,7 @@ void NamingValue::run() {
         for (auto arg : f->getArgs()) {
             NameValue(arg);
         }
-        MyAssert("this pass should work on mir", f->getBaseBlocks().empty());
+        MyAssert("this pass should work on mir", f->getBaseBlocks().empty(),EXIT_CODE_ERROR_348);
         for(auto bb :f->getBasicBlocks()){
             NameBasicBlock(bb);
         }

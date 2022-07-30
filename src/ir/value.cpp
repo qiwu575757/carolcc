@@ -38,7 +38,7 @@ void Value::removeUse(Value *user, unsigned value_no) {
 
         if (use->_user == user)
         {
-            MyAssert("error ",use->_value_no == value_no);
+            MyAssert("error ",use->_value_no == value_no,EXIT_CODE_ERROR_330);
             remove_use = use;
             break;
         }

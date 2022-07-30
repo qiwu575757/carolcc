@@ -27,7 +27,7 @@ int AsmBuilder::getAllocaSpOffset(Value *inst) {  // 值的栈偏移
             return stack_map[i].offset;
         }
     }
-    ERROR("can't give any reg because all the reg is using");
+    ERROR("can't give any reg because all the reg is using",EXIT_CODE_ERROR_302);
     return -1;
 }
 
@@ -51,7 +51,7 @@ int real2vir(int reg_idx){
 int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     // LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
     if (val_pos >= op_save_stack_num) {
-        ERROR("overwrite op_idx");
+        ERROR("overwrite op_idx",EXIT_CODE_ERROR_303);
     }
     int reg_get = give_reg_at(inst);  // LVAL REG NUM
     if (reg_get == -1) {
@@ -73,7 +73,7 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
             LSRA_SHOW("[reg %02d]\n", i);
         }
         ERROR("can't give any reg because all the reg is using at inst %d %s"
-        ,linear_map[inst],inst->getPrintName().c_str());
+        ,linear_map[inst],inst->getPrintName().c_str(),EXIT_CODE_ERROR_304);
     }
     Value *reg_v = value_in_reg_at(inst, reg_get, inst->getType()->isFloatTy());
     if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -96,7 +96,7 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
 std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
     std::string insert_inst = "";
     if (val_pos >= op_save_stack_num) {
-        ERROR("overwrite op_idx");
+        ERROR("overwrite op_idx",EXIT_CODE_ERROR_305);
     }
     Value *reg_v = nullptr;
     if(inst->getType()->isFloatTy()){
@@ -159,7 +159,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         }
     }
 
-    // ERROR("cant find this value in reg alloc!");
+    // ERROR("cant find this value in reg alloc!",EXIT_CODE_ERROR_306);
     return -1;
 }
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
@@ -292,7 +292,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     for (auto &p : live_range) {
         if (p.type == interval_value_type::arg_var && !p.spilled) {
             if (!force_reg_alloc(p, p.specific_reg_idx)) {
-                ERROR("can't use force reg alloc when conflict exist!");
+                ERROR("can't use force reg alloc when conflict exist!",EXIT_CODE_ERROR_307);
             }
         }
     }
@@ -601,7 +601,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         if (reg_get == -1) {
                             ERROR(
                                 "can't give any reg because all the reg is "
-                                "using");
+                                "using",EXIT_CODE_ERROR_308);
                         }
                         Value *reg_v = value_in_reg_at(inst, reg_get,inst->getType()->isFloatTy());
                         if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -648,14 +648,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     op_idx += 1;
                     for (auto &op : inst->getOperandList()) {
                         if (op_idx >= op_save_stack_num) {
-                            ERROR("overwrite op_idx");
+                            ERROR("overwrite op_idx",EXIT_CODE_ERROR_309);
                         }
                         if (op_in_inst_is_spilled(inst, op)) {  // 冲突 右值
                             int reg_get = give_reg_at(inst);
                             if (reg_get == -1) {
                                 ERROR(
                                     "can't give any reg because all the reg is "
-                                    "using");
+                                    "using",EXIT_CODE_ERROR_310);
                             }
 
                             auto global = dynamic_cast<GlobalVariable *>(op);
@@ -941,7 +941,7 @@ int AsmBuilder::get_value_sp_offset(Value *inst,
         }
     }
     ERROR("can't find op %s in stack maybe its not in stack",
-          op->getPrintName().c_str());
+          EXIT_CODE_ERROR_311,op->getPrintName().c_str());
     return -1;
 }
 

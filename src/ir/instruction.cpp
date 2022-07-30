@@ -49,11 +49,11 @@ UnaryInst *UnaryInst::createNot(Value *v1, BasicBlock *parent) {
 UnaryInst *UnaryInst::createCast(Value *v1, Type *type_cast_to,
                                  BasicBlock *parent) {
     if (type_cast_to->isFloatTy()) {
-        MyAssert("error type", v1->getType()->isInt32());
+        MyAssert("error type", v1->getType()->isInt32(),EXIT_CODE_ERROR_312);
     } else if (type_cast_to->isInt32()) {
-        MyAssert("error type", v1->getType()->isFloatTy());
+        MyAssert("error type", v1->getType()->isFloatTy(),EXIT_CODE_ERROR_313);
     } else {
-        ERROR("error type");
+        ERROR("error type",EXIT_CODE_ERROR_314);
     }
     return new UnaryInst(type_cast_to, Instruction::CAST, v1, parent);
 }
@@ -192,7 +192,7 @@ std::string BinaryInst::getOperatorString() const {
             return "or";
             //        case Instruction::XOR:return "xor";
         default:
-            ERROR("error binary op kind");
+            ERROR("error binary op kind",EXIT_CODE_ERROR_315);
     }
 }
 ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v)
@@ -209,7 +209,7 @@ ReturnInst *ReturnInst::createRet(Value *v, BasicBlock *parent) {
 ReturnInst::ReturnInst(Type *type, Value *v, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), OpKind::RET, 1, parent) {
     MyAssert("error return type",
-             v->getType()->isIntegerTy() || v->getType()->isFloatTy());
+             v->getType()->isIntegerTy() || v->getType()->isFloatTy(),EXIT_CODE_ERROR_316);
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {
@@ -372,7 +372,7 @@ void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops,
                                      BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
-    ERROR("depreciated");
+    ERROR("depreciated",EXIT_CODE_ERROR_317);
 }
 GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,
                                      BasicBlock *parent)
@@ -389,7 +389,7 @@ Type *GetElementPtrInst::getElementType(Value *ptr,
                                         std::vector<Value *> &idxs) {
     Type *ty = ptr->getType()->getPointerElementType();
     MyAssert("error type",
-             ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy());
+             ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy(),EXIT_CODE_ERROR_318);
     if (ty->isIntegerTy() || ty->isFloatTy()) {
         return ty;
     } else if (ty->isArrayTy()) {
@@ -397,7 +397,7 @@ Type *GetElementPtrInst::getElementType(Value *ptr,
         for (int i = 1; i < idxs.size(); ++i) {
             ty = arr_type->getElementType();
             if (i < idxs.size() - 1) {
-                MyAssert("error type", ty->isArrayTy());
+                MyAssert("error type", ty->isArrayTy(),EXIT_CODE_ERROR_319);
             }
             if (ty->isArrayTy()) {
                 arr_type = static_cast<ArrayType *>(ty);
@@ -416,14 +416,14 @@ void GetElementPtrInst::accept(IrVisitorBase *v) { v->visit(this); }
 CallInst::CallInst(Function *func, BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL,
                   func->getNumArgs() + 1, parent) {
-    MyAssert("call error args number ", func->getNumArgs() == 0);
+    MyAssert("call error args number ", func->getNumArgs() == 0,EXIT_CODE_ERROR_320);
     setOperand(0, func);
 }
 CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,
                   parent) {
-    MyAssert("call error args number ", func->getNumArgs() == args.size());
+    MyAssert("call error args number ", func->getNumArgs() == args.size(),EXIT_CODE_ERROR_321);
     setOperand(0, func);
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);

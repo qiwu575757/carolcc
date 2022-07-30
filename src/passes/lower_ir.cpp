@@ -28,7 +28,7 @@ void LowerIR::splitGEP(BasicBlock *bb) {
             inst->removeUseOps();
             iter = insts.erase(iter);
         } else if (inst->isGep()) {
-            ERROR("GEP have more than 2 operands");
+            ERROR("GEP have more than 2 operands",EXIT_CODE_ERROR_432);
         } else {
             iter++;
         }

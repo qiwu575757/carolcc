@@ -30,7 +30,7 @@ public:
     inline Function *getParent() const { return _parent; }
     unsigned getArgNo() const {
         if (_parent == nullptr) {
-            ERROR("Argument have no parent");
+            ERROR("Argument have no parent",EXIT_CODE_ERROR_428 );
         }
         return _arg_no;
     }

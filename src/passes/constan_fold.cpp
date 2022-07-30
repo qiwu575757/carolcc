@@ -27,7 +27,7 @@ bool ConstantFold::detectBinaryConstantFold(BinaryInst *inst) {
         new_constant = calConstantFloatBinary(inst);
 
     } else {
-        ERROR("unsupported type");
+        ERROR("unsupported type",EXIT_CODE_ERROR_334);
     }
     inst->replaceAllUse(new_constant);
     inst->removeUseOps();
@@ -68,7 +68,7 @@ void ConstantFold::constantFold(Function *f) {
 Constant *ConstantFold::calConstantIntBinary(Instruction *pInstruction) {
     auto oprt1_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(0));
     auto oprt2_ptr = dynamic_cast<ConstantInt *>(pInstruction->getOperand(1));
-    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
+    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_331);
     Constant *res = nullptr;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
@@ -129,17 +129,17 @@ Constant *ConstantFold::calConstantIntBinary(Instruction *pInstruction) {
         case Instruction::ZEXT:
         case Instruction::BREAK:
         case Instruction::CONTINUE:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_335);
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_336);
     }
     return res;
 }
 Constant *ConstantFold::calConstantFloatBinary(Instruction *instr) {
     auto oprt1_ptr = dynamic_cast<ConstantFloat *>(instr->getOperand(0));
     auto oprt2_ptr = dynamic_cast<ConstantFloat *>(instr->getOperand(1));
-    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
+    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_332);
     Constant *res;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
@@ -197,15 +197,15 @@ Constant *ConstantFold::calConstantFloatBinary(Instruction *instr) {
         case Instruction::ZEXT:
         case Instruction::BREAK:
         case Instruction::CONTINUE:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_337);
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_338);
     }
     return res;
 }
 bool ConstantFold::detectCastConstantFold(UnaryInst *pInst) {
-    MyAssert("unary inst is not cast", pInst->isCast());
+    MyAssert("unary inst is not cast", pInst->isCast(),EXIT_CODE_ERROR_333);
     if (pInst->getOperand(0)->isConstant()) {
         Constant *new_constant;
 
@@ -220,7 +220,7 @@ bool ConstantFold::detectCastConstantFold(UnaryInst *pInst) {
                 dynamic_cast<ConstantInt *>(pInst->getOperand(0))->getValue();
             new_constant = ConstantFloat::create(static_cast<float>(val));
         } else {
-            ERROR("unsupported type");
+            ERROR("unsupported type",EXIT_CODE_ERROR_339);
         }
         pInst->replaceAllUse(new_constant);
         pInst->removeUseOps();
@@ -245,7 +245,7 @@ bool ConstantFold::detectCmpConstantFold(CmpInst *pInst) {
     } else if (is_float) {
         new_constant = calConstantFloatBinary(pInst);
     } else {
-        ERROR("error type");
+        ERROR("error type",EXIT_CODE_ERROR_424);
         return false;
     }
     pInst->replaceAllUse(new_constant);

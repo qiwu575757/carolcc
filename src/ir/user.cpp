@@ -7,14 +7,14 @@ User::User(Type *type, const std::string &name, unsigned int use_number) : Value
 }
 void User::setOperand(unsigned no, Value *v) {
 
-    MyAssert("out of index",no>=0&&no<_use_number);
-    // MyAssert("null ptr",v!=nullptr);
+    MyAssert("out of index",no>=0&&no<_use_number,EXIT_CODE_ERROR_327);
+    // MyAssert("null ptr",v!=nullptr,EXIT_CODE_ERROR_329);
     this->_operands_list.at(no) = v;
     v->addUse(this,no);
 }
 Value *User::getOperand(unsigned int no)const {
     if(!(no>=0&&no<_use_number)){
-        ERROR("out of index: expect %d,but only has %d oprands",no,_use_number);
+        ERROR("out of index: expect %d,but only has %d oprands",no,_use_number,EXIT_CODE_ERROR_328);
     }
     return _operands_list.at(no);
 }

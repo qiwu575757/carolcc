@@ -50,7 +50,7 @@ std::string push(const std::vector<Reg> &reg_list) {
       if (flag) {
         asm_instr += ", ";
       }
-      MyAssert("[push]Reg name is null",i.getName().size() != 0);
+      MyAssert("[push]Reg name is null",i.getName().size() != 0,EXIT_CODE_ERROR_300);
       asm_instr += i.getName();
       flag = true;
     }
@@ -213,7 +213,7 @@ std::string mov(const Reg &dst, const Reg &src, const CmpOp &cond) {
 
 std::string vcvt(const Reg &dst) {
   std::string asm_instr;
-  MyAssert("Use vcvt error", dst.is_fp());
+  MyAssert("Use vcvt error", dst.is_fp(),EXIT_CODE_ERROR_301);
 
   asm_instr += spaces;
   asm_instr += "vcvt.f32.s32";

@@ -45,7 +45,7 @@ void LLVMIrIndexer::NameBaseBlock(BaseBlock *base_block) {
             NameBaseBlock(body_block);
         }
     } else {
-        ERROR("error base block type");
+        ERROR("error base block type",EXIT_CODE_ERROR_435);
     }
 }
 void LLVMIrIndexer::NameInstr(Instruction *instr) {

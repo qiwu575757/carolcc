@@ -11,7 +11,7 @@ std::list<BaseBlock *> *IRBuilder::GetInsertBaseBlockList() {
     return this->_base_block_list;
 }
 void IRBuilder::pushBaseBlock(BaseBlock *bb) {
-    MyAssert("null ptr", this->_base_block_list != nullptr);
+    MyAssert("null ptr", this->_base_block_list != nullptr,EXIT_CODE_ERROR_351);
     this->_base_block_list->push_back(bb);
     if (this->_father_block != nullptr) {
         bb->setBaseFather(this->_father_block);
@@ -20,7 +20,7 @@ void IRBuilder::pushBaseBlock(BaseBlock *bb) {
 BaseBlock *IRBuilder::GetBaseBlockFatherBlock() { return this->_father_block; }
 BasicBlock *IRBuilder::GetInsertBasicBlock() { return this->_basic_block; }
 void IRBuilder::SetBasicBlockInsertPoint(std::list<BaseBlock *> *bbl) {
-    MyAssert("null ptr", bbl != nullptr);
+    MyAssert("null ptr", bbl != nullptr,EXIT_CODE_ERROR_352);
     this->_base_block_list = bbl;
 }
 void IRBuilder::SetBaseBlockFatherBlock(BaseBlock *bb) {

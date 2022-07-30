@@ -60,7 +60,7 @@ std::string ConstantFloat::getPrintName(){
     //             is_all_zero=false;
     //         }
     //         last_base_number++;
-            
+
     //     }
     //     last_base_number--;
     //     if(*last_base_number=='0' && !is_all_zero){
@@ -106,7 +106,7 @@ ConstantArray *ConstantArray::turn(Type *basic_type,
                     init_list.push_back( ConstantInt::create(static_cast<long>(vall)));
                 }
                 else {
-                    ERROR("error type");
+                    ERROR("error type",EXIT_CODE_ERROR_431);
                 }
             }
         ArrayType* array_type;
@@ -117,7 +117,7 @@ ConstantArray *ConstantArray::turn(Type *basic_type,
             array_type = ArrayType::get(Type::getInt32Ty(),init_list.size());
         }
         else{
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_432);
         }
         return ConstantArray::create(array_type,init_list);
     }
