@@ -28,13 +28,13 @@ run_test_one.sh
 
 scripts/__pycache__
 test/
-test_file/functional/.gitkeep
+test_file/
 */*.hir
 *.hir
 */*.mir
 *.mir
 
-# =======================python 
+# =======================python
 # Byte-compiled / optimized / DLL files
 
 __pycache__/
