@@ -37,6 +37,8 @@ BasicBlock * getTargetBasicBlock(BaseBlock * b){
         MyAssert("error", if_block);
         return getTargetBasicBlock(if_block->getCondBaseBlockList()->front());
     }
+    ERROR("error");
+    return nullptr;
 }
 auto TyVoid = Type::getVoidTy();          // 改
 auto TyFloat = Type::getFloatTy();        // 改
@@ -1132,7 +1134,6 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
         node.l_and_exp->accept(*this);
     } else {
         auto second_block = BasicBlock::create("");
-        auto father_true_bb = G_true_bb;
         auto father_false_bb = G_false_bb;
         
         // G_true_bb=G_true_bb;

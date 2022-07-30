@@ -40,15 +40,15 @@ public:
 
 class ValueCloner{
 public:
-    static Function *copyFunc(Function* old_func);
+    Function *copyFunc(Function* old_func);
     // 仅仅负责复制basicblock里的指令
-    static  BasicBlock *copyBasicBlock(BasicBlock* old_bb);
+    void copyBasicBlock(BasicBlock* old_bb);
     // 复制 instr
-    static Instruction* copyInstr(Instruction * old_instr);
-    static Value* findValue(Value* old_val);
+    Instruction* copyInstr(Instruction * old_instr);
+    Value* findValue(Value* old_val);
 
    private:
-    static std::map<Value *, Value *> _old2new;
+    std::map<Value *, Value *> _old2new;
     // static std::set<BasicBlock*> _visited_bb;
 };
 #endif  // !COMPILER_VALUE_H

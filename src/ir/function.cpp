@@ -92,6 +92,19 @@ void Function::addAlloca(AllocaInst *alloca) {
     }
     _alloca_end = alloca;
 }
+void Function::insertAlloca(AllocaInst *alloca) {
+    auto entry = getEntryBlock();
+    INFO("delelting alloca");
+    if (_alloca_end != nullptr) {
+        entry->deleteInstr(alloca);
+        entry->insertAfterInstr(_alloca_end, alloca);
+    } else {
+        entry->deleteInstr(alloca);
+        entry->getInstructions().push_front(alloca);
+    }
+    _alloca_end = alloca;
+
+}
 void Function::setAllocaEnd(AllocaInst *alloca) {
     INFO("setting alloca");
     _alloca_end = alloca;

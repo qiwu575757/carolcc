@@ -409,7 +409,7 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
     }
-    parent->getParentFunc()->addCallee(func);
+    parent->getFunction()->addCallee(func);
     func->addCaller(parent->getFunction());
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args,

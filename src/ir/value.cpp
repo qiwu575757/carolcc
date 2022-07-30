@@ -5,6 +5,7 @@
 
 #include "ir/constant.h"
 #include "ir/instruction.h"
+#include "passes/module.h"
 #include "ir/function.h"
 #include "ir/type.h"
 #include "user.h"
@@ -152,7 +153,7 @@ Function *ValueCloner::copyFunc(Function *old_func) {
     }
     return new_func_ptr;
 }
-BasicBlock *ValueCloner::copyBasicBlock(BasicBlock *old_bb) {
+void ValueCloner::copyBasicBlock(BasicBlock *old_bb) {
     for (auto instr : old_bb->getInstructions()) {
         auto new_instr = copyInstr(instr);
         _old2new[instr] = new_instr;
@@ -197,6 +198,9 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
                 dynamic_cast<BasicBlock *>(findValue(br_instr->getOperand(0))),
                 new_parent_bb);
         }
+        else {
+            ERROR("error type");
+        }
     } else if (old_instr->isStore()) {
         new_instr = StoreInst::createStore(findValue(old_instr->getOperand(0)),
                                            findValue(old_instr->getOperand(1)),
@@ -225,7 +229,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
     } else {
         new_instr = nullptr;
     }
-    MyAssert("error", new_instr);
+    MyAssert("error", new_instr!=nullptr);
     return new_instr;
 }
 Value *ValueCloner::findValue(Value *old_val) {

@@ -52,6 +52,8 @@ private:
 class Function : public GlobalValue {
 public:
     void addAlloca(AllocaInst*);
+    // 函数内联专用
+    void insertAlloca(AllocaInst*);
     void setAllocaEnd(AllocaInst*);
     Function(FunctionType *type, const std::string &name, Module *parent);
     Function(FunctionType *type, const std::string &name );
@@ -72,7 +74,7 @@ public:
         return _basic_block_list;
     }
     BasicBlock *getEntryBlock() {
-        return *_basic_block_list.begin();
+        return _basic_block_list.front();
     }
     void removeBasicBlock(BasicBlock *basicblock);
 
@@ -109,7 +111,7 @@ public:
     std::set<Function*>& getCalleeSet() {return _callee_list;}
     std::set<Function*>& getCallerSet() {return _caller_list;}
     void addCaller(Function* caller){_caller_list.insert(caller);}
-    void addCallee(Function* callee){_caller_list.insert(callee);}
+    void addCallee(Function* callee){_callee_list.insert(callee);}
 
 private:
     Instruction* _alloca_end;
