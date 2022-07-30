@@ -398,6 +398,10 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             break;
         };
     }
+    printf("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);
+    if(use_int_reg_num > virtual_reg_max - 10 || use_float_reg_num > virtual_reg_max - 10){
+        ERROR("virtual reg is going to crash!",virtual_reg_full_error);
+    }
     func_used_reg_map[func->getPrintName()].first = std::min(use_int_reg_num,int_reg_number);
     func_used_reg_map[func->getPrintName()].second = std::min(use_float_reg_num,float_reg_number);
 

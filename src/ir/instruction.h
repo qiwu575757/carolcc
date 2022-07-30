@@ -49,12 +49,11 @@ class Instruction : public User {
         GEP,  // get element ptr
         CALL,
         ZEXT,
+        CAST,
+        
         // HIR
         BREAK,
-        CONTINUE,
-        //
-        CAST
-
+        CONTINUE
     };
 
     OpKind getInstructionKind() const { return _op_id; }

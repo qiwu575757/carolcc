@@ -26,9 +26,16 @@
 
 
 enum EXIT_CODE {
+    virtual_reg_full_error,
+    CMPOPRANDREGERROR,
+    DIVOPRANDREGERROR,
     RetReturnRegERROR,
     SUBOPRANDREGERROR,
+    ADDOPRANDREGERROR,
     CmpOperandFpError,
+    MULOPRANDREGERROR,
+    FpNotInstrError,
+    GetNegRegError,
     LoadOffsetOperandNotOne,
     ToManyArgsInBr,
     StorerOffsetOperandNotOne,
@@ -169,13 +176,12 @@ enum EXIT_CODE {
     EXIT_CODE_ERROR_429,
     EXIT_CODE_ERROR_430,
     EXIT_CODE_ERROR_431,
-
     EXIT_CODE_ERROR_432,
     EXIT_CODE_ERROR_433,
     EXIT_CODE_ERROR_434,
     EXIT_CODE_ERROR_435,
-    
     EXIT_CODE_ERROR_436,
+
     EXIT_CODE_ERROR_437,
     EXIT_CODE_ERROR_438,
     EXIT_CODE_ERROR_439,
