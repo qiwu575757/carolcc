@@ -39,7 +39,7 @@ void HIrPrinter::visit(Argument *node) {
     print_left("Argument","");
 }
 void HIrPrinter::visit(BaseBlock *node) {
-    
+
     if (node->isBaiscBlock()) {
         print_left("BaseBlock",node->getPrintName());
         add_tab();
@@ -81,7 +81,7 @@ void HIrPrinter::visit(BaseBlock *node) {
         delete_tab();
 
     } else {
-        ERROR("error base block type");
+        ERROR("error base block type",EXIT_CODE_ERROR_433);
     }
 
 }
@@ -130,7 +130,7 @@ void HIrPrinter::visit(HIR *node) {
         print_left("continue",node->getPrintName());
     }
     else {
-        ERROR("error  type");
+        ERROR("error  type",EXIT_CODE_ERROR_434);
     }
 }
 

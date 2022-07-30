@@ -102,7 +102,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         else if(if_cond->size()>1) {
             auto iter =  if_cond->rbegin() ;
             for(auto &i : *if_cond){
-                MyAssert("error type", i->isBaiscBlock());
+                MyAssert("error type", i->isBaiscBlock(),EXIT_CODE_ERROR_340);
             }
             cur_next = cond_bb;
             iter ++;
@@ -150,7 +150,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
         else if(while_cond->size()>1) {
             auto iter =  while_cond->rbegin() ;
             for(auto &i : *while_cond){
-                MyAssert("error type", i->isBaiscBlock());
+                MyAssert("error type", i->isBaiscBlock(),EXIT_CODE_ERROR_341);
             }
             cur_next = last_cond_bb;
             iter ++;
@@ -160,7 +160,7 @@ BasicBlock *HIRToMIR::genBasicBlock(BaseBlock *base_bb, BasicBlock *next_bb,
             return cur_next;
         }
     } else {
-        ERROR("unknown baseblock");
+        ERROR("unknown baseblock",EXIT_CODE_ERROR_342);
     }
 
     return nullptr;

@@ -77,9 +77,9 @@ void MirSimplifyCFG::mergeSinglePredecessorBasicBlocks() {
                              pre_bb->getPrintName().c_str());
             auto br = pre_bb->getTerminator();
             SIMPLIFY_CFG_LOG("1");
-            MyAssert("null terminator", br != nullptr);
+            MyAssert("null terminator", br != nullptr,EXIT_CODE_ERROR_343);
             SIMPLIFY_CFG_LOG("2");
-            MyAssert("not branch ", br->isBr());
+            MyAssert("not branch ", br->isBr(),EXIT_CODE_ERROR_344);
             SIMPLIFY_CFG_LOG("3");
             // 只有这一个后继
             if (br->getOperandNumber() == 1) {
@@ -134,7 +134,7 @@ void MirSimplifyCFG::eliminateSingleUnCondBrBasicBlocks() {
                             }
                         }
 //                        else {
-//                            ERROR("this should be done at mergeSinglePredecessorBasicBlocks()");
+//                            ERROR("this should be done at mergeSinglePredecessorBasicBlocks()",EXIT_CODE_ERROR_347);
 //                        }
                     }
                     if (bb_delete) {
@@ -164,9 +164,7 @@ void MirSimplifyCFG::eliminateSingleUnCondBrBasicBlocks() {
 //                        bb->replaceAllUse(*(bb->getSuccBasicBlocks().begin()));
                         for (auto use: bb->getUseList()) {
                             auto instr = dynamic_cast<Instruction *>(use->_user);
-                            if(!instr->isBr()){
-                                MyAssert("error type", instr->isBr());
-                            }
+                            MyAssert("error type", instr->isBr(),EXIT_CODE_ERROR_345);
                             instr->setOperand(use->_value_no, *succ_bb);
                         }
                         bb->getUseList().clear();
@@ -195,9 +193,9 @@ void MirSimplifyCFG::eliminateSinglePredecessorPhi() {
             std::vector<Instruction *> wait_delete;
             for (auto inst: bb->getInstructions()) {
                 if (inst->isPhi()) {
-                    MyAssert("error phi oprd number ", inst->getOperandNumber() == 2);
+                    MyAssert("error phi oprd number ", inst->getOperandNumber() == 2,EXIT_CODE_ERROR_346);
                     MyAssert("error ", inst->getOperand(1) == _func->getEntryBlock() ||
-                                       (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()));
+                                       (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()),EXIT_CODE_ERROR_347);
                     wait_delete.push_back(inst);
                     auto var = inst->getOperand(0);
 

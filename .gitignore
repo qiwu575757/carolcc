@@ -26,7 +26,7 @@ core
 *.ll
 run_test_one.sh
 
-scripts/__pycache__
+scripts/
 test/
 test_file/
 */*.hir
@@ -224,7 +224,7 @@ cython_debug/
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+
 *.lib
 
 # Executables
@@ -234,3 +234,4 @@ cython_debug/
 
 *.s
 *.asm
+*.ir

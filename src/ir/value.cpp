@@ -51,9 +51,7 @@ void Value::removeUse(Value *user, unsigned value_no) {
 
         if (use->_value_no == value_no && use->_user==user)
         {
-            // if(){
-            //     MyAssert("can't get right use record ", use->_user == user);
-            // }
+            MyAssert("error ",use->_value_no == value_no,EXIT_CODE_ERROR_330);
             remove_use = use;
             break;
         }

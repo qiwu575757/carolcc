@@ -72,7 +72,7 @@ public:
                 return func;
             }
         }
-        ERROR("no function given %s", func_name.c_str());
+        ERROR("no function given %s",EXIT_CODE_ERROR_429, func_name.c_str());
     }
 
 private:

@@ -73,7 +73,7 @@ bool G_tmp_computable = false;
 
 void SYSYBuilder::visit(tree_comp_unit &node) {
     SYSY_BUILDER("line:%d", node._line_no);
-    MyAssert("no function defined", node.functions.size() != 0);
+    MyAssert("no function defined", node.functions.size() != 0,EXIT_CODE_ERROR_372);
     SYSY_BUILDER(" comp_unit functions %d definitions %d 42",
                  node.functions.size(), node.definitions.size());
     // 这种写法会允许 后置全局变量定义出现，这是因为语法设计的问题
@@ -112,7 +112,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                            type_helper::FLOAT) {
                     param_types.push_back(TyFloat);
                 } else {
-                    ERROR("illegal parameter type");
+                    ERROR("illegal parameter type",EXIT_CODE_ERROR_381);
                 }
             } else if (param->funcfparamarray != nullptr) {
                 Type *array_type;
@@ -234,12 +234,12 @@ void SYSYBuilder::visit(tree_const_decl &node) {
             G_tmp_type = Type::getFloatTy();
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_382);
     }
     node.const_def_list->accept(*this);
 }
 
-void SYSYBuilder::visit(tree_basic_type &node) { ERROR("error call"); }
+void SYSYBuilder::visit(tree_basic_type &node) { ERROR("error call",EXIT_CODE_ERROR_383); }
 
 void SYSYBuilder::visit(tree_const_def_list &node) {
     SYSY_BUILDER("line:%d", node._line_no);
@@ -302,7 +302,7 @@ void SYSYBuilder::visit(tree_const_exp &node) {
 //    } else if (G_tmp_type == Type::getInt32Ty()) {
 //        G_tmp_computing = true;
 //    } else {
-//        ERROR("erorr type");
+//        ERROR("erorr type",EXIT_CODE_ERROR_384);
 //    }
     G_tmp_computing = true;
     node.add_exp->accept(*this);
@@ -313,7 +313,7 @@ void SYSYBuilder::visit(tree_const_exp &node) {
 //    } else if (G_tmp_type->isIntegerTy()) {
 //        G_tmp_val = CONST_INT(G_tmp_int);
 //    } else {
-//        ERROR("error type");
+//        ERROR("error type",EXIT_CODE_ERROR_385);
 //    }
     G_tmp_computing = false;
 }
@@ -328,7 +328,7 @@ void SYSYBuilder::visit(tree_var_decl &node) {
             G_tmp_type = Type::getFloatTy();
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_386);
     }
     node.var_def_list->accept(*this);
     G_tmp_type = nullptr;
@@ -340,7 +340,7 @@ void SYSYBuilder::visit(tree_exp &node) {
     if (node.add_exp != nullptr) {
         node.add_exp->accept(*this);
     } else {
-        ERROR("tree_exp has null add exp");
+        ERROR("tree_exp has null add exp",EXIT_CODE_ERROR_387);
     }
 }
 
@@ -358,7 +358,7 @@ void SYSYBuilder::visit(tree_init_val &node) {
                 node.exp->accept(*this);
                 G_tmp_val = (Value *)(CONST_FLOAT(G_tmp_float));
             } else {
-                ERROR("ERROR TYPE");
+                ERROR("ERROR TYPE",EXIT_CODE_ERROR_388);
             }
             G_tmp_computing = false;
         } else {
@@ -410,31 +410,31 @@ void SYSYBuilder::visit(tree_init_val &node) {
 void SYSYBuilder::visit(tree_init_val_list &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*dyb TODO 把处理后的数据放在node.instant_init 里方便父节点处理*/
-    ERROR("visit tree_init_val_list error");
+    ERROR("visit tree_init_val_list error",EXIT_CODE_ERROR_389);
 }
 
 void SYSYBuilder::visit(tree_func_fparams &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*TODO*/
-    ERROR("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error",EXIT_CODE_ERROR_390);
 }
 
 void SYSYBuilder::visit(tree_func_fparam &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*TODO*/
-    ERROR("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error",EXIT_CODE_ERROR_391);
 }
 
 void SYSYBuilder::visit(tree_func_fparamone &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*TODO*/
-    ERROR("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error",EXIT_CODE_ERROR_392);
 }
 
 void SYSYBuilder::visit(tree_func_fparamarray &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*TODO*/
-    ERROR("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error",EXIT_CODE_ERROR_393);
 }
 
 void SYSYBuilder::visit(tree_decl &node) {
@@ -444,7 +444,7 @@ void SYSYBuilder::visit(tree_decl &node) {
     } else if (node.var_decl != nullptr) {
         node.var_decl->accept(*this);
     } else {
-        ERROR("tree_decl build error");
+        ERROR("tree_decl build error",EXIT_CODE_ERROR_394);
     }
 }
 
@@ -452,7 +452,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     SYSY_BUILDER(" const_def name is %s",node.id.c_str());
     if (node.const_init_val == nullptr) {
-        ERROR("const_def need init value");
+        ERROR("const_def need init value",EXIT_CODE_ERROR_395);
     } else {
         if (node.const_exp_list ==
             nullptr) {  // 非数组情况
@@ -619,7 +619,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                         initializer = CONST_FLOAT(val);
                     }
                     else {
-                        ERROR("ERROR TYPE");
+                        ERROR("ERROR TYPE",EXIT_CODE_ERROR_396);
                     }
                 }
                 else {
@@ -642,7 +642,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                                                  false, CONST_FLOAT(0));
                 }
                 else {
-                    ERROR("error type");
+                    ERROR("error type",EXIT_CODE_ERROR_397);
                 }
                 scope.push(node.id, var);
             }
@@ -661,7 +661,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
 void SYSYBuilder::visit(tree_block_item_list &node) {
     SYSY_BUILDER("line:%d", node._line_no);
     /*dyb TODO*/
-    ERROR("error tree_block_item_list");
+    ERROR("error tree_block_item_list",EXIT_CODE_ERROR_398);
 }
 
 void SYSYBuilder::visit(tree_block_item &node) {
@@ -679,7 +679,7 @@ void SYSYBuilder::visit(tree_block_item &node) {
         node.stmt->accept(*this);
         return;
     }
-    ERROR("error tree_block_item");
+    ERROR("error tree_block_item",EXIT_CODE_ERROR_399);
 }
 
 void SYSYBuilder::visit(tree_stmt &node) {
@@ -721,7 +721,7 @@ void SYSYBuilder::visit(tree_stmt &node) {
         SYSY_BUILDER("null tree_block_item");
         return;
     }
-    ERROR("error tree_block_item");
+    ERROR("error tree_block_item",EXIT_CODE_ERROR_400);
 }
 
 void SYSYBuilder::visit(tree_assign_stmt &node) {
@@ -802,7 +802,7 @@ void SYSYBuilder::visit(tree_number &node) {
         G_tmp_val = CONST_INT(node.int_value);
         G_tmp_int = node.int_value;
     } else {
-        ERROR("ERROR type in tree number");
+        ERROR("ERROR type in tree number",EXIT_CODE_ERROR_401);
     }
 }
 
@@ -824,7 +824,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             } else if (G_tmp_val->getType()->isInt32()) {
                 G_tmp_int = static_cast<ConstantInt *>(G_tmp_val)->getValue();
             } else {
-                ERROR("ERROR TYPE");
+                ERROR("ERROR TYPE",EXIT_CODE_ERROR_402);
             }
         } else if (node.number != nullptr) {
             SYSY_BUILDER("exp");
@@ -862,7 +862,7 @@ void SYSYBuilder::visit(tree_primary_exp &node) {
             SYSY_BUILDER(" tree_primary_exp 700");
             node.number->accept(*this);
         } else {
-            ERROR("exp");
+            ERROR("exp",EXIT_CODE_ERROR_403);
         }
     }
 }
@@ -878,7 +878,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
         } else if (node.unary_exp != nullptr) {
             node.unary_exp->accept(*this);
         } else {
-            ERROR("Function call in visit tree_unary_exp");
+            ERROR("Function call in visit tree_unary_exp",EXIT_CODE_ERROR_404);
         }
 
         if (node.oprt == "-") {
@@ -889,10 +889,10 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                 G_tmp_int = -G_tmp_int;
                 G_tmp_val = CONST_INT( -dynamic_cast<ConstantInt*>(G_tmp_val)->getValue());
             } else {
-                ERROR("");
+                ERROR("",EXIT_CODE_ERROR_405);
             }
         } else if (node.oprt == "!") {  // for operation !
-            ERROR("not oprt in visit tree_unary_exp");
+            ERROR("not oprt in visit tree_unary_exp",EXIT_CODE_ERROR_406);
         }
     } else {
         SYSY_BUILDER(" unary exp 719");
@@ -927,7 +927,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, val_i32);
             } else {
-                ERROR("");
+                ERROR("",EXIT_CODE_ERROR_407);
             }
         } else if (node.oprt == "!") {
             if (G_tmp_val->getType()->isIntegerTy()) {
@@ -1181,12 +1181,12 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
 
 void SYSYBuilder::visit(tree_const_val_list &node) {
     SYSY_BUILDER("line:%d", node._line_no);
-    ERROR("error call");
+    ERROR("error call",EXIT_CODE_ERROR_408);
 }
 
-void SYSYBuilder::visit(tree_const_exp_list &node) { ERROR("error call"); }
+void SYSYBuilder::visit(tree_const_exp_list &node) { ERROR("error call",EXIT_CODE_ERROR_409); }
 
-void SYSYBuilder::visit(tree_arrray_def &node) { ERROR("error call"); }
+void SYSYBuilder::visit(tree_arrray_def &node) { ERROR("error call",EXIT_CODE_ERROR_410); }
 
 void SYSYBuilder::visit(tree_if_stmt &node) {
     SYSY_BUILDER("line:%d", node._line_no);
@@ -1446,7 +1446,7 @@ void SYSYBuilder::visit(tree_func_call &node) {
     }
     else {
         func = module->getFunction(node.id);
-        MyAssert("func not found", func != nullptr);
+        MyAssert("func not found", func != nullptr,EXIT_CODE_ERROR_373);
         if (node.func_param_list != nullptr) {
             SYSY_BUILDER("node exp size is %d ",
                          node.func_param_list->exps.size());
@@ -1473,11 +1473,11 @@ void SYSYBuilder::visit(tree_func_call &node) {
 
 void SYSYBuilder::visit(tree_func_paramlist &node) {
     SYSY_BUILDER("line:%d", node._line_no);
-    ERROR("visit tree_var_def_list error");
+    ERROR("visit tree_var_def_list error",EXIT_CODE_ERROR_411);
 }
 void SYSYBuilder::visit(syntax_tree_node &node) {
     SYSY_BUILDER("line:%d", node._line_no);
-    ERROR("error call");
+    ERROR("error call",EXIT_CODE_ERROR_412);
 }
 SYSYBuilder::SYSYBuilder(const std::string &name) {
     module = std::shared_ptr<Module>(new Module(name));
@@ -1598,7 +1598,7 @@ SYSYBuilder::SYSYBuilder(const std::string &name) {
 }
 void SYSYBuilder::build(tree_comp_unit *node) { node->accept(*this); }
 void SYSYBuilder::calBinary(const std::string oprt) {
-    // MyAssert("error oprd number", _oprt_stack.size() == 2);
+    // MyAssert("error oprd number", _oprt_stack.size() == 2,EXIT_CODE_ERROR_374);
     SYSY_BUILDER("in cal binary,queue size is %d",_oprt_stack.size());
 
     auto oprt2 = _oprt_stack.top();
@@ -1610,7 +1610,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
         MyAssert(
             "error type combo",
             (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
-                (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()));
+                (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()),EXIT_CODE_ERROR_375);
 
         if (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) {
             auto imm = dynamic_cast<ConstantInt *>(oprt2)->getValue();
@@ -1620,7 +1620,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
             auto imm = dynamic_cast<ConstantInt *>(oprt1)->getValue();
             oprt1 = CONST_FLOAT(imm);
         } else {
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_413);
         }
     }
 
@@ -1646,7 +1646,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
                     res = a % b;
                     break;
                 default:
-                    ERROR("illegal oprt");
+                    ERROR("illegal oprt",EXIT_CODE_ERROR_414);
             }
             G_tmp_int = res;
             G_tmp_val = CONST_INT(res);
@@ -1669,21 +1669,21 @@ void SYSYBuilder::calBinary(const std::string oprt) {
                     res = a / b;
                     break;
                 case '%':
-                    ERROR("error mod oprt for float");
+                    ERROR("error mod oprt for float",EXIT_CODE_ERROR_415);
                 default:
-                    ERROR("illegal oprt");
+                    ERROR("illegal oprt",EXIT_CODE_ERROR_416);
             }
             G_tmp_float = res;
             G_tmp_val = CONST_FLOAT(res);
 //            _oprd_queue.push(CONST_FLOAT(res));
         } else {
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_417);
         }
     }
 }
 void SYSYBuilder::buildBinary(const std::string oprt){
     SYSY_BUILDER("queue size is %d",_oprt_stack.size());
-    // MyAssert("error oprd number", _oprt_stack.size() == 2);
+    // MyAssert("error oprd number", _oprt_stack.size() == 2,EXIT_CODE_ERROR_376);
     auto oprt2 = _oprt_stack.top();
     _oprt_stack.pop();
     auto oprt1 = _oprt_stack.top();
@@ -1700,7 +1700,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
         MyAssert(
             "error type combo",
             (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
-            (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()));
+            (oprt2->getType()->isFloatTy() && oprt1->getType()->isInt32()),EXIT_CODE_ERROR_377);
 
         if (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) {
             oprt2 = builder->createInt2Fp(oprt2);
@@ -1708,7 +1708,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
                    oprt1->getType()->isInt32()) {
             oprt1 = builder->createInt2Fp(oprt1);
         } else {
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_418);
         }
     }
 
@@ -1746,7 +1746,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
                 res = builder->createNEQ(Type::getInt1Ty(), oprt1, oprt2);
             }
             else {
-                ERROR("ERROR TYPE");
+                ERROR("ERROR TYPE",EXIT_CODE_ERROR_419);
             }
             G_tmp_val = res;
             //            _oprd_queue.push(CONST_INT(res));
@@ -1766,7 +1766,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
                 res = builder->createDiv(oprt1,oprt2);
             }
             else if(oprt == "%"){
-                ERROR("ERROR TYPE");
+                ERROR("ERROR TYPE",EXIT_CODE_ERROR_420);
             }
             else if (oprt == "<=") {
                 res = builder->createLE(Type::getInt1Ty(), oprt1, oprt2);
@@ -1783,12 +1783,12 @@ void SYSYBuilder::buildBinary(const std::string oprt){
                 res = builder->createNEQ(Type::getInt1Ty(), oprt1, oprt2);
             }
             else {
-                ERROR("ERROR TYPE");
+                ERROR("ERROR TYPE",EXIT_CODE_ERROR_421);
             }
             G_tmp_val = res;
             //            _oprd_queue.push(CONST_FLOAT(res));
         } else {
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_422);
         }
     }
 
@@ -1797,18 +1797,18 @@ Value *SYSYBuilder::checkAndCast(Value *value,Type* target_value) {
     MyAssert("复杂类型的类型转换!",
              (target_value->isFloatTy() || target_value->isIntegerTy())&&
              (value->getType()->isFloatTy() || value->getType()->isIntegerTy())
-    );
+    ,EXIT_CODE_ERROR_378);
     auto res = value;
     if(!res->getType()->eq(*target_value)){
         auto const_int = dynamic_cast<ConstantInt*>(value);
         auto const_float = dynamic_cast<ConstantFloat*>(value);
         if(const_int){
-            MyAssert("error type",target_value->isFloatTy());
+            MyAssert("error type",target_value->isFloatTy(),EXIT_CODE_ERROR_379);
             auto val = const_int->getValue();
             res = CONST_FLOAT(val);
         }
         else if(const_float){
-            MyAssert("error type",target_value->isInt32());
+            MyAssert("error type",target_value->isInt32(),EXIT_CODE_ERROR_380);
             auto val = const_float->getValue();
             res = CONST_INT(val);
 

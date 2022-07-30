@@ -150,11 +150,6 @@ int main(int argc, char **argv) {
         builder->getModule()->MIRMEMprint(output_file);
     }
 
-    // std::cout<<"################-asm_code-#################"<<std::endl;
-    // std::fflush(0);
-    // std::cout<<asm_code;
-    // std::cout<<"################-asm_code-#################"<<std::endl;
-
     if (is_emit_asm) {
         builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);

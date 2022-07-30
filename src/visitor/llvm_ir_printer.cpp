@@ -45,7 +45,7 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
             NameBaseBlock(body_block);
         }
     } else {
-        ERROR("error base block type");
+        ERROR("error base block type",EXIT_CODE_ERROR_356);
     }
 }
 void LLVMIrPrinter::NameInstr(Instruction *instr) {
@@ -72,7 +72,7 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
         node->getType()->getPointerElementType()->print(output_file);
         output_file << ", align 4" << std::endl;
     } else {
-        ERROR("null AllocaInst");
+        ERROR("null AllocaInst",EXIT_CODE_ERROR_357);
     }
 }
 void LLVMIrPrinter::visit(Function *node) {
@@ -236,7 +236,7 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
             body_block->accept(this);
         }
     } else {
-        ERROR("error base block type");
+        ERROR("error base block type",EXIT_CODE_ERROR_358);
     }
     delete_tab();
 }
@@ -253,7 +253,7 @@ void LLVMIrPrinter::visit(LoadInst *node) {
         output_file << node->getOperand(0)->getPrintName() << ", "
                     << "align 4" << std::endl;
     } else {
-        ERROR("null LoadInst");
+        ERROR("null LoadInst",EXIT_CODE_ERROR_359);
     }
 }
 void LLVMIrPrinter::visit(ReturnInst *node) {
@@ -266,7 +266,7 @@ void LLVMIrPrinter::visit(ReturnInst *node) {
             output_file << node->getOperand(0)->getPrintName();
         } else {
 
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_360);
         }
     }
     else
@@ -290,7 +290,7 @@ void LLVMIrPrinter::visit(UnaryInst *node) {
             node->getType()->print(output_file);
         }
         else {
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_363);
         }
     }
     output_file<<std::endl;
@@ -311,7 +311,7 @@ void LLVMIrPrinter::visit(StoreInst *node) {
                 << "align 4" << std::endl;
 }
 void LLVMIrPrinter::visit(Value *node) {
-    ERROR("TODO");
+    ERROR("TODO",EXIT_CODE_ERROR_361);
 }
 void LLVMIrPrinter::visit(CmpInst *node) {
     output_file << node->getPrintName() << " = ";
@@ -325,7 +325,7 @@ void LLVMIrPrinter::visit(CmpInst *node) {
         is_float=false;
     }
     else {
-        ERROR("error type");
+        ERROR("error type",EXIT_CODE_ERROR_362);
     }
 
 
@@ -333,41 +333,41 @@ void LLVMIrPrinter::visit(CmpInst *node) {
     if(node->isEq()){
         if(!is_float)
             output_file<<"eq";
-        else 
+        else
             output_file<<"oeq";
     }
     else if(node->isNeq()){
         if(!is_float)
             output_file<<"ne";
-        else 
+        else
             output_file<<"one";
     }
     else if(node->isGe()){
         if(!is_float)
             output_file<<"sge";
-        else 
+        else
             output_file<<"oge";
     }
     else if(node->isGt()){
         if(!is_float)
             output_file<<"sgt";
-        else 
+        else
             output_file<<"ogt";
     }
     else if(node->isLt()){
         if(!is_float)
             output_file<<"slt";
-        else 
+        else
             output_file<<"olt";
     }
     else if(node->isLe()){
         if(!is_float)
             output_file<<"sle";
-        else 
+        else
             output_file<<"ole";
     }
     output_file<<" ";
-    MyAssert("icmp has no oprt",node->getOperandNumber()==2);
+    MyAssert("icmp has no oprt",node->getOperandNumber()==2,EXIT_CODE_ERROR_353);
     node->getOperand(0)->getType()->print(output_file);
     output_file<<node->getOperand(0)->getPrintName()<<", "<<node->getOperand(1)->getPrintName()<<std::endl;
 }
@@ -386,13 +386,14 @@ void LLVMIrPrinter::visit(BranchInst *node) {
         <<"label "<<node->getOperand(2)->getPrintName()<<std::endl;
     }
     else {
-        ERROR("error branch oprt number");
+        ERROR("error branch oprt number",EXIT_CODE_ERROR_364);
     }
 }
 void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
     node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
+    MyAssert("ele",node->getOperandNumber() == 3,EXIT_CODE_ERROR_354);
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
         if(i!=0){
@@ -438,23 +439,23 @@ void LLVMIrPrinter::visit(HIR *node) {
         output_file<<"continue" <<std::endl;
     }
     else {
-        ERROR("error  type");
+        ERROR("error  type",EXIT_CODE_ERROR_365);
     }
 
 }
 
 void LLVMIrPrinter::visit(ConstantInt *node) {
-    ERROR("TODO");
+    ERROR("TODO",EXIT_CODE_ERROR_366);
 }
 void LLVMIrPrinter::visit(ConstantFloat *node) {
-    ERROR("TODO");
+    ERROR("TODO",EXIT_CODE_ERROR_367);
 }
 void LLVMIrPrinter::visit(ConstantArray *node) {
-    ERROR("TODO");
+    ERROR("TODO",EXIT_CODE_ERROR_368);
 }
 void LLVMIrPrinter::print_array_init(ConstantArray *array){
     INFO("printing array init");
-    MyAssert("array is null", array != nullptr);
+    MyAssert("array is null", array != nullptr,EXIT_CODE_ERROR_355);
     //type
     array->getType()->print(output_file);
     auto array_type = static_cast<ArrayType *>(array->getType());
@@ -477,7 +478,7 @@ void LLVMIrPrinter::print_array_init(ConstantArray *array){
                 }
             }
             else {
-                ERROR("error type");
+                ERROR("error type",EXIT_CODE_ERROR_369);
             }
         }
         if(isZeroInitializer){
@@ -529,7 +530,7 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
         } else if (node->getType()->getPointerElementType()->isArrayTy() ) {
             print_array_init(static_cast<ConstantArray *>(node->getInit()));
         } else {
-            ERROR("ERROR type");
+            ERROR("ERROR type",EXIT_CODE_ERROR_370);
         }
     } else {
         INFO("null init ");
@@ -540,7 +541,7 @@ void LLVMIrPrinter::visit(GlobalVariable *node) {
             output_file<<"zeroinitializer";
         }
         else {
-            ERROR("ERROR type");
+            ERROR("ERROR type",EXIT_CODE_ERROR_371);
         }
     }
     output_file << ", align 4" << std::endl;

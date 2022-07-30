@@ -40,19 +40,20 @@ class Instruction : public User {
         ALLOCA,
         LOAD,
         STORE,
-
+        //
+        STORE_OFFSET,//自定义指令
+        LOAD_OFFSET,
         // other instructions
         CMP,
         PHI,
         GEP,  // get element ptr
         CALL,
         ZEXT,
+        CAST,
+        
         // HIR
         BREAK,
-        CONTINUE,
-        //
-        CAST
-
+        CONTINUE
     };
 
     OpKind getInstructionKind() const { return _op_id; }
@@ -86,8 +87,11 @@ class Instruction : public User {
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
+    bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
+    bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
+    Function *getFunction() const { return getParent()->getParentFunc(); }
 
    protected:
     Instruction(Type *type, OpKind op_id, unsigned op_nums);
@@ -221,6 +225,24 @@ class StoreInst : public Instruction {
     Value *getLVal() { return getOperand(1); }
     Value *getRVal() { return getOperand(0); }
 };
+// DYB DEFINE
+class StoreOffset : public Instruction {
+   private:
+    StoreOffset(Value *value,int offset, BasicBlock *parent);
+   public:
+    int offset;
+    static StoreOffset *createStoreOffset(Value *value,int offset, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+};
+class LoadOffset : public Instruction {
+   private:
+    LoadOffset(Value *value,int offset, BasicBlock *parent);
+   public:
+    int offset;
+    static LoadOffset *createLoadOffset(Value *value,int offset, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+};
+//
 class LoadInst : public Instruction {
    private:
     LoadInst(Value *ptr, BasicBlock *parent);

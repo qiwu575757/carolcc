@@ -47,7 +47,7 @@ int Type::getSize(bool extended) {
 
 void Type::print(std::ofstream& output_file) {
     if (!output_file.is_open()) {
-        ERROR("output file is not open");
+        ERROR("output file is not open",EXIT_CODE_ERROR_325);
     }
     INFO("visiting type::print");
     switch (_id) {
@@ -203,13 +203,13 @@ FunctionType::FunctionType(Type *result, std::vector<Type *> &params)
     : Type(Type::FunctionTyID), _result(result) {
     //    exit_ifnot(_InvalidRetVal_Constructor_FunctionType,
     //               isValidReturnType(result) && "Invalid return type for function!");
-    MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidReturnType(result) && "Invalid return type for function!");
+    MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidReturnType(result) && "Invalid return type for function!",EXIT_CODE_ERROR_322);
 
     for (auto p: params) {
         //        exit_ifnot(_InvalidArgType_Constructor_FunctionType,
         //                   isValidArgumentType(p) &&
         //                           "Not a valid type for function argument!");
-        MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidArgumentType(p));
+        MyAssert("_InvalidRetVal_Constructor_FunctionType", isValidArgumentType(p),EXIT_CODE_ERROR_323);
         _args.push_back(p);
     }
 }
@@ -230,7 +230,7 @@ Type *FunctionType::getResultType() const { return _result; }
 // ArrayType
 ArrayType::ArrayType(Type *contained, unsigned num_elements)
     : Type(Type::ArrayTyID), _num_elements(num_elements) {
-    MyAssert("_InvalidElemType_Constructor_ArrayType", isValidElementType(contained));
+    MyAssert("_InvalidElemType_Constructor_ArrayType", isValidElementType(contained),EXIT_CODE_ERROR_324);
     _contained = contained;
 }
 
