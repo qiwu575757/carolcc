@@ -24,26 +24,37 @@
 //#define __TRACE
 //#define __INFO
 
+
+enum EXIT_CODE {
+    RetReturnRegERROR,
+    SUBOPRANDREGERROR,
+    CmpOperandFpError,
+    LoadOffsetOperandNotOne,
+    ToManyArgsInBr,
+    StorerOffsetOperandNotOne,
+    UnknownIrInstruction,
+};
+
 #ifdef __ASSERT
-#define MyAssert(info, cond)                                           \
+#define MyAssert(info, cond, exit_code)                                           \
     do {                                                               \
         if (!(cond)) {                                                 \
             printf(RED "[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
-            exit(2);                                                   \
+            exit(exit_code);                                                   \
         }                                                              \
     } while (0)
 #else
-#define MyAssert(info, cond)
+#define MyAssert(info, cond, exit_code)
 #endif
 
 #ifdef __ERROR
-#define ERROR(format, ...)                                                          \
+#define ERROR(format, exit_code, ...)                                                          \
     do {                                                                            \
         printf(RED "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-        exit(3);                                                                    \
+        exit(exit_code);                                                                    \
     } while (0)
 #else
-#define ERROR(format, ...)
+#define ERROR(format, exit_code, ...)
 #endif
 
 

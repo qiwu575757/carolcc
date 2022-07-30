@@ -291,7 +291,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       asm_code += generateFunctionCall(inst, args, "memset",  -1);
     }
     asm_code += InstGen::comment("alloca val"+inst->getPrintName(), "offset = " + std::to_string(offset));
-    MyAssert("[alloca] Return reg index is -1.",getRegIndexOfValue(inst,inst) != -1);
+    MyAssert("[alloca] Return reg index is -1.",getRegIndexOfValue(inst,inst) != -1, RetReturnRegERROR);
     asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(getRegIndexOfValue(inst,inst),false),
                     InstGen::sp, InstGen::Constant(offset,false));
   } else if (inst->isLoad()) {
@@ -405,7 +405,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           if (inst->isAdd()) {
             asm_code += InstGen::add(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isSub()){
-            MyAssert("op0 != -1",op0!=-1);
+            MyAssert("op0 != -1",op0!=-1, SUBOPRANDREGERROR);
             WARNNING("sub: target: %d, op0: %d, op1: %d",target,op0,op1);
             asm_code += InstGen::sub(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isDiv()) {
@@ -444,7 +444,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                             InstGen::NOP);
     } else if (operands.size() == 3) {
       if (operands[0]->isConstant()) {
-          MyAssert("Cmp instr operands 0 imm is not int.", operands[0]->getType()->isIntegerTy());
+          MyAssert("Cmp instr operands 0 imm is not int.", operands[0]->getType()->isIntegerTy(),CmpOperandFpError);
           if (atoi(operands[0]->getPrintName().c_str()) > 0 ) {
             asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),
                                       InstGen::NOP);
@@ -465,10 +465,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                                   InstGen::NOP);
       }
     } else {
-      ERROR("TO many args in br instruction");
+      ERROR("TO many args in br instruction",ToManyArgsInBr);
     }
   } else if (inst->isLOAD_OFFSET()) { // 需要将对应指令中变量的类型设置好
-    MyAssert("LOAD_OFFSET operands error", operands.size() == 1);
+    MyAssert("LOAD_OFFSET operands error", operands.size() == 1, LoadOffsetOperandNotOne);
     bool is_fp = operands[0]->getType()->isFloatTy();
     if (is_fp)
       asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
@@ -477,13 +477,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
   } else if (inst->isSTORE_OFFSET()) {
-    MyAssert("STORE_OFFSET operands error", operands.size() == 1);
+    MyAssert("STORE_OFFSET operands error", operands.size() == 1,StorerOffsetOperandNotOne);
     bool is_fp = operands[0]->getType()->isFloatTy();
     asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
   } else {
-    ERROR("Unknown ir instrucion.");
+    ERROR("Unknown ir instrucion.", UnknownIrInstruction);
   }
 
   return asm_code;

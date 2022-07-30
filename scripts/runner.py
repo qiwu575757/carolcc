@@ -124,7 +124,7 @@ class Runner():
         self.detector = open(error_log+"error.log", "r")
         line_ = 0
         for l in self.detector.readlines():
-            if l.startswith("TOTAL") or l.startswith("Timer") or l.startswith("qemu: Unsupported syscall: 397"):
+            if l.startswith("TOTAL") or l.startswith("Timer") or l.startswith("qemu: Unsupported syscall: 397") or l.startswith("qemu: Unsupported syscall: 403"):
                 continue
             line_+=1
         self.detector.close()

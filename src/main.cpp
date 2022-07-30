@@ -114,33 +114,32 @@ int main(int argc, char **argv) {
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
     if(is_O2 && !is_debug){
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-
-        // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
-        if(is_show_hir_pad_graph && is_debug)
-            PM.add_pass<EmitPadGraph>("EmitPadGraph");
-        PM.add_pass<Mem2Reg>("Mem2Reg");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-
-        // PM.add_pass<SCCP>("SCCP");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<SCCP>("SCCP");
-        //  if(is_emit_mir && is_debug)
-        //      PM.add_pass<EmitIR>("EmitIR");
-
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // // if(is_emit_mir && is_debug)
+        // // PM.add_pass<EmitIR>("EmitIR");
+        // if(is_show_hir_pad_graph && is_debug)
+        //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        // PM.add_pass<Mem2Reg>("Mem2Reg");
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
 
-        PM.add_pass<GlobalVariableNumbering>("GVN");
+        // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+
+        // // PM.add_pass<SCCP>("SCCP");
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
+        // // PM.add_pass<SCCP>("SCCP");
+        // //  if(is_emit_mir && is_debug)
+        // //      PM.add_pass<EmitIR>("EmitIR");
+
+        // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // // if(is_emit_mir && is_debug)
+        // //     PM.add_pass<EmitIR>("EmitIR");
+
+        // PM.add_pass<GlobalVariableNumbering>("GVN");
+        // // if(is_emit_mir && is_debug)
+        // //     PM.add_pass<EmitIR>("EmitIR");
 
     }
     PM.run();
