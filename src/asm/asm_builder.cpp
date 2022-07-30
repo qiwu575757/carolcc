@@ -290,13 +290,16 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           ConstantInt::get(inst->getType()->getSize())};
       asm_code += generateFunctionCall(inst, args, "memset",  -1);
     }
+    int op = getRegIndexOfValue(inst,inst);
     asm_code += InstGen::comment("alloca val"+inst->getPrintName(), "offset = " + std::to_string(offset));
-    MyAssert("[alloca] Return reg index is  < 0.",getRegIndexOfValue(inst,inst) >= 0, RetReturnRegERROR);
-    asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(getRegIndexOfValue(inst,inst),false),
+    MyAssert("[alloca] Return reg index is  < 0.",op >= 0, RetReturnRegERROR);
+    asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(op,false),
                     InstGen::sp, InstGen::Constant(offset,false));
   } else if (inst->isLoad()) {
       int op0 = getRegIndexOfValue(inst,operands[0]);
-      asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,inst),inst->getType()->isFloatTy()),
+      int target = getRegIndexOfValue(inst,inst);
+      MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && target >= 0, GetNegRegError);
+      asm_code += InstGen::load(InstGen::Reg(op0,inst->getType()->isFloatTy()),
               InstGen::Addr(InstGen::Reg(op0,false),0));
 
   } else if (inst->isStore()) {
@@ -515,7 +518,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
   }
-
   else {
     ERROR("Unknown ir instrucion.", UnknownIrInstruction);
   }
