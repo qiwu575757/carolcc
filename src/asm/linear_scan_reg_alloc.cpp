@@ -386,16 +386,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 
     int use_int_reg_num = 0;
     for (int i = 0; i < virtual_reg_max; i++) {
-        if (virtual_int_regs[i].size() == 0) {
-            use_int_reg_num = i;
-            break;
+        if (virtual_int_regs[i].size() != 0) {
+            use_int_reg_num ++ ;
         };
     }
     int use_float_reg_num = 0;
     for (int i = 0; i < virtual_reg_max; i++) {
-        if (virtual_float_regs[i].size() == 0) {
-            use_float_reg_num = i;
-            break;
+        if (virtual_float_regs[i].size() != 0) {
+            use_float_reg_num ++ ;
         };
     }
     printf("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);

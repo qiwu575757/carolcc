@@ -67,7 +67,7 @@ const int clone_flag = CLONE_VM | SIGCHLD;
 const int int_reg_number = 13;
 const int float_reg_number = 32;
 
-const int virtual_reg_max = 200;
+const int virtual_reg_max = 1200;
 
 enum interval_value_type{
   local_var,
