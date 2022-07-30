@@ -60,6 +60,7 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
     }
     module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
     module_header_code += ".macro mov32, cond, reg, val \n \tmovw\\cond \\reg, #:lower16:\\val\n \tmovt\\cond \\reg, #:upper16:\\val \n.endm" + InstGen::newline;
+
     return module_header_code;
 }
 
@@ -197,7 +198,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     func_head_code += InstGen::push(saved_registers);
     func_head_code += InstGen::comment("alloca stack space", "");
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
-                InstGen::Constant(func_stack_size, false));
+                                 InstGen::Constant(func_stack_size, false));
 
     // 参数的映射认为已经处理好了
     return func_head_code;
@@ -595,6 +596,13 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   return func_asm;
 }
 
+std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>args,
+                std::string func_name, std::vector<InstGen::Reg> saved_registers) {
+  std::string func_asm;
+  // 系统函数最多两个参数，仅通过寄存器传参
+  int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
+  int callee_stack_size = stack_size_mapping[func_name];
+  int saved_fp_regs = 0; // 调用者保存的浮点寄存器的个数，用于计算保存寄存器偏移
   for (auto i : saved_registers ) {
     if (i.is_fp()) {
       saved_fp_regs++;
@@ -605,6 +613,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   {
     int int_args = 0, float_args = 0; // 记录已当前扫描到的整型/浮点参数的个数
     for (int i = 0; i < args.size(); i++) {
+      // 是否是浮点数==》当前是否可能占用浮点寄存器
       bool is_fp = args[i]->getType()->isFloatTy();
        // 对于类型转化abi函数，传参只用 r0(对于abi函数均使用r传参，目前仅cast abi参数是浮点)
       bool use_fp = is_fp && !inst->isCast(); // 传参时是否使用浮点寄存器

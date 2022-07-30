@@ -327,6 +327,28 @@ BranchInst *BranchInst::createCondBr(Value *cond, BasicBlock *if_true,
 
 void BranchInst::accept(IrVisitorBase *v) { v->visit(this); }
 
+// DYB
+StoreOffset::StoreOffset(Value *value,int offset, BasicBlock *parent)
+    : Instruction(Type::getVoidTy(), Instruction::STORE_OFFSET, 1, parent) {
+    setOperand(0, value);
+    this->offset = offset;
+}
+StoreOffset *StoreOffset::createStoreOffset(Value *value,int offset,BasicBlock *parent) {
+    return new StoreOffset(value, offset, parent);
+}
+void StoreOffset::accept(IrVisitorBase *v) { v->visit(this); }
+
+LoadOffset::LoadOffset(Value *value,int offset, BasicBlock *parent)
+    : Instruction(Type::getVoidTy(), Instruction::LOAD_OFFSET, 1, parent) {
+    setOperand(0, value);
+    this->offset = offset;
+}
+LoadOffset *LoadOffset::createLoadOffset(Value *value,int offset,BasicBlock *parent) {
+    return new LoadOffset(value, offset, parent);
+}
+void LoadOffset::accept(IrVisitorBase *v) { v->visit(this); }
+// DYB
+
 StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);

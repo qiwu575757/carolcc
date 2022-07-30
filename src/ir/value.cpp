@@ -56,7 +56,7 @@ void Value::removeUse(Value *user, unsigned value_no) {
             break;
         }
     }
-    MyAssert("can't get right use record ", remove_use!=nullptr);
+    MyAssert("can't get right use record ", remove_use!=nullptr,EXIT_CODE_ERROR_436 );
     auto iter = std::find(_user_list.begin(), _user_list.end(), remove_use);
 
     _user_list.erase(iter);

@@ -71,7 +71,7 @@ void SCCP::constantFoldAndPropagation(Function *f) {
             auto zext_inst = dynamic_cast<ZExtInst *>(inst);
             if (zext_inst != nullptr) {
                 if (zext_inst->getOperand(0)->isConstant()) {
-                    MyAssert("error type", zext_inst->getType()->isInt32());
+                    MyAssert("error type", zext_inst->getType()->isInt32(),EXIT_CODE_ERROR_437);
                     auto constant_int =
                         dynamic_cast<ConstantInt *>(zext_inst->getOperand(0));
                     if (constant_int != nullptr) {
@@ -93,7 +93,7 @@ void SCCP::constantFoldAndPropagation(Function *f) {
 Constant *SCCP::calConstantIntBinary(Instruction *pInstruction,
                                      ConstantInt *oprt1_ptr,
                                      ConstantInt *oprt2_ptr) {
-    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
+    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_438);
     Constant *res;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
@@ -154,17 +154,17 @@ Constant *SCCP::calConstantIntBinary(Instruction *pInstruction,
         case Instruction::ZEXT:
         case Instruction::BREAK:
         case Instruction::CONTINUE:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_439);
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_440);
     }
     return res;
 }
 Constant *SCCP::calConstantFloatBinary(Instruction *instr,
                                        ConstantFloat *oprt1_ptr,
                                        ConstantFloat *oprt2_ptr) {
-    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr);
+    MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_441);
     Constant *res;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
@@ -222,15 +222,15 @@ Constant *SCCP::calConstantFloatBinary(Instruction *instr,
         case Instruction::ZEXT:
         case Instruction::BREAK:
         case Instruction::CONTINUE:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_442);
             break;
         default:
-            ERROR("error type");
+            ERROR("error type",EXIT_CODE_ERROR_443);
     }
     return res;
 }
 bool SCCP::detectCastConstantFold(UnaryInst *pInst) {
-    MyAssert("unary inst is not cast", pInst->isCast());
+    MyAssert("unary inst is not cast", pInst->isCast(),EXIT_CODE_ERROR_444);
     if (pInst->getOperand(0)->isConstant()) {
         Constant *new_constant;
 
@@ -245,7 +245,7 @@ bool SCCP::detectCastConstantFold(UnaryInst *pInst) {
                 dynamic_cast<ConstantInt *>(pInst->getOperand(0))->getValue();
             new_constant = ConstantFloat::create(static_cast<float>(val));
         } else {
-            ERROR("unsupported type");
+            ERROR("unsupported type",EXIT_CODE_ERROR_445);
         }
         pInst->removeUseOps();
         pInst->replaceAllUse(new_constant);
@@ -274,7 +274,7 @@ bool SCCP::detectCmpConstantFold(CmpInst *pInst) {
             pInst, dynamic_cast<ConstantFloat *>(pInst->getOperand(0)),
             dynamic_cast<ConstantFloat *>(pInst->getOperand(1)));
     } else {
-        ERROR("error type");
+        ERROR("error type",EXIT_CODE_ERROR_446);
         return false;
     }
     pInst->removeUseOps();
@@ -299,7 +299,7 @@ void SCCP::sparseConditionalConstantPropagation(Function *f) {
         while (!_value_work_list.empty()) {
             auto instr = dynamic_cast<Instruction *>(_value_work_list.front());
             _value_work_list.pop_front();
-            MyAssert("error", instr);
+            MyAssert("error", instr,EXIT_CODE_ERROR_447);
             SCCP_LOG("单独运行sccp在指令 %s 上",instr->getPrintName().c_str());
             for(auto use :instr->getUseList()){
                 auto user = dynamic_cast<Instruction*>(use->_user) ;
@@ -331,7 +331,7 @@ Constant *SCCP::calConstantBinary(Instruction *inst, Value *oprt1,
                                    dynamic_cast<ConstantFloat *>(oprt2));
 
     } else {
-        ERROR("unsupported type");
+        ERROR("unsupported type",EXIT_CODE_ERROR_448);
     }
     return new_constant;
 }
@@ -382,7 +382,7 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 instr, _instr_assign_table[oprd1], _instr_assign_table[oprd2]);
             if (isValueNeverAssigned(instr)) _value_work_list.push_back(instr);
             MyAssert("new_constant is not a constant",
-                     new_constant->isConstant());
+                     new_constant->isConstant(),EXIT_CODE_ERROR_449);
             _instr_assign_table[instr] = new_constant;
         } else if (isValueHasMultiValue(oprd1) || isValueHasMultiValue(oprd2)) {
             if (isValueNeverAssigned(instr) || isValueHasDefiniteValue(instr))
@@ -401,7 +401,7 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
         for (int i = 0; i < instr->getOperandNumber(); i = i + 2) {
             auto pre_val = instr->getOperand(i);
             auto pre_bb = dynamic_cast<BasicBlock *>(instr->getOperand(i + 1));
-            MyAssert("error", pre_val != nullptr && pre_bb != nullptr);
+            MyAssert("error", pre_val != nullptr && pre_bb != nullptr,EXIT_CODE_ERROR_450);
             if (pre_val->isConstant()) {
                 _instr_assign_table[pre_val] = pre_val;
             }
@@ -417,7 +417,7 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 if (certain_pre_number == 1) {
                     a_val =
                         dynamic_cast<Constant *>(_instr_assign_table[pre_val]);
-                    MyAssert("a_val is null ptr", a_val != nullptr);
+                    MyAssert("a_val is null ptr", a_val != nullptr,EXIT_CODE_ERROR_451);
                 } else {
                     auto another_val =
                         dynamic_cast<Constant *>(_instr_assign_table[pre_val]);
@@ -435,7 +435,7 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
         if (certain_pre_number == 1 || (certain_pre_number > 1 && is_different_val_same)) {
             if (isValueNeverAssigned(instr)) {
                 _value_work_list.push_back(instr);
-                MyAssert("a_val is not a constant", a_val->isConstant());
+                MyAssert("a_val is not a constant", a_val->isConstant(),EXIT_CODE_ERROR_452);
                 _instr_assign_table[instr] = a_val;
             }
         }
@@ -546,10 +546,10 @@ void SCCP::sccpOnInstrution(Instruction *instr) {
                 _value_work_list.push_back(instr);
             _instr_assign_table[instr] = uncertainValue;
         } else if (isValueHasDefiniteValue(oprd)) {
-            MyAssert("error type", instr->getType()->isInt32());
+            MyAssert("error type", instr->getType()->isInt32(),EXIT_CODE_ERROR_456);
             auto constant_int =
                 dynamic_cast<ConstantInt *>(_instr_assign_table[oprd]);
-            MyAssert("error", constant_int != nullptr);
+            MyAssert("error", constant_int != nullptr,EXIT_CODE_ERROR_457);
             auto new_constant = ConstantInt::create(constant_int->getValue());
             if(isValueNeverAssigned(instr) )
                 _value_work_list.push_back(instr);
@@ -611,7 +611,7 @@ void SCCP::replaceConstant(Function *f) {
             key_instr->replaceAllUse(val_instr);
             if (key_instr->getParent() == nullptr) {
                 ERROR("key_instr(%s) should have parent!",
-                      key_instr->getPrintName().c_str());
+                      EXIT_CODE_ERROR_458, key_instr->getPrintName().c_str());
             }
             wait_delete[key_instr->getParent()].push_back(key_instr);
         }

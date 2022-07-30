@@ -24,17 +24,17 @@
 BasicBlock * getTargetBasicBlock(BaseBlock * b){
     if(b->isBaiscBlock()){
         auto basic_block = dynamic_cast<BasicBlock*>(b);
-        MyAssert("error", basic_block);
+        MyAssert("error", basic_block, EXIT_CODE_ERROR_439);
         return basic_block;
     }
     else if(b->isWhileBlock()){
         auto while_block = dynamic_cast<WhileBlock*>(b);
-        MyAssert("error", while_block);
+        MyAssert("error", while_block, EXIT_CODE_ERROR_439);
         return getTargetBasicBlock(while_block->getCondBaseBlockList()->front());
     }
     else if(b->isIfBlock()){
         auto if_block = dynamic_cast<IfBlock*>(b);
-        MyAssert("error", if_block);
+        MyAssert("error", if_block, EXIT_CODE_ERROR_439);
         return getTargetBasicBlock(if_block->getCondBaseBlockList()->front());
     }
 }
@@ -1134,7 +1134,7 @@ void SYSYBuilder::visit(tree_l_or_exp &node) {
         auto second_block = BasicBlock::create("");
         auto father_true_bb = G_true_bb;
         auto father_false_bb = G_false_bb;
-        
+
         // G_true_bb=G_true_bb;
         G_false_bb = second_block;
         node.l_or_exp->accept(*this);
@@ -1237,7 +1237,7 @@ void SYSYBuilder::visit(tree_if_stmt &node) {
     builder->SetInstrInsertPoint(cond_basic_block);
     node.cond->accept(*this);
     builder->SetBasicBlockInsertPoint(up_level_list);
-    
+
     builder->SetBaseBlockFatherBlock(father_block);
 }
 
@@ -1364,7 +1364,7 @@ void SYSYBuilder::visit(tree_while_stmt &node) {
     builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
     G_true_bb = while_block->getBodyBaseBlockList()->front();
-    G_false_bb = while_end_bb;   
+    G_false_bb = while_end_bb;
     node.cond->accept(*this);
 
     builder->SetBasicBlockInsertPoint(up_level_list);
