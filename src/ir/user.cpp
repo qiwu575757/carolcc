@@ -15,7 +15,7 @@ void User::setOperand(unsigned no, Value *v) {
 }
 Value *User::getOperand(unsigned int no)const {
     if(!(no>=0&&no<_use_number)){
-        ERROR("out of index: expect %d,but only has %d oprands",no,_use_number);
+        ERROR("instr[\%%s]: out of index: expect %d,but only has %d oprands",getName().c_str(),no,_use_number);
     }
     return _operands_list.at(no);
 }

@@ -31,7 +31,7 @@ public:
  void addUse(User *user, unsigned value_num);
  void replaceAllUse(Value *new_value);  //将对某个值的使用全部替换为新值
  void removeUse(Value *val, unsigned arg_no);
- std::string getName();
+ std::string getName()const;
  std::list<Use *> &getUseList() { return _user_list; }
  void setName(std::string name);
  virtual void accept(IrVisitorBase *v);

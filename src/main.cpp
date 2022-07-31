@@ -137,17 +137,14 @@ int main(int argc, char **argv) {
         PM.add_pass<SCCP>("SCCP");
         if(is_emit_mir && is_debug)
             PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<SCCP>("SCCP");
-        //  if(is_emit_mir && is_debug)
-        //      PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<GlobalVariableNumbering>("GVN");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
     }
     PM.run();

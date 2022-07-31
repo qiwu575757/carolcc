@@ -1,8 +1,5 @@
 #include "value.h"
 
-#include <cstddef>
-#include <queue>
-
 #include "ir/constant.h"
 #include "ir/instruction.h"
 #include "passes/module.h"
@@ -11,6 +8,14 @@
 #include "user.h"
 #include "utils.h"
 #include "visitor/ir_visitor_base.h"
+
+#include <cstddef>
+#include <cstdio>
+#include <iostream>
+#include <ostream>
+#include <queue>
+#include <type_traits>
+
 void Value::addUse(User *user, unsigned value_num) {
     this->_user_list.push_back(new Use(this, value_num, user));
 }
@@ -70,7 +75,7 @@ bool Value::isConstant() {
     auto constant = dynamic_cast<Constant *>(this);
     return constant != nullptr;
 }
-std::string Value::getName() { return _name; }
+std::string Value::getName()const { return _name; }
 void Value::accept(IrVisitorBase *v) { v->visit(this); }
 void Value::setName(std::string name) {
     if (!_name.empty()) {
@@ -95,34 +100,38 @@ Function *ValueCloner::copyFunc(Function *old_func) {
     }
 
     for (auto bb : old_func->getBasicBlocks()) {
-        _old2new[bb] = BasicBlock::create("", new_func_ptr);
+        auto new_bb =  BasicBlock::create("");
+        _old2new[bb] =new_bb;
+        new_func_ptr->addBasicBlock(new_bb);
+        new_bb->setParentFunc(new_func_ptr);
     }
 
-    for (auto bb : old_func->getBasicBlocks()) {
-        auto new_bb = dynamic_cast<BasicBlock *>(_old2new[bb]);
-        MyAssert("null ptr", new_bb);
-        for (auto pre_bb : bb->getPreBasicBlocks()) {
-            auto new_pre = dynamic_cast<BasicBlock *>(_old2new[pre_bb]);
-            MyAssert("null ptr", new_pre);
-            new_bb->addPreBasicBlock(new_pre);
-        }
-        for (auto suc_bb : bb->getSuccBasicBlocks()) {
-            auto new_suc = dynamic_cast<BasicBlock *>(_old2new[suc_bb]);
-            MyAssert("null ptr", new_suc);
-            new_bb->addPreBasicBlock(new_suc);
-        }
-    }
+    // for (auto bb : old_func->getBasicBlocks()) {
+    //     auto new_bb = dynamic_cast<BasicBlock *>(_old2new[bb]);
+    //     MyAssert("null ptr", new_bb);
+    //     for (auto pre_bb : bb->getPreBasicBlocks()) {
+    //         auto new_pre = dynamic_cast<BasicBlock *>(_old2new[pre_bb]);
+    //         MyAssert("null ptr", new_pre);
+    //         // new_bb->addPreBasicBlock(new_pre);
+    //     }
+    //     for (auto suc_bb : bb->getSuccBasicBlocks()) {
+    //         auto new_suc = dynamic_cast<BasicBlock *>(_old2new[suc_bb]);
+    //         MyAssert("null ptr", new_suc);
+    //         // new_bb->addPreBasicBlock(new_suc);
+    //     }
+    // }
 
     std::set<BasicBlock *> visited_bb;
     std::queue<BasicBlock *> work_list;
     work_list.push(old_func->getEntryBlock());
+    visited_bb.insert(old_func->getEntryBlock());
     while (!work_list.empty()) {
         auto b = work_list.front();
         work_list.pop();
-        visited_bb.insert(b);
         copyBasicBlock(b);
         for (auto suc_b : b->getSuccBasicBlockList()) {
             if (visited_bb.find(suc_b) == visited_bb.end()) {
+                visited_bb.insert(suc_b);
                 work_list.push(suc_b);
             }
         }
@@ -157,6 +166,7 @@ void ValueCloner::copyBasicBlock(BasicBlock *old_bb) {
     for (auto instr : old_bb->getInstructions()) {
         auto new_instr = copyInstr(instr);
         _old2new[instr] = new_instr;
+        MyAssert("error", new_instr->getInstructionKind() == instr->getInstructionKind());
         // dynamic_cast<BasicBlock*>(old_bb)->getInstructions().push_back(new_instr);
     }
 }
@@ -212,29 +222,55 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
         auto called_func = dynamic_cast<Function *>(old_instr->getOperand(0));
         MyAssert("nullptr ", called_func != nullptr);
         std::vector<Value *> args = {};
-        new_instr = CallInst::createCall(called_func, args, new_parent_bb);
         for (auto i = 1; i < old_instr->getOperandNumber(); i++) {
-            new_instr->addOperand(findValue(old_instr->getOperand(i)));
+            args.push_back(findValue(old_instr->getOperand(i)));
+            // new_instr->addOperand(findValue(old_instr->getOperand(i)));
         }
+        new_instr = CallInst::createCall(called_func, args, new_parent_bb);
     } else if (old_instr->isZext()) {
         new_instr = ZExtInst::creatZExtInst(old_instr->getType(),
                                             findValue(old_instr->getOperand(0)),
                                             new_parent_bb);
     } else if (old_instr->isAlloca()) {
+        auto old_alloca_instr = dynamic_cast<AllocaInst*>(old_instr);
         new_instr =
-            AllocaInst::createAlloca(old_instr->getType(), new_parent_bb);
+            AllocaInst::createAlloca(old_alloca_instr->getAllocaType(), new_parent_bb);
     } else if (old_instr->isPhi()) {
         new_instr = PhiInstr::createPhi(
-            old_instr->getType(), old_instr->getOperandNumber(), new_parent_bb);
-    } else {
+            old_instr->getType(), new_parent_bb);
+    } else if (old_instr->isGep()) {
+        
+            std::vector<Value*>indexs;
+            for(auto i = 1;i<old_instr->getOperandNumber();i++){
+                indexs.push_back(findValue(old_instr->getOperand(i)));
+            }
+            auto ptr = findValue(old_instr->getOperand(0));
+            new_instr = GetElementPtrInst::createGEP(ptr, indexs, new_parent_bb);
+    } else if(old_instr->isRet() ){
+        if(old_instr->getOperandNumber()==1){
+            new_instr=ReturnInst::createRet(findValue(old_instr->getOperand(0)), new_parent_bb);
+        }
+        else if(old_instr->getOperandNumber()==0){
+            new_instr=ReturnInst::createVoidRet(new_parent_bb);
+        }
+        else {
+            ERROR("ERROR");
+        }
+        
+    }else {
         new_instr = nullptr;
     }
-    MyAssert("error", new_instr!=nullptr);
+    if(new_instr==nullptr){
+        MyAssert("error", new_instr != nullptr);
+    }
     return new_instr;
 }
 Value *ValueCloner::findValue(Value *old_val) {
     if (dynamic_cast<Constant *>(old_val)) {
         return old_val;
+    }
+    if(_old2new[old_val]==nullptr){
+        ERROR("can't fin %s in table",old_val->getPrintName().c_str());
     }
     return _old2new[old_val];
 }

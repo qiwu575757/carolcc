@@ -21,16 +21,15 @@ Instruction::Instruction(Type *type, Instruction::OpKind op_id,
                          unsigned int op_nums)
     : Instruction(type, op_id, op_nums, nullptr) {}
 
-
-bool Instruction::isCommutative()const{
-     bool res =  isAdd()||isMul()||isOr()||isXor();
-     if(!res){
-        if(isCmp()){
-            auto cmp = static_cast<  CmpInst const*>(this);
-            res = cmp->isEq()||cmp->isNeq();
+bool Instruction::isCommutative() const {
+    bool res = isAdd() || isMul() || isOr() || isXor();
+    if (!res) {
+        if (isCmp()) {
+            auto cmp = static_cast<CmpInst const *>(this);
+            res = cmp->isEq() || cmp->isNeq();
         }
-     }
-     return res;
+    }
+    return res;
 }
 // UnaryInst::UnaryInst(Type *type, OpKind op_id, Value *v1)
 //     : Instruction(type, op_id, 1) {
@@ -335,12 +334,18 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    return new StoreInst(value, ptr, parent);
+    if(ptr->getType()->getPointerElementType()->eq(*value->getType())){
+        return new StoreInst(value, ptr, parent);
+    }
+    else {
+        ERROR("error");
+        return nullptr;
+    }
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
-    std::string StoreInst::getPrintName(){
-        return getOperand(0)->getPrintName()+"_"+getOperand(1)->getPrintName();
-    }
+std::string StoreInst::getPrintName() {
+    return getOperand(0)->getPrintName() + "_" + getOperand(1)->getPrintName();
+}
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
@@ -369,8 +374,10 @@ GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,
 Type *GetElementPtrInst::getElementType(Value *ptr,
                                         std::vector<Value *> &idxs) {
     Type *ty = ptr->getType()->getPointerElementType();
-    MyAssert("error type",
-             ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy());
+    if (!(ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy())) {
+        MyAssert("error type",
+                 ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy());
+    }
     if (ty->isIntegerTy() || ty->isFloatTy()) {
         return ty;
     } else if (ty->isArrayTy()) {
@@ -404,7 +411,9 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,
                   parent) {
-    MyAssert("call error args number ", func->getNumArgs() == args.size());
+    if (func->getNumArgs() != args.size()) {
+        MyAssert("call error args number ", func->getNumArgs() == args.size());
+    }
     setOperand(0, func);
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);

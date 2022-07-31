@@ -1,6 +1,7 @@
 
 #include "emit_ir.h"
 
+#include <cstdio>
 #include <string>
 
 #include "module.h"
@@ -15,6 +16,7 @@ void EmitIR::run() {
     auto mir_output_file = _m->getModuleName();
     mir_output_file.replace(mir_output_file.end() - 2,
                             mir_output_file.end(), "ir"+std::to_string(++ir_count));
+        printf("IR Number is %d\n",ir_count);
         _m->MIRMEMprint(mir_output_file);
 }
 void EmitPadGraph::run() {

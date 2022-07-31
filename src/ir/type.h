@@ -62,7 +62,7 @@ public:
     int getSize(bool extended = true);
     int getDims();
 
-    void print(std::ofstream &output_file);
+    void print(std::ostream &output_file);
 
     std::string CommentPrint();
 

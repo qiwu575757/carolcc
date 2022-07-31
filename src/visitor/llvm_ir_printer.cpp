@@ -127,7 +127,7 @@ void LLVMIrPrinter::visit(Function *node) {
             output_file << "}" << std::endl;
         }
     }
-    else if(this->ir_level == Module::IRLevel::MIR_MEM){
+    else {
         seq.clear();
         depth = 0;
 
@@ -202,6 +202,17 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
               output_file<<pred->getPrintName();
               i++;
               if(i!=basic_block->getPreBasicBlockList().size()){
+                  output_file<<", ";
+              }
+          }
+          if(!basic_block->getSuccBasicBlockList().empty()){
+              output_file<<" ;suc =";
+          }
+          i = 0;
+          for(auto& pred : basic_block->getSuccBasicBlockList()){
+              output_file<<pred->getPrintName();
+              i++;
+              if(i!=basic_block->getSuccBasicBlockList().size()){
                   output_file<<", ";
               }
           }
