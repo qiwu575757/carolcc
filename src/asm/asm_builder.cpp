@@ -299,7 +299,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       int op0 = getRegIndexOfValue(inst,operands[0]);
       int target = getRegIndexOfValue(inst,inst);
       MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && target >= 0, GetNegRegError);
-      asm_code += InstGen::load(InstGen::Reg(op0,inst->getType()->isFloatTy()),
+      asm_code += InstGen::load(InstGen::Reg(target,inst->getType()->isFloatTy()),
               InstGen::Addr(InstGen::Reg(op0,false),0));
 
   } else if (inst->isStore()) {
