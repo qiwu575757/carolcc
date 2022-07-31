@@ -1,5 +1,6 @@
 #ifndef COMPILER_LLVM_IR_INDEX_H
 #define COMPILER_LLVM_IR_INDEX_H
+#include "ir/instruction.h"
 #include "ir_visitor_base.h"
 #include "ir/global_variable.h"
 #include <fstream>
@@ -47,6 +48,7 @@ private:
     void visit(ConstantFloat *node){};
     void visit(ConstantArray *node){};
     void visit(PhiInstr *node) {};
+    void visit(MovInstr *node) {};
 
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);

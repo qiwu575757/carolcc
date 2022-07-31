@@ -53,7 +53,9 @@ class Instruction : public User {
         
         // HIR
         BREAK,
-        CONTINUE
+        CONTINUE,
+        // Mov
+        MOV
     };
 
     OpKind getInstructionKind() const { return _op_id; }
@@ -340,4 +342,16 @@ class PhiInstr : public Instruction {
     }
 };
 
+class MovInstr : public Instruction{
+    private : 
+    MovInstr (Type* ty,PhiInstr* phi,Value* r_val);
+    PhiInstr* _l_val;
+
+    public :
+    static MovInstr* createMov(PhiInstr* phi,Value* r_val,BasicBlock* parent);
+    void accept(IrVisitorBase *v) override;
+    Value* getLVal(){return _l_val;}
+    void setLVal(PhiInstr* v){_l_val = v;}
+
+};
 #endif  // COMPILER_INSTRUCTION_H

@@ -41,6 +41,7 @@ private:
     void visit(ConstantFloat *node) final;
     void visit(ConstantArray *node) final;
     void visit(PhiInstr *node) final;
+    void visit(MovInstr *node) final;
 
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);

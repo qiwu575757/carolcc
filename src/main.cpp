@@ -114,7 +114,7 @@ int main(int argc, char **argv) {
     PM.add_pass<HIRToMIR>("HIRToMIR");
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
-    if(is_O2 && !is_debug){
+    if(is_O2){
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
@@ -140,8 +140,11 @@ int main(int argc, char **argv) {
         //     PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<GlobalVariableNumbering>("GVN");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<LowerIR>("LowerIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
     }
     PM.run();

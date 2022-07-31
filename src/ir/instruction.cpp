@@ -20,16 +20,15 @@ Instruction::Instruction(Type *type, Instruction::OpKind op_id,
                          unsigned int op_nums)
     : Instruction(type, op_id, op_nums, nullptr) {}
 
-
-bool Instruction::isCommutative()const{
-     bool res =  isAdd()||isMul()||isOr()||isXor();
-     if(!res){
-        if(isCmp()){
-            auto cmp = static_cast<  CmpInst const*>(this);
-            res = cmp->isEq()||cmp->isNeq();
+bool Instruction::isCommutative() const {
+    bool res = isAdd() || isMul() || isOr() || isXor();
+    if (!res) {
+        if (isCmp()) {
+            auto cmp = static_cast<CmpInst const *>(this);
+            res = cmp->isEq() || cmp->isNeq();
         }
-     }
-     return res;
+    }
+    return res;
 }
 // UnaryInst::UnaryInst(Type *type, OpKind op_id, Value *v1)
 //     : Instruction(type, op_id, 1) {
@@ -49,11 +48,11 @@ UnaryInst *UnaryInst::createNot(Value *v1, BasicBlock *parent) {
 UnaryInst *UnaryInst::createCast(Value *v1, Type *type_cast_to,
                                  BasicBlock *parent) {
     if (type_cast_to->isFloatTy()) {
-        MyAssert("error type", v1->getType()->isInt32(),EXIT_CODE_ERROR_312);
+        MyAssert("error type", v1->getType()->isInt32(), EXIT_CODE_ERROR_312);
     } else if (type_cast_to->isInt32()) {
-        MyAssert("error type", v1->getType()->isFloatTy(),EXIT_CODE_ERROR_313);
+        MyAssert("error type", v1->getType()->isFloatTy(), EXIT_CODE_ERROR_313);
     } else {
-        ERROR("error type",EXIT_CODE_ERROR_314);
+        ERROR("error type", EXIT_CODE_ERROR_314);
     }
     return new UnaryInst(type_cast_to, Instruction::CAST, v1, parent);
 }
@@ -192,7 +191,7 @@ std::string BinaryInst::getOperatorString() const {
             return "or";
             //        case Instruction::XOR:return "xor";
         default:
-            ERROR("error binary op kind",EXIT_CODE_ERROR_315);
+            ERROR("error binary op kind", EXIT_CODE_ERROR_315);
     }
 }
 // ReturnInst::ReturnInst(Type *type, Instruction::OpKind op_id, Value *v)
@@ -209,7 +208,8 @@ ReturnInst *ReturnInst::createRet(Value *v, BasicBlock *parent) {
 ReturnInst::ReturnInst(Type *type, Value *v, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), OpKind::RET, 1, parent) {
     MyAssert("error return type",
-             v->getType()->isIntegerTy() || v->getType()->isFloatTy(),EXIT_CODE_ERROR_316);
+             v->getType()->isIntegerTy() || v->getType()->isFloatTy(),
+             EXIT_CODE_ERROR_316);
     setOperand(0, v);
 }
 ReturnInst *ReturnInst::createVoidRet(BasicBlock *parent) {
@@ -328,22 +328,24 @@ BranchInst *BranchInst::createCondBr(Value *cond, BasicBlock *if_true,
 void BranchInst::accept(IrVisitorBase *v) { v->visit(this); }
 
 // DYB
-StoreOffset::StoreOffset(Value *value,int offset, BasicBlock *parent)
+StoreOffset::StoreOffset(Value *value, int offset, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), Instruction::STORE_OFFSET, 1, parent) {
     setOperand(0, value);
     this->offset = offset;
 }
-StoreOffset *StoreOffset::createStoreOffset(Value *value,int offset,BasicBlock *parent) {
+StoreOffset *StoreOffset::createStoreOffset(Value *value, int offset,
+                                            BasicBlock *parent) {
     return new StoreOffset(value, offset, parent);
 }
 void StoreOffset::accept(IrVisitorBase *v) { v->visit(this); }
 
-LoadOffset::LoadOffset(Value *value,int offset, BasicBlock *parent)
+LoadOffset::LoadOffset(Value *value, int offset, BasicBlock *parent)
     : Instruction(Type::getVoidTy(), Instruction::LOAD_OFFSET, 1, parent) {
     setOperand(0, value);
     this->offset = offset;
 }
-LoadOffset *LoadOffset::createLoadOffset(Value *value,int offset,BasicBlock *parent) {
+LoadOffset *LoadOffset::createLoadOffset(Value *value, int offset,
+                                         BasicBlock *parent) {
     return new LoadOffset(value, offset, parent);
 }
 void LoadOffset::accept(IrVisitorBase *v) { v->visit(this); }
@@ -359,9 +361,9 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr,
     return new StoreInst(value, ptr, parent);
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
-    std::string StoreInst::getPrintName(){
-        return getOperand(0)->getPrintName()+"_"+getOperand(1)->getPrintName();
-    }
+std::string StoreInst::getPrintName() {
+    return getOperand(0)->getPrintName() + "_" + getOperand(1)->getPrintName();
+}
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
@@ -374,7 +376,7 @@ void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops,
                                      BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
-    ERROR("depreciated",EXIT_CODE_ERROR_317);
+    ERROR("depreciated", EXIT_CODE_ERROR_317);
 }
 GetElementPtrInst::GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,
                                      BasicBlock *parent)
@@ -391,7 +393,8 @@ Type *GetElementPtrInst::getElementType(Value *ptr,
                                         std::vector<Value *> &idxs) {
     Type *ty = ptr->getType()->getPointerElementType();
     MyAssert("error type",
-             ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy(),EXIT_CODE_ERROR_318);
+             ty->isIntegerTy() || ty->isFloatTy() || ty->isArrayTy(),
+             EXIT_CODE_ERROR_318);
     if (ty->isIntegerTy() || ty->isFloatTy()) {
         return ty;
     } else if (ty->isArrayTy()) {
@@ -399,7 +402,7 @@ Type *GetElementPtrInst::getElementType(Value *ptr,
         for (int i = 1; i < idxs.size(); ++i) {
             ty = arr_type->getElementType();
             if (i < idxs.size() - 1) {
-                MyAssert("error type", ty->isArrayTy(),EXIT_CODE_ERROR_319);
+                MyAssert("error type", ty->isArrayTy(), EXIT_CODE_ERROR_319);
             }
             if (ty->isArrayTy()) {
                 arr_type = static_cast<ArrayType *>(ty);
@@ -418,14 +421,16 @@ void GetElementPtrInst::accept(IrVisitorBase *v) { v->visit(this); }
 CallInst::CallInst(Function *func, BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL,
                   func->getNumArgs() + 1, parent) {
-    MyAssert("call error args number ", func->getNumArgs() == 0,EXIT_CODE_ERROR_320);
+    MyAssert("call error args number ", func->getNumArgs() == 0,
+             EXIT_CODE_ERROR_320);
     setOperand(0, func);
 }
 CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,
                   parent) {
-    MyAssert("call error args number ", func->getNumArgs() == args.size(),EXIT_CODE_ERROR_321);
+    MyAssert("call error args number ", func->getNumArgs() == args.size(),
+             EXIT_CODE_ERROR_321);
     setOperand(0, func);
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
@@ -484,3 +489,19 @@ PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) {
     return new PhiInstr(ty, 0, bb);
 }
 void PhiInstr::accept(IrVisitorBase *v) { v->visit(this); }
+void MovInstr::accept(IrVisitorBase *v) { v->visit(this); }
+MovInstr::MovInstr(Type *ty, PhiInstr *phi, Value *r_val)
+    : Instruction(Type::getVoidTy(), Instruction::MOV, 1), _l_val(phi) {
+    // 设置成void类型，防止重命名的时候导致多余命名
+    setOperand(0, r_val);
+}
+MovInstr *MovInstr::createMov(PhiInstr *phi, Value *r_val, BasicBlock *parent) {
+    auto instr = new MovInstr(phi->getType(), phi, r_val);
+    auto term_instr = parent->getTerminator();
+    MyAssert(
+        "mov instr should be inserted into block whose terminator instr is br",
+        term_instr->isBr(), EXIT_CODE_ERROR_460);
+    parent->insertInstr(parent->getTerminator(), instr);
+    instr->setParent(parent);
+    return instr;
+}

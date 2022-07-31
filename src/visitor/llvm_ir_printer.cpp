@@ -571,6 +571,9 @@ void LLVMIrPrinter::visit(PhiInstr *node) {
     }
     output_file<<std::endl;
 }
+void LLVMIrPrinter::visit(MovInstr *node) {
+    output_file<<"mov "<<node->getLVal()->getPrintName()<<" = "<<node->getOperand(0)->getPrintName()<<"\n";
+}
 
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
