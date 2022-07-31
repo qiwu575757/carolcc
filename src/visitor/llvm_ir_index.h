@@ -27,6 +27,7 @@ public:
 private:
     void visit(UnaryInst *node){};
     void visit(BinaryInst *node){};
+    void visit(MlaInst *node){};
     void visit(AllocaInst *node){};
     void visit(StoreInst *node){};
     //  ---------

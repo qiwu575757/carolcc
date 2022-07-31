@@ -369,6 +369,31 @@ LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);
 }
 void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
+
+// wuqi
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3, parent) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3, BasicBlock *parent) {
+    return new MlaInst(v1,v2,v3,parent);
+}
+void MlaInst::accept(IrVisitorBase *v) { v->visit(this); }
+//wuqi
+
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops,
                                      BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
@@ -419,6 +444,7 @@ CallInst::CallInst(Function *func, BasicBlock *parent)
     MyAssert("call error args number ", func->getNumArgs() == 0,EXIT_CODE_ERROR_320);
     setOperand(0, func);
 }
+
 CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,

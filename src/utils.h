@@ -20,7 +20,7 @@
 #define __DEBUG
 // #define __LSRA_WARN
 // #define __LSRA_SHOW
-// #define __WARN
+#define __WARN
 //#define __TRACE
 //#define __INFO
 
@@ -191,7 +191,7 @@ enum EXIT_CODE {
 #define MyAssert(info, cond, exit_code)                                           \
     do {                                                               \
         if (!(cond)) {                                                 \
-            printf(RED "[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
+            fprintf(stderr,"[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
             exit(exit_code);                                                   \
         }                                                              \
     } while (0)
@@ -202,7 +202,7 @@ enum EXIT_CODE {
 #ifdef __ERROR
 #define ERROR(format, exit_code, ...)                                                          \
     do {                                                                            \
-        printf(RED "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fprintf(stderr,"[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
         exit(exit_code);                                                                    \
     } while (0)
 #else
