@@ -45,10 +45,7 @@ int Type::getSize(bool extended) {
     return 0;
 }
 
-void Type::print(std::ofstream& output_file) {
-    if (!output_file.is_open()) {
-        ERROR("output file is not open",EXIT_CODE_ERROR_325);
-    }
+void Type::print(std::ostream& output_file) {
     INFO("visiting type::print");
     switch (_id) {
         case LabelTyID:

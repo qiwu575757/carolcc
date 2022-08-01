@@ -54,6 +54,7 @@ class Reg : public Value {
 
 public:
   explicit Reg(int id, bool is_vfpreg) : id(id), is_fp_(is_vfpreg){};
+  virtual ~Reg() = default;
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
   bool has_shift() const { return false; }

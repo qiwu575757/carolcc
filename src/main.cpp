@@ -11,6 +11,7 @@
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/lower_ir.h"
+#include "passes/function_inline.h"
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/pass_manager.h"
@@ -127,22 +128,21 @@ int main(int argc, char **argv) {
             PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<FunctionInline>("FunctionInline");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<SCCP>("SCCP");
         if(is_emit_mir && is_debug)
             PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<SCCP>("SCCP");
-        //  if(is_emit_mir && is_debug)
-        //      PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
-        PM.add_pass<GlobalVariableNumbering>("GVN");
         if(is_emit_mir && is_debug)
             PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<LowerIR>("LowerIR");
+
+        PM.add_pass<GlobalVariableNumbering>("GVN");
         if(is_emit_mir && is_debug)
             PM.add_pass<EmitIR>("EmitIR");
 

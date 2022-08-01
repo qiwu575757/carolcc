@@ -57,6 +57,7 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     if (reg_get == -1) {
         // debug
         LSRA_WARNNING("-- int reg set --");
+        #ifdef __LSRA_SHOW
         for (int i = 0; i < int_reg_number; i++) {
             LSRA_SHOW("[reg %02d]", i);
             for (auto &reg : virtual_int_reg_use[i]) {
@@ -64,7 +65,9 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
             }
             LSRA_SHOW("[reg %02d]\n", i);
         }
+        #endif // DEBUG
         LSRA_WARNNING("-- float reg set --");
+        #ifdef __LSRA_SHOW
         for (int i = 0; i < float_reg_number; i++) {
             LSRA_SHOW("[reg %02d]", i);
             for (auto &reg : virtual_float_reg_use[i]) {
@@ -72,8 +75,9 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
             }
             LSRA_SHOW("[reg %02d]\n", i);
         }
+        #endif // DEBUG
         ERROR("can't give any reg because all the reg is using at inst %d %s"
-        ,linear_map[inst],inst->getPrintName().c_str(),EXIT_CODE_ERROR_304);
+        ,EXIT_CODE_ERROR_304,linear_map[inst],inst->getPrintName().c_str());
     }
     Value *reg_v = value_in_reg_at(inst, reg_get, inst->getType()->isFloatTy());
     if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -502,7 +506,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     stack_size += op_save_stack_num * 4;  //压入四个保护位置
     //计算变量栈溢出空间
-    int use_reg_num = 0;
+    // int use_reg_num = 0;
     for (int i = int_reg_number; i < virtual_reg_max; i++) {
         if (virtual_int_regs[i].size() == 0) {
             break;
@@ -576,10 +580,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     // debug
     LSRA_SHOW("-- stack size %d --\n", stack_size);
+    #ifdef __LSRA_WARN
+    
     for (auto &itv : stack_map) {
         LSRA_WARNNING("type: %d V: %s -> sp + %d ", itv.is_data,
                       itv.v->getPrintName().c_str(), itv.offset);
     }
+    #endif // DEBUG
     auto tmpBB = BasicBlock::create("");
     //栈溢出处理 检查栈溢出的变量的使用，在其前后插指令
     if (insert) {
@@ -950,7 +957,7 @@ int AsmBuilder::get_value_sp_offset(Value *inst,
 std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                                                          bool insert) {
     linear_map.clear();
-    int instr_index = 0;
+    // int instr_index = 0;
     int linear_index = 0;
     int bb_index = 0;
     std::map<Value *, interval> live_map;
@@ -1188,11 +1195,13 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
         }
     }
     // debug
+    #ifdef __LSRA_WARN
+    
     LSRA_WARNNING(" LIVE INTERVAL");
     for (auto &p : live_res) {
         LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
     }
-
+    #endif // DEBUG
     linear_scan_reg_alloc(live_res, func, insert);
     return live_res;
 }

@@ -27,6 +27,9 @@ public:
     Value *getOperand(unsigned no) const;
     std::vector<Value*>& getOperandList(){return _operands_list;}
     unsigned getOperandNumber() const { return _use_number; };
+/**
+ * 删掉 自己参数被使用的记录
+ */
     void removeUseOps();
 
 private:

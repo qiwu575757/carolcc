@@ -38,7 +38,7 @@ std::string push(const std::vector<Reg> &reg_list) {
   asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
 
   bool has_fp = false;
-  int total_push = 0;
+  // int total_push = 0;
 
   bool flag = false;
   asm_instr += spaces;

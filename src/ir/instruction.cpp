@@ -1,5 +1,6 @@
 #include "instruction.h"
 
+#include "basic_block.h"
 #include "function.h"
 #include "passes/module.h"
 #include "type.h"
@@ -358,7 +359,13 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    return new StoreInst(value, ptr, parent);
+    if(ptr->getType()->getPointerElementType()->eq(*value->getType())){
+        return new StoreInst(value, ptr, parent);
+    }
+    else {
+        ERROR("error type",EXIT_CODE_ERROR_312);
+        return nullptr;
+    }
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
 std::string StoreInst::getPrintName() {
@@ -471,6 +478,8 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
     }
+    parent->getFunction()->addCallee(func);
+    func->addCaller(parent->getFunction());
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args,
                                BasicBlock *parent) {
