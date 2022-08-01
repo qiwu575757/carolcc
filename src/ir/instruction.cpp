@@ -1,4 +1,6 @@
 #include "instruction.h"
+#include <algorithm>
+#include <ostream>
 
 #include "basic_block.h"
 #include "function.h"
@@ -359,10 +361,15 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    if(ptr->getType()->getPointerElementType()->eq(*value->getType())){
+    if(ptr->getType()->getPointerElementType()->eq(value->getType())){
         return new StoreInst(value, ptr, parent);
     }
     else {
+        std::cout<<"[CreateStore]:(ptr,val) = (";
+        ptr->getType()->print(std::cout);
+        std::cout<<",";
+        value->getType()->print(std::cout);
+        std::cout<<")\n";
         ERROR("error type",EXIT_CODE_ERROR_312);
         return nullptr;
     }
@@ -536,7 +543,7 @@ PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) {
 void PhiInstr::accept(IrVisitorBase *v) { v->visit(this); }
 void MovInstr::accept(IrVisitorBase *v) { v->visit(this); }
 MovInstr::MovInstr(Type *ty, PhiInstr *phi, Value *r_val)
-    : Instruction(Type::getVoidTy(), Instruction::MOV, 1), _l_val(phi) {
+    : Instruction(ty, Instruction::MOV, 1), _l_val(phi) {
     // 设置成void类型，防止重命名的时候导致多余命名
     setOperand(0, r_val);
 }

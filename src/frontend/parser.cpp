@@ -84,14 +84,16 @@
     void yyerror(char*s)
     {
         extern char *yytext;	// defined and maintained in lex
-        int len=strlen(yytext);
-        int i;
-        char buf[512]={0};
-        for (i=0;i<len;++i)
-        {
-            //TODO: may have bugs
-            sprintf(buf,"%s%d ",buf,yytext[i]);
-        }
+        // int len=strlen(yytext);
+        // int i;
+        char buf[1024]={0};
+        strcpy(buf,yytext);
+        // for (i=0;i<len;++i)
+        // {
+        //     //TODO: may have bugs
+        //     sprintf(buf,"%s%d ",buf,yytext[i]);
+            
+        // }
         // std::string txt = "ERROR: text :"+to
         fprintf(stderr, "ERROR: text %s\n",yytext);
         fprintf(stderr, "ERROR: %s at symbol '%s' on line %d\n", s, buf, yyline);
@@ -100,7 +102,7 @@
     void insertVarible(std::string& type,std::string& id);
     void insertFunction(std::string& type,std::string& id);
 
-#line 104 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 106 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -597,17 +599,17 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
-       0,   171,   171,   178,   183,   189,   196,   202,   211,   221,
-     227,   235,   241,   247,   256,   264,   274,   280,   288,   294,
-     299,   308,   314,   322,   331,   341,   347,   355,   361,   368,
-     375,   386,   392,   401,   407,   411,   419,   424,   432,   440,
-     453,   459,   467,   473,   482,   492,   499,   507,   512,   521,
-     527,   535,   541,   551,   561,   566,   572,   579,   588,   600,
-     609,   616,   624,   631,   643,   652,   661,   667,   676,   683,
-     691,   698,   708,   714,   720,   729,   735,   742,   749,   757,
-     766,   772,   782,   788,   798,   804,   812,   820,   830,   836,
-     844,   854,   860,   868,   876,   884,   894,   900,   908,   918,
-     924,   933,   939
+       0,   173,   173,   180,   185,   191,   198,   204,   213,   223,
+     229,   237,   243,   249,   258,   266,   276,   282,   290,   296,
+     301,   310,   316,   324,   333,   343,   349,   357,   363,   370,
+     377,   388,   394,   403,   409,   413,   421,   426,   434,   442,
+     455,   461,   469,   475,   484,   494,   501,   509,   514,   523,
+     529,   537,   543,   553,   563,   568,   574,   581,   590,   602,
+     611,   618,   626,   633,   645,   654,   663,   669,   678,   685,
+     693,   700,   710,   716,   722,   731,   737,   744,   751,   759,
+     768,   774,   784,   790,   800,   806,   814,   822,   832,   838,
+     846,   856,   862,   870,   878,   886,   896,   902,   910,   920,
+     926,   935,   941
 };
 #endif
 
@@ -1313,125 +1315,125 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* CompUnit: FuncDef  */
-#line 172 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 174 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             root = new tree_comp_unit();
             root->_line_no = yyline+1;
             printf("func def is %s\n",(yyvsp[0].func_def)->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>((yyvsp[0].func_def)));
         }
-#line 1324 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1326 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 3: /* CompUnit: CompUnit FuncDef  */
-#line 179 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 181 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             printf("func def is %s\n",(yyvsp[0].func_def)->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>((yyvsp[0].func_def)));
         }
-#line 1333 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1335 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 4: /* CompUnit: Decl  */
-#line 184 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 186 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             root = new tree_comp_unit();
             root->_line_no = yyline+1;
             root->definitions.push_back(std::shared_ptr<tree_decl>((yyvsp[0].decl)));
         }
-#line 1343 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1345 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 5: /* CompUnit: CompUnit Decl  */
-#line 190 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 192 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             root->definitions.push_back(std::shared_ptr<tree_decl>((yyvsp[0].decl)));
         }
-#line 1351 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1353 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 6: /* Decl: ConstDecl  */
-#line 197 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 199 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.decl) = new tree_decl();
             (yyval.decl)->_line_no = yyline+1;
             (yyval.decl)->const_decl=std::shared_ptr<tree_const_decl>((yyvsp[0].const_decl));
         }
-#line 1361 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1363 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 7: /* Decl: VarDecl  */
-#line 203 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 205 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.decl) = new tree_decl();
             (yyval.decl)->_line_no = yyline+1;
             (yyval.decl)->var_decl=std::shared_ptr<tree_var_decl>((yyvsp[0].var_decl));
         }
-#line 1371 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1373 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 8: /* ConstDecl: "const" BType ConstDefList ";"  */
-#line 212 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 214 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_decl) = new tree_const_decl();
             (yyval.const_decl)->_line_no = yyline+1;
             (yyval.const_decl)->b_type=std::shared_ptr<tree_basic_type>((yyvsp[-2].basic_type));
             (yyval.const_decl)->const_def_list=std::shared_ptr<tree_const_def_list>((yyvsp[-1].const_def_list));
         }
-#line 1382 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1384 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 9: /* ConstDefList: ConstDef  */
-#line 222 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 224 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def_list) = new tree_const_def_list();
             (yyval.const_def_list)->_line_no = yyline+1;
             (yyval.const_def_list)->const_defs.push_back(std::shared_ptr<tree_const_def>((yyvsp[0].const_def)));
         }
-#line 1392 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1394 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 10: /* ConstDefList: ConstDefList "," ConstDef  */
-#line 228 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 230 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].const_def_list)->const_defs.push_back(std::shared_ptr<tree_const_def>((yyvsp[0].const_def)));
             (yyval.const_def_list) = (yyvsp[-2].const_def_list);
         }
-#line 1401 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1403 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 11: /* BType: "int"  */
-#line 236 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 238 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::INT;
         }
-#line 1411 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1413 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 12: /* BType: "float"  */
-#line 242 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 244 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::FLOAT;
         }
-#line 1421 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1423 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 13: /* BType: "void"  */
-#line 248 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 250 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::VOID;
         }
-#line 1431 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1433 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 14: /* ConstDef: TIDENTIFIER ConstExpArrayList "=" ConstInitVal  */
-#line 257 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 259 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def) = new tree_const_def();
             (yyval.const_def)->_line_no = yyline+1;
@@ -1439,161 +1441,161 @@ yyreduce:
             (yyval.const_def)->const_exp_list=std::shared_ptr<tree_const_exp_list>((yyvsp[-2].const_exp_list));
             (yyval.const_def)->const_init_val=std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val));
         }
-#line 1443 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1445 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 15: /* ConstDef: TIDENTIFIER "=" ConstInitVal  */
-#line 265 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 267 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def) = new tree_const_def();
             (yyval.const_def)->_line_no = yyline+1;
             (yyval.const_def)->id=*(yyvsp[-2].string);
             (yyval.const_def)->const_init_val=std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val));
         }
-#line 1454 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1456 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 16: /* ConstExpArrayList: "[" ConstExp "]"  */
-#line 275 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 277 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_exp_list) = new tree_const_exp_list();
             (yyval.const_exp_list)->_line_no = yyline+1;
             (yyval.const_exp_list)->const_exp.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
         }
-#line 1464 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1466 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 17: /* ConstExpArrayList: ConstExpArrayList "[" ConstExp "]"  */
-#line 281 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 283 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].const_exp_list)->const_exp.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
             (yyval.const_exp_list) = (yyvsp[-3].const_exp_list);
         }
-#line 1473 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1475 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 18: /* ConstInitVal: ConstExp  */
-#line 289 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 291 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
             (yyval.const_init_val)->const_exp= std::shared_ptr<tree_const_exp>((yyvsp[0].const_exp)) ;
         }
-#line 1483 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1485 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 19: /* ConstInitVal: "{" "}"  */
-#line 295 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 297 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
         }
-#line 1492 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1494 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 20: /* ConstInitVal: "{" ConstInitVallist "}"  */
-#line 300 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 302 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
             (yyval.const_init_val)->const_val_list = std::shared_ptr<tree_const_val_list>((yyvsp[-1].const_init_val_list)) ;
         }
-#line 1502 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1504 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 21: /* ConstInitVallist: ConstInitVal  */
-#line 309 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 311 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val_list) = new tree_const_val_list();
             (yyval.const_init_val_list)->_line_no = yyline+1;
             (yyval.const_init_val_list)->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val)));
         }
-#line 1512 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1514 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 22: /* ConstInitVallist: ConstInitVallist "," ConstInitVal  */
-#line 315 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 317 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].const_init_val_list)->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val)));
             (yyval.const_init_val_list) = (yyvsp[-2].const_init_val_list);
         }
-#line 1521 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1523 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 23: /* ConstExp: AddExp  */
-#line 323 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 325 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_exp) = new tree_const_exp();
             (yyval.const_exp)->_line_no = yyline+1;
             (yyval.const_exp)->add_exp = std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 1531 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1533 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 24: /* VarDecl: BType VarDefList ";"  */
-#line 332 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 334 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_decl) = new tree_var_decl();
             (yyval.var_decl)->_line_no = yyline+1;
             (yyval.var_decl)->b_type=std::shared_ptr<tree_basic_type>((yyvsp[-2].basic_type));
             (yyval.var_decl)->var_def_list=std::shared_ptr<tree_var_def_list>((yyvsp[-1].var_def_list));
         }
-#line 1542 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1544 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 25: /* VarDefList: VarDef  */
-#line 342 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 344 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def_list) = new tree_var_def_list();
             (yyval.var_def_list)->_line_no = yyline+1;
             (yyval.var_def_list)->var_defs.push_back(std::shared_ptr<tree_var_def>((yyvsp[0].var_def)));
         }
-#line 1552 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1554 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 26: /* VarDefList: VarDefList "," VarDef  */
-#line 348 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 350 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].var_def_list)->var_defs.push_back(std::shared_ptr<tree_var_def>((yyvsp[0].var_def)));
             (yyval.var_def_list) = (yyvsp[-2].var_def_list);
         }
-#line 1561 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1563 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 27: /* VarDef: TIDENTIFIER  */
-#line 356 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 358 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[0].string);
         }
-#line 1571 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1573 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 28: /* VarDef: TIDENTIFIER "=" InitVal  */
-#line 362 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 364 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[-2].string);
             (yyval.var_def)->init_val = std::shared_ptr<tree_init_val>((yyvsp[0].init_val));
         }
-#line 1582 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1584 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 29: /* VarDef: TIDENTIFIER ArrayDef  */
-#line 369 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 371 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[-1].string);
             (yyval.var_def)->array_def = std::shared_ptr<tree_arrray_def>((yyvsp[0].array_def));
         }
-#line 1593 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1595 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 30: /* VarDef: TIDENTIFIER ArrayDef "=" InitVal  */
-#line 376 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 378 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
@@ -1601,78 +1603,78 @@ yyreduce:
             (yyval.var_def)->array_def = std::shared_ptr<tree_arrray_def>((yyvsp[-2].array_def));
             (yyval.var_def)->init_val = std::shared_ptr<tree_init_val>((yyvsp[0].init_val));
         }
-#line 1605 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1607 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 31: /* ArrayDef: "[" ConstExp "]"  */
-#line 387 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 389 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_def) = new tree_arrray_def();
             (yyval.array_def)->_line_no = yyline+1;
             (yyval.array_def)->const_exps.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
         }
-#line 1615 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1617 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 32: /* ArrayDef: ArrayDef "[" ConstExp "]"  */
-#line 393 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 395 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_def)->const_exps.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
             (yyval.array_def) = (yyvsp[-3].array_def);
         }
-#line 1624 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1626 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 33: /* InitVal: Exp  */
-#line 402 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 404 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
             (yyval.init_val)->exp=std::shared_ptr<tree_exp>((yyvsp[0].exp));
         }
-#line 1634 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1636 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 34: /* InitVal: "{" "}"  */
-#line 407 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 409 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
               {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
     }
-#line 1643 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1645 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 35: /* InitVal: "{" InitValList "}"  */
-#line 411 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 413 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
                           {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
             (yyval.init_val)->init_val_list = std::shared_ptr<tree_init_val_list>((yyvsp[-1].init_val_list));
     }
-#line 1653 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1655 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 36: /* InitValList: InitVal  */
-#line 419 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 421 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
               {
         (yyval.init_val_list) = new tree_init_val_list();
         (yyval.init_val_list)->_line_no = yyline+1;
         (yyval.init_val_list)->init_vals.push_back(std::shared_ptr<tree_init_val>((yyvsp[0].init_val)));
     }
-#line 1663 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1665 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 37: /* InitValList: InitValList "," InitVal  */
-#line 424 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 426 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
                               {
         (yyvsp[-2].init_val_list)->init_vals.push_back(std::shared_ptr<tree_init_val>((yyvsp[0].init_val)));
         (yyval.init_val_list) = (yyvsp[-2].init_val_list);
     }
-#line 1672 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1674 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 38: /* FuncDef: BType TIDENTIFIER "(" ")" Block  */
-#line 433 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 435 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_def) = new tree_func_def();
             (yyval.func_def)->_line_no = yyline+1;
@@ -1680,11 +1682,11 @@ yyreduce:
             (yyval.func_def)->id = *(yyvsp[-3].string);
             (yyval.func_def)->block.push_back(std::shared_ptr<tree_block>((yyvsp[0].block)));
         }
-#line 1684 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1686 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 39: /* FuncDef: BType TIDENTIFIER "(" FuncFParams ")" Block  */
-#line 441 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 443 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_def) = new tree_func_def();
             (yyval.func_def)->_line_no = yyline+1;
@@ -1694,139 +1696,139 @@ yyreduce:
 
             (yyval.func_def)->block.push_back(std::shared_ptr<tree_block>((yyvsp[0].block)));
         }
-#line 1698 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1700 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 40: /* FuncFParams: FuncFParam  */
-#line 454 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 456 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparams) = new tree_func_fparams();
             (yyval.func_fparams)->_line_no = yyline+1;
             (yyval.func_fparams)->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>((yyvsp[0].func_fparam)));
         }
-#line 1708 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1710 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 41: /* FuncFParams: FuncFParams "," FuncFParam  */
-#line 460 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 462 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].func_fparams)->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>((yyvsp[0].func_fparam)));
             (yyval.func_fparams) = (yyvsp[-2].func_fparams);
         }
-#line 1717 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1719 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 42: /* FuncFParam: FuncFParamOne  */
-#line 468 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 470 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparam) = new tree_func_fparam();
             (yyval.func_fparam)->_line_no = yyline+1;
             (yyval.func_fparam)->funcfparamone = std::shared_ptr<tree_func_fparamone>((yyvsp[0].func_fparamone));
         }
-#line 1727 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1729 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 43: /* FuncFParam: FuncFParamArray  */
-#line 474 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 476 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparam) = new tree_func_fparam();
             (yyval.func_fparam)->_line_no = yyline+1;
             (yyval.func_fparam)->funcfparamarray = std::shared_ptr<tree_func_fparamarray>((yyvsp[0].func_fparamarray));
         }
-#line 1737 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1739 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 44: /* FuncFParamOne: BType TIDENTIFIER  */
-#line 483 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 485 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparamone) = new tree_func_fparamone();
             (yyval.func_fparamone)->_line_no = yyline+1;
             (yyval.func_fparamone)->b_type = std::shared_ptr<tree_basic_type>((yyvsp[-1].basic_type));
             (yyval.func_fparamone)->id = *(yyvsp[0].string);
         }
-#line 1748 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1750 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 45: /* FuncFParamArray: BType TIDENTIFIER "[" "]"  */
-#line 493 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 495 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparamarray) = new tree_func_fparamarray();
             (yyval.func_fparamarray)->_line_no = yyline+1;
             (yyval.func_fparamarray)->b_type = std::shared_ptr<tree_basic_type>((yyvsp[-3].basic_type));
             (yyval.func_fparamarray)->id = *(yyvsp[-2].string);
         }
-#line 1759 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1761 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 46: /* FuncFParamArray: FuncFParamArray "[" Exp "]"  */
-#line 500 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 502 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].func_fparamarray)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
             (yyval.func_fparamarray) = (yyvsp[-3].func_fparamarray);
         }
-#line 1768 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1770 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 47: /* Block: "{" "}"  */
-#line 508 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 510 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.block) = new tree_block();
             (yyval.block)->_line_no = yyline+1;
         }
-#line 1777 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1779 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 48: /* Block: "{" BlockItemList "}"  */
-#line 513 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 515 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.block) = new tree_block();
             (yyval.block)->_line_no = yyline+1;
             (yyval.block)->block_item_list=std::shared_ptr<tree_block_item_list>((yyvsp[-1].block_item_list));
         }
-#line 1787 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1789 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 49: /* BlockItemList: BlockItem  */
-#line 522 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 524 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item_list) = new tree_block_item_list();
             (yyval.block_item_list)->_line_no = yyline+1;
             (yyval.block_item_list)->block_items.push_back(std::shared_ptr<tree_block_item>((yyvsp[0].block_item)));
         }
-#line 1797 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1799 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 50: /* BlockItemList: BlockItemList BlockItem  */
-#line 528 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 530 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-1].block_item_list)->block_items.push_back(std::shared_ptr<tree_block_item>((yyvsp[0].block_item)));
             (yyval.block_item_list)=(yyvsp[-1].block_item_list);
         }
-#line 1806 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1808 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 51: /* BlockItem: Decl  */
-#line 536 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 538 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item) = new tree_block_item();
             (yyval.block_item)->_line_no = yyline+1;
             (yyval.block_item)->decl=std::shared_ptr<tree_decl>((yyvsp[0].decl));
         }
-#line 1816 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1818 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 52: /* BlockItem: Stmt  */
-#line 542 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 544 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item) = new tree_block_item();
             (yyval.block_item)->_line_no = yyline+1;
             (yyval.block_item)->stmt=std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
         }
-#line 1826 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1828 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 53: /* Stmt: LVal "=" Exp ";"  */
-#line 553 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 555 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1835,40 +1837,40 @@ yyreduce:
             a_stmt->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp));
             (yyval.stmt)->assigm_stmt=std::shared_ptr<tree_assign_stmt>(a_stmt) ;
         }
-#line 1839 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1841 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 54: /* Stmt: ";"  */
-#line 562 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 564 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
         }
-#line 1848 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1850 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 55: /* Stmt: Exp ";"  */
-#line 567 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 569 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             (yyval.stmt)->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp)) ;
         }
-#line 1858 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1860 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 56: /* Stmt: Block  */
-#line 573 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 575 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             (yyval.stmt)->block=std::shared_ptr<tree_block>((yyvsp[0].block)) ;
         }
-#line 1868 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1870 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 57: /* Stmt: "if" "(" Cond ")" Stmt  */
-#line 580 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 582 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1877,11 +1879,11 @@ yyreduce:
             if_stmt->stmt = std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
             (yyval.stmt)->if_stmt = std::shared_ptr<tree_if_stmt>(if_stmt) ;
         }
-#line 1881 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1883 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 58: /* Stmt: "if" "(" Cond ")" Stmt "else" Stmt  */
-#line 589 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 591 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1892,11 +1894,11 @@ yyreduce:
             (yyval.stmt)->if_else_stmt = std::shared_ptr<tree_if_else_stmt>(if_else_stmt) ;
 
         }
-#line 1896 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1898 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 59: /* Stmt: "while" "(" Cond ")" Stmt  */
-#line 601 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 603 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1905,44 +1907,44 @@ yyreduce:
             while_stmt->stmt = std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
             (yyval.stmt)->while_stmt = std::shared_ptr<tree_while_stmt>(while_stmt) ;
         }
-#line 1909 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1911 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 60: /* Stmt: "continue" ";"  */
-#line 610 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 612 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto continue_stmt = new tree_continue_stmt();
             (yyval.stmt)->continue_stmt = std::shared_ptr<tree_continue_stmt>(continue_stmt) ;
         }
-#line 1920 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1922 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 61: /* Stmt: "break" ";"  */
-#line 617 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 619 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto break_stmt = new tree_break_stmt();
             (yyval.stmt)->break_stmt = std::shared_ptr<tree_break_stmt>(break_stmt) ;
         }
-#line 1931 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1933 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 62: /* Stmt: "return" ";"  */
-#line 625 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 627 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto a_stmt = new tree_return_null_stmt();
             (yyval.stmt)->return_null_stmt=std::shared_ptr<tree_return_null_stmt>(a_stmt) ;
         }
-#line 1942 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1944 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 63: /* Stmt: "return" Exp ";"  */
-#line 632 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 634 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1950,226 +1952,226 @@ yyreduce:
             a_stmt->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp));
             (yyval.stmt)->return_stmt=std::shared_ptr<tree_return_stmt>(a_stmt) ;
         }
-#line 1954 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1956 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 64: /* Exp: AddExp  */
-#line 644 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 646 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.exp) = new tree_exp();
             (yyval.exp)->_line_no = yyline+1;
             (yyval.exp)->add_exp = std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 1964 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1966 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 65: /* Cond: LOrExp  */
-#line 653 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 655 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.cond) = new tree_cond();
             (yyval.cond)->_line_no = yyline+1;
             (yyval.cond)->l_or_exp = std::shared_ptr<tree_l_or_exp>((yyvsp[0].l_or_exp));
         }
-#line 1974 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1976 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 66: /* LVal: TIDENTIFIER  */
-#line 662 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 664 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_val) = new tree_l_val();
             (yyval.l_val)->_line_no = yyline+1;
             (yyval.l_val)->id = *(yyvsp[0].string);
         }
-#line 1984 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1986 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 67: /* LVal: ArrayIdent  */
-#line 668 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 670 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_val) = new tree_l_val();
             (yyval.l_val)->_line_no = yyline+1;
             (yyval.l_val)->array_ident = std::shared_ptr<tree_array_ident>((yyvsp[0].array_ident));
         }
-#line 1994 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1996 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 68: /* ArrayIdent: TIDENTIFIER "[" Exp "]"  */
-#line 677 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 679 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_ident) = new tree_array_ident();
             (yyval.array_ident)->_line_no = yyline+1;
             (yyval.array_ident)->id = *(yyvsp[-3].string);
             (yyval.array_ident)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
         }
-#line 2005 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2007 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 69: /* ArrayIdent: ArrayIdent "[" Exp "]"  */
-#line 684 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 686 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].array_ident)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
             (yyval.array_ident) = (yyvsp[-3].array_ident);
         }
-#line 2014 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2016 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 70: /* Number: TINTEGER  */
-#line 692 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 694 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.number) = new tree_number();
             (yyval.number)->_line_no = yyline+1;
             (yyval.number)->int_value = std::stoi((yyvsp[0].string)->c_str(), nullptr, 0);
             (yyval.number)->is_int=true;
         }
-#line 2025 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2027 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 71: /* Number: TFLOATNUM  */
-#line 699 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 701 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.number) = new tree_number();
             (yyval.number)->_line_no = yyline+1;
             (yyval.number)->float_value = (float)atof((yyvsp[0].string)->c_str());
             (yyval.number)->is_int=false;
         }
-#line 2036 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2038 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 72: /* PrimaryExp: "(" Exp ")"  */
-#line 709 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 711 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->exp = std::shared_ptr<tree_exp>((yyvsp[-1].exp));
         }
-#line 2046 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2048 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 73: /* PrimaryExp: LVal  */
-#line 715 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 717 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->l_val = std::shared_ptr<tree_l_val>((yyvsp[0].l_val));
         }
-#line 2056 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2058 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 74: /* PrimaryExp: Number  */
-#line 721 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 723 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->number = std::shared_ptr<tree_number>((yyvsp[0].number));
         }
-#line 2066 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2068 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 75: /* UnaryExp: PrimaryExp  */
-#line 730 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 732 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->primary_exp = std::shared_ptr<tree_primary_exp>((yyvsp[0].primary_exp));
         }
-#line 2076 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2078 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 76: /* UnaryExp: "+" UnaryExp  */
-#line 736 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 738 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="+";
         }
-#line 2087 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2089 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 77: /* UnaryExp: "-" UnaryExp  */
-#line 743 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 745 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="-";
         }
-#line 2098 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2100 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 78: /* UnaryExp: "!" UnaryExp  */
-#line 750 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 752 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="!";
         }
-#line 2109 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2111 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 79: /* UnaryExp: FuncCall  */
-#line 758 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 760 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->func_call = std::shared_ptr<tree_func_call>((yyvsp[0].func_call));
         }
-#line 2119 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2121 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 80: /* FuncCall: TIDENTIFIER "(" ")"  */
-#line 767 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 769 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_call) = new tree_func_call();
             (yyval.func_call)->_line_no = yyline+1;
             (yyval.func_call)->id = *(yyvsp[-2].string);
         }
-#line 2129 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2131 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 81: /* FuncCall: TIDENTIFIER "(" FuncParamList ")"  */
-#line 773 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 775 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_call) = new tree_func_call();
             (yyval.func_call)->_line_no = yyline+1;
             (yyval.func_call)->id = *(yyvsp[-3].string);
             (yyval.func_call)->func_param_list = std::shared_ptr<tree_func_paramlist>((yyvsp[-1].func_param_list));
         }
-#line 2140 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2142 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 82: /* FuncParamList: Exp  */
-#line 783 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 785 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_param_list) = new tree_func_paramlist();
             (yyval.func_param_list)->_line_no = yyline+1;
             (yyval.func_param_list)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[0].exp)));
         }
-#line 2150 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2152 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 83: /* FuncParamList: FuncParamList "," Exp  */
-#line 789 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 791 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].func_param_list)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[0].exp)));
             (yyval.func_param_list) = (yyvsp[-2].func_param_list);
         }
-#line 2159 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2161 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 84: /* MulExp: UnaryExp  */
-#line 799 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 801 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
         }
-#line 2169 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2171 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 85: /* MulExp: MulExp "*" UnaryExp  */
-#line 805 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 807 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2177,11 +2179,11 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="*";
         }
-#line 2181 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2183 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 86: /* MulExp: MulExp "/" UnaryExp  */
-#line 813 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 815 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2189,11 +2191,11 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="/";
         }
-#line 2193 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2195 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 87: /* MulExp: MulExp "%" UnaryExp  */
-#line 821 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 823 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2201,21 +2203,21 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="%";
         }
-#line 2205 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2207 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 88: /* AddExp: MulExp  */
-#line 831 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 833 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2215 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2217 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 89: /* AddExp: AddExp "+" MulExp  */
-#line 837 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 839 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
@@ -2223,11 +2225,11 @@ yyreduce:
             (yyval.add_exp)->oprt="+";
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2227 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2229 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 90: /* AddExp: AddExp "-" MulExp  */
-#line 845 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 847 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
@@ -2235,21 +2237,21 @@ yyreduce:
             (yyval.add_exp)->oprt="-";
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2239 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2241 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 91: /* RelExp: AddExp  */
-#line 855 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 857 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2249 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2251 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 92: /* RelExp: RelExp "<" AddExp  */
-#line 861 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 863 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2257,11 +2259,11 @@ yyreduce:
             (yyval.rel_exp)->oprt="<";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2261 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2263 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 93: /* RelExp: RelExp ">" AddExp  */
-#line 869 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 871 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2269,11 +2271,11 @@ yyreduce:
             (yyval.rel_exp)->oprt=">";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2273 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2275 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 94: /* RelExp: RelExp "<=" AddExp  */
-#line 877 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 879 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2281,11 +2283,11 @@ yyreduce:
             (yyval.rel_exp)->oprt="<=";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2285 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2287 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 95: /* RelExp: RelExp ">=" AddExp  */
-#line 885 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 887 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2293,21 +2295,21 @@ yyreduce:
             (yyval.rel_exp)->oprt=">=";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2297 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2299 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 96: /* EqExp: RelExp  */
-#line 895 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 897 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2307 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2309 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 97: /* EqExp: EqExp "==" RelExp  */
-#line 901 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 903 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
@@ -2315,11 +2317,11 @@ yyreduce:
             (yyval.eq_exp)->oprt="==";
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2319 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2321 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 98: /* EqExp: EqExp "!=" RelExp  */
-#line 909 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 911 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
@@ -2327,53 +2329,53 @@ yyreduce:
             (yyval.eq_exp)->oprt="!=";
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2331 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2333 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 99: /* LAndExp: EqExp  */
-#line 919 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 921 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_and_exp) = new tree_l_and_exp();
             (yyval.l_and_exp)->_line_no = yyline+1;
             (yyval.l_and_exp)->eq_exp=std::shared_ptr<tree_eq_exp>((yyvsp[0].eq_exp));
         }
-#line 2341 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2343 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 100: /* LAndExp: LAndExp "&&" EqExp  */
-#line 925 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 927 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_and_exp) = new tree_l_and_exp();
             (yyval.l_and_exp)->_line_no = yyline+1;
             (yyval.l_and_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[-2].l_and_exp));
             (yyval.l_and_exp)->eq_exp=std::shared_ptr<tree_eq_exp>((yyvsp[0].eq_exp));
         }
-#line 2352 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2354 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 101: /* LOrExp: LAndExp  */
-#line 934 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 936 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_or_exp) = new tree_l_or_exp();
             (yyval.l_or_exp)->_line_no = yyline+1;
             (yyval.l_or_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[0].l_and_exp));
         }
-#line 2362 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2364 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
   case 102: /* LOrExp: LOrExp "||" LAndExp  */
-#line 940 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 942 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_or_exp) = new tree_l_or_exp();
             (yyval.l_or_exp)->_line_no = yyline+1;
             (yyval.l_or_exp)->l_or_exp=std::shared_ptr<tree_l_or_exp>((yyvsp[-2].l_or_exp));
             (yyval.l_or_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[0].l_and_exp));
         }
-#line 2373 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2375 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
     break;
 
 
-#line 2377 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2379 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
 
       default: break;
     }
@@ -2566,7 +2568,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 947 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 949 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
 
 void insertVarible(std::string& type,std::string& id){
     VaribleTable.insert(std::make_pair<std::string, VaribleInfo>(std::string(id),VaribleInfo(type)));

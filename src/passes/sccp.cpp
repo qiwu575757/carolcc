@@ -94,7 +94,7 @@ Constant *SCCP::calConstantIntBinary(Instruction *pInstruction,
                                      ConstantInt *oprt1_ptr,
                                      ConstantInt *oprt2_ptr) {
     MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_438);
-    Constant *res;
+    Constant *res=nullptr;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
     switch (pInstruction->getInstructionKind()) {
@@ -165,7 +165,7 @@ Constant *SCCP::calConstantFloatBinary(Instruction *instr,
                                        ConstantFloat *oprt1_ptr,
                                        ConstantFloat *oprt2_ptr) {
     MyAssert("null ptr", oprt1_ptr != nullptr && oprt2_ptr != nullptr,EXIT_CODE_ERROR_441);
-    Constant *res;
+    Constant *res=nullptr;
     auto oprt1 = oprt1_ptr->getValue();
     auto oprt2 = oprt2_ptr->getValue();
     switch (instr->getInstructionKind()) {

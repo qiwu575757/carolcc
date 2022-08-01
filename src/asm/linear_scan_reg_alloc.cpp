@@ -13,15 +13,16 @@
 #include "utils.h"
 
 std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
-    for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
-        LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
-    }
-    LSRA_WARNNING("#####%s",func->getPrintName().c_str());
+    // for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
+    //     LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
+    // }
+    // LSRA_WARNNING("#####%s",func->getPrintName().c_str());
     // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()));
     return func_used_reg_map[func->getPrintName()];
 }
 
 int AsmBuilder::getAllocaSpOffset(Value *inst) {  // 值的栈偏移
+    if(dynamic_cast<MovInstr *>(inst))inst = dynamic_cast<MovInstr *>(inst)->getLVal();//MOV转化
     for (int i = 0; i < stack_map.size(); i++) {
         if (stack_map[i].v == inst && stack_map[i].is_data) {
             return stack_map[i].offset;
@@ -127,18 +128,20 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 }
 // 一般指令(除call/gep)无论该值在栈中还是寄存器中
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
+
+    if(dynamic_cast<MovInstr *>(val))val = dynamic_cast<MovInstr *>(val)->getLVal();//MOV转化
     int tag = linear_map[inst];
     if(val->getType()->isFloatTy()){
-    LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
-    val->getPrintName().c_str(),tag);
+    // LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
+    // val->getPrintName().c_str(),tag);
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
-                LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                virtual_float_regs[i][j].v->getPrintName().c_str(),
-                virtual_float_regs[i][j].v == val,
-                virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
-                virtual_float_regs[i][j].st_id,
-                virtual_float_regs[i][j].ed_id,i);
+                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                // virtual_float_regs[i][j].v->getPrintName().c_str(),
+                // virtual_float_regs[i][j].v == val,
+                // virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
+                // virtual_float_regs[i][j].st_id,
+                // virtual_float_regs[i][j].ed_id,i);
                 if (virtual_float_regs[i][j].v == val &&
                     tag >= virtual_float_regs[i][j].st_id &&
                     tag <= virtual_float_regs[i][j].ed_id) {
@@ -150,16 +153,16 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         }
     }
     else{
-    LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
-    val->getPrintName().c_str(),tag);
+    // LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
+    // val->getPrintName().c_str(),tag);
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                virtual_int_regs[i][j].v->getPrintName().c_str(),
-                virtual_int_regs[i][j].v == val,
-                virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
-                virtual_int_regs[i][j].st_id,
-                virtual_int_regs[i][j].ed_id,i);
+                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                // virtual_int_regs[i][j].v->getPrintName().c_str(),
+                // virtual_int_regs[i][j].v == val,
+                // virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
+                // virtual_int_regs[i][j].st_id,
+                // virtual_int_regs[i][j].ed_id,i);
                 if (virtual_int_regs[i][j].v == val &&
                     tag >= virtual_int_regs[i][j].st_id &&
                     tag <= virtual_int_regs[i][j].ed_id) {
@@ -197,6 +200,8 @@ bool cmp(interval lhs, interval rhs)  //升序
 }
 
 bool AsmBuilder::value_in_reg(Value *v) {  //计算栈空间
+    if(dynamic_cast<MovInstr *>(v))v = dynamic_cast<MovInstr *>(v)->getLVal();//MOV转化
+
     if(v->getType()->isFloatTy()){
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
@@ -916,6 +921,7 @@ int AsmBuilder::give_used_reg_at(Value *inst) {  // 分配使用过的寄存器
 
 bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
     // LSRA_WARNNING("op_in_inst_is_spilled");
+    if(dynamic_cast<MovInstr *>(op))op = dynamic_cast<MovInstr *>(op)->getLVal();//MOV转化
 
     int tag = linear_map[inst];
     if(op->getType()->isFloatTy()){
@@ -949,6 +955,8 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
 
 int AsmBuilder::get_value_sp_offset(Value *inst,
                                         Value *op) {  // 查看变量在栈上的偏移
+    if(dynamic_cast<MovInstr *>(op))op = dynamic_cast<MovInstr *>(op)->getLVal();//MOV转化
+
     LSRA_WARNNING("ask stack offset of %s", op->getPrintName().c_str());
     int tag = linear_map[inst];
     for (int i = 0; i < stack_map.size(); i++) {
@@ -1018,7 +1026,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
             if (inst->getType()->getSize() > 0) {
                 if(inst->isMOV()){
                     auto mov_inst = dynamic_cast<MovInstr *>(inst);
-                    if(!live_map.count(mov_inst)){ //对于phi进行变量区间分析
+                    if(!live_map.count(mov_inst->getLVal())){ //对于phi进行变量区间分析
                         live_map[mov_inst->getLVal()].def = true;
                         live_map[mov_inst->getLVal()].st_id = linear_index;
                         live_map[mov_inst->getLVal()].ed_id = linear_index;
@@ -1123,6 +1131,10 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 for (auto op : inst->getOperandList()) {
                     // ?
                     if (inst->isCall() && op_id == 0) {
+                        op_id++;
+                        continue;
+                    }
+                    if (inst->isMOV() && op_id == 0 && op->isConstant()) {
                         op_id++;
                         continue;
                     }

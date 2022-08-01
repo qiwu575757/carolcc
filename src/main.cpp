@@ -90,12 +90,15 @@ int main(int argc, char **argv) {
     }
 
     yyin = fopen(input_file.c_str(), "r");
+    if (!yyin) {
+        perror(input_file.c_str());
+        return 1;
+    }
     if (output_file.empty()) {
         output_file = input_file;
         output_file.replace(output_file.end() - 2, output_file.end(), "s");
     }
     output = fopen(output_file.c_str(), "w");
-    if (!yyin) perror(input_file.c_str());
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
@@ -147,6 +150,7 @@ int main(int argc, char **argv) {
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
 
+        PM.add_pass<LowerIR>("LowerIR");
     }
     PM.add_pass<Mem2Reg>("Mem2Reg");
     PM.add_pass<LowerIR>("LowerIR");
