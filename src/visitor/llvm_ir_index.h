@@ -57,6 +57,7 @@ private:
 
     int depth;
     std::unordered_map<Value *, int> seq;
+    std::set<PhiInstr *> phi_pool;
 };
 
 #endif//COMPILER_LLVM_IR_INDEXER_H

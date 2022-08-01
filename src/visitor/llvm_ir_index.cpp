@@ -47,16 +47,27 @@ void LLVMIrIndexer::NameBaseBlock(BaseBlock *base_block) {
     }
 }
 void LLVMIrIndexer::NameInstr(Instruction *instr) {
-    if (seq.find(instr) == seq.end()  && !instr->getType()->isVoidTy()) {
-      if(!instr->getName().empty()){
-        WARNNING("renaming instr %s",instr->getName().c_str());
-      }
-        auto seq_num = seq.size();
-        instr->setName(std::to_string(seq_num));
-        seq.insert({instr, seq_num});
+    auto mov_instr = dynamic_cast<MovInstr*>(instr);
+    if(!mov_instr){
+        if (seq.find(instr) == seq.end() && !instr->getType()->isVoidTy()) {
+            if (!instr->getName().empty()) {
+                WARNNING("renaming instr %s", instr->getName().c_str());
+            }
+            auto seq_num = seq.size();
+            instr->setName(std::to_string(seq_num));
+            seq.insert({instr, seq_num});
+        }
+    }
+    else {
+        auto phi = dynamic_cast<PhiInstr*>(mov_instr->getLVal());
+        if(phi_pool.count(phi)==0){
+            NameValue(phi);
+            phi_pool.insert(phi);
+        }
     }
 }
 void LLVMIrIndexer::visit(Function *node) {
+    phi_pool.clear();
     if(this->ir_level == Module::IRLevel::HIR){
         seq.clear();
         depth = 0;

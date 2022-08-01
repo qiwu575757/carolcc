@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include "passes/module.h"
 
-static int var_no = 1;
-static const std::string head = "%";
 void LLVMIrPrinter::NameValue(Value *val) {
     if (seq.find(val) == seq.end() ) {
       if(!val->getName().empty()){
@@ -49,20 +47,23 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
     }
 }
 void LLVMIrPrinter::NameInstr(Instruction *instr) {
-    if (seq.find(instr) == seq.end()  && !instr->getType()->isVoidTy()) {
-      if(!instr->getName().empty()){
-        WARNNING("renaming instr %s",instr->getName().c_str());
-      }
-        auto seq_num = seq.size();
-        instr->setName(std::to_string(seq_num));
-        seq.insert({instr, seq_num});
+    auto mov_instr = dynamic_cast<MovInstr*>(instr);
+    if(!mov_instr){
+        if (seq.find(instr) == seq.end() && !instr->getType()->isVoidTy()) {
+            if (!instr->getName().empty()) {
+                WARNNING("renaming instr %s", instr->getName().c_str());
+            }
+            auto seq_num = seq.size();
+            instr->setName(std::to_string(seq_num));
+            seq.insert({instr, seq_num});
+        }
     }
-}
-std::string getname(int n) {
-    if (!n) {
-        return "%" + std::to_string(var_no++);
-    } else {
-        return "%" + std::to_string(n + var_no);
+    else {
+        auto phi = dynamic_cast<PhiInstr*>(mov_instr->getLVal());
+        if(phi_pool.count(phi)==0){
+            NameValue(phi);
+            phi_pool.insert(phi);
+        }
     }
 }
 void LLVMIrPrinter::visit(AllocaInst *node) {
@@ -76,9 +77,10 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
     }
 }
 void LLVMIrPrinter::visit(Function *node) {
+    seq.clear();
+    phi_pool.clear();
+    depth = 0;
     if(this->ir_level == Module::IRLevel::HIR){
-        seq.clear();
-        depth = 0;
 
         // 先给变量编号
         INFO("naming args");
@@ -128,8 +130,6 @@ void LLVMIrPrinter::visit(Function *node) {
         }
     }
     else {
-        seq.clear();
-        depth = 0;
 
         // 先给变量编号
         INFO("naming args");
@@ -594,7 +594,12 @@ void LLVMIrPrinter::visit(PhiInstr *node) {
     output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(MovInstr *node) {
-    output_file<<"mov "<<node->getLVal()->getPrintName()<<" = "<<node->getOperand(0)->getPrintName()<<"\n";
+    output_file<<"mov "<<node->getLVal()->getPrintName()<<" = "<<node->getOperand(0)->getPrintName();
+    output_file<<"\t; from bb(";
+    auto phi =dynamic_cast<PhiInstr*>(node->getLVal());
+    output_file<<phi->getParent()->getPrintName();
+    output_file<<") phi : ";
+    node->getLVal()->accept(this);
 }
 
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,

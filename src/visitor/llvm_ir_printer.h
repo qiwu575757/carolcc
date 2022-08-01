@@ -75,6 +75,7 @@ private:
     int depth;
     std::ofstream output_file;
     std::unordered_map<Value *, int> seq;
+    std::set<PhiInstr *> phi_pool;
 };
 
 #endif//COMPILER_LLVM_IR_PRINTER_H
