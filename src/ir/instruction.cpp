@@ -1,5 +1,6 @@
 #include "instruction.h"
 
+#include "basic_block.h"
 #include "function.h"
 #include "passes/module.h"
 #include "type.h"
@@ -358,7 +359,13 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    return new StoreInst(value, ptr, parent);
+    if(ptr->getType()->getPointerElementType()->eq(*value->getType())){
+        return new StoreInst(value, ptr, parent);
+    }
+    else {
+        ERROR("error type",EXIT_CODE_ERROR_312);
+        return nullptr;
+    }
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
 std::string StoreInst::getPrintName() {
@@ -373,6 +380,41 @@ LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);
 }
 void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
+
+// wuqi
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst::MlaInst(Type *ty,Value *v1, Value *v2, Value *v3)
+    : Instruction(ty, Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3, parent) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Type *ty, Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(ty, v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3, BasicBlock *parent) {
+    return new MlaInst(v1,v2,v3,parent);
+}
+void MlaInst::accept(IrVisitorBase *v) { v->visit(this); }
+//wuqi
+
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops,
                                      BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
@@ -425,6 +467,7 @@ CallInst::CallInst(Function *func, BasicBlock *parent)
              EXIT_CODE_ERROR_320);
     setOperand(0, func);
 }
+
 CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,
@@ -435,6 +478,8 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
     }
+    parent->getFunction()->addCallee(func);
+    func->addCaller(parent->getFunction());
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args,
                                BasicBlock *parent) {

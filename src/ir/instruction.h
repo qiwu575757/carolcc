@@ -46,11 +46,12 @@ class Instruction : public User {
         // other instructions
         CMP,
         PHI,
-        GEP,  // get element ptr
+        GEP,  // get element ptr， will be replaced by mla
+        MLA,
         CALL,
         ZEXT,
         CAST,
-        
+
         // HIR
         BREAK,
         CONTINUE,
@@ -64,7 +65,7 @@ class Instruction : public User {
     //    bool isNeg()const { return _op_id == Instruction::NEG; }
     bool isNot() const { return _op_id == Instruction::NOT; }
     bool isCast() const { return _op_id == Instruction::CAST; }
-
+    // binary
     bool isAdd() const { return _op_id == Instruction::ADD; }
     bool isSub() const { return _op_id == Instruction::SUB; }
     bool isMul() const { return _op_id == Instruction::MUL; }
@@ -85,6 +86,7 @@ class Instruction : public User {
     bool isCmp() const { return _op_id == Instruction::CMP; }
     bool isPhi() const { return _op_id == Instruction::PHI; }
     bool isGep() const { return _op_id == Instruction::GEP; }
+    bool isMla() const { return _op_id == Instruction::MLA; }
     bool isCall() const { return _op_id == Instruction::CALL; }
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
@@ -106,7 +108,7 @@ class Instruction : public User {
 };
 
 class UnaryInst : public Instruction {
-   private:
+   public:
     // UnaryInst(Type *type, OpKind op_id, Value *v1);
     UnaryInst(Type *type, OpKind op_id, Value *v1, BasicBlock *parent);
 
@@ -119,7 +121,7 @@ class UnaryInst : public Instruction {
 };
 
 class BinaryInst : public Instruction {
-   private:
+   public:
     // BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
     BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2,
                BasicBlock *parent);
@@ -168,7 +170,7 @@ class CmpInst : public Instruction {
     bool isLe() const{ return _cmp_op == CmpInst::LE; }
     CmpOp getCmpOp() { return _cmp_op; }
 
-   private:
+   public:
     // CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
 };
@@ -254,6 +256,24 @@ class LoadInst : public Instruction {
     static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 };
+
+// wuqi define
+class MlaInst : public Instruction {
+   private:
+    MlaInst(Value *v1, Value *v2, Value *v3);
+    MlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent);
+    MlaInst(Type *ty, OpKind id, BasicBlock *bb) : Instruction(ty, id, 3, bb) {}
+
+   public:
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3,
+                                      BasicBlock *bb);
+    void accept(IrVisitorBase *v) override;
+};
+//
+
 class GetElementPtrInst : public Instruction {
    private:
     GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,

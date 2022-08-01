@@ -49,31 +49,35 @@ int real2vir(int reg_idx){
 }
 
 int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
-    // LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
+    LSRA_WARNNING("ask for value %s",inst->getPrintName().c_str());
     if (val_pos >= op_save_stack_num) {
         ERROR("overwrite op_idx",EXIT_CODE_ERROR_303);
     }
     int reg_get = give_reg_at(inst);  // LVAL REG NUM
     if (reg_get == -1) {
         // debug
-        // LSRA_WARNNING("-- int reg set --");
-        // for (int i = 0; i < int_reg_number; i++) {
-        //     LSRA_SHOW("[reg %02d]", i);
-        //     for (auto reg : virtual_int_reg_use[i]) {
-        //         LSRA_SHOW(" %02d ", reg);
-        //     }
-        //     LSRA_SHOW("[reg %02d]\n", i);
-        // }
-        // LSRA_WARNNING("-- float reg set --");
-        // for (int i = 0; i < float_reg_number; i++) {
-        //     LSRA_SHOW("[reg %02d]", i);
-        //     for (auto reg : virtual_float_reg_use[i]) {
-        //         LSRA_SHOW(" %02d ", reg);
-        //     }
-        //     LSRA_SHOW("[reg %02d]\n", i);
-        // }
+        LSRA_WARNNING("-- int reg set --");
+        #ifdef __LSRA_SHOW
+        for (int i = 0; i < int_reg_number; i++) {
+            LSRA_SHOW("[reg %02d]", i);
+            for (auto &reg : virtual_int_reg_use[i]) {
+                LSRA_SHOW(" %02d ", reg);
+            }
+            LSRA_SHOW("[reg %02d]\n", i);
+        }
+        #endif // DEBUG
+        LSRA_WARNNING("-- float reg set --");
+        #ifdef __LSRA_SHOW
+        for (int i = 0; i < float_reg_number; i++) {
+            LSRA_SHOW("[reg %02d]", i);
+            for (auto &reg : virtual_float_reg_use[i]) {
+                LSRA_SHOW(" %02d ", reg);
+            }
+            LSRA_SHOW("[reg %02d]\n", i);
+        }
+        #endif // DEBUG
         ERROR("can't give any reg because all the reg is using at inst %d %s"
-        ,linear_map[inst],EXIT_CODE_ERROR_304,inst->getPrintName().c_str());
+        ,EXIT_CODE_ERROR_304,linear_map[inst],inst->getPrintName().c_str());
     }
     Value *reg_v = value_in_reg_at(inst, reg_get, inst->getType()->isFloatTy());
     if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -125,16 +129,16 @@ std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
 int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     int tag = linear_map[inst];
     if(val->getType()->isFloatTy()){
-    // LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
-    // val->getPrintName().c_str(),tag);
+    LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
+    val->getPrintName().c_str(),tag);
         for (int i = 0; i < float_reg_number; i++) {
             for (int j = 0; j < virtual_float_regs[i].size(); j++) {
-                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                // virtual_float_regs[i][j].v->getPrintName().c_str(),
-                // virtual_float_regs[i][j].v == val,
-                // virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
-                // virtual_float_regs[i][j].st_id,
-                // virtual_float_regs[i][j].ed_id,i);
+                LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                virtual_float_regs[i][j].v->getPrintName().c_str(),
+                virtual_float_regs[i][j].v == val,
+                virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
+                virtual_float_regs[i][j].st_id,
+                virtual_float_regs[i][j].ed_id,i);
                 if (virtual_float_regs[i][j].v == val &&
                     tag >= virtual_float_regs[i][j].st_id &&
                     tag <= virtual_float_regs[i][j].ed_id) {
@@ -146,16 +150,16 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
         }
     }
     else{
-    // LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
-    // val->getPrintName().c_str(),tag);
+    LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
+    val->getPrintName().c_str(),tag);
         for (int i = 0; i < int_reg_number; i++) {
             for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                // virtual_int_regs[i][j].v->getPrintName().c_str(),
-                // virtual_int_regs[i][j].v == val,
-                // virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
-                // virtual_int_regs[i][j].st_id,
-                // virtual_int_regs[i][j].ed_id,i);
+                LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+                virtual_int_regs[i][j].v->getPrintName().c_str(),
+                virtual_int_regs[i][j].v == val,
+                virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
+                virtual_int_regs[i][j].st_id,
+                virtual_int_regs[i][j].ed_id,i);
                 if (virtual_int_regs[i][j].v == val &&
                     tag >= virtual_int_regs[i][j].st_id &&
                     tag <= virtual_int_regs[i][j].ed_id) {
@@ -173,7 +177,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
 std::pair<int, bool> AsmBuilder::getValuePosition(Value *inst,
                                                   Value *val) {  // 全局变量？
-    // LSRA_WARNNING("inst lval is %s, ask pos of value %s",inst->getPrintName().c_str(), val->getPrintName().c_str());
+    LSRA_WARNNING("inst lval is %s, ask pos of value %s",inst->getPrintName().c_str(), val->getPrintName().c_str());
     int get_reg = getRegIndexOfValue(inst, val);
 
     if(get_reg == -1 && (dynamic_cast<GlobalVariable *>(val) || dynamic_cast<Constant *>(val))){
@@ -404,7 +408,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             use_float_reg_num ++ ;
         };
     }
-    printf("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);
+    // printf("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);
     if(use_int_reg_num > virtual_reg_max - 10 || use_float_reg_num > virtual_reg_max - 10){
         ERROR("virtual reg is going to crash!",virtual_reg_full_error);
     }
@@ -510,6 +514,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     stack_size += op_save_stack_num * 4;  //压入四个保护位置
     //计算变量栈溢出空间
+    // int use_reg_num = 0;
     for (int i = int_reg_number; i < virtual_reg_max; i++) {
         if (virtual_int_regs[i].size() == 0) {
             break;
@@ -583,10 +588,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     // debug
     LSRA_SHOW("-- stack size %d --\n", stack_size);
-    for (auto itv : stack_map) {
+    #ifdef __LSRA_WARN
+    
+    for (auto &itv : stack_map) {
         LSRA_WARNNING("type: %d V: %s -> sp + %d ", itv.is_data,
                       itv.v->getPrintName().c_str(), itv.offset);
     }
+    #endif // DEBUG
     auto tmpBB = BasicBlock::create("");
     //栈溢出处理 检查栈溢出的变量的使用，在其前后插指令
     if (insert) {
@@ -957,6 +965,7 @@ int AsmBuilder::get_value_sp_offset(Value *inst,
 std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                                                          bool insert) {
     linear_map.clear();
+    // int instr_index = 0;
     int linear_index = 0;
     int bb_index = 0;
     std::map<Value *, interval> live_map;
@@ -1015,6 +1024,10 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                         live_map[mov_inst->getLVal()].ed_id = linear_index;
                         live_map[mov_inst->getLVal()].is_float = mov_inst->getLVal()->getType()->isFloatTy();
                     }
+                    else{
+                        live_map[mov_inst->getLVal()].ed_id = linear_index;
+                    }
+                    LSRA_WARNNING("is mov %d %d",live_map[mov_inst->getLVal()].st_id,live_map[mov_inst->getLVal()].ed_id);
                 }
                 else if (!live_map.count(inst))  //其余 first time
                 {   
@@ -1072,7 +1085,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     live_map[op].type = interval_value_type::imm_var;
                 }
                 //
-                if(linear_map.count(op)){ // 变量必有左值定义
+                if(dynamic_cast<MovInstr *>(op) && linear_map.count(op)){ // 变量必有左值定义
                     auto op_inst = dynamic_cast<MovInstr *>(op);
                     if(op_inst){
                         op = op_inst->getLVal(); //!!进行变量映射 映射为对应PHI
@@ -1216,11 +1229,13 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
         }
     }
     // debug
+    #ifdef __LSRA_WARN
+    
     LSRA_WARNNING(" LIVE INTERVAL");
     for (auto p : live_res) {
         LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
     }
-
+    #endif // DEBUG
     linear_scan_reg_alloc(live_res, func, insert);
     return live_res;
 }

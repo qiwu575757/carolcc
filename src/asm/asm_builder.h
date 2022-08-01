@@ -53,6 +53,13 @@ const std::vector<InstGen::Reg> allocate_regs = {
     InstGen::Reg(12, false), InstGen::Reg(14, false) };
 const std::vector<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
 
+// 通过系统函数汇编推测出的其用到的浮点寄存器
+const std::vector<InstGen::Reg> sysfunc_used_fpregs = {
+      InstGen::Reg(0, true), InstGen::Reg(2, true),
+      InstGen::Reg(14, true), InstGen::Reg(15, true)
+    };
+
+
 const int cache_line_bits = 7;
 const int cache_line_size = 1 << cache_line_bits;
 const int mt_num_threads = 4;
@@ -107,8 +114,6 @@ private:
   std::set<Value *> allocated;
   std::map<Instruction *, std::set<Value *>> context_active_vars;
   std::string getType(interval_value_type t);
-  // int stack_size = 65536;//131072 32768 16384 根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
-  // int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
   int stack_size;
   int return_offset; // 注意维护
   bool debug;
@@ -121,6 +126,7 @@ private:
   std::map<Value *,int > linear_map;//指令列表
   std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   int op_save[4];// 栈溢出时的保存寄存器
+
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -168,6 +174,7 @@ public:
   int get_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
 
   std::vector<InstGen::Reg> getCalleeSavedRegisters(Function *func);
+  std::vector<InstGen::Reg> getSysFuncCallerSavedRegisters(std::string func_name);
   std::vector<InstGen::Reg> getCallerSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getAllRegisters(Function *func);
   std::pair<int, int> getUsedRegisterNum(Function *func);
