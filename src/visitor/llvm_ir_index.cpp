@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include "passes/module.h"
 
-static int var_no = 1;
-static const std::string head = "%";
 void LLVMIrIndexer::NameValue(Value *val) {
     if (seq.find(val) == seq.end() ) {
       if(!val->getName().empty()){
