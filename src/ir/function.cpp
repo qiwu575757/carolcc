@@ -3,6 +3,7 @@
 #include <map>
 
 #include "ir/basic_block.h"
+#include "ir/instruction.h"
 #include "passes/module.h"
 #include "type.h"
 #include "user.h"
@@ -98,7 +99,19 @@ void Function::insertAlloca(AllocaInst *alloca) {
     if (_alloca_end != nullptr) {
         entry->insertAfterInstr(_alloca_end, alloca);
     } else {
-        entry->getInstructions().push_front(alloca);
+        Instruction* last_alloca=nullptr;
+        for(auto instr:entry->getInstructions()){
+            if(!instr->isAlloca()){
+                break;
+            }
+            last_alloca=instr;
+        }
+        if(last_alloca==nullptr){
+            entry->getInstructions().push_front(alloca);
+        }
+        else {
+            entry->insertAfterInstr(last_alloca, alloca);
+        }
     }
     _alloca_end = alloca;
 

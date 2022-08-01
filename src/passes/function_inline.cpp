@@ -151,7 +151,6 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
             auto instr = bb->getTerminator();
             auto ret_instr = dynamic_cast<ReturnInst*>(instr);
             if (ret_instr != nullptr) {
-                FUNC_LINE_LOG("get ret instr ret %s in block %s",ret_instr->getOperand(0)->getPrintName().c_str(),ret_instr->getParent()->getPrintName().c_str());
                 ret_instrs.push_back(ret_instr);
 
             }
@@ -208,6 +207,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
     old_func_list.splice(old_func_list.end(), copy_func->getBasicBlocks());
     caller_func->getBasicBlocks().push_back(
         end_block);
+    caller_func->setAllocaEnd(nullptr);
     for(auto alloca : wait_move_allocas){
         caller_func->insertAlloca(alloca);
     }
