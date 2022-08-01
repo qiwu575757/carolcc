@@ -46,11 +46,12 @@ class Instruction : public User {
         // other instructions
         CMP,
         PHI,
-        GEP,  // get element ptr
+        GEP,  // get element ptr， will be replaced by mla
+        MLA,
         CALL,
         ZEXT,
         CAST,
-        
+
         // HIR
         BREAK,
         CONTINUE
@@ -83,6 +84,7 @@ class Instruction : public User {
     bool isCmp() const { return _op_id == Instruction::CMP; }
     bool isPhi() const { return _op_id == Instruction::PHI; }
     bool isGep() const { return _op_id == Instruction::GEP; }
+    bool isMla() const { return _op_id == Instruction::MLA; }
     bool isCall() const { return _op_id == Instruction::CALL; }
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
@@ -251,6 +253,24 @@ class LoadInst : public Instruction {
     static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 };
+
+// wuqi define
+class MlaInst : public Instruction {
+   private:
+    MlaInst(Value *v1, Value *v2, Value *v3);
+    MlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent);
+    MlaInst(Type *ty, OpKind id, BasicBlock *bb) : Instruction(ty, id, 3, bb) {}
+
+   public:
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3,
+                                      BasicBlock *bb);
+    void accept(IrVisitorBase *v) override;
+};
+//
+
 class GetElementPtrInst : public Instruction {
    private:
     GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,

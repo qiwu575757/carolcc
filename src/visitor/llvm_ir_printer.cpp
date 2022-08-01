@@ -302,6 +302,17 @@ void LLVMIrPrinter::visit(BinaryInst *node) {
     << node->getOperand(1)->getPrintName()<<std::endl;
 
 }
+void LLVMIrPrinter::visit(MlaInst *node) {
+    output_file << "%" << node->getName() << " = "
+                    << "mla ";
+    node->getOperand(0)->getType()->print(output_file);
+    output_file << node->getOperand(0)->getPrintName() << ", ";
+    node->getOperand(1)->getType()->print(output_file);
+    output_file << node->getOperand(1)->getPrintName() << ", ";
+    node->getOperand(2)->getType()->print(output_file);
+    output_file << node->getOperand(2)->getPrintName() <<std::endl;
+}
+
 void LLVMIrPrinter::visit(StoreInst *node) {
     output_file << "store ";
     node->getOperand(0)->getType()->print(output_file);
@@ -393,7 +404,7 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
     node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
-    MyAssert("ele",node->getOperandNumber() == 3,EXIT_CODE_ERROR_354);
+
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
         if(i!=0){

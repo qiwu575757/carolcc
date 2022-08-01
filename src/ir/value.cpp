@@ -31,6 +31,7 @@ void Value::replaceAllUse(Value *new_val) {
 //        printf(" user %s  argnum: %d \n",user->getPrintName().c_str(),use->_value_no);
         user->setOperand(use->_value_no, new_val);
     }
+
     this->_user_list.clear();
 }
 /**
@@ -62,8 +63,9 @@ void Value::removeUse(Value *user, unsigned value_no) {
     _user_list.erase(iter);
 }
 bool Value::isConstant(){
-        auto constant = dynamic_cast<Constant*>(this);
-        return constant != nullptr;
+    auto constant = dynamic_cast<Constant*>(this);
+
+    return constant != nullptr;
 }
 std::string Value::getName() {
     return _name;

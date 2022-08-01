@@ -8,6 +8,7 @@ class IrVisitorBase {
 public:
     virtual void visit(UnaryInst *node) = 0;
     virtual void visit(BinaryInst *node) = 0;
+    virtual void visit(MlaInst *node) = 0;
     virtual void visit(AllocaInst *node) = 0;
     virtual void visit(StoreInst *node) = 0;
     //  ---------

@@ -517,6 +517,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
+  } else if (inst->isMla()) {
+    asm_code += InstGen::comment("get mla instr ","");
+    asm_code += InstGen::mla(
+          InstGen::Reg(getRegIndexOfValue(inst,inst),false),
+          InstGen::Reg(getRegIndexOfValue(inst,operands[0]),false),
+          InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
+          InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false));
   }
   else {
     ERROR("Unknown ir instrucion.", UnknownIrInstruction);
@@ -785,12 +792,8 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
     } else if (r.getID() < n.second) { // 保存的浮点寄存器
       registers.push_back(r);
     }
-
-    if (r.is_fp()) {
-      WARNNING("id = %d, id2 = %d",r.getID(), n.second);
-    }
   }
-  WARNNING("func: %s use %d iregs.", func->getPrintName(), registers.size());
+  // WARNNING("func: %s use %d iregs.", func->getPrintName(), registers.size());
   #endif
 
   return registers;
