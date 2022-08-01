@@ -117,7 +117,7 @@ void SYSYBuilder::visit(tree_func_def &node) {
                     ERROR("illegal parameter type",EXIT_CODE_ERROR_381);
                 }
             } else if (param->funcfparamarray != nullptr) {
-                Type *array_type;
+                Type *array_type=nullptr;
                 if (param->funcfparamarray->b_type->type == type_helper::INT) {
                     array_type = Type::getInt32Ty();
                 } else if (param->funcfparamarray->b_type->type ==
@@ -153,8 +153,8 @@ void SYSYBuilder::visit(tree_func_def &node) {
     G_pre_enter_scope = true;
 
     std::vector<Argument *> args;
-    for (auto arg = fun->arg_begin(); arg != fun->arg_end(); arg++) {
-        args.push_back(*arg);
+    for (auto arg :fun->getArgs()) {
+        args.push_back(arg);
     }
 
     int i = 0;
@@ -461,7 +461,7 @@ void SYSYBuilder::visit(tree_const_def &node) {
                         //            G_tmp_computing = true;
             node.const_init_val->accept(*this);
             //            G_tmp_computing = false;
-            if(!G_tmp_val->getType()->eq(*G_tmp_type)){
+            if(!G_tmp_val->getType()->eq(G_tmp_type)){
                 SYSY_BUILDER("const def is casting");
                 G_tmp_val = checkAndCast(G_tmp_val,G_tmp_type);
             }
@@ -611,7 +611,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 node.init_val->accept(*this);
                 G_in_global_init = false;
                 Constant* initializer ;
-                if(!G_tmp_val->getType()->eq(*G_tmp_type)){
+                if(!G_tmp_val->getType()->eq(G_tmp_type)){
                     if(G_tmp_val->getType()->isFloatTy() && G_tmp_type->isInt32()){
                         auto val  = dynamic_cast<ConstantFloat*>(G_tmp_val)->getValue();
                         initializer = CONST_INT(val);
@@ -1607,7 +1607,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
     auto oprt1 = _oprt_stack.top();
     _oprt_stack.pop();
 
-    if (!oprt1->getType()->eq(*oprt2->getType())) {
+    if (!oprt1->getType()->eq(oprt2->getType())) {
         MyAssert(
             "error type combo",
             (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
@@ -1625,7 +1625,7 @@ void SYSYBuilder::calBinary(const std::string oprt) {
         }
     }
 
-    if (oprt1->getType()->eq(*oprt2->getType())) {
+    if (oprt1->getType()->eq(oprt2->getType())) {
         if (oprt1->getType()->isInt32()) {
             auto a = dynamic_cast<ConstantInt *>(oprt1)->getValue();
             auto b = dynamic_cast<ConstantInt *>(oprt2)->getValue();
@@ -1697,7 +1697,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
         oprt2 = builder->creatZExtInst(TyInt32, oprt2);
     }
 
-    if (!oprt1->getType()->eq(*oprt2->getType())) {
+    if (!oprt1->getType()->eq(oprt2->getType())) {
         MyAssert(
             "error type combo",
             (oprt1->getType()->isFloatTy() && oprt2->getType()->isInt32()) ||
@@ -1713,7 +1713,7 @@ void SYSYBuilder::buildBinary(const std::string oprt){
         }
     }
 
-    if (oprt1->getType()->eq(*oprt2->getType())) {
+    if (oprt1->getType()->eq(oprt2->getType())) {
         if (oprt1->getType()->isInt32()) {
             Value* res ;
             if(oprt == "+"){
@@ -1800,7 +1800,7 @@ Value *SYSYBuilder::checkAndCast(Value *value,Type* target_value) {
              (value->getType()->isFloatTy() || value->getType()->isIntegerTy())
     ,EXIT_CODE_ERROR_378);
     auto res = value;
-    if(!res->getType()->eq(*target_value)){
+    if(!res->getType()->eq(target_value)){
         auto const_int = dynamic_cast<ConstantInt*>(value);
         auto const_float = dynamic_cast<ConstantFloat*>(value);
         if(const_int){

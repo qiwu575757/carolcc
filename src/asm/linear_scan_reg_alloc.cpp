@@ -96,6 +96,8 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
             return vir2real(reg_get);
         }
     }
+    //todo
+    return 0;
 }
 std::string AsmBuilder::popValue(Value *inst, int reg_idx, int val_pos) {
     std::string insert_inst = "";

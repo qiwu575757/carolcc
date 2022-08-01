@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.7.6.  */
+/* A Bison parser, made by GNU Bison 3.8.2.  */
 
 /* Bison interface for Yacc-like parsers in C
 
@@ -35,8 +35,8 @@
    especially those whose name start with YY_ or yy_.  They are
    private implementation details that can be changed or removed.  */
 
-#ifndef YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
-# define YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
+#ifndef YY_YY_HOME_YONCHICY_COMPILER_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
+# define YY_YY_HOME_YONCHICY_COMPILER_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -98,7 +98,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 34 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 36 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
 
 std::string            *string;
 int                    token;
@@ -152,7 +152,7 @@ tree_l_and_exp         *l_and_exp;
 tree_l_or_exp          *l_or_exp;
 
 
-#line 156 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.h"
+#line 156 "/home/yonchicy/compiler/carolcc/src/frontend/parser.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
@@ -163,6 +163,8 @@ typedef union YYSTYPE YYSTYPE;
 
 extern YYSTYPE yylval;
 
+
 int yyparse (void);
 
-#endif /* !YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED  */
+
+#endif /* !YY_YY_HOME_YONCHICY_COMPILER_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED  */

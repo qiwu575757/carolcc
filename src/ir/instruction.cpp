@@ -1,4 +1,6 @@
 #include "instruction.h"
+#include <algorithm>
+#include <ostream>
 
 #include "basic_block.h"
 #include "function.h"
@@ -359,10 +361,15 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    if(ptr->getType()->getPointerElementType()->eq(*value->getType())){
+    if(ptr->getType()->getPointerElementType()->eq(value->getType())){
         return new StoreInst(value, ptr, parent);
     }
     else {
+        std::cout<<"[CreateStore]:(ptr,val) = (";
+        ptr->getType()->print(std::cout);
+        std::cout<<",";
+        value->getType()->print(std::cout);
+        std::cout<<")\n";
         ERROR("error type",EXIT_CODE_ERROR_312);
         return nullptr;
     }
