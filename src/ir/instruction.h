@@ -257,11 +257,13 @@ class LoadInst : public Instruction {
 class MlaInst : public Instruction {
    private:
     MlaInst(Value *v1, Value *v2, Value *v3);
+    MlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
     MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent);
     MlaInst(Type *ty, OpKind id, BasicBlock *bb) : Instruction(ty, id, 3, bb) {}
 
    public:
     static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
     static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3,
                                       BasicBlock *bb);
     void accept(IrVisitorBase *v) override;

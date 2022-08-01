@@ -303,7 +303,8 @@ void LLVMIrPrinter::visit(BinaryInst *node) {
 
 }
 void LLVMIrPrinter::visit(MlaInst *node) {
-    output_file<<"mla ";
+    output_file << "%" << node->getName() << " = "
+                    << "mla ";
     node->getOperand(0)->getType()->print(output_file);
     output_file << node->getOperand(0)->getPrintName() << ", ";
     node->getOperand(1)->getType()->print(output_file);
@@ -403,7 +404,7 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
     node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
-    
+
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
         if(i!=0){

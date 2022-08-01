@@ -27,7 +27,10 @@ void LowerIR::splitGEP(BasicBlock *bb) {
             auto array_ty = operands[0]->getType()->getPointerElementType();
             for (int i = 1; i < operands.size(); i++) {
                 auto element_size = array_ty->getSize();
-                if (dynamic_cast<ConstantInt*>(operands[i])->getValue() != 0) { // 如果该参数是常量
+
+                // 这里语法！！！
+                if (!operands[i]->isConstant()){}
+                else if (dynamic_cast<ConstantInt*>(operands[i])->getValue() != 0) { // 如果该参数是常量
                     off +=  dynamic_cast<ConstantInt*>(operands[i])->getValue() * element_size;
                 }
                 array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
@@ -40,7 +43,6 @@ void LowerIR::splitGEP(BasicBlock *bb) {
                 auto element_size = array_ty->getSize();
 
                 if (!operands[i]->isConstant()&&off_no_use) {
-                ERROR("operand.",0);
                     auto muladd = MlaInst::createMlaInst(
                         operands[i],
                         ConstantInt::create(element_size),
@@ -64,10 +66,12 @@ void LowerIR::splitGEP(BasicBlock *bb) {
             // base + offset
             auto addbase = inserts.size() == 0 ?
                         MlaInst::createMlaInst(
-                            ConstantInt::create(1),operands[0],ConstantInt::create(off)
+                            inst->getType(),ConstantInt::create(1),
+                            operands[0],ConstantInt::create(off)
                             ) :
                         MlaInst::createMlaInst(
-                            ConstantInt::create(1),operands[0],inserts[inserts.size()-1]
+                            inst->getType(),ConstantInt::create(1),
+                            operands[0],inserts[inserts.size()-1]
                         );
             addbase->setParent(bb);
             inserts.push_back(addbase);

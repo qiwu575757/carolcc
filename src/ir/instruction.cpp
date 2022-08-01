@@ -377,6 +377,12 @@ MlaInst::MlaInst(Value *v1, Value *v2, Value *v3)
     setOperand(1, v2);
     setOperand(2, v3);
 }
+MlaInst::MlaInst(Type *ty,Value *v1, Value *v2, Value *v3)
+    : Instruction(ty, Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
 MlaInst::MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent)
     : Instruction(Type::getInt32Ty(), Instruction::MLA, 3, parent) {
     setOperand(0, v1);
@@ -386,6 +392,10 @@ MlaInst::MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent)
 MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
                         Value *v3) {
     return new MlaInst(v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Type *ty, Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(ty, v1,v2,v3);
 }
 MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
                         Value *v3, BasicBlock *parent) {
