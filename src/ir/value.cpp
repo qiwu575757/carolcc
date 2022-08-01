@@ -158,7 +158,7 @@ Function *ValueCloner::copyFunc(Function *old_func) {
             }
         }
         else {
-            ERROR("null ptr");
+            ERROR("null ptr",DYNAMIC_CAST_NULL_PTR);
         }
     }
     return new_func_ptr;
@@ -167,19 +167,17 @@ void ValueCloner::copyBasicBlock(BasicBlock *old_bb) {
     for (auto instr : old_bb->getInstructions()) {
         auto new_instr = copyInstr(instr);
         _old2new[instr] = new_instr;
-        MyAssert("error", new_instr->getInstructionKind() == instr->getInstructionKind());
-        // dynamic_cast<BasicBlock*>(old_bb)->getInstructions().push_back(new_instr);
     }
 }
 Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
     Instruction *new_instr;
     auto new_parent_bb =
         dynamic_cast<BasicBlock *>(findValue(old_instr->getParent()));
-    MyAssert("new_parent_bb null ptr !", new_parent_bb);
+    MyAssert("new_parent_bb null ptr !", new_parent_bb,DYNAMIC_CAST_NULL_PTR);
     if (old_instr->isBinary()) {
         if (old_instr->isCmp()) {
             auto old_cmp_instr = dynamic_cast<CmpInst *>(old_instr);
-            MyAssert("null ptr", old_cmp_instr);
+            MyAssert("null ptr", old_cmp_instr,DYNAMIC_CAST_NULL_PTR);
             new_instr = new CmpInst(
                 old_cmp_instr->getType(), old_cmp_instr->getCmpOp(),
                 findValue(old_cmp_instr->getOperand(0)),
@@ -210,7 +208,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
                 new_parent_bb);
         }
         else {
-            ERROR("error type");
+            ERROR("error type",ERROR_DEFUALT);
         }
     } else if (old_instr->isStore()) {
         new_instr = StoreInst::createStore(findValue(old_instr->getOperand(0)),
@@ -221,7 +219,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
                                          new_parent_bb);
     } else if (old_instr->isCall()) {
         auto called_func = dynamic_cast<Function *>(old_instr->getOperand(0));
-        MyAssert("nullptr ", called_func != nullptr);
+        MyAssert("nullptr ", called_func != nullptr,DYNAMIC_CAST_NULL_PTR);
         std::vector<Value *> args = {};
         for (auto i = 1; i < old_instr->getOperandNumber(); i++) {
             args.push_back(findValue(old_instr->getOperand(i)));
@@ -255,14 +253,14 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
             new_instr=ReturnInst::createVoidRet(new_parent_bb);
         }
         else {
-            ERROR("ERROR");
+            ERROR("ERROR",ERROR_DEFUALT);
         }
         
     }else {
         new_instr = nullptr;
     }
     if(new_instr==nullptr){
-        MyAssert("error", new_instr != nullptr);
+        MyAssert("error", new_instr != nullptr,ERROR_DEFUALT);
     }
     return new_instr;
 }
@@ -270,7 +268,5 @@ Value *ValueCloner::findValue(Value *old_val) {
     if (dynamic_cast<Constant *>(old_val)) {
         return old_val;
     }
-    if(_old2new[old_val]==nullptr){
-        ERROR("can't fin %s in table",old_val->getPrintName().c_str());
-    }
     return _old2new[old_val];
+}

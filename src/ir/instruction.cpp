@@ -363,7 +363,7 @@ StoreInst *StoreInst::createStore(Value *value, Value *ptr,
         return new StoreInst(value, ptr, parent);
     }
     else {
-        ERROR("error");
+        ERROR("error type",EXIT_CODE_ERROR_312);
         return nullptr;
     }
 }
@@ -549,3 +549,4 @@ MovInstr *MovInstr::createMov(PhiInstr *phi, Value *r_val, BasicBlock *parent) {
     parent->insertInstr(parent->getTerminator(), instr);
     instr->setParent(parent);
     return instr;
+}

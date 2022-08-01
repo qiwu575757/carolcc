@@ -120,7 +120,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
                 if (store_instr) {
                     auto alloca =
                         dynamic_cast<AllocaInst*>(store_instr->getOperand(1));
-                    MyAssert("null ptr", alloca);
+                    MyAssert("null ptr", alloca,DYNAMIC_CAST_NULL_PTR);
                     wait_delete_instr.push_back(store_instr);
                     wait_delete_instr.push_back(alloca);
                     // 如果有对参数的赋值会怎么样？
@@ -185,7 +185,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
         // }
 
     }else {
-        ERROR("error func ret type");
+        ERROR("error func ret type",ERROR_DEFUALT);
     }
     std::list<AllocaInst*> wait_move_allocas;
     for(auto instr:copy_func->getEntryBlock()->getInstructions()){
