@@ -28,15 +28,15 @@ core
 *.ll
 run_test_one.sh
 
-scripts/__pycache__
+scripts/
 test/
-test_file/functional/.gitkeep
+test_file/
 */*.hir
 *.hir
 */*.mir
 *.mir
 
-# =======================python 
+# =======================python
 # Byte-compiled / optimized / DLL files
 
 __pycache__/
@@ -226,7 +226,7 @@ cython_debug/
 # Compiled Static libraries
 *.lai
 *.la
-*.a
+
 *.lib
 
 # Executables
@@ -236,3 +236,4 @@ cython_debug/
 
 *.s
 *.asm
+*.ir

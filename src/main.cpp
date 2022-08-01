@@ -115,7 +115,7 @@ int main(int argc, char **argv) {
     PM.add_pass<HIRToMIR>("HIRToMIR");
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
-    if(is_O2 ){
+    if(is_O2){
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
 
@@ -147,16 +147,12 @@ int main(int argc, char **argv) {
             PM.add_pass<EmitIR>("EmitIR");
 
     }
+    PM.add_pass<LowerIR>("LowerIR");
     PM.run();
 
     if(is_emit_mir && !is_debug){
-        builder->getModule()->MIRMEMprint(output_file);
     }
-
-    // std::cout<<"################-asm_code-#################"<<std::endl;
-    // std::fflush(0);
-    // std::cout<<asm_code;
-    // std::cout<<"################-asm_code-#################"<<std::endl;
+    // builder->getModule()->MIRMEMprint("tmp.ir");
 
     if (is_emit_asm) {
         builder->getModule()->MIRMEMIndex();

@@ -1,5 +1,6 @@
 #ifndef COMPILER_LLVM_IR_PRINTER_H
 #define COMPILER_LLVM_IR_PRINTER_H
+#include "ir/instruction.h"
 #include "ir_visitor_base.h"
 #include "ir/global_variable.h"
 #include <fstream>
@@ -30,6 +31,7 @@ public:
 private:
     void visit(UnaryInst *node) final;
     void visit(BinaryInst *node) final;
+    void visit(MlaInst *node) final;
     void visit(AllocaInst *node) final;
     void visit(StoreInst *node) final;
     //  ---------
@@ -50,6 +52,7 @@ private:
     void visit(ConstantFloat *node) final;
     void visit(ConstantArray *node) final;
     void visit(PhiInstr *node) final;
+    void visit(MovInstr *node) final;
 
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);

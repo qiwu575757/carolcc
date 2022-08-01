@@ -37,7 +37,7 @@ void GlobalVariableNumbering::check() {
     for (auto f : _m->getFunctions()) {
         for (auto bb : f->getBasicBlocks()) {
             if (bb != f->getEntryBlock() && bb->getPreBasicBlocks().empty()) {
-                ERROR("there should not have dead blocks");
+                ERROR("there should not have dead blocks",EXIT_CODE_ERROR_430);
             }
         }
     }

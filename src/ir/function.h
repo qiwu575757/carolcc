@@ -31,7 +31,7 @@ public:
     inline Function *getParent() const { return _parent; }
     unsigned getArgNo() const {
         if (_parent == nullptr) {
-            ERROR("Argument have no parent");
+            ERROR("Argument have no parent",EXIT_CODE_ERROR_428 );
         }
         return _arg_no;
     }
@@ -114,7 +114,7 @@ public:
     void addCallee(Function* callee){_callee_list.insert(callee);}
 
 private:
-    Instruction* _alloca_end;
+    Instruction* _alloca_end = nullptr;
     std::vector<Argument *> _args;
     std::list<BaseBlock *> _base_block_list;
     Module *_parent;

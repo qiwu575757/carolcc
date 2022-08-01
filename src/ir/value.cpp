@@ -41,6 +41,7 @@ void Value::replaceAllUse(Value *new_val) {
         //        \n",user->getPrintName().c_str(),use->_value_no);
         user->setOperand(use->_value_no, new_val);
     }
+
     this->_user_list.clear();
 }
 /**
@@ -66,7 +67,7 @@ void Value::removeUse(Value *user, unsigned value_no) {
             break;
         }
     }
-    MyAssert("can't get right use record ", remove_use != nullptr);
+    MyAssert("can't get right use record ", remove_use!=nullptr,EXIT_CODE_ERROR_436 );
     auto iter = std::find(_user_list.begin(), _user_list.end(), remove_use);
 
     _user_list.erase(iter);
@@ -273,4 +274,3 @@ Value *ValueCloner::findValue(Value *old_val) {
         ERROR("can't fin %s in table",old_val->getPrintName().c_str());
     }
     return _old2new[old_val];
-}
