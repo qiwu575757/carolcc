@@ -4,6 +4,8 @@ build/
 .idea
 *.png
 *.jpg
+*/*.ir
+*.ir
 
 CMakeFiles/
 cmake-build-debug/
