@@ -8,9 +8,9 @@
 void LowerIR::run() {
     for (auto func : _m->getFunctions()) {
         rmPhi(func);
-        // for (auto bb : func->getBasicBlocks()) {
-        //     splitGEP(bb);
-        // }
+        for (auto bb : func->getBasicBlocks()) {
+            splitGEP(bb);
+        }
     }
 
     _m->setIRLevel(Module::LIR);
