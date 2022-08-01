@@ -77,7 +77,7 @@ enum interval_value_type{
   spill_var,
 };
 
-typedef struct interval{
+struct interval{
     int st_id;
     int ed_id;
     bool def=false;

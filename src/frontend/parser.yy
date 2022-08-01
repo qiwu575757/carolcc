@@ -22,6 +22,7 @@
             //TODO: may have bugs
             sprintf(buf,"%s%d ",buf,yytext[i]);
         }
+        // std::string txt = "ERROR: text :"+to
         fprintf(stderr, "ERROR: text %s\n",yytext);
         fprintf(stderr, "ERROR: %s at symbol '%s' on line %d\n", s, buf, yyline);
         exit(1);

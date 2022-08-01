@@ -98,7 +98,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 33 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 34 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
 
 std::string            *string;
 int                    token;

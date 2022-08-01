@@ -144,6 +144,7 @@ void Dominators::printIDom(Function *f) {
 }
 void Dominators::printDominaceFrontier(Function *f) {
     DOMINATOR_LOG("=====[支配边界]:\n");
+#ifdef _DOMINATOR_LOG
     for(auto & bb : f->getBasicBlocks()){
         DOMINATOR_LOG("%s : ",bb->getPrintName().c_str());
         for(auto  df: bb->getDomFrontier()) {
@@ -152,9 +153,11 @@ void Dominators::printDominaceFrontier(Function *f) {
         DOMINATOR_LOG("\n");
 
     }
+#endif
 }
 void Dominators::printDomTree(Function *f) {
     DOMINATOR_LOG("=====[支配者树]:\n");
+#ifdef _DOMINATOR_LOG
     for(auto & bb : f->getBasicBlocks()){
         DOMINATOR_LOG("%s : ",bb->getPrintName().c_str());
         for(auto df : bb->getDomTreeSucc()) {
@@ -163,6 +166,7 @@ void Dominators::printDomTree(Function *f) {
         DOMINATOR_LOG("\n");
 
     }
+#endif
 }
 void Dominators::init(Function *pFunction) {
     for(auto bb:pFunction->getBasicBlocks()){
