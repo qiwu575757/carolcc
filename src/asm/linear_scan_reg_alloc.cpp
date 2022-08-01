@@ -56,24 +56,24 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     int reg_get = give_reg_at(inst);  // LVAL REG NUM
     if (reg_get == -1) {
         // debug
-        LSRA_WARNNING("-- int reg set --");
-        for (int i = 0; i < int_reg_number; i++) {
-            LSRA_SHOW("[reg %02d]", i);
-            for (auto &reg : virtual_int_reg_use[i]) {
-                LSRA_SHOW(" %02d ", reg);
-            }
-            LSRA_SHOW("[reg %02d]\n", i);
-        }
-        LSRA_WARNNING("-- float reg set --");
-        for (int i = 0; i < float_reg_number; i++) {
-            LSRA_SHOW("[reg %02d]", i);
-            for (auto &reg : virtual_float_reg_use[i]) {
-                LSRA_SHOW(" %02d ", reg);
-            }
-            LSRA_SHOW("[reg %02d]\n", i);
-        }
+        // LSRA_WARNNING("-- int reg set --");
+        // for (int i = 0; i < int_reg_number; i++) {
+        //     LSRA_SHOW("[reg %02d]", i);
+        //     for (auto reg : virtual_int_reg_use[i]) {
+        //         LSRA_SHOW(" %02d ", reg);
+        //     }
+        //     LSRA_SHOW("[reg %02d]\n", i);
+        // }
+        // LSRA_WARNNING("-- float reg set --");
+        // for (int i = 0; i < float_reg_number; i++) {
+        //     LSRA_SHOW("[reg %02d]", i);
+        //     for (auto reg : virtual_float_reg_use[i]) {
+        //         LSRA_SHOW(" %02d ", reg);
+        //     }
+        //     LSRA_SHOW("[reg %02d]\n", i);
+        // }
         ERROR("can't give any reg because all the reg is using at inst %d %s"
-        ,linear_map[inst],inst->getPrintName().c_str(),EXIT_CODE_ERROR_304);
+        ,linear_map[inst],EXIT_CODE_ERROR_304,inst->getPrintName().c_str());
     }
     Value *reg_v = value_in_reg_at(inst, reg_get, inst->getType()->isFloatTy());
     if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -89,6 +89,14 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
         else{
             str += InstGen::store(InstGen::Reg(vir2real(reg_get), false),
                               InstGen::Addr(InstGen::sp, op_save[val_pos]));
+            return vir2real(reg_get);
+        }
+    }
+    else{ // 没占用寄存器
+        if(inst->getType()->isFloatTy()){
+            return reg_get;
+        }
+        else{
             return vir2real(reg_get);
         }
     }
@@ -289,7 +297,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     stack_size = 0;
     //
     // 优先处理入口参数
-    for (auto &p : live_range) {
+    for (auto p : live_range) {
         if (p.type == interval_value_type::arg_var && !p.spilled) {
             if (!force_reg_alloc(p, p.specific_reg_idx)) {
                 ERROR("can't use force reg alloc when conflict exist!",EXIT_CODE_ERROR_307);
@@ -299,7 +307,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // cal weight
     //栈溢出处理 检查
     // 对于浮点和整型共同处理
-    for (auto &p : live_range) {
+    for (auto p : live_range) {
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
         p.use_freq = (total_use_num + 1e-4) / (sum_range + 1e-4);
@@ -310,7 +318,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 
     sort(live_range.begin(), live_range.end(), cmp);
 
-    for (auto &itv : live_range) {
+    for (auto itv : live_range) {
         if (itv.type == interval_value_type::arg_var) {
             // 已经处理过arg，不再计算
             continue;
@@ -475,7 +483,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // LSRA_WARNNING("-- int reg set --");
     // for (int i = 0; i < int_reg_number; i++) {
     //     LSRA_SHOW("[reg %02d]", i);
-    //     for (auto &reg : virtual_int_reg_use[i]) {
+    //     for (auto reg : virtual_int_reg_use[i]) {
     //         LSRA_SHOW(" %02d ", reg);
     //     }
     //     LSRA_SHOW("[reg %02d]\n", i);
@@ -484,13 +492,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // LSRA_WARNNING("-- float reg set --");
     // for (int i = 0; i < float_reg_number; i++) {
     //     LSRA_SHOW("[reg %02d]", i);
-    //     for (auto &reg : virtual_float_reg_use[i]) {
+    //     for (auto reg : virtual_float_reg_use[i]) {
     //         LSRA_SHOW(" %02d ", reg);
     //     }
     //     LSRA_SHOW("[reg %02d]\n", i);
     // }
     // 进行栈空间计算，首先分配函数传参从第五个开始，栈溢出的变量需要分配四个保护位置，替换寄存器值，分配alloc空间，分配ret，对齐
-    for (auto &itv : live_range) {
+    for (auto itv : live_range) {
         if (itv.type == interval_value_type::arg_var && itv.spilled) {
             itv.offset = (itv.specific_reg_idx) * 4;
             stack_size += 4;
@@ -502,7 +510,6 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     stack_size += op_save_stack_num * 4;  //压入四个保护位置
     //计算变量栈溢出空间
-    int use_reg_num = 0;
     for (int i = int_reg_number; i < virtual_reg_max; i++) {
         if (virtual_int_regs[i].size() == 0) {
             break;
@@ -542,7 +549,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 
 
     // alloca space
-    for (auto &itv : live_range) {
+    for (auto itv : live_range) {
         if (itv.is_allocated) {
             bool extended = true;
             auto sizeof_arg = itv.v->getType()->getSize(extended);
@@ -565,7 +572,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // 扩大栈空间
     // stack_size += 128;
     // 参数栈表示
-    for (auto &p : live_range) {
+    for (auto p : live_range) {
         if (p.type == interval_value_type::arg_var && p.spilled) {
             if(p.is_float){
                 virtual_float_regs[virtual_reg_max-1].push_back(p);
@@ -576,19 +583,19 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     // debug
     LSRA_SHOW("-- stack size %d --\n", stack_size);
-    for (auto &itv : stack_map) {
+    for (auto itv : stack_map) {
         LSRA_WARNNING("type: %d V: %s -> sp + %d ", itv.is_data,
                       itv.v->getPrintName().c_str(), itv.offset);
     }
     auto tmpBB = BasicBlock::create("");
     //栈溢出处理 检查栈溢出的变量的使用，在其前后插指令
     if (insert) {
-        for (auto &bb : func->getBasicBlocks()) {
+        for (auto bb : func->getBasicBlocks()) {
             std::vector<std::pair<int, std::list<Instruction *>>> insert_instrs;
             int idx = 0;
             for (auto inst_iter = bb->getInstructions().begin();
                  inst_iter != bb->getInstructions().end(); inst_iter++) {
-                auto &inst = *inst_iter;
+                auto inst = *inst_iter;
                 if (!inst->isCall() && !inst->isGep() && !inst->isBr()) {
                     // call 主要是需要pop push 寄存器mov参数个数不定 ，
                     // gep 参数个数不定 转成多个新的指令
@@ -648,7 +655,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         }
                     }
                     op_idx += 1;
-                    for (auto &op : inst->getOperandList()) {
+                    for (auto op : inst->getOperandList()) {
                         if (op_idx >= op_save_stack_num) {
                             ERROR("overwrite op_idx",EXIT_CODE_ERROR_309);
                         }
@@ -736,10 +743,10 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         op_idx += 1;
                     }
 
-                    for (auto &insert_inst : before_inst.second) {
+                    for (auto insert_inst : before_inst.second) {
                         linear_map[insert_inst] = linear_map[inst];
                     }
-                    for (auto &insert_inst : after_inst.second) {
+                    for (auto insert_inst : after_inst.second) {
                         linear_map[insert_inst] = linear_map[inst];
                     }
                     insert_instrs.push_back(before_inst);
@@ -752,7 +759,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     // LSRA_WARNNING("-- insert inst --");
                     // if (!before_inst.second.empty()) {
                     //     LSRA_WARNNING(" before instr %d ", before_inst.first);
-                    //     for (auto &inst : before_inst.second) {
+                    //     for (auto inst : before_inst.second) {
                     //         auto inststore = dynamic_cast<StoreOffset *>(inst);
                     //         if (inststore)
                     //             LSRA_WARNNING("store, v : %s , offset : %d",
@@ -772,7 +779,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     // if (!after_inst.second.empty()) {
                     //     // LSRA_WARNNING("-- insert inst --");
                     //     LSRA_WARNNING(" after instr %d ", after_inst.first);
-                    //     for (auto &inst : after_inst.second) {
+                    //     for (auto inst : after_inst.second) {
                     //         auto inststore = dynamic_cast<StoreOffset *>(inst);
                     //         if (inststore)
                     //             LSRA_WARNNING("store, v : %s , offset : %d",
@@ -950,12 +957,10 @@ int AsmBuilder::get_value_sp_offset(Value *inst,
 std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                                                          bool insert) {
     linear_map.clear();
-    int instr_index = 0;
     int linear_index = 0;
     int bb_index = 0;
     std::map<Value *, interval> live_map;
     std::map<BasicBlock *, std::set<Value *>> live_in, live_out;
-    std::set<Value *> values;
     std::map<BasicBlock *, int> bb_map;
     std::vector<interval> loop_set;
     std::vector<interval> live_res;  // 对于结果进行后处理
@@ -966,12 +971,11 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
         "-------------------------------------------------------[LSRA]scan "
         "func: %s",
         func->getPrintName().c_str());
-    // find all vars
+    // find all vars 
     int int_arg_idx = 0;
     int float_arg_idx = 0;
     int stack_arg_idx = 0;
-    for (auto &args : func->getArgs()) {
-        values.insert(args);
+    for (auto args : func->getArgs()) {
         if (!live_map.count(args))  // arg interval init
         {
             live_map[args].st_id = -1;
@@ -996,15 +1000,24 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
             // 还要考虑
         }
     }
-    // linear list
+    // linear list 对于MOV指令需要特殊处理，需要使用phi进行映射 
     // LSRA_WARNNING(" LINEAR LIST");
-    for (auto &bb : func->getBasicBlocks()) {
+    for (auto bb : func->getBasicBlocks()) {
         // LSRA_WARNNING(" [%d:B] ",bb_index);
         bb_map[bb] = bb_index++;
-        for (auto &inst : bb->getInstructions()) {
+        for (auto inst : bb->getInstructions()) {
             if (inst->getType()->getSize() > 0) {
-                if (!live_map.count(inst))  // first time
-                {
+                if(inst->isMOV()){
+                    auto mov_inst = dynamic_cast<MovInstr *>(inst);
+                    if(!live_map.count(mov_inst)){ //对于phi进行变量区间分析
+                        live_map[mov_inst->getLVal()].def = true;
+                        live_map[mov_inst->getLVal()].st_id = linear_index;
+                        live_map[mov_inst->getLVal()].ed_id = linear_index;
+                        live_map[mov_inst->getLVal()].is_float = mov_inst->getLVal()->getType()->isFloatTy();
+                    }
+                }
+                else if (!live_map.count(inst))  //其余 first time
+                {   
                     if (inst->isAlloca()) {
                         live_map[inst].is_allocated = true;
                     }
@@ -1013,16 +1026,17 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     live_map[inst].ed_id = linear_index;
                     live_map[inst].is_float = inst->getType()->isFloatTy();
                 }
-                values.insert(inst);
                 // LSRA_WARNNING(" [%d:%s]
                 // ",linear_index,inst->getName().c_str());
             }
-            linear_map[inst] = linear_index++;
+            if(!linear_map.count(inst)){ // 此处需要对不同mov加以区分
+                linear_map[inst] = linear_index++;
+            }
         }
     }
     // 成环定义：如果一个块的前驱节点是大于等于自身的则形成环路，且该环路的上下界可知
-    for (auto &bb : func->getBasicBlocks()) {
-        for (auto &pb : bb->getPreBasicBlocks()) {
+    for (auto bb : func->getBasicBlocks()) {
+        for (auto pb : bb->getPreBasicBlocks()) {
             if (bb_map[pb] >= bb_map[bb]) {
                 LSRA_WARNNING(" LOOP BLOCK CHECK: bb %d %s -- bb %d %s",
                               bb_map[bb], bb->getPrintName().c_str(),
@@ -1039,23 +1053,30 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
     }
     // LSRA_WARNNING("LOOP CHECK DONE");
     // cal ls(&&(
-    for (auto &bb : func->getBasicBlocks()) {
+    for (auto bb : func->getBasicBlocks()) {
         // LSRA_WARNNING("linear scan bb %s",bb->getPrintName().c_str());
-        for (auto &inst : bb->getInstructions()) {
+        for (auto inst : bb->getInstructions()) {
             // LSRA_WARNNING("linear scan instr
             // %s",inst->getPrintName().c_str());
             if (inst->isBr()) {
                 if (inst->getOperandList().size() <= 1) {
                     continue;
                 }
-                auto &op = inst->getOperandList()[0];
-                //
+                auto op = inst->getOperandList()[0];
+                
                 auto global = dynamic_cast<GlobalVariable *>(op);
                 auto const_int = dynamic_cast<ConstantInt *>(op);
                 if (global) {
                     live_map[op].type = interval_value_type::global_var;
                 } else if (const_int) {
                     live_map[op].type = interval_value_type::imm_var;
+                }
+                //
+                if(linear_map.count(op)){ // 变量必有左值定义
+                    auto op_inst = dynamic_cast<MovInstr *>(op);
+                    if(op_inst){
+                        op = op_inst->getLVal(); //!!进行变量映射 映射为对应PHI
+                    }
                 }
                 //
                 if (!live_map.count(op))  // first time
@@ -1068,7 +1089,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                         live_map[op].ed_id = linear_map[inst];
                     }
                 }
-                for (auto &itv : loop_set) {
+                for (auto itv : loop_set) {
                     if (linear_map[inst] <= itv.ed_id &&
                         linear_map[inst] >=
                             itv.st_id) {  // 该指令在该循环中使用
@@ -1086,7 +1107,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 live_map[op].use_id.insert(linear_map[inst]);
             } else {
                 int op_id = 0;
-                for (auto &op : inst->getOperandList()) {
+                for (auto op : inst->getOperandList()) {
                     // ?
                     if (inst->isCall() && op_id == 0) {
                         op_id++;
@@ -1115,6 +1136,13 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     } else if (const_int) {
                         live_map[op].type = interval_value_type::imm_var;
                     }
+                    //
+                    if(linear_map.count(op)){ // 变量必有左值定义
+                        auto op_inst = dynamic_cast<MovInstr *>(op);
+                        if(op_inst){
+                            op = op_inst->getLVal(); //!!进行变量映射 映射为对应PHI
+                        }
+                    }
                     // ?
                     if (!live_map.count(op))  // first time
                     {
@@ -1126,7 +1154,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                             live_map[op].ed_id = linear_map[inst];
                         }
                     }
-                    for (auto &itv : loop_set) {
+                    for (auto itv : loop_set) {
                         if (linear_map[inst] <= itv.ed_id &&
                             linear_map[inst] >=
                                 itv.st_id) {  // 该指令在该循环中使用
@@ -1155,7 +1183,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
     LSRA_WARNNING("LINEAR SCAN DONE");
 
     //对于结果后处理全局变量立即数处理
-    for (auto &p : live_map) {
+    for (auto p : live_map) {
         if (p.second.def) {
             interval itv;
             itv.st_id = p.second.st_id;
@@ -1189,7 +1217,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
     }
     // debug
     LSRA_WARNNING(" LIVE INTERVAL");
-    for (auto &p : live_res) {
+    for (auto p : live_res) {
         LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
     }
 

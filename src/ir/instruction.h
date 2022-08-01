@@ -91,6 +91,7 @@ class Instruction : public User {
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
     bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
     bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
+    bool isMOV() const { return _op_id == Instruction::MOV; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
     Function *getFunction() const { return getParent()->getParentFunc(); }

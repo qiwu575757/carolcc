@@ -77,7 +77,7 @@ enum interval_value_type{
   spill_var,
 };
 
-typedef struct interval{
+struct interval{
     int st_id;
     int ed_id;
     bool def=false;
@@ -92,7 +92,7 @@ typedef struct interval{
     int specific_reg_idx;
     int offset;
     bool is_float = false;
-    // std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
+    std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
 class AsmBuilder {
