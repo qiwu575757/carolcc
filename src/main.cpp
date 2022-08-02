@@ -68,8 +68,6 @@ int main(int argc, char **argv) {
             i++;
         } else if (strcmp(argv[i], "-S") == 0 && i + 1 < argc) {
             is_emit_asm = true;
-            // output_file = std::string(argv[i + 1]);
-            // i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
         } else if (strcmp(argv[i], "-emit-mir") == 0) {
@@ -120,42 +118,38 @@ int main(int argc, char **argv) {
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
     if(is_O2){
+        if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
+        if(is_show_hir_pad_graph && is_debug)
+            PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        PM.add_pass<Mem2Reg>("Mem2Reg");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
 
-        // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
-        // if(is_show_hir_pad_graph && is_debug)
-        //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
-        // PM.add_pass<Mem2Reg>("Mem2Reg");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<SCCP>("SCCP");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<SCCP>("SCCP");
+         if(is_emit_mir && is_debug)
+             PM.add_pass<EmitIR>("EmitIR");
 
-        // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
-        // PM.add_pass<SCCP>("SCCP");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<SCCP>("SCCP");
-        //  if(is_emit_mir && is_debug)
-        //      PM.add_pass<EmitIR>("EmitIR");
-
-        // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
-        // PM.add_pass<GlobalVariableNumbering>("GVN");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<LowerIR>("LowerIR");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<LowerIR>("LowerIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
     }
-    PM.add_pass<Mem2Reg>("Mem2Reg");
-    PM.add_pass<EmitIR>("EmitIR");
-    PM.add_pass<LowerIR>("LowerIR");
-    PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<Mem2Reg>("Mem2Reg");
+    // PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<LowerIR>("LowerIR");
+    // PM.add_pass<EmitIR>("EmitIR");
     PM.run();
 
     if(is_emit_mir && !is_debug){

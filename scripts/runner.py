@@ -38,7 +38,7 @@ npu_llvm_scheme = {"scheme": "npu_llvm",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "build/compiler" + " -S  -o {asm} {sy}",
+                  "frontend_instr": "build/compiler" + " -S  -O2 -o {asm} {sy}",
                   "emit_llvm_ir": True}
 
 

@@ -197,6 +197,9 @@ std::string mov(const Reg &dst, const Reg &src, const CmpOp &cond) {
   if (src.is_reg() && dst.getName() == src.getName()) {
     return asm_instr;
   }
+  if (dst.getID() < 0 || src.getID() < 0) {
+    ERROR("get neg reg %d, %d",GetNegRegError, dst.getID(), src.getID());
+  }
   asm_instr += spaces;
   if (dst.is_fp() || src.is_fp())
     asm_instr += "vmov.f32";

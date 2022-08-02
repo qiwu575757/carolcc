@@ -19,6 +19,7 @@
 
 #define CONST_FLOAT(num) ConstantFloat::create(num)
 
+#define ZERO_INIT
 
 // 如果以baseblock作为目标，则返回条件的第一个basic block 块
 BasicBlock * getTargetBasicBlock(BaseBlock * b){
@@ -508,12 +509,14 @@ void SYSYBuilder::visit(tree_const_def &node) {
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
                     // FIXME: 这里暂时关闭
-                    // if(G_array_init[i]->isConstant()){
-                    //     auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
-                    //     if(constant_val->isZero()){
-                    //         continue;
-                    //     }
-                    // }
+#ifdef ZERO_INIT
+                    if(G_array_init[i]->isConstant()){
+                        auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
+                        if(constant_val->isZero()){
+                            continue;
+                        }
+                    }
+#endif
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
                         G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());
@@ -586,12 +589,14 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 }
                 for (int i = 0; i < G_array_init.size(); i++) {
                     // FIXME:
-                    // if(G_array_init[i]->isConstant()){
-                    //     auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
-                    //     if(constant_val->isZero()){
-                    //         continue;
-                    //     }
-                    // }
+#ifdef ZERO_INIT
+                    if(G_array_init[i]->isConstant()){
+                        auto constant_val = dynamic_cast<Constant*>(G_array_init[i]);
+                        if(constant_val->isZero()){
+                            continue;
+                        }
+                    }
+#endif
                     if (i != 0) {
                         auto p = builder->createGEP(ptr, {CONST_INT(i)});
                         G_array_init[i] = checkAndCast(G_array_init[i],p->getType()->getPointerElementType());

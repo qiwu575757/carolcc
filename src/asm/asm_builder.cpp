@@ -476,7 +476,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else {
       asm_code += InstGen::mov(InstGen::Reg(target,is_fp),InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp));
     }
-    
+
   }
   else {
     ERROR("Unknown ir instrucion.", UnknownIrInstruction);
@@ -607,7 +607,8 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
             if (int_reg_conflict || float_reg_conflict) {
                 int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
-                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
+                  if (saved_registers[k].getID() == arg_pos.first &&
+                      saved_registers[k].is_fp() == is_fp){
                     if (is_fp) {
                       off = 4 * (k - saved_int_regs);
                     } else {
@@ -650,8 +651,8 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
             if (int_reg_conflict || float_reg_conflict){
                 int off = -1;// 发生冲突的寄存器的原值在栈中的偏移
                 for (int k = 0; k < saved_registers.size(); k++) {
-                  WARNNING("%d == %d ", saved_registers[k].getID(), arg_pos.first);
-                  if (saved_registers[k] == InstGen::Reg(arg_pos.first,is_fp)){
+                  if (saved_registers[k].getID() == arg_pos.first &&
+                      saved_registers[k].is_fp() == is_fp){
                     if (is_fp) {
                       off = 4 * (k - saved_int_regs);
                     } else {
