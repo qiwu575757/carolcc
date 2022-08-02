@@ -1,4 +1,4 @@
-/* A Bison parser, made by GNU Bison 3.8.2.  */
+/* A Bison parser, made by GNU Bison 3.7.6.  */
 
 /* Bison implementation for Yacc-like parsers in C
 
@@ -46,10 +46,10 @@
    USER NAME SPACE" below.  */
 
 /* Identify Bison output, and Bison version.  */
-#define YYBISON 30802
+#define YYBISON 30706
 
 /* Bison version string.  */
-#define YYBISON_VERSION "3.8.2"
+#define YYBISON_VERSION "3.7.6"
 
 /* Skeleton name.  */
 #define YYSKELETON_NAME "yacc.c"
@@ -67,7 +67,7 @@
 
 
 /* First part of user prologue.  */
-#line 1 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 1 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
 
     #include "helpers/type_helper.h"
     #include "syntax_tree.h"
@@ -102,7 +102,7 @@
     void insertVarible(std::string& type,std::string& id);
     void insertFunction(std::string& type,std::string& id);
 
-#line 106 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 106 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
 
 # ifndef YY_CAST
 #  ifdef __cplusplus
@@ -367,18 +367,12 @@ typedef int yy_state_fast_t;
 # define YY_USE(E) /* empty */
 #endif
 
+#if defined __GNUC__ && ! defined __ICC && 407 <= __GNUC__ * 100 + __GNUC_MINOR__
 /* Suppress an incorrect diagnostic about yylval being uninitialized.  */
-#if defined __GNUC__ && ! defined __ICC && 406 <= __GNUC__ * 100 + __GNUC_MINOR__
-# if __GNUC__ * 100 + __GNUC_MINOR__ < 407
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
-    _Pragma ("GCC diagnostic push")                                     \
-    _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")
-# else
-#  define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                           \
+# define YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN                            \
     _Pragma ("GCC diagnostic push")                                     \
     _Pragma ("GCC diagnostic ignored \"-Wuninitialized\"")              \
     _Pragma ("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-# endif
 # define YY_IGNORE_MAYBE_UNINITIALIZED_END      \
     _Pragma ("GCC diagnostic pop")
 #else
@@ -596,7 +590,7 @@ static const yytype_int8 yytranslate[] =
 };
 
 #if YYDEBUG
-/* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
+  /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_int16 yyrline[] =
 {
        0,   173,   173,   180,   185,   191,   198,   204,   213,   223,
@@ -649,6 +643,18 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 }
 #endif
 
+#ifdef YYPRINT
+/* YYTOKNUM[NUM] -- (External) token number corresponding to the
+   (internal) symbol number NUM (which must be that of a token).  */
+static const yytype_int16 yytoknum[] =
+{
+       0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
+     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
+     275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
+     285,   286,   287,   288,   289,   290,   291,   292,   293
+};
+#endif
+
 #define YYPACT_NINF (-160)
 
 #define yypact_value_is_default(Yyn) \
@@ -659,8 +665,8 @@ yysymbol_name (yysymbol_kind_t yysymbol)
 #define yytable_value_is_error(Yyn) \
   0
 
-/* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-   STATE-NUM.  */
+  /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
+     STATE-NUM.  */
 static const yytype_int16 yypact[] =
 {
       89,  -160,  -160,  -160,    18,   125,  -160,  -160,    17,  -160,
@@ -684,9 +690,9 @@ static const yytype_int16 yypact[] =
      108,   136,   196,  -160,   195,  -160
 };
 
-/* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
-   Performed when YYTABLE does not specify something else to do.  Zero
-   means the default is an error.  */
+  /* YYDEFACT[STATE-NUM] -- Default reduction number in state STATE-NUM.
+     Performed when YYTABLE does not specify something else to do.  Zero
+     means the default is an error.  */
 static const yytype_int8 yydefact[] =
 {
        0,    11,    12,    13,     0,     0,     4,     6,     0,     7,
@@ -710,7 +716,7 @@ static const yytype_int8 yydefact[] =
       97,   100,   102,    59,     0,    58
 };
 
-/* YYPGOTO[NTERM-NUM].  */
+  /* YYPGOTO[NTERM-NUM].  */
 static const yytype_int16 yypgoto[] =
 {
     -160,  -160,    43,  -160,  -160,    -3,   218,  -160,   -56,  -160,
@@ -720,7 +726,7 @@ static const yytype_int16 yypgoto[] =
     -160
 };
 
-/* YYDEFGOTO[NTERM-NUM].  */
+  /* YYDEFGOTO[NTERM-NUM].  */
 static const yytype_uint8 yydefgoto[] =
 {
        0,     5,   106,     7,    19,     8,    20,    29,    64,    96,
@@ -730,9 +736,9 @@ static const yytype_uint8 yydefgoto[] =
      159
 };
 
-/* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
-   positive, shift that token.  If negative, reduce the rule whose
-   number is the opposite.  If YYTABLE_NINF, syntax error.  */
+  /* YYTABLE[YYPACT[STATE-NUM]] -- What to do in state STATE-NUM.  If
+     positive, shift that token.  If negative, reduce the rule whose
+     number is the opposite.  If YYTABLE_NINF, syntax error.  */
 static const yytype_uint8 yytable[] =
 {
       53,    11,    56,    89,   174,    53,    53,    95,    92,   113,
@@ -797,8 +803,8 @@ static const yytype_int16 yycheck[] =
       21,    22,    -1,    -1,    -1,    26
 };
 
-/* YYSTOS[STATE-NUM] -- The symbol kind of the accessing symbol of
-   state STATE-NUM.  */
+  /* YYSTOS[STATE-NUM] -- The (internal number of the) accessing
+     symbol of state STATE-NUM.  */
 static const yytype_int8 yystos[] =
 {
        0,     8,     9,    10,    12,    40,    41,    42,    44,    50,
@@ -822,7 +828,7 @@ static const yytype_int8 yystos[] =
       76,    77,    78,    64,    16,    64
 };
 
-/* YYR1[RULE-NUM] -- Symbol kind of the left-hand side of rule RULE-NUM.  */
+  /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
 static const yytype_int8 yyr1[] =
 {
        0,    39,    40,    40,    40,    40,    41,    41,    42,    43,
@@ -838,7 +844,7 @@ static const yytype_int8 yyr1[] =
       78,    79,    79
 };
 
-/* YYR2[RULE-NUM] -- Number of symbols on the right-hand side of rule RULE-NUM.  */
+  /* YYR2[YYN] -- Number of symbols on the right hand side of rule YYN.  */
 static const yytype_int8 yyr2[] =
 {
        0,     2,     1,     2,     1,     2,     1,     1,     4,     1,
@@ -863,7 +869,6 @@ enum { YYENOMEM = -2 };
 #define YYACCEPT        goto yyacceptlab
 #define YYABORT         goto yyabortlab
 #define YYERROR         goto yyerrorlab
-#define YYNOMEM         goto yyexhaustedlab
 
 
 #define YYRECOVERING()  (!!yyerrstatus)
@@ -904,7 +909,10 @@ do {                                            \
     YYFPRINTF Args;                             \
 } while (0)
 
-
+/* This macro is provided for backward compatibility. */
+# ifndef YY_LOCATION_PRINT
+#  define YY_LOCATION_PRINT(File, Loc) ((void) 0)
+# endif
 
 
 # define YY_SYMBOL_PRINT(Title, Kind, Value, Location)                    \
@@ -931,6 +939,10 @@ yy_symbol_value_print (FILE *yyo,
   YY_USE (yyoutput);
   if (!yyvaluep)
     return;
+# ifdef YYPRINT
+  if (yykind < YYNTOKENS)
+    YYPRINT (yyo, yytoknum[yykind], *yyvaluep);
+# endif
   YY_IGNORE_MAYBE_UNINITIALIZED_BEGIN
   YY_USE (yykind);
   YY_IGNORE_MAYBE_UNINITIALIZED_END
@@ -1115,7 +1127,6 @@ yyparse (void)
   YYDPRINTF ((stderr, "Starting parse\n"));
 
   yychar = YYEMPTY; /* Cause a token to be read.  */
-
   goto yysetstate;
 
 
@@ -1141,7 +1152,7 @@ yysetstate:
 
   if (yyss + yystacksize - 1 <= yyssp)
 #if !defined yyoverflow && !defined YYSTACK_RELOCATE
-    YYNOMEM;
+    goto yyexhaustedlab;
 #else
     {
       /* Get the current used size of the three stacks, in elements.  */
@@ -1169,7 +1180,7 @@ yysetstate:
 # else /* defined YYSTACK_RELOCATE */
       /* Extend the stack our own way.  */
       if (YYMAXDEPTH <= yystacksize)
-        YYNOMEM;
+        goto yyexhaustedlab;
       yystacksize *= 2;
       if (YYMAXDEPTH < yystacksize)
         yystacksize = YYMAXDEPTH;
@@ -1180,7 +1191,7 @@ yysetstate:
           YY_CAST (union yyalloc *,
                    YYSTACK_ALLOC (YY_CAST (YYSIZE_T, YYSTACK_BYTES (yystacksize))));
         if (! yyptr)
-          YYNOMEM;
+          goto yyexhaustedlab;
         YYSTACK_RELOCATE (yyss_alloc, yyss);
         YYSTACK_RELOCATE (yyvs_alloc, yyvs);
 #  undef YYSTACK_RELOCATE
@@ -1201,7 +1212,6 @@ yysetstate:
         YYABORT;
     }
 #endif /* !defined yyoverflow && !defined YYSTACK_RELOCATE */
-
 
   if (yystate == YYFINAL)
     YYACCEPT;
@@ -1315,125 +1325,125 @@ yyreduce:
   switch (yyn)
     {
   case 2: /* CompUnit: FuncDef  */
-#line 174 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 174 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             root = new tree_comp_unit();
             root->_line_no = yyline+1;
             printf("func def is %s\n",(yyvsp[0].func_def)->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>((yyvsp[0].func_def)));
         }
-#line 1326 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1336 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 3: /* CompUnit: CompUnit FuncDef  */
-#line 181 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 181 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             printf("func def is %s\n",(yyvsp[0].func_def)->id.c_str());
 		    root->functions.push_back(std::shared_ptr<tree_func_def>((yyvsp[0].func_def)));
         }
-#line 1335 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1345 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 4: /* CompUnit: Decl  */
-#line 186 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 186 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             root = new tree_comp_unit();
             root->_line_no = yyline+1;
             root->definitions.push_back(std::shared_ptr<tree_decl>((yyvsp[0].decl)));
         }
-#line 1345 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1355 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 5: /* CompUnit: CompUnit Decl  */
-#line 192 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 192 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             root->definitions.push_back(std::shared_ptr<tree_decl>((yyvsp[0].decl)));
         }
-#line 1353 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1363 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 6: /* Decl: ConstDecl  */
-#line 199 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 199 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.decl) = new tree_decl();
             (yyval.decl)->_line_no = yyline+1;
             (yyval.decl)->const_decl=std::shared_ptr<tree_const_decl>((yyvsp[0].const_decl));
         }
-#line 1363 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1373 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 7: /* Decl: VarDecl  */
-#line 205 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 205 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.decl) = new tree_decl();
             (yyval.decl)->_line_no = yyline+1;
             (yyval.decl)->var_decl=std::shared_ptr<tree_var_decl>((yyvsp[0].var_decl));
         }
-#line 1373 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1383 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 8: /* ConstDecl: "const" BType ConstDefList ";"  */
-#line 214 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 214 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_decl) = new tree_const_decl();
             (yyval.const_decl)->_line_no = yyline+1;
             (yyval.const_decl)->b_type=std::shared_ptr<tree_basic_type>((yyvsp[-2].basic_type));
             (yyval.const_decl)->const_def_list=std::shared_ptr<tree_const_def_list>((yyvsp[-1].const_def_list));
         }
-#line 1384 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1394 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 9: /* ConstDefList: ConstDef  */
-#line 224 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 224 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def_list) = new tree_const_def_list();
             (yyval.const_def_list)->_line_no = yyline+1;
             (yyval.const_def_list)->const_defs.push_back(std::shared_ptr<tree_const_def>((yyvsp[0].const_def)));
         }
-#line 1394 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1404 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 10: /* ConstDefList: ConstDefList "," ConstDef  */
-#line 230 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 230 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].const_def_list)->const_defs.push_back(std::shared_ptr<tree_const_def>((yyvsp[0].const_def)));
             (yyval.const_def_list) = (yyvsp[-2].const_def_list);
         }
-#line 1403 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1413 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 11: /* BType: "int"  */
-#line 238 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 238 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::INT;
         }
-#line 1413 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1423 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 12: /* BType: "float"  */
-#line 244 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 244 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::FLOAT;
         }
-#line 1423 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1433 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 13: /* BType: "void"  */
-#line 250 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 250 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.basic_type) = new tree_basic_type();
             (yyval.basic_type)->_line_no = yyline+1;
             (yyval.basic_type)->type=type_helper::VOID;
         }
-#line 1433 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1443 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 14: /* ConstDef: TIDENTIFIER ConstExpArrayList "=" ConstInitVal  */
-#line 259 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 259 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def) = new tree_const_def();
             (yyval.const_def)->_line_no = yyline+1;
@@ -1441,161 +1451,161 @@ yyreduce:
             (yyval.const_def)->const_exp_list=std::shared_ptr<tree_const_exp_list>((yyvsp[-2].const_exp_list));
             (yyval.const_def)->const_init_val=std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val));
         }
-#line 1445 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1455 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 15: /* ConstDef: TIDENTIFIER "=" ConstInitVal  */
-#line 267 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 267 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_def) = new tree_const_def();
             (yyval.const_def)->_line_no = yyline+1;
             (yyval.const_def)->id=*(yyvsp[-2].string);
             (yyval.const_def)->const_init_val=std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val));
         }
-#line 1456 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1466 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 16: /* ConstExpArrayList: "[" ConstExp "]"  */
-#line 277 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 277 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_exp_list) = new tree_const_exp_list();
             (yyval.const_exp_list)->_line_no = yyline+1;
             (yyval.const_exp_list)->const_exp.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
         }
-#line 1466 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1476 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 17: /* ConstExpArrayList: ConstExpArrayList "[" ConstExp "]"  */
-#line 283 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 283 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].const_exp_list)->const_exp.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
             (yyval.const_exp_list) = (yyvsp[-3].const_exp_list);
         }
-#line 1475 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1485 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 18: /* ConstInitVal: ConstExp  */
-#line 291 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 291 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
             (yyval.const_init_val)->const_exp= std::shared_ptr<tree_const_exp>((yyvsp[0].const_exp)) ;
         }
-#line 1485 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1495 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 19: /* ConstInitVal: "{" "}"  */
-#line 297 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 297 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
         }
-#line 1494 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1504 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 20: /* ConstInitVal: "{" ConstInitVallist "}"  */
-#line 302 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 302 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val) = new tree_const_init_val();
             (yyval.const_init_val)->_line_no = yyline+1;
             (yyval.const_init_val)->const_val_list = std::shared_ptr<tree_const_val_list>((yyvsp[-1].const_init_val_list)) ;
         }
-#line 1504 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1514 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 21: /* ConstInitVallist: ConstInitVal  */
-#line 311 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 311 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_init_val_list) = new tree_const_val_list();
             (yyval.const_init_val_list)->_line_no = yyline+1;
             (yyval.const_init_val_list)->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val)));
         }
-#line 1514 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1524 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 22: /* ConstInitVallist: ConstInitVallist "," ConstInitVal  */
-#line 317 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 317 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].const_init_val_list)->const_init_vals.push_back(std::shared_ptr<tree_const_init_val>((yyvsp[0].const_init_val)));
             (yyval.const_init_val_list) = (yyvsp[-2].const_init_val_list);
         }
-#line 1523 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1533 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 23: /* ConstExp: AddExp  */
-#line 325 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 325 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.const_exp) = new tree_const_exp();
             (yyval.const_exp)->_line_no = yyline+1;
             (yyval.const_exp)->add_exp = std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 1533 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1543 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 24: /* VarDecl: BType VarDefList ";"  */
-#line 334 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 334 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_decl) = new tree_var_decl();
             (yyval.var_decl)->_line_no = yyline+1;
             (yyval.var_decl)->b_type=std::shared_ptr<tree_basic_type>((yyvsp[-2].basic_type));
             (yyval.var_decl)->var_def_list=std::shared_ptr<tree_var_def_list>((yyvsp[-1].var_def_list));
         }
-#line 1544 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1554 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 25: /* VarDefList: VarDef  */
-#line 344 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 344 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def_list) = new tree_var_def_list();
             (yyval.var_def_list)->_line_no = yyline+1;
             (yyval.var_def_list)->var_defs.push_back(std::shared_ptr<tree_var_def>((yyvsp[0].var_def)));
         }
-#line 1554 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1564 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 26: /* VarDefList: VarDefList "," VarDef  */
-#line 350 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 350 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].var_def_list)->var_defs.push_back(std::shared_ptr<tree_var_def>((yyvsp[0].var_def)));
             (yyval.var_def_list) = (yyvsp[-2].var_def_list);
         }
-#line 1563 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1573 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 27: /* VarDef: TIDENTIFIER  */
-#line 358 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 358 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[0].string);
         }
-#line 1573 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1583 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 28: /* VarDef: TIDENTIFIER "=" InitVal  */
-#line 364 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 364 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[-2].string);
             (yyval.var_def)->init_val = std::shared_ptr<tree_init_val>((yyvsp[0].init_val));
         }
-#line 1584 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1594 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 29: /* VarDef: TIDENTIFIER ArrayDef  */
-#line 371 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 371 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
             (yyval.var_def)->id = *(yyvsp[-1].string);
             (yyval.var_def)->array_def = std::shared_ptr<tree_arrray_def>((yyvsp[0].array_def));
         }
-#line 1595 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1605 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 30: /* VarDef: TIDENTIFIER ArrayDef "=" InitVal  */
-#line 378 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 378 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.var_def) = new tree_var_def();
             (yyval.var_def)->_line_no = yyline+1;
@@ -1603,78 +1613,78 @@ yyreduce:
             (yyval.var_def)->array_def = std::shared_ptr<tree_arrray_def>((yyvsp[-2].array_def));
             (yyval.var_def)->init_val = std::shared_ptr<tree_init_val>((yyvsp[0].init_val));
         }
-#line 1607 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1617 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 31: /* ArrayDef: "[" ConstExp "]"  */
-#line 389 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 389 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_def) = new tree_arrray_def();
             (yyval.array_def)->_line_no = yyline+1;
             (yyval.array_def)->const_exps.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
         }
-#line 1617 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1627 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 32: /* ArrayDef: ArrayDef "[" ConstExp "]"  */
-#line 395 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 395 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_def)->const_exps.push_back(std::shared_ptr<tree_const_exp>((yyvsp[-1].const_exp)));
             (yyval.array_def) = (yyvsp[-3].array_def);
         }
-#line 1626 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1636 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 33: /* InitVal: Exp  */
-#line 404 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 404 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
             (yyval.init_val)->exp=std::shared_ptr<tree_exp>((yyvsp[0].exp));
         }
-#line 1636 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1646 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 34: /* InitVal: "{" "}"  */
-#line 409 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 409 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
               {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
     }
-#line 1645 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1655 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 35: /* InitVal: "{" InitValList "}"  */
-#line 413 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 413 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
                           {
             (yyval.init_val) = new tree_init_val();
             (yyval.init_val)->_line_no = yyline+1;
             (yyval.init_val)->init_val_list = std::shared_ptr<tree_init_val_list>((yyvsp[-1].init_val_list));
     }
-#line 1655 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1665 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 36: /* InitValList: InitVal  */
-#line 421 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 421 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
               {
         (yyval.init_val_list) = new tree_init_val_list();
         (yyval.init_val_list)->_line_no = yyline+1;
         (yyval.init_val_list)->init_vals.push_back(std::shared_ptr<tree_init_val>((yyvsp[0].init_val)));
     }
-#line 1665 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1675 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 37: /* InitValList: InitValList "," InitVal  */
-#line 426 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 426 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
                               {
         (yyvsp[-2].init_val_list)->init_vals.push_back(std::shared_ptr<tree_init_val>((yyvsp[0].init_val)));
         (yyval.init_val_list) = (yyvsp[-2].init_val_list);
     }
-#line 1674 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1684 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 38: /* FuncDef: BType TIDENTIFIER "(" ")" Block  */
-#line 435 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 435 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_def) = new tree_func_def();
             (yyval.func_def)->_line_no = yyline+1;
@@ -1682,11 +1692,11 @@ yyreduce:
             (yyval.func_def)->id = *(yyvsp[-3].string);
             (yyval.func_def)->block.push_back(std::shared_ptr<tree_block>((yyvsp[0].block)));
         }
-#line 1686 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1696 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 39: /* FuncDef: BType TIDENTIFIER "(" FuncFParams ")" Block  */
-#line 443 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 443 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_def) = new tree_func_def();
             (yyval.func_def)->_line_no = yyline+1;
@@ -1696,139 +1706,139 @@ yyreduce:
 
             (yyval.func_def)->block.push_back(std::shared_ptr<tree_block>((yyvsp[0].block)));
         }
-#line 1700 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1710 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 40: /* FuncFParams: FuncFParam  */
-#line 456 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 456 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparams) = new tree_func_fparams();
             (yyval.func_fparams)->_line_no = yyline+1;
             (yyval.func_fparams)->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>((yyvsp[0].func_fparam)));
         }
-#line 1710 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1720 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 41: /* FuncFParams: FuncFParams "," FuncFParam  */
-#line 462 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 462 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].func_fparams)->funcfparamlist.push_back(std::shared_ptr<tree_func_fparam>((yyvsp[0].func_fparam)));
             (yyval.func_fparams) = (yyvsp[-2].func_fparams);
         }
-#line 1719 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1729 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 42: /* FuncFParam: FuncFParamOne  */
-#line 470 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 470 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparam) = new tree_func_fparam();
             (yyval.func_fparam)->_line_no = yyline+1;
             (yyval.func_fparam)->funcfparamone = std::shared_ptr<tree_func_fparamone>((yyvsp[0].func_fparamone));
         }
-#line 1729 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1739 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 43: /* FuncFParam: FuncFParamArray  */
-#line 476 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 476 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparam) = new tree_func_fparam();
             (yyval.func_fparam)->_line_no = yyline+1;
             (yyval.func_fparam)->funcfparamarray = std::shared_ptr<tree_func_fparamarray>((yyvsp[0].func_fparamarray));
         }
-#line 1739 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1749 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 44: /* FuncFParamOne: BType TIDENTIFIER  */
-#line 485 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 485 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparamone) = new tree_func_fparamone();
             (yyval.func_fparamone)->_line_no = yyline+1;
             (yyval.func_fparamone)->b_type = std::shared_ptr<tree_basic_type>((yyvsp[-1].basic_type));
             (yyval.func_fparamone)->id = *(yyvsp[0].string);
         }
-#line 1750 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1760 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 45: /* FuncFParamArray: BType TIDENTIFIER "[" "]"  */
-#line 495 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 495 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_fparamarray) = new tree_func_fparamarray();
             (yyval.func_fparamarray)->_line_no = yyline+1;
             (yyval.func_fparamarray)->b_type = std::shared_ptr<tree_basic_type>((yyvsp[-3].basic_type));
             (yyval.func_fparamarray)->id = *(yyvsp[-2].string);
         }
-#line 1761 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1771 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 46: /* FuncFParamArray: FuncFParamArray "[" Exp "]"  */
-#line 502 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 502 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].func_fparamarray)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
             (yyval.func_fparamarray) = (yyvsp[-3].func_fparamarray);
         }
-#line 1770 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1780 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 47: /* Block: "{" "}"  */
-#line 510 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 510 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.block) = new tree_block();
             (yyval.block)->_line_no = yyline+1;
         }
-#line 1779 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1789 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 48: /* Block: "{" BlockItemList "}"  */
-#line 515 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 515 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.block) = new tree_block();
             (yyval.block)->_line_no = yyline+1;
             (yyval.block)->block_item_list=std::shared_ptr<tree_block_item_list>((yyvsp[-1].block_item_list));
         }
-#line 1789 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1799 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 49: /* BlockItemList: BlockItem  */
-#line 524 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 524 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item_list) = new tree_block_item_list();
             (yyval.block_item_list)->_line_no = yyline+1;
             (yyval.block_item_list)->block_items.push_back(std::shared_ptr<tree_block_item>((yyvsp[0].block_item)));
         }
-#line 1799 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1809 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 50: /* BlockItemList: BlockItemList BlockItem  */
-#line 530 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 530 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-1].block_item_list)->block_items.push_back(std::shared_ptr<tree_block_item>((yyvsp[0].block_item)));
             (yyval.block_item_list)=(yyvsp[-1].block_item_list);
         }
-#line 1808 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1818 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 51: /* BlockItem: Decl  */
-#line 538 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 538 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item) = new tree_block_item();
             (yyval.block_item)->_line_no = yyline+1;
             (yyval.block_item)->decl=std::shared_ptr<tree_decl>((yyvsp[0].decl));
         }
-#line 1818 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1828 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 52: /* BlockItem: Stmt  */
-#line 544 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 544 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.block_item) = new tree_block_item();
             (yyval.block_item)->_line_no = yyline+1;
             (yyval.block_item)->stmt=std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
         }
-#line 1828 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1838 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 53: /* Stmt: LVal "=" Exp ";"  */
-#line 555 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 555 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1837,40 +1847,40 @@ yyreduce:
             a_stmt->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp));
             (yyval.stmt)->assigm_stmt=std::shared_ptr<tree_assign_stmt>(a_stmt) ;
         }
-#line 1841 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1851 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 54: /* Stmt: ";"  */
-#line 564 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 564 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
         }
-#line 1850 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1860 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 55: /* Stmt: Exp ";"  */
-#line 569 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 569 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             (yyval.stmt)->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp)) ;
         }
-#line 1860 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1870 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 56: /* Stmt: Block  */
-#line 575 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 575 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             (yyval.stmt)->block=std::shared_ptr<tree_block>((yyvsp[0].block)) ;
         }
-#line 1870 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1880 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 57: /* Stmt: "if" "(" Cond ")" Stmt  */
-#line 582 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 582 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1879,11 +1889,11 @@ yyreduce:
             if_stmt->stmt = std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
             (yyval.stmt)->if_stmt = std::shared_ptr<tree_if_stmt>(if_stmt) ;
         }
-#line 1883 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1893 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 58: /* Stmt: "if" "(" Cond ")" Stmt "else" Stmt  */
-#line 591 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 591 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1894,11 +1904,11 @@ yyreduce:
             (yyval.stmt)->if_else_stmt = std::shared_ptr<tree_if_else_stmt>(if_else_stmt) ;
 
         }
-#line 1898 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1908 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 59: /* Stmt: "while" "(" Cond ")" Stmt  */
-#line 603 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 603 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1907,44 +1917,44 @@ yyreduce:
             while_stmt->stmt = std::shared_ptr<tree_stmt>((yyvsp[0].stmt));
             (yyval.stmt)->while_stmt = std::shared_ptr<tree_while_stmt>(while_stmt) ;
         }
-#line 1911 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1921 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 60: /* Stmt: "continue" ";"  */
-#line 612 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 612 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto continue_stmt = new tree_continue_stmt();
             (yyval.stmt)->continue_stmt = std::shared_ptr<tree_continue_stmt>(continue_stmt) ;
         }
-#line 1922 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1932 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 61: /* Stmt: "break" ";"  */
-#line 619 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 619 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto break_stmt = new tree_break_stmt();
             (yyval.stmt)->break_stmt = std::shared_ptr<tree_break_stmt>(break_stmt) ;
         }
-#line 1933 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1943 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 62: /* Stmt: "return" ";"  */
-#line 627 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 627 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
             auto a_stmt = new tree_return_null_stmt();
             (yyval.stmt)->return_null_stmt=std::shared_ptr<tree_return_null_stmt>(a_stmt) ;
         }
-#line 1944 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1954 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 63: /* Stmt: "return" Exp ";"  */
-#line 634 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 634 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.stmt) = new tree_stmt();
             (yyval.stmt)->_line_no = yyline+1;
@@ -1952,226 +1962,226 @@ yyreduce:
             a_stmt->exp=std::shared_ptr<tree_exp>((yyvsp[-1].exp));
             (yyval.stmt)->return_stmt=std::shared_ptr<tree_return_stmt>(a_stmt) ;
         }
-#line 1956 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1966 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 64: /* Exp: AddExp  */
-#line 646 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 646 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.exp) = new tree_exp();
             (yyval.exp)->_line_no = yyline+1;
             (yyval.exp)->add_exp = std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 1966 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1976 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 65: /* Cond: LOrExp  */
-#line 655 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 655 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.cond) = new tree_cond();
             (yyval.cond)->_line_no = yyline+1;
             (yyval.cond)->l_or_exp = std::shared_ptr<tree_l_or_exp>((yyvsp[0].l_or_exp));
         }
-#line 1976 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1986 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 66: /* LVal: TIDENTIFIER  */
-#line 664 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 664 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_val) = new tree_l_val();
             (yyval.l_val)->_line_no = yyline+1;
             (yyval.l_val)->id = *(yyvsp[0].string);
         }
-#line 1986 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 1996 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 67: /* LVal: ArrayIdent  */
-#line 670 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 670 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_val) = new tree_l_val();
             (yyval.l_val)->_line_no = yyline+1;
             (yyval.l_val)->array_ident = std::shared_ptr<tree_array_ident>((yyvsp[0].array_ident));
         }
-#line 1996 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2006 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 68: /* ArrayIdent: TIDENTIFIER "[" Exp "]"  */
-#line 679 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 679 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.array_ident) = new tree_array_ident();
             (yyval.array_ident)->_line_no = yyline+1;
             (yyval.array_ident)->id = *(yyvsp[-3].string);
             (yyval.array_ident)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
         }
-#line 2007 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2017 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 69: /* ArrayIdent: ArrayIdent "[" Exp "]"  */
-#line 686 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 686 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-3].array_ident)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[-1].exp)));
             (yyval.array_ident) = (yyvsp[-3].array_ident);
         }
-#line 2016 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2026 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 70: /* Number: TINTEGER  */
-#line 694 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 694 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.number) = new tree_number();
             (yyval.number)->_line_no = yyline+1;
             (yyval.number)->int_value = std::stoi((yyvsp[0].string)->c_str(), nullptr, 0);
             (yyval.number)->is_int=true;
         }
-#line 2027 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2037 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 71: /* Number: TFLOATNUM  */
-#line 701 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 701 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.number) = new tree_number();
             (yyval.number)->_line_no = yyline+1;
             (yyval.number)->float_value = (float)atof((yyvsp[0].string)->c_str());
             (yyval.number)->is_int=false;
         }
-#line 2038 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2048 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 72: /* PrimaryExp: "(" Exp ")"  */
-#line 711 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 711 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->exp = std::shared_ptr<tree_exp>((yyvsp[-1].exp));
         }
-#line 2048 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2058 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 73: /* PrimaryExp: LVal  */
-#line 717 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 717 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->l_val = std::shared_ptr<tree_l_val>((yyvsp[0].l_val));
         }
-#line 2058 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2068 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 74: /* PrimaryExp: Number  */
-#line 723 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 723 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.primary_exp) = new tree_primary_exp();
             (yyval.primary_exp)->_line_no = yyline+1;
             (yyval.primary_exp)->number = std::shared_ptr<tree_number>((yyvsp[0].number));
         }
-#line 2068 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2078 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 75: /* UnaryExp: PrimaryExp  */
-#line 732 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 732 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->primary_exp = std::shared_ptr<tree_primary_exp>((yyvsp[0].primary_exp));
         }
-#line 2078 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2088 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 76: /* UnaryExp: "+" UnaryExp  */
-#line 738 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 738 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="+";
         }
-#line 2089 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2099 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 77: /* UnaryExp: "-" UnaryExp  */
-#line 745 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 745 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="-";
         }
-#line 2100 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2110 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 78: /* UnaryExp: "!" UnaryExp  */
-#line 752 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 752 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.unary_exp)->oprt="!";
         }
-#line 2111 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2121 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 79: /* UnaryExp: FuncCall  */
-#line 760 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 760 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.unary_exp) = new tree_unary_exp();
             (yyval.unary_exp)->_line_no = yyline+1;
             (yyval.unary_exp)->func_call = std::shared_ptr<tree_func_call>((yyvsp[0].func_call));
         }
-#line 2121 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2131 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 80: /* FuncCall: TIDENTIFIER "(" ")"  */
-#line 769 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 769 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_call) = new tree_func_call();
             (yyval.func_call)->_line_no = yyline+1;
             (yyval.func_call)->id = *(yyvsp[-2].string);
         }
-#line 2131 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2141 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 81: /* FuncCall: TIDENTIFIER "(" FuncParamList ")"  */
-#line 775 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 775 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_call) = new tree_func_call();
             (yyval.func_call)->_line_no = yyline+1;
             (yyval.func_call)->id = *(yyvsp[-3].string);
             (yyval.func_call)->func_param_list = std::shared_ptr<tree_func_paramlist>((yyvsp[-1].func_param_list));
         }
-#line 2142 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2152 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 82: /* FuncParamList: Exp  */
-#line 785 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 785 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.func_param_list) = new tree_func_paramlist();
             (yyval.func_param_list)->_line_no = yyline+1;
             (yyval.func_param_list)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[0].exp)));
         }
-#line 2152 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2162 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 83: /* FuncParamList: FuncParamList "," Exp  */
-#line 791 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 791 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyvsp[-2].func_param_list)->exps.push_back(std::shared_ptr<tree_exp>((yyvsp[0].exp)));
             (yyval.func_param_list) = (yyvsp[-2].func_param_list);
         }
-#line 2161 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2171 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 84: /* MulExp: UnaryExp  */
-#line 801 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 801 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
         }
-#line 2171 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2181 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 85: /* MulExp: MulExp "*" UnaryExp  */
-#line 807 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 807 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2179,11 +2189,11 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="*";
         }
-#line 2183 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2193 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 86: /* MulExp: MulExp "/" UnaryExp  */
-#line 815 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 815 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2191,11 +2201,11 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="/";
         }
-#line 2195 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2205 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 87: /* MulExp: MulExp "%" UnaryExp  */
-#line 823 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 823 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.mul_exp) = new tree_mul_exp();
             (yyval.mul_exp)->_line_no = yyline+1;
@@ -2203,21 +2213,21 @@ yyreduce:
             (yyval.mul_exp)->unary_exp=std::shared_ptr<tree_unary_exp>((yyvsp[0].unary_exp));
             (yyval.mul_exp)->oprt="%";
         }
-#line 2207 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2217 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 88: /* AddExp: MulExp  */
-#line 833 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 833 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2217 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2227 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 89: /* AddExp: AddExp "+" MulExp  */
-#line 839 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 839 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
@@ -2225,11 +2235,11 @@ yyreduce:
             (yyval.add_exp)->oprt="+";
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2229 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2239 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 90: /* AddExp: AddExp "-" MulExp  */
-#line 847 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 847 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.add_exp) = new tree_add_exp();
             (yyval.add_exp)->_line_no = yyline+1;
@@ -2237,21 +2247,21 @@ yyreduce:
             (yyval.add_exp)->oprt="-";
             (yyval.add_exp)->mul_exp=std::shared_ptr<tree_mul_exp>((yyvsp[0].mul_exp));
         }
-#line 2241 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2251 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 91: /* RelExp: AddExp  */
-#line 857 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 857 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2251 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2261 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 92: /* RelExp: RelExp "<" AddExp  */
-#line 863 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 863 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2259,11 +2269,11 @@ yyreduce:
             (yyval.rel_exp)->oprt="<";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2263 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2273 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 93: /* RelExp: RelExp ">" AddExp  */
-#line 871 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 871 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2271,11 +2281,11 @@ yyreduce:
             (yyval.rel_exp)->oprt=">";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2275 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2285 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 94: /* RelExp: RelExp "<=" AddExp  */
-#line 879 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 879 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2283,11 +2293,11 @@ yyreduce:
             (yyval.rel_exp)->oprt="<=";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2287 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2297 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 95: /* RelExp: RelExp ">=" AddExp  */
-#line 887 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 887 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.rel_exp) = new tree_rel_exp();
             (yyval.rel_exp)->_line_no = yyline+1;
@@ -2295,21 +2305,21 @@ yyreduce:
             (yyval.rel_exp)->oprt=">=";
             (yyval.rel_exp)->add_exp=std::shared_ptr<tree_add_exp>((yyvsp[0].add_exp));
         }
-#line 2299 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2309 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 96: /* EqExp: RelExp  */
-#line 897 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 897 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2309 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2319 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 97: /* EqExp: EqExp "==" RelExp  */
-#line 903 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 903 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
@@ -2317,11 +2327,11 @@ yyreduce:
             (yyval.eq_exp)->oprt="==";
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2321 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2331 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 98: /* EqExp: EqExp "!=" RelExp  */
-#line 911 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 911 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.eq_exp) = new tree_eq_exp();
             (yyval.eq_exp)->_line_no = yyline+1;
@@ -2329,53 +2339,53 @@ yyreduce:
             (yyval.eq_exp)->oprt="!=";
             (yyval.eq_exp)->rel_exp=std::shared_ptr<tree_rel_exp>((yyvsp[0].rel_exp));
         }
-#line 2333 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2343 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 99: /* LAndExp: EqExp  */
-#line 921 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 921 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_and_exp) = new tree_l_and_exp();
             (yyval.l_and_exp)->_line_no = yyline+1;
             (yyval.l_and_exp)->eq_exp=std::shared_ptr<tree_eq_exp>((yyvsp[0].eq_exp));
         }
-#line 2343 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2353 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 100: /* LAndExp: LAndExp "&&" EqExp  */
-#line 927 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 927 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_and_exp) = new tree_l_and_exp();
             (yyval.l_and_exp)->_line_no = yyline+1;
             (yyval.l_and_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[-2].l_and_exp));
             (yyval.l_and_exp)->eq_exp=std::shared_ptr<tree_eq_exp>((yyvsp[0].eq_exp));
         }
-#line 2354 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2364 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 101: /* LOrExp: LAndExp  */
-#line 936 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 936 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_or_exp) = new tree_l_or_exp();
             (yyval.l_or_exp)->_line_no = yyline+1;
             (yyval.l_or_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[0].l_and_exp));
         }
-#line 2364 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2374 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
   case 102: /* LOrExp: LOrExp "||" LAndExp  */
-#line 942 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 942 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
         {
             (yyval.l_or_exp) = new tree_l_or_exp();
             (yyval.l_or_exp)->_line_no = yyline+1;
             (yyval.l_or_exp)->l_or_exp=std::shared_ptr<tree_l_or_exp>((yyvsp[-2].l_or_exp));
             (yyval.l_or_exp)->l_and_exp=std::shared_ptr<tree_l_and_exp>((yyvsp[0].l_and_exp));
         }
-#line 2375 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2385 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
     break;
 
 
-#line 2379 "/home/yonchicy/compiler/carolcc/src/frontend/parser.cpp"
+#line 2389 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.cpp"
 
       default: break;
     }
@@ -2457,7 +2467,6 @@ yyerrorlab:
      label yyerrorlab therefore never appears in user code.  */
   if (0)
     YYERROR;
-  ++yynerrs;
 
   /* Do not reclaim the symbols of the rule whose action triggered
      this YYERROR.  */
@@ -2518,7 +2527,7 @@ yyerrlab1:
 `-------------------------------------*/
 yyacceptlab:
   yyresult = 0;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
 /*-----------------------------------.
@@ -2526,22 +2535,24 @@ yyacceptlab:
 `-----------------------------------*/
 yyabortlab:
   yyresult = 1;
-  goto yyreturnlab;
+  goto yyreturn;
 
 
-/*-----------------------------------------------------------.
-| yyexhaustedlab -- YYNOMEM (memory exhaustion) comes here.  |
-`-----------------------------------------------------------*/
+#if !defined yyoverflow
+/*-------------------------------------------------.
+| yyexhaustedlab -- memory exhaustion comes here.  |
+`-------------------------------------------------*/
 yyexhaustedlab:
   yyerror (YY_("memory exhausted"));
   yyresult = 2;
-  goto yyreturnlab;
+  goto yyreturn;
+#endif
 
 
-/*----------------------------------------------------------.
-| yyreturnlab -- parsing is finished, clean up and return.  |
-`----------------------------------------------------------*/
-yyreturnlab:
+/*-------------------------------------------------------.
+| yyreturn -- parsing is finished, clean up and return.  |
+`-------------------------------------------------------*/
+yyreturn:
   if (yychar != YYEMPTY)
     {
       /* Make sure we have latest lookahead translation.  See comments at
@@ -2568,7 +2579,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 949 "/home/yonchicy/compiler/carolcc/src/frontend/parser.yy"
+#line 949 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
 
 void insertVarible(std::string& type,std::string& id){
     VaribleTable.insert(std::make_pair<std::string, VaribleInfo>(std::string(id),VaribleInfo(type)));

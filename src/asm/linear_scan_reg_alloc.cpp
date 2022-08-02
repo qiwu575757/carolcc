@@ -1095,8 +1095,44 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
             }
         }
     }
-    // LSRA_WARNNING("LOOP CHECK DONE");
-    // cal ls(&&(
+    // 环合并 处理环路之间的交叉情况
+    std::vector<interval> tmp_loop=loop_set;
+    std::vector<interval> res_loop;
+    while(1){
+        for(int i=0;i<tmp_loop.size()-1;i++){
+            for(int j=i+1;j<tmp_loop.size();j++){
+                if(tmp_loop[i].ed_id >= tmp_loop[j].st_id && tmp_loop[i].ed_id <= tmp_loop[j].ed_id
+                && tmp_loop[i].st_id >= tmp_loop[j].st_id && tmp_loop[i].st_id <= tmp_loop[j].ed_id
+                || tmp_loop[j].ed_id >= tmp_loop[i].st_id && tmp_loop[j].ed_id <= tmp_loop[i].ed_id
+                && tmp_loop[j].st_id >= tmp_loop[i].st_id && tmp_loop[j].st_id <= tmp_loop[i].ed_id){
+                    continue;
+                }
+                if(tmp_loop[i].ed_id >= tmp_loop[j].st_id && tmp_loop[i].ed_id <= tmp_loop[j].ed_id
+                && tmp_loop[j].st_id >= tmp_loop[i].st_id && tmp_loop[j].st_id <= tmp_loop[i].ed_id
+                || tmp_loop[j].ed_id >= tmp_loop[i].st_id && tmp_loop[j].ed_id <= tmp_loop[i].ed_id
+                && tmp_loop[i].st_id >= tmp_loop[j].st_id && tmp_loop[i].st_id <= tmp_loop[j].ed_id){
+                    interval itv;
+                    itv.st_id = std::min(tmp_loop[i].st_id,tmp_loop[j].st_id);
+                    itv.ed_id = std::max(tmp_loop[i].ed_id,tmp_loop[j].ed_id);
+                    // LSRA_WARNNING(" LOOP CHECK: from %d to %d",itv.st_id,itv.ed_id);
+                    res_loop.push_back(itv);
+                }
+            }
+        }
+        if(res_loop.empty()){
+            break;
+        }
+        LSRA_WARNNING("next turn");
+        loop_set.insert(loop_set.end(),res_loop.begin(),res_loop.end());
+        tmp_loop.clear();
+        tmp_loop = res_loop;
+        res_loop.clear();
+    }
+    for(auto lp: loop_set){
+        LSRA_WARNNING(" LOOP CHECK: f59_sort_test5.syrom %d to %d",lp.st_id,lp.ed_id);
+    }
+    LSRA_WARNNING("LOOP CHECK DONE");
+    // cal ls
     for (auto bb : func->getBasicBlocks()) {
         // LSRA_WARNNING("linear scan bb %s",bb->getPrintName().c_str());
         for (auto inst : bb->getInstructions()) {
