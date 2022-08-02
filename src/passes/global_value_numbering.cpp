@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <queue>
 #include <set>
+#include <vector>
 
 #include "dominators.h"
 #include "ir/constant.h"
@@ -71,6 +72,11 @@ void GlobalVariableNumbering::LVN(BasicBlock* bb) {
             if (val != instr) {
                 replace(instr, val);
             }
+        } else if(instr->isGep()) {
+            auto val = lookUpOrAdd(instr);
+            if (val != instr) {
+                replace(instr, val);
+            }
         } else {
             // TODO:其他类型指令的优化
         }
@@ -104,6 +110,32 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
                                       (lhs == rhs2 && rhs == lhs2));
 
                     if (same_op && same_oprd) {
+                        return val_instr;
+                    }
+                }
+            }
+        }
+    } else if(instr->isGep()){
+        std::vector<Value*> oprds ;
+        for(auto oprd : instr->getOperandList()){
+            oprds.push_back(lookUpOrAdd(oprd));
+        }
+        for (auto map_it : _value_table) {
+            for (auto it : map_it) {
+                auto key_instr = dynamic_cast<Instruction*>(it.first);
+                auto val_instr = it.second;
+                if (key_instr && key_instr->isGep()) {
+                    std::list<Value*> oprds2;
+                    bool all_same=true;
+                    int i =0;
+                    for(auto oprd : key_instr->getOperandList()){
+                        if(oprds.at(i) != lookUpOrAdd(oprd) ){
+                            all_same=false;
+                            break;
+                        }
+                        i++;
+                    }
+                    if (all_same ) {
                         return val_instr;
                     }
                 }
