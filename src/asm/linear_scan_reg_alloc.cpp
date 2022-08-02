@@ -332,34 +332,54 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     sort(live_range.begin(), live_range.end(), cmp);
 
     for (auto itv : live_range) {
-        if (itv.type == interval_value_type::arg_var) {
+        if (itv.type == interval_value_type::arg_var) { //#
             // 已经处理过arg，不再计算
             continue;
         }
+        float ave = (itv.st_id+itv.ed_id)/2.0;
         if(itv.is_float){
             for (int i = 0; i < virtual_reg_max; i++) {
                 bool conflict = false;
                 int index = 0;
-                for (int j = 0; j < virtual_float_regs[i].size(); j++) {
-                    conflict = true;
-                    if (virtual_float_regs[i][j].ed_id < itv.st_id &&
-                        j == virtual_float_regs[i].size() -
-                                1) {  // j 在 itv 前面 并且是最后一个
-                        conflict = false;
-                        index = j + 1;
-                        break;
-                    } else if (virtual_float_regs[i][j].st_id > itv.ed_id &&
-                            j == 0) {  // j 在 itv 后面 并且是第一个
-                        conflict = false;
-                        index = j;
-                        break;
-                    } else if (j != virtual_float_regs[i].size() - 1 &&
-                            virtual_float_regs[i][j + 1].st_id > itv.ed_id &&
-                            virtual_float_regs[i][j].ed_id <
-                                itv.st_id) {  // j 在 itv 后面 并且是第一个
-                        conflict = false;
-                        index = j + 1;
-                        break;
+                if(virtual_float_regs[i].empty()){
+                    index = 0;
+                }
+                else{
+                    int l = 0, r = virtual_float_regs[i].size()-1;
+                    float ave1 = (virtual_float_regs[i][l].st_id+virtual_float_regs[i][l].ed_id)/2.0;
+                    float ave2 = (virtual_float_regs[i][r].st_id+virtual_float_regs[i][r].ed_id)/2.0;
+                    if(ave <= ave1 || ave >= ave2){
+                        if(itv.ed_id<virtual_float_regs[i][l].st_id){
+                            index = l;
+                        }
+                        else if(itv.st_id>virtual_float_regs[i][r].ed_id ){
+                            index = r+1;
+                        }
+                        else{
+                            conflict = true;
+                        }
+                    }
+                    else{
+                        while(r-l>1){
+                            float ave1 = (virtual_float_regs[i][l].st_id+virtual_float_regs[i][l].ed_id)/2.0;
+                            float ave2 = (virtual_float_regs[i][r].st_id+virtual_float_regs[i][r].ed_id)/2.0;
+                            float mid = (l+r)/2.0;
+                            float mid_l = (virtual_float_regs[i][int(mid+0.5)].st_id+virtual_float_regs[i][int(mid+0.5)].ed_id)/2.0;
+                            // float mid_r = (virtual_float_regs[i][int(mid-0.5)].st_id+virtual_float_regs[i][int(mid-0.5)].ed_id)/2;
+                            if(ave>ave1 && ave<mid_l){
+                                r = int(mid+0.5);
+                            }else{
+                                l = int(mid);
+                            }
+                        }
+                        if (virtual_float_regs[i][r].st_id > itv.ed_id &&
+                                virtual_float_regs[i][l].ed_id < itv.st_id) {  // j 在 itv 后面 并且是第一个
+                            index = r;
+                        }
+                        else{
+                            conflict = true;
+                        }
+
                     }
                 }
                 if (!conflict) {
@@ -367,39 +387,136 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                             itv);
                     break;
                 }
+
             }
+            // for (int i = 0; i < virtual_reg_max; i++) {
+            //     bool conflict = false;
+            //     int index = 0;
+            //     for (int j = 0; j < virtual_float_regs[i].size(); j++) {
+            //         conflict = true;
+            //         if (j == virtual_float_regs[i].size()-1 && virtual_float_regs[i][j].ed_id < itv.st_id ) {  // j 在 itv 前面 并且是最后一个
+            //             conflict = false;
+            //             index = j + 1;
+            //             break;
+            //         } else if (j == 0 && virtual_float_regs[i][j].st_id > itv.ed_id) {  // j 在 itv 后面 并且是第一个
+            //             conflict = false;
+            //             index = j;
+            //             break;
+            //         } else if (j != virtual_float_regs[i].size() - 1 &&
+            //                 virtual_float_regs[i][j + 1].st_id > itv.ed_id &&
+            //                 virtual_float_regs[i][j].ed_id <
+            //                     itv.st_id) {  // j 在 itv 后面 并且是第一个
+            //             conflict = false;
+            //             index = j + 1;
+            //             break;
+            //         }
+
+            //         if (virtual_float_regs[i][j].st_id > itv.ed_id) {  // j 在 itv 后面 并且是第一个
+            //             conflict = true;
+            //             break;
+            //         }
+
+            //     }
+            //     if (!conflict) {
+            //         virtual_float_regs[i].insert(virtual_float_regs[i].begin() + index,
+            //                                 itv);
+            //         break;
+            //     }
+            // }
         }
         else{
                for (int i = 0; i < virtual_reg_max; i++) {
                 bool conflict = false;
                 int index = 0;
-                for (int j = 0; j < virtual_int_regs[i].size(); j++) {
-                    conflict = true;
-                    if (virtual_int_regs[i][j].ed_id < itv.st_id &&
-                        j == virtual_int_regs[i].size() -
-                                1) {  // j 在 itv 前面 并且是最后一个
-                        conflict = false;
-                        index = j + 1;
-                        break;
-                    } else if (virtual_int_regs[i][j].st_id > itv.ed_id &&
-                            j == 0) {  // j 在 itv 后面 并且是第一个
-                        conflict = false;
-                        index = j;
-                        break;
-                    } else if (j != virtual_int_regs[i].size() - 1 &&
-                            virtual_int_regs[i][j + 1].st_id > itv.ed_id &&
-                            virtual_int_regs[i][j].ed_id <
-                                itv.st_id) {  // j 在 itv 后面 并且是第一个
-                        conflict = false;
-                        index = j + 1;
-                        break;
+                if(virtual_int_regs[i].empty()){
+                    index = 0;
+                    // WARNNING("直接插入");
+                }
+                else{
+                    int l = 0, r = virtual_int_regs[i].size()-1;
+                    float ave1 = (virtual_int_regs[i][l].st_id+virtual_int_regs[i][l].ed_id)/2.0;
+                    float ave2 = (virtual_int_regs[i][r].st_id+virtual_int_regs[i][r].ed_id)/2.0;
+                    if(ave <= ave1 || ave >= ave2){
+                        if(itv.ed_id<virtual_int_regs[i][l].st_id){
+                            // WARNNING("直接插入头");
+
+                            index = l;
+                        }
+                        else if(itv.st_id>virtual_int_regs[i][r].ed_id ){
+                            // WARNNING("直接插入尾");
+                            index = r+1;
+                        }
+                        else{
+                            conflict = true;
+                        }
                     }
+                    else{
+                        // WARNNING("二分查找");
+                        while(r-l>1){
+                            // WARNNING("二分查找 %d %d",l,r);
+                            float ave1 = (virtual_int_regs[i][l].st_id+virtual_int_regs[i][l].ed_id)/2.0;
+                            float ave2 = (virtual_int_regs[i][r].st_id+virtual_int_regs[i][r].ed_id)/2.0;
+                            float mid = (l+r)/2.0;
+                            float mid_l = (virtual_int_regs[i][int(mid+0.5)].st_id+virtual_int_regs[i][int(mid+0.5)].ed_id)/2.0;
+                            // float mid_r = (virtual_int_regs[i][int(mid-0.5)].st_id+virtual_int_regs[i][int(mid-0.5)].ed_id)/2;
+                            if(ave>ave1 && ave<mid_l){
+                                r = int(mid+0.5);
+                            }else{
+                                l = int(mid);
+                            }
+                        }
+                        if (virtual_int_regs[i][r].st_id > itv.ed_id &&
+                                virtual_int_regs[i][l].ed_id < itv.st_id) {  // j 在 itv 后面 并且是第一个
+                            index = r;
+                        }
+                        else{
+                            conflict = true;
+                        }
+
+                    }
+                    // WARNNING("l = %d, r = %d insert pos %d reg %d", l, r, index,i);
                 }
                 if (!conflict) {
+                    // WARNNING("insert pos %d reg %d", index,i);
                     virtual_int_regs[i].insert(virtual_int_regs[i].begin() + index,
                                             itv);
                     break;
                 }
+                // bool conflict = false;
+                // int index = 0;
+                // for (int j = 0; j < virtual_int_regs[i].size(); j++) {
+                //     conflict = true;
+                //     if (virtual_int_regs[i][j].ed_id < itv.st_id &&
+                //         j == virtual_int_regs[i].size() -
+                //                 1) {  // j 在 itv 前面 并且是最后一个
+                //         conflict = false;
+                //         index = j + 1;
+                //         break;
+                //     } else if (virtual_int_regs[i][j].st_id > itv.ed_id &&
+                //             j == 0) {  // j 在 itv 后面 并且是第一个
+                //         conflict = false;
+                //         index = j;
+                //         break;
+                //     } else if (j != virtual_int_regs[i].size() - 1 &&
+                //             virtual_int_regs[i][j + 1].st_id > itv.ed_id &&
+                //             virtual_int_regs[i][j].ed_id <
+                //                 itv.st_id) {  // j 在 itv 后面 并且是第一个
+                //         conflict = false;
+                //         index = j + 1;
+                //         break;
+                //     }
+
+                //     if (virtual_int_regs[i][j].st_id > itv.ed_id) {  // j 在 itv 后面 并且是第一个
+                //         conflict = true;
+                //         break;
+                //     }
+                // }
+
+                // if (!conflict) {
+                //     virtual_int_regs[i].insert(virtual_int_regs[i].begin() + index,
+                //                             itv);
+                //     break;
+                // }
             }
         }
 
@@ -939,10 +1056,9 @@ int AsmBuilder::give_used_reg_at(Value *inst) {  // 分配使用过的寄存器
     return -1;
 }
 
-bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {
+bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {//#
     // LSRA_WARNNING("op_in_inst_is_spilled");
     if(dynamic_cast<MovInstr *>(op))op = dynamic_cast<MovInstr *>(op)->getLVal();//MOV转化
-
     int tag = linear_map[inst];
     if(op->getType()->isFloatTy()){
         for (int i = float_reg_number; i < virtual_reg_max; i++) {
@@ -1039,8 +1155,15 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
     }
     // linear list 对于MOV指令需要特殊处理，需要使用phi进行映射
     // LSRA_WARNNING(" LINEAR LIST");
-    for (auto bb : func->getBasicBlocks()) {
-        // LSRA_WARNNING(" [%d:B] ",bb_index);
+    std::queue<BasicBlock *>bbq;
+    bbq.push(func->getEntryBlock());
+    while(!bbq.empty()){
+        auto bb = bbq.front();
+        bbq.pop();
+        if(bb_map.count(bb)){
+            continue;
+        }
+        for(auto b: bb->getSuccBasicBlocks()) bbq.push(b);
         bb_map[bb] = bb_index++;
         for (auto inst : bb->getInstructions()) {
             if (inst->getType()->getSize() > 0) {
@@ -1079,6 +1202,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
         }
     }
     // 成环定义：如果一个块的前驱节点是大于等于自身的则形成环路，且该环路的上下界可知
+    std::map<int,int> rec;
     for (auto bb : func->getBasicBlocks()) {
         for (auto pb : bb->getPreBasicBlocks()) {
             if (bb_map[pb] >= bb_map[bb]) {
@@ -1092,13 +1216,15 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 itv.st_id = linear_map[bb->getInstructions().front()];
                 itv.ed_id = linear_map[pb->getInstructions().back()];
                 loop_set.push_back(itv);
+                rec[itv.st_id*100000+itv.ed_id]=1;
             }
         }
     }
     // 环合并 处理环路之间的交叉情况
     std::vector<interval> tmp_loop=loop_set;
     std::vector<interval> res_loop;
-    while(1){
+    LSRA_WARNNING("size %d",tmp_loop.size());
+    while(tmp_loop.size()){
         for(int i=0;i<tmp_loop.size()-1;i++){
             for(int j=i+1;j<tmp_loop.size();j++){
                 if(tmp_loop[i].ed_id >= tmp_loop[j].st_id && tmp_loop[i].ed_id <= tmp_loop[j].ed_id
@@ -1114,7 +1240,10 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     interval itv;
                     itv.st_id = std::min(tmp_loop[i].st_id,tmp_loop[j].st_id);
                     itv.ed_id = std::max(tmp_loop[i].ed_id,tmp_loop[j].ed_id);
-                    // LSRA_WARNNING(" LOOP CHECK: from %d to %d",itv.st_id,itv.ed_id);
+                    if(rec[itv.st_id*100000+itv.ed_id])continue;
+                    //LSRA_WARNNING(" LOOP CHECK: from %d to %d",itv.st_id,itv.ed_id);
+                    //getchar();
+                    rec[itv.st_id*100000+itv.ed_id]=1;
                     res_loop.push_back(itv);
                 }
             }
@@ -1129,7 +1258,7 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
         res_loop.clear();
     }
     for(auto lp: loop_set){
-        LSRA_WARNNING(" LOOP CHECK: f59_sort_test5.syrom %d to %d",lp.st_id,lp.ed_id);
+        LSRA_WARNNING(" LOOP CHECK: from %d to %d",lp.st_id,lp.ed_id);
     }
     LSRA_WARNNING("LOOP CHECK DONE");
     // cal ls
@@ -1167,6 +1296,9 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                 } else {
                     if (linear_map[inst] > live_map[op].ed_id) {
                         live_map[op].ed_id = linear_map[inst];
+                    }
+                    if (linear_map[inst] < live_map[op].st_id) {
+                        live_map[op].st_id = linear_map[inst];
                     }
                 }
                 for (auto itv : loop_set) {
@@ -1237,6 +1369,9 @@ std::vector<interval> AsmBuilder::live_interval_analysis(Function *func,
                     } else {
                         if (linear_map[inst] > live_map[op].ed_id) {
                             live_map[op].ed_id = linear_map[inst];
+                        }
+                        if (linear_map[inst] < live_map[op].st_id) {
+                            live_map[op].st_id = linear_map[inst];
                         }
                     }
                     for (auto itv : loop_set) {

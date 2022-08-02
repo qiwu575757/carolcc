@@ -117,7 +117,7 @@ int main(int argc, char **argv) {
     // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     // if(is_emit_mir && is_debug)
     //     PM.add_pass<EmitIR>("EmitIR");
-    if(is_O2){
+    if(1){
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         // if(is_emit_mir && is_debug)
         // PM.add_pass<EmitIR>("EmitIR");
@@ -132,9 +132,11 @@ int main(int argc, char **argv) {
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
 
-        PM.add_pass<FunctionInline>("FunctionInline");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
+        if (is_O2) { // 目前该优化导致编译时间过长，功能测试暂不开启
+            PM.add_pass<FunctionInline>("FunctionInline");
+            // if(is_emit_mir && is_debug)
+            //     PM.add_pass<EmitIR>("EmitIR");
+        }
 
         PM.add_pass<SCCP>("SCCP");
         // if(is_emit_mir && is_debug)
@@ -148,12 +150,11 @@ int main(int argc, char **argv) {
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
     }
-    if (!is_O2) {
-        PM.add_pass<Mem2Reg>("Mem2Reg");
-        PM.add_pass<EmitIR>("EmitIR");
-    }
+    // if (!is_O2) {
+    //     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+    //     PM.add_pass<Mem2Reg>("Mem2Reg");
+    // }
     PM.add_pass<LowerIR>("LowerIR");
-    PM.add_pass<EmitIR>("EmitIR");
     PM.run();
 
     if(is_emit_mir && !is_debug){
