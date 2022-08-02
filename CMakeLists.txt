@@ -1,10 +1,19 @@
 cmake_minimum_required(VERSION 3.16)
 
 PROJECT(compiler)
-SET(CMAKE_BUILD_TYPE "Debug")
+SET(CMAKE_BUILD_TYPE "Release")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_CXX_STANDARD 17)
-# add_definitions(-Wno-sign-compare -Wno-unused-function,)
+# 条件判断
+if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -O0")
+    message("-- [debug] version")
+
+elseif(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall -O2")
+    message("-- [release] version")
+endif()
+
 FIND_PACKAGE(BISON REQUIRED)
 SET(BISONOUTPUT ${CMAKE_SOURCE_DIR}/src/frontend/parser.cpp)
 
@@ -33,7 +42,6 @@ ENDIF()
 
 FILE(GLOB_RECURSE source_files "src/*.cpp")
 
-MESSAGE("source is ${source_files}")
 SET(INCLUDE_DIRECTORIES ./src )
 INCLUDE_DIRECTORIES(src/)
 

@@ -204,7 +204,9 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
     for(auto bb : copy_func->getBasicBlocks()){
         bb->setParentFunc(call_parent_bb->getParentFunc());
     }
-    old_func_list.splice(old_func_list.end(), copy_func->getBasicBlocks());
+    auto call_it = std::find(old_func_list.begin(),old_func_list.end(),call_parent_bb);
+    call_it++;
+    old_func_list.splice(call_it, copy_func->getBasicBlocks());
     caller_func->getBasicBlocks().push_back(
         end_block);
     caller_func->setAllocaEnd(nullptr);
