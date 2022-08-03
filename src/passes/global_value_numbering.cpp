@@ -72,14 +72,14 @@ void GlobalVariableNumbering::LVN(BasicBlock* bb) {
             if (val != instr) {
                 replace(instr, val);
             }
-        } /*else if(instr->isGep()) {
+        } else if(instr->isGep()) {
             auto val = lookUpOrAdd(instr);
             if (val != instr) {
                 replace(instr, val);
             }
         } else {
             // TODO:其他类型指令的优化
-        }*/
+        }
     }
 }
 Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
@@ -115,7 +115,7 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
                 }
             }
         }
-    } /*else if(instr->isGep()){
+    } else if(instr->isGep()){
         std::vector<Value*> oprds ;
         for(auto oprd : instr->getOperandList()){
             oprds.push_back(lookUpOrAdd(oprd));
@@ -147,7 +147,7 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
         }
     } else {
         // TODO: 其他种类的指令
-    }*/
+    }
     return instr;
 }
 Value* GlobalVariableNumbering::lookUpOrAdd(Value* val) {

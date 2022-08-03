@@ -14,6 +14,8 @@ extern int yyline;
 #define TOKEN(t) (yylval.token=t)
 %}
 
+MultilineComment		"/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"
+SingleLineComment		"//".*$
 
 %%
 
@@ -70,8 +72,8 @@ while {return TOKEN(TWHILE);}
 
 "=" {return TOKEN(TASSIGN);}
 
-"/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"   {}//MultilineComment
-"//".*$                             {}//SingleLineComment
+{MultilineComment}				 		/** 忽略 **/
+{SingleLineComment}						/** 忽略 **/
 
 <<EOF>> {yyterminate();}
 %%

@@ -365,16 +365,12 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
               asm_code += generateFunctionCall(inst,operands,"__aeabi_idiv", 0);
             }
           } else if (inst->isCmp()) { // 注意命令
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0, CMPOPRANDREGERROR);
             asm_code += InstGen::cmp(InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isShl()) {
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0 && !is_fp, GetNegRegError);
             asm_code += InstGen::lsl(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isAshr()) {
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0 && !is_fp, GetNegRegError);
             asm_code += InstGen::asr(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isLshr()) {
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0 && !is_fp, GetNegRegError);
             asm_code += InstGen::lsr(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           }
         }
