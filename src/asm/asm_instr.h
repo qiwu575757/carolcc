@@ -20,7 +20,8 @@ const std::string reg_name[] = {"r0",  "r1", "r2", "r3", "r4",  "r5",
                                 "r6",  "r7", "r8", "r9", "r10", "r11",
                                 "r12", "sp", "lr", "pc"};
 
-const int max_reg_id = 15;
+const int max_int_reg_id = 15;
+const int max_fp_reg_id = 31;
 
 const std::string vfpreg_name[] = {"s0",  "s1", "s2", "s3", "s4",  "s5", "s6",  "s7",
                                 "s8", "s9", "s10", "s11", "s12",  "s13", "s14",  "s15",
@@ -53,7 +54,12 @@ class Reg : public Value {
   bool is_fp_;
 
 public:
-  explicit Reg(int id, bool is_vfpreg) : id(id), is_fp_(is_vfpreg){};
+  explicit Reg(int id, bool is_vfpreg) : id(id), is_fp_(is_vfpreg){
+    if (id < 0 || (!is_fp_ && id > max_int_reg_id)|| (is_fp_ && id > max_fp_reg_id)) {
+      std::cerr << "Invalid Reg ID!" << std::endl;
+      exit(GetNegRegError);
+    }
+  };
   virtual ~Reg() = default;
   bool is_reg() const { return true; }
   bool is_constant() const { return false; }
@@ -81,14 +87,18 @@ public:
 private:
   int id;
   int shift;
+  bool is_fp_;
   ShiftType _t;
 
 public:
   explicit RegShift(int id, int shift, ShiftType _t = ShiftType::lsl)
-      : id(id), shift(shift), _t(_t) {
-    if (id < 0 || id > max_reg_id) {
+      : id(id), shift(shift), _t(_t), is_fp_(false) {
+    if (id < 0 || (!is_fp_ && id > max_int_reg_id)) {
       std::cerr << "Invalid Reg ID!" << std::endl;
-      abort();
+      exit(GetNegRegError);
+    }
+    if (is_fp_) {
+      exit(ShiftRegUseFp);
     }
     if (shift < 0 || shift > 31) {
       std::cerr << "Invalid Reg shift!" << std::endl;
