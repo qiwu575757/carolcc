@@ -15,6 +15,8 @@ std::string AsmBuilder::generate_asm(std::string file_name){
       live_interval_analysis(func);
       stack_size_mapping[func->getName()] = this->stack_size;
       std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
+
+      // fp  lr寄存器
       callee_saved_regs_size_mapping[func->getName()] = 8 + regs.size() * 4;
       name_func_mapping[func->getName()] = func;
     }
@@ -191,7 +193,7 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     auto saved_registers = getCalleeSavedRegisters(func);
     saved_registers.push_back(InstGen::fp);
     saved_registers.push_back(InstGen::lr);
-     std::sort(saved_registers.begin(), saved_registers. end(), cmp);
+    std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
     func_head_code += InstGen::comment("save callee-save registers, lr and fp", "");
     func_head_code += InstGen::push(saved_registers);
@@ -292,13 +294,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     }
     int op = getRegIndexOfValue(inst,inst);
     asm_code += InstGen::comment("alloca val"+inst->getPrintName(), "offset = " + std::to_string(offset));
-    MyAssert("[alloca] Return reg index is  < 0.",op >= 0, RetReturnRegERROR);
     asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(op,false),
                     InstGen::sp, InstGen::Constant(offset,false));
   } else if (inst->isLoad()) {
       int op0 = getRegIndexOfValue(inst,operands[0]);
       int target = getRegIndexOfValue(inst,inst);
-      MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && target >= 0, GetNegRegError);
       asm_code += InstGen::load(InstGen::Reg(target,inst->getType()->isFloatTy()),
               InstGen::Addr(InstGen::Reg(op0,false),0));
 
@@ -420,7 +420,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                             InstGen::NOP);
     } else if (operands.size() == 3) {
       if (operands[0]->isConstant()) {
-          MyAssert("Cmp instr operands 0 imm is not int.", operands[0]->getType()->isIntegerTy(),CmpOperandFpError);
           if (atoi(operands[0]->getPrintName().c_str()) > 0 ) {
             asm_code += InstGen::b(InstGen::Label(getLabelName(inst->getParent(),operands[1]->getName())),
                                       InstGen::NOP);
@@ -444,7 +443,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       ERROR("TO many args in br instruction",ToManyArgsInBr);
     }
   } else if (inst->isLOAD_OFFSET()) { // 需要将对应指令中变量的类型设置好
-    MyAssert("LOAD_OFFSET operands error", operands.size() == 1, LoadOffsetOperandNotOne);
     bool is_fp = operands[0]->getType()->isFloatTy();
     if (is_fp)
       asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
@@ -453,7 +451,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
   } else if (inst->isSTORE_OFFSET()) {
-    MyAssert("STORE_OFFSET operands error", operands.size() == 1,StorerOffsetOperandNotOne);
     bool is_fp = operands[0]->getType()->isFloatTy();
     asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
