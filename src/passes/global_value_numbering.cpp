@@ -135,7 +135,7 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
                         }
                         i++;
                     }
-                    if (all_same ) {
+                    if (i ==oprds.size() && all_same ) {
                         return val_instr;
                     }
                 }
