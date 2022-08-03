@@ -13,7 +13,6 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     // 建立函数名-栈大小映射
     for(auto &func: this->module->getFunctions()){
       live_interval_analysis(func);
-      // allocaStackSpace(func);
       stack_size_mapping[func->getName()] = this->stack_size;
       std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
       callee_saved_regs_size_mapping[func->getName()] = 8 + regs.size() * 4;
@@ -244,8 +243,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
   std::string asm_code;
   std::string str;
   auto &operands = inst->getOperandList();
-  bool operands_global[operands.size()]; // 操作数全局变量判断
-  memset(operands_global,false,operands.size());
+  bool mla_op1_is_1 = false;
 
   for (int i = 0; i < operands.size(); i++) {
     // 增加对全局变量的处理
@@ -254,13 +252,13 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       if (value_reg != -1){
         asm_code += getGlobalValAddress(value_reg,operands[i]);
       }
-      operands_global[i] = true;
       if (value_reg == -1 && !inst->isCall()) {
         ERROR("Get wrong reg.",EXIT_CODE_ERROR_427);
       }
     } else if (inst->isMla() && i == 0 && operands[0]->isConstant() &&
               atoi(operands[i]->getPrintName().c_str()) == 1) {
       // 对 mla 的第一个操作数为 1 进行特殊处理
+      mla_op1_is_1 = true;
       continue;
     } else if(!inst->isBr()&&!inst->isCall()){ // 增加对立即数的赋值处理
       // 若没有分配寄存器，应该返回 -1；分配了就赋值
@@ -320,7 +318,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       inst->isAdd() || inst->isSub() || inst->isMul() ||
       inst->isDiv() || inst->isRem() || inst->isCmp() ||
       inst->isZext() || inst->isNot() || inst->isShl() ||
-      inst->isAshr() || inst->isLshr()) {
+      inst->isAshr() || inst->isLshr() || inst->isAnd() ||
+      inst->isOr()) {
       int target = getRegIndexOfValue(inst,inst);
       // 认为若rem指令的操作数为立即数，不需要寄存器
       int op0 = !inst->isRem() ? getRegIndexOfValue(inst,operands[0]) : -2;
@@ -328,29 +327,38 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       int op1 = (is_fp || (operands.size()>1&&!operands[1]->isConstant()) || inst->isMul()) ? getRegIndexOfValue(inst,operands[1]) : -2;
 
       if (inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp() ||
-          inst->isAshr() || inst->isLshr() || inst->isShl()) {
+          inst->isAshr() || inst->isLshr() || inst->isShl() || inst->isAnd() ||
+          inst->isOr()) {
         if (!is_fp && operands[1]->isConstant()){
+          int int_value = atoi((operands[1])->getPrintName().c_str());
+
           if (inst->isAdd()) {
-            asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           } else if (inst->isSub()){
-            asm_code += InstGen::instConst(InstGen::sub,InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::instConst(InstGen::sub,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           } else if (inst->isDiv()) {
-            asm_code += InstGen::divConst(InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::divConst(InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           } else if (inst->isCmp()) {
             asm_code += InstGen::instConst(InstGen::cmp, InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+                          InstGen::Constant(int_value,false));
           } else if (inst->isShl()) {
-            asm_code += InstGen::instConst(InstGen::lsl,InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::instConst(InstGen::lsl,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           } else if (inst->isAshr()) {
-            asm_code += InstGen::instConst(InstGen::asr,InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::instConst(InstGen::asr,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           } else if (inst->isLshr()) {
-            asm_code += InstGen::instConst(InstGen::lsr,InstGen::Reg(target,false),InstGen::Reg(op0,false),
-                          InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
+            asm_code += InstGen::instConst(InstGen::lsr,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
+          } else if (inst->isAnd()) {
+            asm_code += InstGen::instConst(InstGen::and_,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
+          } else if (inst->isOr()) {
+            asm_code += InstGen::instConst(InstGen::orr,InstGen::Reg(target,false),
+                        InstGen::Reg(op0,false), InstGen::Constant(int_value,false));
           }
         } else { // 默认浮点的值以及存到了寄存器中
           if (inst->isAdd()) {
@@ -372,6 +380,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
             asm_code += InstGen::asr(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isLshr()) {
             asm_code += InstGen::lsr(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
+          } else if (inst->isAnd()) {
+            asm_code += InstGen::and_(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
+          } else if (inst->isOr()) {
+            asm_code += InstGen::orr(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           }
         }
 
@@ -448,10 +460,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
   } else if (inst->isMla()) {
     asm_code += InstGen::comment("get mla instr ","");
-    if (operands[0]->isConstant()) {
-      asm_code += InstGen::mla(
-            InstGen::Reg(getRegIndexOfValue(inst,inst),false),
-            InstGen::Constant(atoi(operands[0]->getPrintName().c_str()),false),
+    if (mla_op1_is_1) {
+      asm_code += InstGen::add( InstGen::Reg(getRegIndexOfValue(inst,inst),false),
             InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
             InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false));
     } else {
