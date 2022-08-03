@@ -14,8 +14,12 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     LSRA_WARNNING("func num : %d",this->module->getFunctions().size());
     for(auto &func: this->module->getFunctions()){
       live_interval_analysis(func);
+      // allocaStackSpace(func);
       stack_size_mapping[func->getName()] = func_reg_map[func->getPrintName()].stack_size;
       std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
+      callee_saved_regs_size_mapping[func->getName()] = 8 + regs.size() * 4;
+      name_func_mapping[func->getName()] = func;
+    }
     for(auto &func: this->module->getFunctions()){
       if(func->getBasicBlocks().size() != 0) {
         std::vector<InstGen::Reg> callee_regs = getCalleeSavedRegisters(func);
