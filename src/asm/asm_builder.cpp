@@ -11,10 +11,11 @@ std::string AsmBuilder::generate_asm(std::map<Value *, int> register_mapping){
 std::string AsmBuilder::generate_asm(std::string file_name){
     std::string asm_code;
     // 建立函数名-栈大小映射
+    LSRA_WARNNING("func num : %d",this->module->getFunctions().size());
     for(auto &func: this->module->getFunctions()){
       live_interval_analysis(func);
       // allocaStackSpace(func);
-      stack_size_mapping[func->getName()] = this->stack_size;
+      stack_size_mapping[func->getName()] = func_reg_map[func->getPrintName()].stack_size;
       std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
       callee_saved_regs_size_mapping[func->getName()] = 8 + regs.size() * 4;
       name_func_mapping[func->getName()] = func;
