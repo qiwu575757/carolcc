@@ -31,8 +31,8 @@ void LowerIR::splitGEP(BasicBlock *bb) {
                 auto element_size = array_ty->getSize();
 
                 // 这里语法！！！
-                if (!operands[i]->isConstant()){}
-                else if (dynamic_cast<ConstantInt*>(operands[i])->getValue() != 0) { // 如果该参数是常量
+                 if (operands[i]->isConstant() &&
+                 dynamic_cast<ConstantInt*>(operands[i])->getValue() != 0) { // 如果该参数是常量
                     off +=  dynamic_cast<ConstantInt*>(operands[i])->getValue() * element_size;
                 }
                 array_ty = static_cast<ArrayType*>(array_ty)->getElementType();
@@ -82,8 +82,8 @@ void LowerIR::splitGEP(BasicBlock *bb) {
             for (auto insert_instr : inserts) {
                 insts.insert(iter,insert_instr);
             }
-            WARNNING("inserts instr off is %d.",off);
-            WARNNING("inserts instr is %d.",inserts.size());
+            // WARNNING("inserts instr off is %d.",off);
+            // WARNNING("inserts instr is %d.",inserts.size());
             // replace and erase gep
             inst->replaceAllUse(inserts[inserts.size()-1]);
             inst->removeUseOps();

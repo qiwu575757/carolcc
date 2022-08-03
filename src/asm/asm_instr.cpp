@@ -639,6 +639,28 @@ std::string mla(const Reg &dst, const Reg &op1, const Reg &op2,
   return asm_instr;
 }
 
+std::string mla(const Reg &dst, const Constant &op1, const Reg &op2,
+                const Reg &op3) {
+  std::string asm_instr;
+  asm_instr += spaces;
+  if (!op1.is_fp() && op1.getValue() == 1) { //将mla转化为 add
+    asm_instr += add(dst,op2,op3);
+  } else {
+    asm_instr += "mla";
+    asm_instr += " ";
+    asm_instr += dst.getName();
+    asm_instr += ", ";
+    asm_instr += op1.getName();
+    asm_instr += ", ";
+    asm_instr += op2.getName();
+    asm_instr += ", ";
+    asm_instr += op3.getName();
+    asm_instr += newline;
+  }
+
+  return asm_instr;
+}
+
 std::string smmla(const Reg &dst, const Reg &op1, const Reg &op2,
                   const Reg &op3) {
   std::string asm_instr;

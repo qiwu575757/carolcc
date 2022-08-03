@@ -210,6 +210,8 @@ std::string mul(const Reg &dst, const Reg &op1, const Reg &op2);
 std::string smmul(const Reg &dst, const Reg &op1, const Reg &op2);
 std::string mla(const Reg &dst, const Reg &op1, const Reg &op2,
                 const Reg &op3);
+std::string mla(const Reg &dst, const Constant &op1, const Reg &op2,
+                const Reg &op3);
 std::string smmla(const Reg &dst, const Reg &op1, const Reg &op2,
                   const Reg &op3);
 std::string mls(const Reg &dst, const Reg &op1, const Reg &op2,

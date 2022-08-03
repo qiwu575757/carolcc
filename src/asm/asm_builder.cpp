@@ -258,12 +258,14 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       if (value_reg == -1 && !inst->isCall()) {
         ERROR("Get wrong reg.",EXIT_CODE_ERROR_427);
       }
+    } else if (inst->isMla() && i == 0 && operands[0]->isConstant() &&
+              atoi(operands[i]->getPrintName().c_str()) == 1) {
+      // 对 mla 的第一个操作数为 1 进行特殊处理
+      continue;
     } else if(!inst->isBr()&&!inst->isCall()){ // 增加对立即数的赋值处理
       // 若没有分配寄存器，应该返回 -1；分配了就赋值
       int imm_reg = getRegIndexOfValue(inst,operands[i]);
       if (operands[i]->isConstant()&&imm_reg!=-1) {
-        // bool is_fp =( ((inst->isAdd() || inst->isSub() || inst->isMul() || inst->isDiv() || inst->isCmp()) &&
-        //             (inst->getType()->isFloatTy())) );// 某些浮点指令的操作数需要使用 r寄存器
         bool is_fp = operands[i]->getType()->isFloatTy();
         int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(operands[i])) :
                           atoi(operands[i]->getPrintName().c_str());
@@ -329,10 +331,10 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           inst->isAshr() || inst->isLshr() || inst->isShl()) {
         if (!is_fp && operands[1]->isConstant()){
           if (inst->isAdd()) {
-            asm_code += InstGen::add(InstGen::Reg(target,false),InstGen::Reg(op0,false),
+            asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(target,false),InstGen::Reg(op0,false),
                           InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
           } else if (inst->isSub()){
-            asm_code += InstGen::sub(InstGen::Reg(target,false),InstGen::Reg(op0,false),
+            asm_code += InstGen::instConst(InstGen::sub,InstGen::Reg(target,false),InstGen::Reg(op0,false),
                           InstGen::Constant(atoi((operands[1])->getPrintName().c_str()),false));
           } else if (inst->isDiv()) {
             asm_code += InstGen::divConst(InstGen::Reg(target,false),InstGen::Reg(op0,false),
@@ -352,14 +354,11 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           }
         } else { // 默认浮点的值以及存到了寄存器中
           if (inst->isAdd()) {
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0, ADDOPRANDREGERROR);
             asm_code += InstGen::add(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isSub()){
-            MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0, SUBOPRANDREGERROR);
             asm_code += InstGen::sub(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
           } else if (inst->isDiv()) {
             if (is_fp) {
-              MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0, DIVOPRANDREGERROR);
               asm_code += InstGen::sdiv(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
             }
             else {
@@ -387,7 +386,6 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
           asm_code += InstGen::mov(InstGen::Reg(target,false),InstGen::Constant(1,false),cmp_op);
         }
       } else if (inst->isMul()) {
-          MyAssert("op0 < 0 or op1 < 0 or target < 0",op0 >= 0 && op1 >= 0 && target >= 0, MULOPRANDREGERROR);
           asm_code += InstGen::mul(InstGen::Reg(target,is_fp),InstGen::Reg(op0,is_fp),InstGen::Reg(op1,is_fp));
       } else if (inst->isRem()) {
           asm_code += generateFunctionCall(inst,operands,"__aeabi_idivmod", 1);
@@ -454,11 +452,19 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                       InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
   } else if (inst->isMla()) {
     asm_code += InstGen::comment("get mla instr ","");
-    asm_code += InstGen::mla(
-          InstGen::Reg(getRegIndexOfValue(inst,inst),false),
-          InstGen::Reg(getRegIndexOfValue(inst,operands[0]),false),
-          InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
-          InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false));
+    if (operands[0]->isConstant()) {
+      asm_code += InstGen::mla(
+            InstGen::Reg(getRegIndexOfValue(inst,inst),false),
+            InstGen::Constant(atoi(operands[0]->getPrintName().c_str()),false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false));
+    } else {
+      asm_code += InstGen::mla(
+            InstGen::Reg(getRegIndexOfValue(inst,inst),false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[0]),false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false));
+    }
   } else if (inst->isMOV()) {
     asm_code += InstGen::comment("get mov instr","");
     int target = getRegIndexOfValue(inst,inst);
