@@ -1,6 +1,7 @@
 #include "dominators.h"
 #include "ir/basic_block.h"
 #include "ir/function.h"
+#include "passes/module.h"
 
 // #define _DOMINATOR_LOG
 

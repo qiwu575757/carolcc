@@ -705,11 +705,27 @@ void SYSYBuilder::visit(tree_stmt &node) {
     } else if (node.block != nullptr) {
         node.block->accept(*this);
         return;
-    } else if (node.break_stmt != nullptr) {
+    } else if (node.break_stmt  != nullptr) {
         node.break_stmt->accept(*this);
+        BasicBlock *bb;
+        if (builder->GetBaseBlockFatherBlock() == nullptr) {
+            bb = BasicBlock::create("", G_cur_fun);
+        } else {
+            bb = BasicBlock::create("");
+            builder->pushBaseBlock(bb);
+        }
+        builder->SetInstrInsertPoint(bb);
         return;
-    } else if (node.continue_stmt != nullptr) {
+    } else if ( node.continue_stmt!=nullptr) {
         node.continue_stmt->accept(*this);
+        BasicBlock *bb;
+        if (builder->GetBaseBlockFatherBlock() == nullptr) {
+            bb = BasicBlock::create("", G_cur_fun);
+        } else {
+            bb = BasicBlock::create("");
+            builder->pushBaseBlock(bb);
+        }
+        builder->SetInstrInsertPoint(bb);
         return;
     } else if (node.exp != nullptr) {  //
         node.exp->accept(*this);

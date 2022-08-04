@@ -2,7 +2,6 @@
 #define COMPILER_DOMINATORS_H
 
 #include "passes/pass.h"
-#include "passes/module.h"
 #include <set>
 #include <list>
 #include <map>

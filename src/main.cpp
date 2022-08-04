@@ -6,7 +6,6 @@
 #include <string>
 
 #include "asm/asm_builder.h"
-#include "passes/dominators.h"
 #include "passes/emit_ir.h"
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
@@ -21,7 +20,6 @@
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/sysy_builder.h"
 #include "visitor/tree_visitor_base.h"
-#include "passes/dominators.h"
 #include "passes/emit_ir.h"
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
@@ -114,9 +112,9 @@ int main(int argc, char **argv) {
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    // PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+    if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
+    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if(is_O2){
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         // if(is_emit_mir && is_debug)
@@ -129,14 +127,17 @@ int main(int argc, char **argv) {
         //     PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
-        if (is_O2) { // 目前该优化导致编译时间过长，功能测试暂不开启
-            PM.add_pass<FunctionInline>("FunctionInline");
-            // if(is_emit_mir && is_debug)
-            //     PM.add_pass<EmitIR>("EmitIR");
-        }
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
+
+
+        PM.add_pass<FunctionInline>("FunctionInline");
+        if(is_emit_mir && is_debug)
+            PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<SCCP>("SCCP");
         // if(is_emit_mir && is_debug)
@@ -146,9 +147,6 @@ int main(int argc, char **argv) {
         // if(is_emit_mir && is_debug)
         //     PM.add_pass<EmitIR>("EmitIR");
 
-        PM.add_pass<GlobalVariableNumbering>("GVN");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
     }
     // if (!is_O2) {
     //     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
