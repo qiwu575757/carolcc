@@ -11,6 +11,9 @@ public:
     void run() override;
     void splitGEP(BasicBlock *bb);
     void rmPhi(Function* f);
+    void convertRem2And(BasicBlock *bb);
+    void splitRem(BasicBlock *bb);
+    bool isPowerOfTwo(int x);
 };
 
 #endif

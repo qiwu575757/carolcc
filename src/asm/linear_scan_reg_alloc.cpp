@@ -630,7 +630,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     // 分配 ret
     func_reg_map[cur_func_name].return_offset = func_reg_map[cur_func_name].stack_size;
-    func_reg_map[cur_func_name].stack_size += 4;
+    func_reg_map[cur_func_name].stack_size += 8;
     // 扩大栈空间
     // func_reg_map[cur_func_name].stack_size += 128;
     // 参数栈表示

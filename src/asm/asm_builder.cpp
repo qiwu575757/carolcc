@@ -15,6 +15,7 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     for(auto &func: this->module->getFunctions()){
       live_interval_analysis(func);
       // allocaStackSpace(func);
+      return_offset_mapping[func->getName()] = func_reg_map[func->getPrintName()].return_offset;
       stack_size_mapping[func->getName()] = func_reg_map[func->getPrintName()].stack_size;
       std::vector<InstGen::Reg> regs = getCalleeSavedRegisters(func);
 
@@ -505,6 +506,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   bool use_fp = is_fp && inst->isCall();// 只有 call指令返回值可能会用 s0,如 cast指令
 
   std::vector<InstGen::Reg> saved_registers;
+  std::vector<InstGen::Reg> return_register;
   if (inst->isCall()) {
     saved_registers = getCallerSavedRegisters(name_func_mapping[func_name]);
   } else { // 对于 abi 的处理
@@ -531,17 +533,24 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
       }
     }
     saved_registers = new_save_registers;
+    return_register.push_back(returned_reg);
   }
 
-   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
+  std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
   if (!saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
   }
   func_asm += InstGen::comment(" call " + func_name, "");
 
+  // 保存可能发生冲突的 return reg, 不一起保存的原因是将结果传递给目标寄存器简单
+  if (!return_register.empty()) {
+    int return_offset = return_offset_mapping[inst->getParent()->getParentFunc()->getName()];
+    func_asm += InstGen::store(return_register[0],
+        InstGen::Addr(InstGen::sp,return_offset+4*saved_registers.size()));
+  }
   // pass func args
-  func_asm += passFunctionArgs(inst,args,func_name,saved_registers);
+  func_asm += passFunctionArgs(inst,args,func_name,saved_registers,return_register);
 
   func_asm += InstGen::bl(func_name);
 
@@ -557,6 +566,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
               InstGen::Addr(InstGen::sp,inst_pos.first+saved_registers.size()*4));
     }
   }
+
   if (!saved_registers.empty()) {
     func_asm += InstGen::pop(saved_registers);
   }
@@ -566,16 +576,24 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
 
   saved_registers.clear();
+  return_register.clear();
+
   return func_asm;
 }
 
 std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>args,
-                std::string func_name, std::vector<InstGen::Reg> saved_registers) {
+  std::string func_name, std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs) {
   std::string func_asm;
   // 系统函数最多两个参数，仅通过寄存器传参
   int callee_saved_regs_size = callee_saved_regs_size_mapping[func_name];
   int callee_stack_size = stack_size_mapping[func_name];
+
+  int return_offset = return_offset_mapping[inst->getParent()->getParentFunc()->getName()];
+  int cur_sp_off = return_offset + 4*saved_registers.size();
   int saved_fp_regs = 0; // 调用者保存的浮点寄存器的个数，用于计算保存寄存器偏移
+  int has_return = !return_regs.empty();
+  InstGen::Reg return_reg = has_return ? return_regs[0] : InstGen::Reg(0,false);
+
   for (auto i : saved_registers ) {
     if (i.is_fp()) {
       saved_fp_regs++;
@@ -602,9 +620,14 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
 
             func_asm += InstGen::mov(InstGen::Reg(used_reg,use_fp),temp_reg);
           } else {
-            func_asm += InstGen::setValue(InstGen::Reg(used_reg,false),
-                    InstGen::Constant(atoi(args[i]->getPrintName().c_str())+
-                    (inst->isAlloca()&&(i==0) ? saved_registers.size()*4 : 0),false));
+            if (inst->isAlloca()&&(used_reg==0)) { // for memset call
+              func_asm += InstGen::instConst(InstGen::add, InstGen::Reg(used_reg,false),
+                    InstGen::sp, InstGen::Constant(atoi(args[i]->getPrintName().c_str())+
+                     saved_registers.size()*4, false));
+            } else {
+              func_asm += InstGen::setValue(InstGen::Reg(used_reg,false),
+                      InstGen::Constant(atoi(args[i]->getPrintName().c_str()),false));
+            }
           }
         } else {
           // 若变量在栈中，返回的offset是push之前的offset
@@ -628,6 +651,9 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
+                if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
+                  off = cur_sp_off;
+                }
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
                                         InstGen::Addr(InstGen::sp,off));
@@ -637,21 +663,22 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
             }
           } else { // 参数在栈中
             func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp),
-                  InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size() * 4));
-            // func_asm += InstGen::mov(InstGen::Reg(used_reg,use_fp),temp_reg);
+                  InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
           }
         }
       } else if ((!use_fp && int_args > 3) || (use_fp && float_args > 15)){
       // 使用栈传递参数
         // 参数在调用函数栈的位置偏移
         int offset = (std::max(float_args, 16)-16)*4 + (std::max(int_args,4)-4)*4;
+        // 与当前sp的绝对偏移
+        int abs_offset = offset-callee_saved_regs_size-callee_stack_size;
 
         if (args[i]->isConstant()) {
           int int_value = is_fp ? float2int(dynamic_cast<ConstantFloat *>(args[i])) :
                     atoi((args[i])->getPrintName().c_str());
           func_asm += InstGen::setValue(temp_reg,InstGen::Constant(int_value,false));
           func_asm += InstGen::store(temp_reg,
-            InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+            InstGen::Addr(InstGen::sp,abs_offset));
         } else {
           std::pair<int, bool> arg_pos = getValuePosition(inst,args[i]);
 
@@ -672,19 +699,22 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
+                if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
+                  off = cur_sp_off;
+                }
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
-                  InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+                  InstGen::Addr(InstGen::sp,abs_offset));
             } else {
               func_asm += InstGen::store(InstGen::Reg(arg_pos.first,is_fp),
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+                InstGen::Addr(InstGen::sp,abs_offset));
             }
            } else {
             func_asm += InstGen::load(temp_reg,
               InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
             func_asm += InstGen::store(temp_reg,
-                InstGen::Addr(InstGen::sp,offset-callee_saved_regs_size-callee_stack_size));
+                InstGen::Addr(InstGen::sp,abs_offset));
           }
         }
       } else {
@@ -695,10 +725,6 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
       else int_args++;
     }
 
-    // for memset call
-    if (inst->isAlloca()) {
-      func_asm += InstGen::add(InstGen::Reg(0,false),InstGen::Reg(0,false),InstGen::sp);
-  }
   }
 
   return func_asm;

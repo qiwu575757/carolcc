@@ -10,6 +10,7 @@ void LowerIR::run() {
         rmPhi(func);
         for (auto bb : func->getBasicBlocks()) {
             splitGEP(bb);
+            convertRem2And(bb);
         }
     }
 
@@ -93,6 +94,61 @@ void LowerIR::splitGEP(BasicBlock *bb) {
         }
     }
 }
+
+bool LowerIR::isPowerOfTwo(int x) {
+  return x && (!(x & (x - 1)));
+}
+
+void LowerIR::convertRem2And(BasicBlock *bb) {
+  auto &insts = bb->getInstructions();
+  for (auto iter = insts.begin(); iter != insts.end();) {
+    auto inst = *iter;
+    if (inst->isRem()) {
+      auto op2 = dynamic_cast<Constant *>(inst->getOperand(1));
+      if (op2) {
+        int v = static_cast<ConstantInt *>(op2)->getValue();
+        if (isPowerOfTwo(v)) {
+          int p = v - 1;
+          auto tmp = BinaryInst::createAnd(inst->getOperand(0),
+                            ConstantInt::get(p),nullptr);
+          inst->replaceAllUse(tmp);
+          inst->removeUseOps();
+          tmp->setParent(bb);
+          insts.insert(iter, tmp);
+          iter = insts.erase(iter);
+          continue;
+        }
+      }
+    }
+    ++iter;
+  }
+}
+
+// 将取摸转化为 除法、乘法、减法
+void LowerIR::splitRem(BasicBlock *bb) {
+  auto &insts = bb->getInstructions();
+  for (auto iter = insts.begin(); iter != insts.end();) {
+    auto inst = *iter;
+    if (inst->isRem()) {
+      auto op1 = inst->getOperand(0);
+      auto op2 = inst->getOperand(1);
+      auto div = BinaryInst::createDiv(op1, op2, nullptr);
+      div->setParent(bb);
+      auto mul = BinaryInst::createMul(div, op2, nullptr);
+      mul->setParent(bb);
+      auto sub = BinaryInst::createSub(op1, mul, nullptr);
+      sub->setParent(bb);
+      insts.insert(iter, div);
+      insts.insert(iter, mul);
+      insts.insert(iter, sub);
+      inst->replaceAllUse(sub);
+      inst->removeUseOps();
+      iter = insts.erase(iter);
+    } else
+      ++iter;
+  }
+}
+
 void LowerIR::rmPhi(Function *f){
     std::list<PhiInstr*>phis;
     for(auto bb : f->getBasicBlocks()){

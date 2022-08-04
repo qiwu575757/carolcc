@@ -35,8 +35,11 @@ std::string condCode(const CmpOp &cond) {
 
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
-  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
+  if (reg_list.empty()) {
+    return asm_instr;
+  }
 
+  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
   bool has_fp = false;
   // int total_push = 0;
 
@@ -102,6 +105,10 @@ std::string push(const std::vector<Reg> &reg_list) {
 
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
+  if (reg_list.empty()) {
+    return asm_instr;
+  }
+
   asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
   bool has_fp = false;
 

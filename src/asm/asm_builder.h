@@ -120,6 +120,7 @@ class AsmBuilder {
 private:
   std::shared_ptr<Module> module;
   std::map<std::string, int> stack_size_mapping;// func_name - stack size
+  std::map<std::string, int> return_offset_mapping;// func_name - return offset
   std::map<std::string, int> callee_saved_regs_size_mapping;// func_name - callee saved reg size
   std::map<std::string, Function*> name_func_mapping;// func_name - func
   int thread_stack_bits;
@@ -203,7 +204,7 @@ public:
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
   std::string getGlobalValAddress(int op_reg, Value *val);
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
-          std::string func_name,std::vector<InstGen::Reg> saved_registers);
+          std::string func_name,std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs);
 
 
 };
