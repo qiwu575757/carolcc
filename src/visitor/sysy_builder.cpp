@@ -19,7 +19,7 @@
 
 #define CONST_FLOAT(num) ConstantFloat::create(num)
 
-#define ZERO_INIT
+// #define ZERO_INIT
 
 // 如果以baseblock作为目标，则返回条件的第一个basic block 块
 BasicBlock * getTargetBasicBlock(BaseBlock * b){
@@ -88,6 +88,8 @@ void SYSYBuilder::visit(tree_comp_unit &node) {
     for (auto func : node.functions) {
         SYSY_BUILDER("visiting func %s", func->id.c_str());
         func->accept(*this);
+        
+
     }
 }
 
@@ -188,6 +190,8 @@ void SYSYBuilder::visit(tree_func_def &node) {
     for (auto &b : node.block) {
         b->accept(*this);
     }
+
+    fun->movAllocaToEntry();
     scope.exit();
 }
 
@@ -654,7 +658,10 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 scope.push(node.id, var);
             }
         } else {
+                // printf("%s\n",node.id.c_str());
             auto val_alloc = builder->createAllocaAtEntry(G_tmp_type);
+            // auto val_alloc = builder->createAlloca(G_tmp_type);
+
             scope.push(node.id, val_alloc);
             if (node.init_val != nullptr) {  // 变量赋值
                 node.init_val->accept(*this);

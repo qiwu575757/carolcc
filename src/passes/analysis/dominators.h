@@ -1,8 +1,8 @@
 #ifndef COMPILER_DOMINATORS_H
 #define COMPILER_DOMINATORS_H
 
-#include "pass.h"
-#include "module.h"
+#include "passes/pass.h"
+#include "passes/module.h"
 #include <set>
 #include <list>
 #include <map>

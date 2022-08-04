@@ -5,7 +5,7 @@
 #include <set>
 #include <vector>
 
-#include "dominators.h"
+#include "analysis/dominators.h"
 #include "ir/constant.h"
 #include "ir/function.h"
 #include "ir/instruction.h"
@@ -72,11 +72,11 @@ void GlobalVariableNumbering::LVN(BasicBlock* bb) {
             if (val != instr) {
                 replace(instr, val);
             }
-        } else if(instr->isGep()) {
-            auto val = lookUpOrAdd(instr);
-            if (val != instr) {
-                replace(instr, val);
-            }
+        // } else if(instr->isGep()) {
+            // auto val = lookUpOrAdd(instr);
+            // if (val != instr) {
+                // replace(instr, val);
+            // }
         } else {
             // TODO:其他类型指令的优化
         }

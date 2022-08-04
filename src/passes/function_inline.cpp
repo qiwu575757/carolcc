@@ -197,6 +197,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
             break;
         }
     }
+    FUNC_LINE_LOG("wait move alloca size is %zu",wait_move_allocas.size());
     for(auto alloca : wait_move_allocas){
         alloca->getParent()->deleteInstr(alloca);
     }

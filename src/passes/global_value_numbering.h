@@ -5,11 +5,12 @@
 #include "ir/constant.h"
 #include "ir/instruction.h"
 #include "pass.h"
-#include "passes/dominators.h"
+#include "passes/analysis/dominators.h"
 
 #include <map>
 #include <string>
 #include <queue>
+#include <unordered_map>
 #include <vector>
 class Function;
 class BinaryInst;
@@ -31,7 +32,7 @@ public:
     
 
 private:
-    std::vector<std::map<Value*,Value*>> _value_table;
+    std::vector<std::unordered_map<Value*,Value*>> _value_table;
     Value* lookUpOrAdd(Value* val);
     Dominators _dom_analysis;
     Value* findSameInstrInTable(Instruction* instr);

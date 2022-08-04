@@ -361,18 +361,18 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
 }
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    if(ptr->getType()->getPointerElementType()->eq(value->getType())){
+    // if(ptr->getType()->getPointerElementType()->eq(value->getType())){
         return new StoreInst(value, ptr, parent);
-    }
-    else {
-        std::cout<<"[CreateStore]:(ptr,val) = (";
-        ptr->getType()->print(std::cout);
-        std::cout<<",";
-        value->getType()->print(std::cout);
-        std::cout<<")\n";
-        ERROR("error type",EXIT_CODE_ERROR_312);
-        return nullptr;
-    }
+    // }
+    // else {
+    //     std::cout<<"[CreateStore]:(ptr,val) = (";
+    //     ptr->getType()->print(std::cout);
+    //     std::cout<<",";
+    //     value->getType()->print(std::cout);
+    //     std::cout<<")\n";
+    //     ERROR("error type",EXIT_CODE_ERROR_312);
+    //     return nullptr;
+    // }
 }
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
 std::string StoreInst::getPrintName() {
@@ -510,9 +510,12 @@ ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
 Type *ZExtInst::getDestType() const { return _dest_ty; }
 void ZExtInst::accept(IrVisitorBase *v) { v->visit(this); }
 AllocaInst::AllocaInst(Type *ty, BasicBlock *parent)
-    : Instruction(PointerType::get(ty), Instruction::ALLOCA, 0, parent),
+    : Instruction(PointerType::get(ty), Instruction::ALLOCA, 0),
       _alloca_ty(ty),
-      _init(false) {}
+      _init(false) {
+        this->setParent(parent);
+        parent->getFunction()->addAlloca(this);
+      }
 AllocaInst *AllocaInst::createAlloca(Type *ty, BasicBlock *parent) {
     return new AllocaInst(ty, parent);
 }

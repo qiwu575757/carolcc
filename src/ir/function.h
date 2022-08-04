@@ -52,6 +52,7 @@ private:
 class Function : public GlobalValue {
 public:
     void addAlloca(AllocaInst*);
+    void movAllocaToEntry();
     // 函数内联专用
     void insertAlloca(AllocaInst*);
     void setAllocaEnd(AllocaInst*);
@@ -119,6 +120,7 @@ private:
     std::list<BaseBlock *> _base_block_list;
     Module *_parent;
     std::list<BasicBlock *> _basic_block_list;
+    std::list<Instruction*> _allocas_list;
     bool  _is_builtin;
     // 此函数调用的函数
     std::set<Function*> _callee_list;

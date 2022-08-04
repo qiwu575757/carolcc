@@ -137,6 +137,7 @@ Function *ValueCloner::copyFunc(Function *old_func) {
             }
         }
     }
+    new_func_ptr->movAllocaToEntry();
     std::set<PhiInstr*> phi_set;
     for(auto bb :old_func->getBasicBlocks()){
         for(auto instr : bb->getInstructions()){

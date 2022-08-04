@@ -1,5 +1,4 @@
 #include "dominators.h"
-#include "module.h"
 #include "ir/basic_block.h"
 #include "ir/function.h"
 

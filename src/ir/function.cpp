@@ -81,17 +81,19 @@ void Function::buildArgs() {
 }
 void Function::accept(IrVisitorBase *v) { v->visit(this); }
 void Function::addAlloca(AllocaInst *alloca) {
-    auto entry_it = _base_block_list.begin();
-    auto entry = static_cast<BasicBlock *>(*entry_it);
-    INFO("delelting alloca");
-    if (_alloca_end != nullptr) {
-        entry->deleteInstr(alloca);
-        entry->insertAfterInstr(_alloca_end, alloca);
-    } else {
-        entry->deleteInstr(alloca);
-        entry->getInstructions().push_front(alloca);
+    this->_allocas_list.push_back(alloca);
+}
+void Function::movAllocaToEntry(){
+    BasicBlock* entry;
+    if(!_base_block_list.empty()){
+        entry = dynamic_cast<BasicBlock *>(_base_block_list.front());
     }
-    _alloca_end = alloca;
+    else {
+        entry = dynamic_cast<BasicBlock *>(_basic_block_list.front());
+    }
+    entry->getInstructions().splice(entry->getInstructions().begin(), _allocas_list);
+    
+    
 }
 void Function::insertAlloca(AllocaInst *alloca) {
     auto entry = getEntryBlock();

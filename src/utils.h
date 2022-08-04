@@ -1,4 +1,3 @@
-
 #ifndef EASYCC_ERROR_H
 #define EASYCC_ERROR_H
 
@@ -13,7 +12,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-
+#include <iostream>
+#include <chrono>
 #define __ERROR
 #define __ASSERT
 
@@ -425,5 +425,34 @@ public:
 #else
 #define SYSY_BUILDER(format, ...)
 #endif
+
+
+//timer
+class TimerClock {
+   public:
+    TimerClock(const std::string& name):_name(name) { update(); }
+    
+    ~TimerClock() {}
+
+    void update() { _start = std::chrono::high_resolution_clock::now(); }
+    void stop(){
+        std::cout<<_name<<":"<<getTimerMilliSec()<<"ms"<<std::endl;
+    }
+    //获取秒
+    double getTimerSecond() { return getTimerMicroSec() * 0.000001; }
+    //获取毫秒
+    double getTimerMilliSec() { return getTimerMicroSec() * 0.001; }
+    //获取微妙
+    long long getTimerMicroSec() {
+        //当前时钟减去开始时钟的count
+        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() -
+                                           _start)
+            .count();
+    }
+
+   private:
+    std::string _name;
+    std::chrono::time_point<std::chrono::high_resolution_clock> _start;
+};
 
 #endif// EASYCC_ERROR_H

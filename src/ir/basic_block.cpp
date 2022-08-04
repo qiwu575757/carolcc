@@ -1,4 +1,6 @@
 #include "basic_block.h"
+#include <algorithm>
+#include <iterator>
 #include "function.h"
 #include "visitor/ir_visitor_base.h"
 std::list<Instruction *> &BasicBlock::getInstructions() {
@@ -77,7 +79,9 @@ void BasicBlock::insertAfterInstr(Instruction *pos, Instruction *insertInstr) {
     this->_instructions.push_back(insertInstr);
 }
 void BasicBlock::deleteInstr(Instruction *instr) {
-    this->_instructions.remove(instr);
+    
+    auto it =  std::find(_instructions.begin(), _instructions.end(), instr);
+    if (it != _instructions.end()) this->_instructions.erase(it);
 }
 void BasicBlock::addPreBasicBlock(BasicBlock *bb) {
     this->_pre_bbs.push_back(bb);
