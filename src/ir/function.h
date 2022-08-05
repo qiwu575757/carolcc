@@ -4,6 +4,7 @@
 
 #include "base_block.h"
 #include "helpers/type_helper.h"
+#include "ir/global_variable.h"
 #include "type.h"
 #include "utils.h"
 #include "value.h"
@@ -113,8 +114,17 @@ public:
     std::set<Function*>& getCallerSet() {return _caller_list;}
     void addCaller(Function* caller){_caller_list.insert(caller);}
     void addCallee(Function* callee){_callee_list.insert(callee);}
+    void setSideEffect(bool flag){_has_side_effects = flag;}
+    bool hasSideEffect(){return _has_side_effects;}
+    void setUseGlobalVar(bool flag){_if_use_global_var = flag;}
+    bool useGlobalVar(){return _if_use_global_var;}
+    std::set<GlobalVariable*> & getUsedGlobalVarSet(){return _used_global_var_set;}
+
 
 private:
+    bool _has_side_effects;
+    bool _if_use_global_var;
+    std::set <GlobalVariable*> _used_global_var_set;
     Instruction* _alloca_end = nullptr;
     std::vector<Argument *> _args;
     std::list<BaseBlock *> _base_block_list;

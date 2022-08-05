@@ -10,6 +10,8 @@
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/lower_ir.h"
+#include "passes/dead_code_elimination.h"
+#include "passes/analysis/inter_procedural_analysis.h"
 #include "passes/function_inline.h"
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
@@ -94,7 +96,6 @@ int main(int argc, char **argv) {
         output_file = input_file;
         output_file.replace(output_file.end() - 2, output_file.end(), "s");
     }
-    output = fopen(output_file.c_str(), "w");
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
@@ -116,37 +117,18 @@ int main(int argc, char **argv) {
         PM.add_pass<EmitIR>("EmitIR");
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if(is_O2){
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
-
-        // if(is_show_hir_pad_graph && is_debug)
-        //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
         PM.add_pass<Mem2Reg>("Mem2Reg");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
-        PM.add_pass<GlobalVariableNumbering>("GVN");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
-
-        PM.add_pass<FunctionInline>("FunctionInline");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
         PM.add_pass<SCCP>("SCCP");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        PM.add_pass<FunctionInline>("FunctionInline");
+        PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
     // if (!is_O2) {
     //     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
@@ -166,6 +148,7 @@ int main(int argc, char **argv) {
         builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);
         std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+        output = fopen(output_file.c_str(), "w");
         fprintf(output,"%s",asm_code.c_str());
         fclose(output);
     }

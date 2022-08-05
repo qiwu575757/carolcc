@@ -135,6 +135,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
                     }
                 }
             }
+            copy_arg->replaceAllUse(call_instr_arg);
             for(auto instr:wait_delete_instr){
                 instr->removeUseOps();
                 instr->getParent()->deleteInstr(instr);
@@ -158,9 +159,6 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
     for (auto ret_instr : ret_instrs) {
         // end_block->addPreBasicBlock(ret_instr->getParent());
         // ret_instr->getParent()->addSuccBasicBlock(end_block);
-        FUNC_LINE_LOG("delete ret instr ret %s in block %s",
-                      ret_instr->getOperand(0)->getPrintName().c_str(),
-                      ret_instr->getParent()->getPrintName().c_str());
         ret_instr->getParent()->deleteInstr(ret_instr);
         BranchInst::createBranch(end_block, ret_instr->getParent());
     }
@@ -207,9 +205,8 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
     }
     auto call_it = std::find(old_func_list.begin(),old_func_list.end(),call_parent_bb);
     call_it++;
+    copy_func->getBasicBlocks().push_back(end_block);
     old_func_list.splice(call_it, copy_func->getBasicBlocks());
-    caller_func->getBasicBlocks().push_back(
-        end_block);
     caller_func->setAllocaEnd(nullptr);
     for(auto alloca : wait_move_allocas){
         caller_func->insertAlloca(alloca);

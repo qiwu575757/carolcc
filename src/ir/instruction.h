@@ -91,8 +91,8 @@ class Instruction : public User {
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
-    bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
-    bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
+    bool isStoreOffset() const { return _op_id == Instruction::STORE_OFFSET; }
+    bool isLoadOffset() const { return _op_id == Instruction::LOAD_OFFSET; }
     bool isMOV() const { return _op_id == Instruction::MOV; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
@@ -254,6 +254,7 @@ class StoreInst : public Instruction {
 
     bool hasOffset() { return getOperandNumber() >= 3; }
     void setRVal(Value *v) { setOperand(0, v); }
+    Value *getPtr(){return getOperand(1);}
     void setLVal(Value *v) { setOperand(1, v); }
     void setOffset(Value *v) { setOperand(2, v); }
 };

@@ -14,10 +14,11 @@ class Value;
 class AliasAnalysis  {
    public:
    static Value* getArrayPtr(Value* ptr);
-   static bool isGlaobal(Value* array);
+   static bool isGlobal(Value* array);
    static bool isParam(Value* array);
    static bool isLocal(Value* array);
    static bool isGlobalArray(Value* array);
+   static bool alias(Value* array1,Value* array2);
 };
 
 #endif  // COMPILER_DOMINATORS_H

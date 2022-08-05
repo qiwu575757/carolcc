@@ -199,6 +199,7 @@ enum EXIT_CODE {
     EXIT_CODE_ERROR_460,
     ERROR_TYPE,
     DYNAMIC_CAST_NULL_PTR,
+    deleteDeadCodeError,
     YYERROR,
     ERROR_DEFUALT,
 };
