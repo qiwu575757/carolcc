@@ -134,48 +134,91 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
 
     if(dynamic_cast<MovInstr *>(val))val = dynamic_cast<MovInstr *>(val)->getLVal();//MOV转化
     int tag = func_reg_map[cur_func_name].linear_map[inst];
-    if(val->getType()->isFloatTy()){
-    // LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
-    // val->getPrintName().c_str(),tag);
-        for (int i = 0; i < float_reg_number; i++) {
-            for (int j = 0; j < func_reg_map[cur_func_name].virtual_float_regs[i].size(); j++) {
-                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                // func_reg_map[cur_func_name].virtual_float_regs[i][j].v->getPrintName().c_str(),
-                // func_reg_map[cur_func_name].virtual_float_regs[i][j].v == val,
-                // func_reg_map[cur_func_name].virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
-                // func_reg_map[cur_func_name].virtual_float_regs[i][j].st_id,
-                // func_reg_map[cur_func_name].virtual_float_regs[i][j].ed_id,i);
-                if (func_reg_map[cur_func_name].virtual_float_regs[i][j].v == val &&
-                    tag >= func_reg_map[cur_func_name].virtual_float_regs[i][j].st_id &&
-                    tag <= func_reg_map[cur_func_name].virtual_float_regs[i][j].ed_id) {
-                    // LSRA_WARNNING("%s value give reg %d",
-                                //   val->getPrintName().c_str(), i);
-                    return i;
+
+    // if(func_reg_map[cur_func_name].v2reg[val].size() < 100){
+
+        for(auto itv: func_reg_map[cur_func_name].v2reg[val]){
+            LSRA_WARNNING("%s value %d %d ", val->getPrintName().c_str(), itv.st_id,itv.ed_id);
+            if (tag >= itv.st_id &&
+                tag <= itv.ed_id) {
+
+                if(val->getType()->isFloatTy()){
+                    if(itv.conflict_reg<float_reg_number)
+                        return itv.conflict_reg;
+                }
+                else{
+                    if(itv.conflict_reg<int_reg_number)
+                        return vir2real(itv.conflict_reg);
                 }
             }
         }
-    }
-    else{
-    // LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
-    // val->getPrintName().c_str(),tag);
-        for (int i = 0; i < int_reg_number; i++) {
-            for (int j = 0; j < func_reg_map[cur_func_name].virtual_int_regs[i].size(); j++) {
-                // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
-                // func_reg_map[cur_func_name].virtual_int_regs[i][j].v->getPrintName().c_str(),
-                // func_reg_map[cur_func_name].virtual_int_regs[i][j].v == val,
-                // func_reg_map[cur_func_name].virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
-                // func_reg_map[cur_func_name].virtual_int_regs[i][j].st_id,
-                // func_reg_map[cur_func_name].virtual_int_regs[i][j].ed_id,i);
-                if (func_reg_map[cur_func_name].virtual_int_regs[i][j].v == val &&
-                    tag >= func_reg_map[cur_func_name].virtual_int_regs[i][j].st_id &&
-                    tag <= func_reg_map[cur_func_name].virtual_int_regs[i][j].ed_id) {
-                    // LSRA_WARNNING("%s value give reg %d",
-                                //   val->getPrintName().c_str(), i);
-                    return vir2real(i);
-                }
-            }
-        }
-    }
+    // }
+    // else{
+    //     if(val->getType()->isFloatTy()){
+    //     // LSRA_WARNNING("inst %s fval %s idx %d",inst->getPrintName().c_str(),
+    //     // val->getPrintName().c_str(),tag);
+    //         for (int i = 0; i < float_reg_number; i++) {
+    //             for (int j = 0; j < func_reg_map[cur_func_name].virtual_float_regs[i].size(); j++) {
+    //                 // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+    //                 // func_reg_map[cur_func_name].virtual_float_regs[i][j].v->getPrintName().c_str(),
+    //                 // func_reg_map[cur_func_name].virtual_float_regs[i][j].v == val,
+    //                 // func_reg_map[cur_func_name].virtual_float_regs[i][j].v->getPrintName() == val->getPrintName(),
+    //                 // func_reg_map[cur_func_name].virtual_float_regs[i][j].st_id,
+    //                 // func_reg_map[cur_func_name].virtual_float_regs[i][j].ed_id,i);
+    //                 if (func_reg_map[cur_func_name].virtual_float_regs[i][j].v == val &&
+    //                     tag >= func_reg_map[cur_func_name].virtual_float_regs[i][j].st_id &&
+    //                     tag <= func_reg_map[cur_func_name].virtual_float_regs[i][j].ed_id) {
+    //                     // LSRA_WARNNING("%s value give reg %d",
+    //                                 //   val->getPrintName().c_str(), i);
+    //                     return i;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //     else{
+    //     // LSRA_WARNNING("inst %s ival %s idx %d",inst->getPrintName().c_str(),
+    //     // val->getPrintName().c_str(),tag);
+    //         for (int i = 0; i < int_reg_number; i++) {
+    //             if(func_reg_map[cur_func_name].virtual_int_regs[i].size()<4){
+    //                 for (int j = 0; j < func_reg_map[cur_func_name].virtual_int_regs[i].size(); j++) {
+    //                     // LSRA_WARNNING("check %s same ? %d name_same ? %d start %d end %d reg %d",
+    //                     // func_reg_map[cur_func_name].virtual_int_regs[i][j].v->getPrintName().c_str(),
+    //                     // func_reg_map[cur_func_name].virtual_int_regs[i][j].v == val,
+    //                     // func_reg_map[cur_func_name].virtual_int_regs[i][j].v->getPrintName() == val->getPrintName(),
+    //                     // func_reg_map[cur_func_name].virtual_int_regs[i][j].st_id,
+    //                     // func_reg_map[cur_func_name].virtual_int_regs[i][j].ed_id,i);
+    //                     if (func_reg_map[cur_func_name].virtual_int_regs[i][j].v == val &&
+    //                         tag >= func_reg_map[cur_func_name].virtual_int_regs[i][j].st_id &&
+    //                         tag <= func_reg_map[cur_func_name].virtual_int_regs[i][j].ed_id) {
+    //                         // LSRA_WARNNING("%s value give reg %d",
+    //                                     //   val->getPrintName().c_str(), i);
+    //                         return vir2real(i);
+    //                     }
+    //                 }
+    //             }
+    //             else
+    //             {
+    //                 int l = 0, r = func_reg_map[cur_func_name].virtual_int_regs[i].size()-1;
+    //                 while(r!=l){
+    //                     float mid = (l+r)/2.0;
+    //                     float mid_l = func_reg_map[cur_func_name].virtual_int_regs[i][int(mid+0.5)].st_id;
+    //                     if(tag<mid_l){
+    //                         r = int(mid);
+    //                     }else{
+    //                         l = int(mid+0.5);
+    //                     }
+    //                 }
+    //                 if (func_reg_map[cur_func_name].virtual_int_regs[i][l].v == val &&
+    //                     func_reg_map[cur_func_name].virtual_int_regs[i][l].st_id <= tag &&
+    //                     func_reg_map[cur_func_name].virtual_int_regs[i][l].ed_id >= tag) {  // j 在 itv 后面 并且是第一个
+    //                     return vir2real(i);
+    //                 }
+
+
+    //             }
+    //         }
+    //     }
+    // }
     LSRA_WARNNING("inst %s val %s idx %d",inst->getPrintName().c_str(),
     val->getPrintName().c_str(),tag);
     LSRA_WARNNING("cant find this value in reg alloc!");
@@ -208,6 +251,7 @@ bool cmp(interval lhs, interval rhs)  //升序
 
 bool AsmBuilder::value_in_reg(Value *v) {  //计算栈空间
     if(dynamic_cast<MovInstr *>(v))v = dynamic_cast<MovInstr *>(v)->getLVal();//MOV转化
+
 
     if(v->getType()->isFloatTy()){
         for (int i = 0; i < float_reg_number; i++) {
@@ -263,6 +307,8 @@ bool AsmBuilder::force_reg_alloc(
         if (!conflict) {
             func_reg_map[cur_func_name].virtual_float_regs[reg_idx].insert(
                 func_reg_map[cur_func_name].virtual_float_regs[reg_idx].begin() + index, itv);
+            itv.conflict_reg = reg_idx;
+            func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
             return true;
         }
     }
@@ -292,6 +338,8 @@ bool AsmBuilder::force_reg_alloc(
         if (!conflict) {
             func_reg_map[cur_func_name].virtual_int_regs[reg_idx].insert(
             func_reg_map[cur_func_name].virtual_int_regs[reg_idx].begin() + index, itv);
+            itv.conflict_reg = reg_idx;
+            func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
             return true;
         }
     }
@@ -382,6 +430,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                 if (!conflict) {
                     func_reg_map[cur_func_name].virtual_float_regs[i].insert(func_reg_map[cur_func_name].virtual_float_regs[i].begin() + index,
                                             itv);
+                    itv.conflict_reg = i;
+                    func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                     break;
                 }
 
@@ -446,6 +496,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     // LSRA_WARNNING("insert pos %d reg %d", index,i);
                     func_reg_map[cur_func_name].virtual_int_regs[i].insert(func_reg_map[cur_func_name].virtual_int_regs[i].begin() + index,
                                             itv);
+                    itv.conflict_reg = i;
+                    func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                     break;
                 }
             }
@@ -721,9 +773,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                     if(itv.v->getType()->isFloatTy()){
                         itv.is_float = true;
                         func_reg_map[cur_func_name].virtual_float_regs[reg_get].push_back(itv);
+                        itv.conflict_reg = reg_get;
+                        func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                     }
                     else{
                         func_reg_map[cur_func_name].virtual_int_regs[reg_get].push_back(itv);
+                        itv.conflict_reg = reg_get;
+                        func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                     }
                 }
                 op_idx += 1;
@@ -815,9 +871,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         if(itv.v->getType()->isFloatTy()){
                             itv.is_float = true;
                             func_reg_map[cur_func_name].virtual_float_regs[reg_get].push_back(itv);
+                            itv.conflict_reg = reg_get;
+                            func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                         }
                         else{
                             func_reg_map[cur_func_name].virtual_int_regs[reg_get].push_back(itv);
+                            itv.conflict_reg = reg_get;
+                            func_reg_map[cur_func_name].v2reg[itv.v].push_back(itv);
                         }
                     }
                     op_idx += 1;
@@ -907,6 +967,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 Value *AsmBuilder::value_in_reg_at(
     Value *inst, int reg_idx, bool is_fp) {  // 查看当前寄存器分配的变量
     int tag = func_reg_map[cur_func_name].linear_map[inst];
+
     if(is_fp){
         for (int j = 0; j < func_reg_map[cur_func_name].virtual_float_regs[reg_idx].size(); j++) {
             if (tag >= func_reg_map[cur_func_name].virtual_float_regs[reg_idx][j].st_id &&
@@ -989,6 +1050,23 @@ bool AsmBuilder::op_in_inst_is_spilled(Value *inst, Value *op) {//#
     // LSRA_WARNNING("op_in_inst_is_spilled");
     if(dynamic_cast<MovInstr *>(op))op = dynamic_cast<MovInstr *>(op)->getLVal();//MOV转化
     int tag = func_reg_map[cur_func_name].linear_map[inst];
+
+    // for(auto itv: func_reg_map[cur_func_name].v2reg[op]){
+    //     LSRA_WARNNING("%s value %d %d ", op->getPrintName().c_str(), itv.st_id,itv.ed_id);
+    //     if (tag >= itv.st_id &&
+    //         tag <= itv.ed_id) {
+
+    //         if(op->getType()->isFloatTy()){
+    //             if(itv.conflict_reg>=float_reg_number)
+    //                 return true;
+    //         }
+    //         else{
+    //             if(itv.conflict_reg>=int_reg_number)
+    //                 return true;
+    //         }
+    //     }
+    // }
+
     if(op->getType()->isFloatTy()){
         for (int i = float_reg_number; i < virtual_reg_max; i++) {
             for (int j = 0; j < func_reg_map[cur_func_name].virtual_float_regs[i].size(); j++) {
@@ -1298,6 +1376,11 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                     auto const_int = dynamic_cast<ConstantInt *>(op);
                     if (global) {
                         live_map[op].type = interval_value_type::global_var;
+                        // auto array = dynamic_cast<ConstantArray *>(op);
+                        // if(         array&&
+                        // static_cast<ArrayType*>(array->getType())->getElementType()->isIntegerTy()) {
+                        //     live_map[op].def = true; // INT 全局变量活跃性分析 FLOAT 全局变量视为立即数
+                        // }
                     } else if (const_int) {
                         live_map[op].type = interval_value_type::imm_var;
                     }

@@ -99,6 +99,7 @@ struct interval{
     int specific_reg_idx;
     int offset;
     bool is_float = false;
+    int conflict_reg = -1;
     std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
@@ -110,6 +111,7 @@ class reg_map{
   std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
   std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
+  std::map<Value *,std::vector<interval> > v2reg;//指令列表
   int op_save[4];// 栈溢出时的保存寄存器
   int stack_size;
   int return_offset; // 注意维护
@@ -132,6 +134,8 @@ private:
   bool debug;
   std::map<std::string, reg_map> func_reg_map;
   std::string cur_func_name;
+
+
   // std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
   // std::vector<interval> virtual_float_regs[virtual_reg_max];//虚拟寄存器
   // std::vector<interval> stack_map;//args spill alloc return
