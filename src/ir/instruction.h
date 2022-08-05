@@ -219,18 +219,6 @@ class BranchInst : public Instruction {
                                     BasicBlock *if_false, BasicBlock *bb);
 };
 
-class StoreInst : public Instruction {
-   private:
-    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
-
-   public:
-    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
-    void accept(IrVisitorBase *v) override;
-    std::string getPrintName() override;
-    Value *getLVal() { return getOperand(1); }
-    Value *getPtr(){return getOperand(1);}
-    Value *getRVal() { return getOperand(0); }
-};
 // DYB DEFINE
 class StoreOffset : public Instruction {
    private:
@@ -266,6 +254,7 @@ class StoreInst : public Instruction {
 
     bool hasOffset() { return getOperandNumber() >= 3; }
     void setRVal(Value *v) { setOperand(0, v); }
+    Value *getPtr(){return getOperand(1);}
     void setLVal(Value *v) { setOperand(1, v); }
     void setOffset(Value *v) { setOperand(2, v); }
 };
