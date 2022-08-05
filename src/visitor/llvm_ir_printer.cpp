@@ -121,7 +121,17 @@ void LLVMIrPrinter::visit(Function *node) {
                 }
                 arg->accept(this);
             }
-            output_file << ") {" << std::endl;
+            output_file << ") {" ;
+            output_file<<"; caller: ";
+            for(auto caller : node->getCallerSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+            output_file<<"callee: ";
+            for(auto caller : node->getCalleeSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+
+            output_file<<std::endl;
             INFO("base block size is %zu", node->getBaseBlocks().size());
             for (auto &base_block: node->getBaseBlocks()) {
                 base_block->accept(this);
@@ -170,7 +180,17 @@ void LLVMIrPrinter::visit(Function *node) {
                 }
                 arg->accept(this);
             }
-            output_file << ") {" << std::endl;
+            output_file << ") {" ;
+            output_file<<"; caller: ";
+            for(auto caller : node->getCallerSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+            output_file<<"callee: ";
+            for(auto caller : node->getCalleeSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+
+            output_file<<std::endl;
             INFO("base block size is %zu", node->getBasicBlocks().size());
             for (auto &base_block: node->getBasicBlocks()) {
                 base_block->accept(this);

@@ -91,8 +91,8 @@ class Instruction : public User {
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
-    bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
-    bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
+    bool isStoreOffset() const { return _op_id == Instruction::STORE_OFFSET; }
+    bool isLoadOffset() const { return _op_id == Instruction::LOAD_OFFSET; }
     bool isMOV() const { return _op_id == Instruction::MOV; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
@@ -219,6 +219,18 @@ class BranchInst : public Instruction {
                                     BasicBlock *if_false, BasicBlock *bb);
 };
 
+class StoreInst : public Instruction {
+   private:
+    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
+
+   public:
+    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+    std::string getPrintName() override;
+    Value *getLVal() { return getOperand(1); }
+    Value *getPtr(){return getOperand(1);}
+    Value *getRVal() { return getOperand(0); }
+};
 // DYB DEFINE
 class StoreOffset : public Instruction {
    private:

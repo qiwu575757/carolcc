@@ -466,7 +466,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else {
       ERROR("TO many args in br instruction",ToManyArgsInBr);
     }
-  } else if (inst->isLOAD_OFFSET()) { // 需要将对应指令中变量的类型设置好
+  } else if (inst->isLoadOffset()) { // 需要将对应指令中变量的类型设置好
     bool is_fp = operands[0]->getType()->isFloatTy();
     if (is_fp)
       asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
@@ -474,7 +474,7 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
       asm_code += InstGen::comment("insert load offset",operands[0]->getPrintName());
     asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
                       InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
-  } else if (inst->isSTORE_OFFSET()) {
+  } else if (inst->isStoreOffset()) {
     bool is_fp = operands[0]->getType()->isFloatTy();
     asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
     asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
