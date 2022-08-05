@@ -4,6 +4,7 @@
 #include "ir/basic_block.h"
 #include "ir/instruction.h"
 #include "module.h"
+#include "../utils.h"
 
 void LowerIR::run() {
     for (auto func : _m->getFunctions()) {
@@ -11,6 +12,13 @@ void LowerIR::run() {
         for (auto bb : func->getBasicBlocks()) {
             splitGEP(bb);
             convertRem2And(bb);
+        }
+    }
+
+    for (auto func : _m->getFunctions()) {
+        for (auto bb : func->getBasicBlocks()) {
+          convertMlaLoad2LoadOffset(bb);
+          deleteMla(bb); // 临时用于mla的死代码删除
         }
     }
 
@@ -83,8 +91,7 @@ void LowerIR::splitGEP(BasicBlock *bb) {
             for (auto insert_instr : inserts) {
                 insts.insert(iter,insert_instr);
             }
-            // WARNNING("inserts instr off is %d.",off);
-            // WARNNING("inserts instr is %d.",inserts.size());
+
             // replace and erase gep
             inst->replaceAllUse(inserts[inserts.size()-1]);
             inst->removeUseOps();
@@ -147,6 +154,53 @@ void LowerIR::splitRem(BasicBlock *bb) {
     } else
       ++iter;
   }
+}
+
+
+void LowerIR::convertMlaLoad2LoadOffset(BasicBlock *bb) {
+  for (auto inst : bb->getInstructions()) {
+    if (inst->isLoad()) {
+      auto load = static_cast<LoadInst *>(inst);
+      if (!load->hasOffset()) {
+        auto ptr = dynamic_cast<Instruction *>(load->getOperand(0));
+        if (ptr && ptr->isMla() && !inst->getType()->isFloatTy()) {
+          // load 使用到的 mla 均可转化为 add, 浮点指令无 ldr base, offset, shift
+          MyAssert("load use mla can't convert to add",atoi(ptr->getOperand(0)->getPrintName().c_str()) == 1, ERROR_DEFUALT);
+          load->removeUseOps();
+          load->setNumOps(2);
+          load->setLVal(ptr->getOperand(1));
+          load->setOffset(ptr->getOperand(2));
+          WARNNING("come in");
+        }
+      }
+    } else if (inst->isStore()) {
+      auto store = static_cast<StoreInst *>(inst);
+      if (!store->hasOffset()) {
+        auto ptr = dynamic_cast<Instruction *>(store->getLVal());
+        if (ptr && ptr->isMla()&& !inst->getOperand(0)->getType()->isFloatTy()) {
+          MyAssert("load use mla can't convert to add",atoi(ptr->getOperand(0)->getPrintName().c_str()) == 1, ERROR_DEFUALT);
+          ptr->removeUse(inst, 1);
+          store->setNumOps(3);
+          store->setLVal(ptr->getOperand(1));
+          store->setOffset(ptr->getOperand(2));
+        }
+      }
+    }
+  }
+}
+
+void LowerIR::deleteMla(BasicBlock *bb) {
+    auto &insts = bb->getInstructions();
+    for (auto iter = insts.begin(); iter != insts.end(); ) {
+        auto inst = *iter;
+        if (inst->isMla() && inst->getUseList().empty()) {
+            inst->removeUseOps();
+            iter = insts.erase(iter);
+            WARNNING("delete mla");
+        } else {
+          iter++;
+        }
+    }
 }
 
 void LowerIR::rmPhi(Function *f){

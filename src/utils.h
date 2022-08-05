@@ -18,9 +18,9 @@
 #define __ASSERT
 
 #define __DEBUG
-// #define __LSRA_WARN
-// #define __LSRA_SHOW
-// #define __WARN
+#define __LSRA_WARN
+#define __LSRA_SHOW
+#define __WARN
 //#define __TRACE
 //#define __INFO
 
@@ -431,7 +431,7 @@ public:
 class TimerClock {
    public:
     TimerClock(const std::string& name):_name(name) { update(); }
-    
+
     ~TimerClock() {}
 
     void update() { _start = std::chrono::high_resolution_clock::now(); }

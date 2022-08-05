@@ -13,15 +13,15 @@
 #include "utils.h"
 
 std::pair<int, int> AsmBuilder::getUsedRegisterNum(Function *func) {
-    // for (auto it = func_reg_map[cur_func_name].func_used_reg_map.begin(); it != func_reg_map[cur_func_name].func_used_reg_map.end(); it++) {
-    //     LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
-    // }
+    for (auto it = func_used_reg_map.begin(); it != func_used_reg_map.end(); it++) {
+        LSRA_WARNNING("#####%s %d %d",it->first.c_str(),it->second.first,it->second.second);
+    }
     LSRA_WARNNING("#####%s",func->getPrintName().c_str());
     if(func->getBasicBlocks().empty()){
         return std::pair<int,int>(0,0);
     }
-    // MyAssert("can not find func",func_reg_map[cur_func_name].func_used_reg_map.count(func->getPrintName()),255);
-    return func_reg_map[cur_func_name].func_used_reg_map[func->getPrintName()];
+    // MyAssert("can not find func",func_used_reg_map.count(func->getPrintName()),255);
+    return func_used_reg_map[func->getPrintName()];
 }
 
 int AsmBuilder::getAllocaSpOffset(Value *inst) {  // 值的栈偏移
@@ -469,8 +469,8 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     if(use_int_reg_num > virtual_reg_max - 10 || use_float_reg_num > virtual_reg_max - 10){
         ERROR("virtual reg is going to crash!",virtual_reg_full_error);
     }
-    func_reg_map[cur_func_name].func_used_reg_map[func->getPrintName()].first = std::min(use_int_reg_num,int_reg_number);
-    func_reg_map[cur_func_name].func_used_reg_map[func->getPrintName()].second = std::min(use_float_reg_num,float_reg_number);
+    func_used_reg_map[func->getPrintName()].first = std::min(use_int_reg_num,int_reg_number);
+    func_used_reg_map[func->getPrintName()].second = std::min(use_float_reg_num,float_reg_number);
 
 
 
@@ -1063,7 +1063,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
     std::vector<interval> live_res;  // 对于结果进行后处理
     if (func->getBasicBlocks().empty()) {
         func_reg_map[cur_func_name] = reg_map();
-        func_reg_map[cur_func_name].func_used_reg_map[cur_func_name] = std::pair<int,int>(0,0);
+        func_used_reg_map[cur_func_name] = std::pair<int,int>(0,0);
         func_reg_map[cur_func_name].return_offset = 0;
         func_reg_map[cur_func_name].stack_size = 0;
         LSRA_WARNNING("[live_interval_analysis func : %s exit]",func->getPrintName().c_str());

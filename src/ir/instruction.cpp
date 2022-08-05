@@ -359,33 +359,51 @@ StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
     setOperand(0, value);
     setOperand(1, ptr);
 }
+
+StoreInst::StoreInst(Value *value, Value *ptr, Value *offset, BasicBlock *parent)
+    : Instruction(Type::getVoidTy(), Instruction::STORE, 3, parent) {
+    setOperand(0, value);
+    setOperand(1, ptr);
+    setOperand(2, offset);
+}
+
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
                                   BasicBlock *parent) {
-    // if(ptr->getType()->getPointerElementType()->eq(value->getType())){
-        return new StoreInst(value, ptr, parent);
-    // }
-    // else {
-    //     std::cout<<"[CreateStore]:(ptr,val) = (";
-    //     ptr->getType()->print(std::cout);
-    //     std::cout<<",";
-    //     value->getType()->print(std::cout);
-    //     std::cout<<")\n";
-    //     ERROR("error type",EXIT_CODE_ERROR_312);
-    //     return nullptr;
-    // }
+    return new StoreInst(value, ptr, parent);
 }
+
+StoreInst *StoreInst::createStore(Value *value, Value *ptr,Value *offset,
+                                  BasicBlock *parent) {
+    return new StoreInst(value, ptr, offset, parent);
+}
+
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
+
 std::string StoreInst::getPrintName() {
     return getOperand(0)->getPrintName() + "_" + getOperand(1)->getPrintName();
 }
+
 LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
     setOperand(0, ptr);
 }
+
+LoadInst::LoadInst(Value *ptr,  Value *offset, BasicBlock *parent)
+    : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 2,
+                  parent) {
+    setOperand(0, ptr);
+    setOperand(1, offset);
+}
+
 LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
     return new LoadInst(ptr, parent);
 }
+
+LoadInst *LoadInst::createLoad(Value *ptr, Value *offset, BasicBlock *parent) {
+    return new LoadInst(ptr, offset, parent);
+}
+
 void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
 
 // wuqi

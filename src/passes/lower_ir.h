@@ -14,6 +14,8 @@ public:
     void convertRem2And(BasicBlock *bb);
     void splitRem(BasicBlock *bb);
     bool isPowerOfTwo(int x);
+    void convertMlaLoad2LoadOffset(BasicBlock *bb);
+    void deleteMla(BasicBlock *bb);
 };
 
 #endif

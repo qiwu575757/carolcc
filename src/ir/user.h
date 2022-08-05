@@ -31,6 +31,10 @@ public:
  * 删掉 自己参数被使用的记录
  */
     void removeUseOps();
+    void setNumOps(unsigned num) {
+        _use_number = num;
+        _operands_list.resize(num, nullptr);
+  }
 
 private:
     std::vector<Value *> _operands_list;

@@ -72,6 +72,7 @@ void Value::removeUse(Value *user, unsigned value_no) {
 
     _user_list.erase(iter);
 }
+
 bool Value::isConstant() {
     auto constant = dynamic_cast<Constant *>(this);
     return constant != nullptr;
@@ -153,7 +154,7 @@ Function *ValueCloner::copyFunc(Function *old_func) {
             unsigned i = 0;
             for( ;i < phi->getOperandNumber();i=i+2){
                 new_phi->setParams(
-                    findValue(phi->getOperand(i)), 
+                    findValue(phi->getOperand(i)),
                     findValue(phi->getOperand(i+1))
                     );
             }
@@ -239,7 +240,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
         new_instr = PhiInstr::createPhi(
             old_instr->getType(), new_parent_bb);
     } else if (old_instr->isGep()) {
-        
+
             std::vector<Value*>indexs;
             for(auto i = 1;i<old_instr->getOperandNumber();i++){
                 indexs.push_back(findValue(old_instr->getOperand(i)));
@@ -256,7 +257,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
         else {
             ERROR("ERROR",ERROR_DEFUALT);
         }
-        
+
     }else {
         new_instr = nullptr;
     }

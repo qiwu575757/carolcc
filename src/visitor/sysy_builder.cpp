@@ -19,7 +19,7 @@
 
 #define CONST_FLOAT(num) ConstantFloat::create(num)
 
-// #define ZERO_INIT
+#define ZERO_INIT
 
 // 如果以baseblock作为目标，则返回条件的第一个basic block 块
 BasicBlock * getTargetBasicBlock(BaseBlock * b){
@@ -88,7 +88,7 @@ void SYSYBuilder::visit(tree_comp_unit &node) {
     for (auto func : node.functions) {
         SYSY_BUILDER("visiting func %s", func->id.c_str());
         func->accept(*this);
-        
+
 
     }
 }

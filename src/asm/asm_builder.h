@@ -110,7 +110,6 @@ class reg_map{
   std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
   std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
-  std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   int op_save[4];// 栈溢出时的保存寄存器
   int stack_size;
   int return_offset; // 注意维护
@@ -139,7 +138,7 @@ private:
   // std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
   // std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   // std::map<Value *,int > linear_map;//指令列表
-  // std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
+  std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   // int op_save[4];// 栈溢出时的保存寄存器
 
 

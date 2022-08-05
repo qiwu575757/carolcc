@@ -300,18 +300,39 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += InstGen::instConst(InstGen::add, InstGen::Reg(op,false),
                     InstGen::sp, InstGen::Constant(offset,false));
   } else if (inst->isLoad()) {
+      int shift = 0;
       int op0 = getRegIndexOfValue(inst,operands[0]);
       int target = getRegIndexOfValue(inst,inst);
-      asm_code += InstGen::load(InstGen::Reg(target,inst->getType()->isFloatTy()),
-              InstGen::Addr(InstGen::Reg(op0,false),0));
 
+      if (operands.size() == 1) {
+        asm_code += InstGen::load(
+            InstGen::Reg(target,inst->getType()->isFloatTy()),
+            InstGen::Addr(InstGen::Reg(op0,false),0));
+      } else {
+        asm_code += InstGen::ldr(
+            InstGen::Reg(target,inst->getType()->isFloatTy()),
+            InstGen::Reg(op0,false),
+            InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
+            InstGen::Constant(shift,false)
+        );
+      }
   } else if (inst->isStore()) {
     bool is_fp = operands[0]->getType()->isFloatTy();
-
+    int shift = 0; // 后期可能使用
+    InstGen::Reg op0_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp);
     InstGen::Reg op2_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
 
-    asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
-                        InstGen::Addr(op2_reg,0));
+    if (operands.size() == 2) {
+      asm_code += InstGen::store(
+            op0_reg, InstGen::Addr(op2_reg,0));
+    } else {
+      asm_code += InstGen::str(
+        op0_reg,
+        op2_reg,
+        InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false),
+        InstGen::Constant(shift,false)
+      );
+    }
   } else if (inst->isCall()) {
     // 被调用函数的名字
     std::string func_name = operands.at(0)->getName();
@@ -654,6 +675,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
                   off = cur_sp_off;
                 }
+                WARNNING("11get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
                                         InstGen::Addr(InstGen::sp,off));
@@ -702,6 +724,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
                   off = cur_sp_off;
                 }
+                WARNNING("get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
@@ -770,7 +793,6 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
       if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
         registers.insert(reg);
       }
-      // WARNNING("====================================Caller Get Reg: %d",reg.getID());
     }
   }
   for (auto r : caller_save_regs) {
@@ -779,6 +801,8 @@ std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
   }
   #else
   std::pair<int, int> n = getUsedRegisterNum(func);
+  WARNNING("=============%s Caller Get Reg: %d, %d",func->getPrintName().c_str(),
+                n.first, n.second);
   for (auto r : caller_save_regs) {
     if (!r.is_fp()){
       registers.push_back(r);

@@ -261,8 +261,11 @@ void LLVMIrPrinter::visit(LoadInst *node) {
         output_file << ", ";
         // 输出第一个操作数
         node->getOperand(0)->getType()->print(output_file);
-        output_file << node->getOperand(0)->getPrintName() << ", "
-                    << "align 4" << std::endl;
+        output_file << node->getOperand(0)->getPrintName() << ", ";
+        if (node->hasOffset()) {
+            output_file << node->getOperand(1)->getPrintName() << ", ";
+        }
+        output_file << "align 4" << std::endl;
     } else {
         ERROR("null LoadInst",EXIT_CODE_ERROR_359);
     }
@@ -329,8 +332,11 @@ void LLVMIrPrinter::visit(StoreInst *node) {
     node->getOperand(0)->getType()->print(output_file);
     output_file << node->getOperand(0)->getPrintName() << ", ";
     node->getOperand(1)->getType()->print(output_file);
-    output_file << node->getOperand(1)->getPrintName() << ", "
-                << "align 4" << std::endl;
+    output_file << node->getOperand(1)->getPrintName() << ", ";
+    if (node->hasOffset()) {
+        output_file << node->getOperand(2)->getPrintName() << ", ";
+    }
+    output_file << "align 4" << std::endl;
 }
 void LLVMIrPrinter::visit(Value *node) {
     ERROR("TODO",EXIT_CODE_ERROR_361);

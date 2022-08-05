@@ -219,17 +219,6 @@ class BranchInst : public Instruction {
                                     BasicBlock *if_false, BasicBlock *bb);
 };
 
-class StoreInst : public Instruction {
-   private:
-    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
-
-   public:
-    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
-    void accept(IrVisitorBase *v) override;
-    std::string getPrintName() override;
-    Value *getLVal() { return getOperand(1); }
-    Value *getRVal() { return getOperand(0); }
-};
 // DYB DEFINE
 class StoreOffset : public Instruction {
    private:
@@ -239,6 +228,7 @@ class StoreOffset : public Instruction {
     static StoreOffset *createStoreOffset(Value *value,int offset, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 };
+
 class LoadOffset : public Instruction {
    private:
     LoadOffset(Value *value,int offset, BasicBlock *parent);
@@ -248,13 +238,39 @@ class LoadOffset : public Instruction {
     void accept(IrVisitorBase *v) override;
 };
 //
+class StoreInst : public Instruction {
+   private:
+    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
+    StoreInst(Value *value, Value *ptr, Value *offset ,BasicBlock *parent);
+
+   public:
+    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
+    static StoreInst *createStore(Value *value, Value *ptr, Value *offset ,BasicBlock *parent);
+    void accept(IrVisitorBase *v) override;
+
+    std::string getPrintName() override;
+    Value *getLVal() { return getOperand(1); }
+    Value *getRVal() { return getOperand(0); }
+
+    bool hasOffset() { return getOperandNumber() >= 3; }
+    void setRVal(Value *v) { setOperand(0, v); }
+    void setLVal(Value *v) { setOperand(1, v); }
+    void setOffset(Value *v) { setOperand(2, v); }
+};
+
 class LoadInst : public Instruction {
    private:
     LoadInst(Value *ptr, BasicBlock *parent);
+    LoadInst(Value *ptr, Value *offset ,BasicBlock *parent);
 
    public:
     static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
+    static LoadInst *createLoad(Value *ptr, Value *offset ,BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
+
+    bool hasOffset() { return getOperandNumber() >= 2; }
+    void setLVal(Value *v) { setOperand(0, v); }
+    void setOffset(Value *v) { setOperand(1, v); }
 };
 
 // wuqi define
@@ -364,7 +380,7 @@ class PhiInstr : public Instruction {
 };
 
 class MovInstr : public Instruction{
-    private : 
+    private :
     MovInstr (Type* ty,PhiInstr* phi,Value* r_val);
     PhiInstr* _l_val;
 
