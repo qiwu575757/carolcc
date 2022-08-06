@@ -734,29 +734,58 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         //!! 做好冲突维护
                         // store reg_get to reg_save
                         before_inst.second.push_back(
-                            StoreOffset::createStoreOffset(
-                                reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                            StoreInst::createStore(
+                                reg_v,
+                                ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                tmpBB,
+                                true
+                            ));
                         // load reg_get from func_reg_map[cur_func_name].stack_map 不需要！
                         int offset = get_value_sp_offset(inst, inst);
-                        // before_inst.second.push_back(LoadOffset::createLoadOffset(reg_v,offset,tmpBB));
+                        // before_inst.second.push_back(
+                            // LoadInst::createLoad(
+                            //     reg_v,
+                            //     ConstantInt::get(offset),
+                            //     tmpBB,
+                                    // true
+                            // ));
                         //---------------------------
                         // store reg_get to func_reg_map[cur_func_name].stack_map
                         after_inst.second.push_back(
-                            StoreOffset::createStoreOffset(reg_v, offset,
-                                                            tmpBB));
+                            StoreInst::createStore(
+                                reg_v,
+                                ConstantInt::get(offset),
+                                tmpBB,
+                                true
+                            ));
                         // load reg_get from reg_save
                         after_inst.second.push_back(
-                            LoadOffset::createLoadOffset(
-                                reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                            LoadInst::createLoad(
+                                reg_v,
+                                ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                tmpBB,
+                                true
+                            ));
+
                     } else {
                         // load reg_get from func_reg_map[cur_func_name].stack_map 不需要~!
                         int offset = get_value_sp_offset(inst, inst);
-                        // before_inst.second.push_back(LoadOffset::createLoadOffset(inst,offset,tmpBB));//?
+                        // before_inst.second.push_back(
+                            // LoadInst::createLoad(
+                            //     inst,
+                            //     ConstantInt::get(offset),
+                            //     tmpBB,
+                                    // true
+                            // ));
                         //---------------------------
                         // store reg_get to func_reg_map[cur_func_name].stack_map
                         after_inst.second.push_back(
-                            StoreOffset::createStoreOffset(inst, offset,
-                                                            tmpBB));
+                            StoreInst::createStore(
+                                inst,
+                                ConstantInt::get(offset),
+                                tmpBB,
+                                true
+                            ));
                     }
                     interval itv;
                     if(inst->isMOV()){
@@ -806,13 +835,21 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                 //!! 做好冲突维护
                                 // store reg_get to reg_save
                                 before_inst.second.push_back(
-                                    StoreOffset::createStoreOffset(
-                                        reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                                    StoreInst::createStore(
+                                        reg_v,
+                                        ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                        tmpBB,
+                                        true
+                                    ));
                                 //---------------------------
                                 // load reg_get from reg_save
                                 after_inst.second.push_back(
-                                    LoadOffset::createLoadOffset(
-                                        reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                                    LoadInst::createLoad(
+                                        reg_v,
+                                        ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                        tmpBB,
+                                        true
+                                    ));
                             } else {  //没占用寄存器，直接拿着用，立即数不用存
                                 //!!
                                 //!插入一条冲突寄存器分配到func_reg_map[cur_func_name]->virtual_int_regs
@@ -828,31 +865,59 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                                 //!! 做好冲突维护
                                 // store reg_get to reg_save
                                 before_inst.second.push_back(
-                                    StoreOffset::createStoreOffset(
-                                        reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                                    StoreInst::createStore(
+                                        reg_v,
+                                        ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                        tmpBB,
+                                        true
+                                    ));
                                 // load reg_get from func_reg_map[cur_func_name].stack_map
                                 int offset =
                                     get_value_sp_offset(inst, op);
                                 before_inst.second.push_back(
-                                    LoadOffset::createLoadOffset(
-                                        reg_v, offset, tmpBB));
+                                    LoadInst::createLoad(
+                                        reg_v,
+                                        ConstantInt::get(offset),
+                                        tmpBB,
+                                        true
+                                    ));
                                 //---------------------------
                                 // store reg_get to func_reg_map[cur_func_name].stack_map 不需要！
-                                // after_inst.second.push_back(StoreOffset::createStoreOffset(reg_v,offset,tmpBB));
+                                // after_inst.second.push_back(
+                                    // StoreInst::createStore(
+                                    //     reg_v,
+                                    //     ConstantInt::get(offset),
+                                    //     tmpBB,
+                                            // true
+                                    // ));
                                 // load reg_get from reg_save
                                 after_inst.second.push_back(
-                                    LoadOffset::createLoadOffset(
-                                        reg_v, func_reg_map[cur_func_name].op_save[op_idx], tmpBB));
+                                    LoadInst::createLoad(
+                                        reg_v,
+                                        ConstantInt::get(func_reg_map[cur_func_name].op_save[op_idx]),
+                                        tmpBB,
+                                        true
+                                    ));
                             } else {
                                 // load reg_get from func_reg_map[cur_func_name].stack_map
                                 int offset =
                                     get_value_sp_offset(inst, op);
                                 before_inst.second.push_back(
-                                    LoadOffset::createLoadOffset(op, offset,
-                                                                    tmpBB));
+                                    LoadInst::createLoad(
+                                        op,
+                                        ConstantInt::get(offset),
+                                        tmpBB,
+                                        true
+                                    ));
                                 //---------------------------
                                 // store reg_get to func_reg_map[cur_func_name].stack_map 不需要！
-                                // after_inst.second.push_back(StoreOffset::createStoreOffset(op,offset,tmpBB));
+                                // after_inst.second.push_back(
+                                    // StoreInst::createStore(
+                                    //     op,
+                                    //     ConstantInt::get(offset),
+                                    //     tmpBB,
+                                    //        true
+                                    // ));
                             }
                         }
                         interval itv;
@@ -900,14 +965,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                 // if (!before_inst.second.empty()) {
                 //     LSRA_WARNNING(" before instr %d ", before_inst.first);
                 //     for (auto inst : before_inst.second) {
-                //         auto inststore = dynamic_cast<StoreOffset *>(inst);
+                //         auto inststore = dynamic_cast<StoreInst *>(inst);
                 //         if (inststore)
                 //             LSRA_WARNNING("store, v : %s , offset : %d",
                 //                           inststore->getOperandList()[0]
                 //                               ->getPrintName()
                 //                               .c_str(),
                 //                           inststore->offset);
-                //         auto instload = dynamic_cast<LoadOffset *>(inst);
+                //         auto instload = dynamic_cast<LoadInst *>(inst);
                 //         if (instload)
                 //             LSRA_WARNNING("load, v : %s , offset : %d",
                 //                           instload->getOperandList()[0]
@@ -920,14 +985,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                 //     // LSRA_WARNNING("-- insert inst --");
                 //     LSRA_WARNNING(" after instr %d ", after_inst.first);
                 //     for (auto inst : after_inst.second) {
-                //         auto inststore = dynamic_cast<StoreOffset *>(inst);
+                //         auto inststore = dynamic_cast<StoreInst *>(inst);
                 //         if (inststore)
                 //             LSRA_WARNNING("store, v : %s , offset : %d",
                 //                           inststore->getOperandList()[0]
                 //                               ->getPrintName()
                 //                               .c_str(),
                 //                           inststore->offset);
-                //         auto instload = dynamic_cast<LoadOffset *>(inst);
+                //         auto instload = dynamic_cast<LoadInst *>(inst);
                 //         if (instload)
                 //             LSRA_WARNNING("load, v : %s , offset : %d",
                 //                           instload->getOperandList()[0]

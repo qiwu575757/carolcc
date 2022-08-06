@@ -301,38 +301,66 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
                     InstGen::sp, InstGen::Constant(offset,false));
   } else if (inst->isLoad()) {
       int shift = 0;
-      int op0 = getRegIndexOfValue(inst,operands[0]);
-      int target = getRegIndexOfValue(inst,inst);
+      // 如 0 号操作数为整数，即为 load offset
+      auto is_loadoffset = dynamic_cast<LoadInst *>(inst)->isLoadOff();
+      int target = is_loadoffset ? getRegIndexOfValue(inst,operands[0]) :
+              getRegIndexOfValue(inst,inst);
 
-      if (operands.size() == 1) {
-        asm_code += InstGen::load(
-            InstGen::Reg(target,inst->getType()->isFloatTy()),
-            InstGen::Addr(InstGen::Reg(op0,false),0));
+      if (is_loadoffset) {
+        bool is_fp = operands[0]->getType()->isFloatTy();
+        int offset = atoi(operands[1]->getPrintName().c_str());
+        if (is_fp) {
+          asm_code += InstGen::comment("insert load offset fp",
+                            operands[0]->getPrintName());
+        } else {
+          asm_code += InstGen::comment("insert load offset",
+                            operands[0]->getPrintName());
+        }
+        asm_code += InstGen::load(InstGen::Reg(target,is_fp),
+                          InstGen::Addr(InstGen::sp,offset));
       } else {
-        asm_code += InstGen::ldr(
-            InstGen::Reg(target,inst->getType()->isFloatTy()),
-            InstGen::Reg(op0,false),
-            InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
-            InstGen::Constant(shift,false)
-        );
+        int op0 = getRegIndexOfValue(inst,operands[0]);
+        if (operands.size() == 1) {
+          asm_code += InstGen::load(
+              InstGen::Reg(target,inst->getType()->isFloatTy()),
+              InstGen::Addr(InstGen::Reg(op0,false),0));
+        } else {
+          asm_code += InstGen::ldr(
+              InstGen::Reg(target,inst->getType()->isFloatTy()),
+              InstGen::Reg(op0,false),
+              InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false),
+              InstGen::Constant(shift,false)
+          );
+        }
       }
   } else if (inst->isStore()) {
     bool is_fp = operands[0]->getType()->isFloatTy();
     int shift = 0; // 后期可能使用
+    // 1 号操作数为整数，认为是 store offset
+    bool is_storeoffset = dynamic_cast<StoreInst *>(inst)->isStoreOff();
     InstGen::Reg op0_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp);
-    InstGen::Reg op2_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
 
-    if (operands.size() == 2) {
-      asm_code += InstGen::store(
-            op0_reg, InstGen::Addr(op2_reg,0));
+    if (is_storeoffset) {
+      int offset = atoi(operands[1]->getPrintName().c_str());
+      asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
+      asm_code += InstGen::store(op0_reg,
+                      InstGen::Addr(InstGen::sp,offset));
     } else {
-      asm_code += InstGen::str(
-        op0_reg,
-        op2_reg,
-        InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false),
-        InstGen::Constant(shift,false)
-      );
+      InstGen::Reg op1_reg = InstGen::Reg(getRegIndexOfValue(inst,operands[1]),false);
+
+      if (operands.size() == 2) {
+        asm_code += InstGen::store(
+              op0_reg, InstGen::Addr(op1_reg,0));
+      } else {
+        asm_code += InstGen::str(
+          op0_reg,
+          op1_reg,
+          InstGen::Reg(getRegIndexOfValue(inst,operands[2]),false),
+          InstGen::Constant(shift,false)
+        );
+      }
     }
+
   } else if (inst->isCall()) {
     // 被调用函数的名字
     std::string func_name = operands.at(0)->getName();
@@ -466,20 +494,22 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     } else {
       ERROR("TO many args in br instruction",ToManyArgsInBr);
     }
-  } else if (inst->isLoadOffset()) { // 需要将对应指令中变量的类型设置好
-    bool is_fp = operands[0]->getType()->isFloatTy();
-    if (is_fp)
-      asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
-    else
-      asm_code += InstGen::comment("insert load offset",operands[0]->getPrintName());
-    asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
-                      InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
-  } else if (inst->isStoreOffset()) {
-    bool is_fp = operands[0]->getType()->isFloatTy();
-    asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
-    asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
-                      InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
-  } else if (inst->isMla()) {
+  }
+  // else if (inst->isLoadOffset()) { // 需要将对应指令中变量的类型设置好
+  //   bool is_fp = operands[0]->getType()->isFloatTy();
+  //   if (is_fp)
+  //     asm_code += InstGen::comment("insert load offset fp",operands[0]->getPrintName());
+  //   else
+  //     asm_code += InstGen::comment("insert load offset",operands[0]->getPrintName());
+  //   asm_code += InstGen::load(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
+  //                     InstGen::Addr(InstGen::sp,dynamic_cast<LoadOffset *>(inst)->offset));
+  // } else if (inst->isStoreOffset()) {
+  //   bool is_fp = operands[0]->getType()->isFloatTy();
+  //   asm_code += InstGen::comment("insert store offset ",operands[0]->getPrintName());
+  //   asm_code += InstGen::store(InstGen::Reg(getRegIndexOfValue(inst,operands[0]),is_fp),
+  //                     InstGen::Addr(InstGen::sp,dynamic_cast<StoreOffset *>(inst)->offset));
+  // }
+   else if (inst->isMla()) {
     asm_code += InstGen::comment("get mla instr ","");
     if (mla_op1_is_1) {
       asm_code += InstGen::add( InstGen::Reg(getRegIndexOfValue(inst,inst),false),

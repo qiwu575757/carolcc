@@ -91,8 +91,6 @@ class Instruction : public User {
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
-    bool isStoreOffset() const { return _op_id == Instruction::STORE_OFFSET; }
-    bool isLoadOffset() const { return _op_id == Instruction::LOAD_OFFSET; }
     bool isMOV() const { return _op_id == Instruction::MOV; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
@@ -240,12 +238,15 @@ class LoadOffset : public Instruction {
 //
 class StoreInst : public Instruction {
    private:
-    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
-    StoreInst(Value *value, Value *ptr, Value *offset ,BasicBlock *parent);
+    bool is_storeoffset;
+    StoreInst(Value *value, Value *ptr, BasicBlock *parent,bool is_storeoffset);
+    StoreInst(Value *value, Value *ptr, Value *offset ,BasicBlock *parent,bool is_storeoffset);
 
    public:
-    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
-    static StoreInst *createStore(Value *value, Value *ptr, Value *offset ,BasicBlock *parent);
+    static StoreInst *createStore(Value *value, Value *ptr,
+                        BasicBlock *parent,bool is_storeoffset=false);
+    static StoreInst *createStore(Value *value, Value *ptr, Value *offset ,
+                        BasicBlock *parent,bool is_storeoffset=false);
     void accept(IrVisitorBase *v) override;
 
     std::string getPrintName() override;
@@ -257,21 +258,24 @@ class StoreInst : public Instruction {
     Value *getPtr(){return getOperand(1);}
     void setLVal(Value *v) { setOperand(1, v); }
     void setOffset(Value *v) { setOperand(2, v); }
+    bool isStoreOff() { return this->is_storeoffset; }
 };
 
 class LoadInst : public Instruction {
    private:
-    LoadInst(Value *ptr, BasicBlock *parent);
-    LoadInst(Value *ptr, Value *offset ,BasicBlock *parent);
+    bool is_loadoffset;
+    LoadInst(Value *ptr, BasicBlock *parent, bool is_loadoffset);
+    LoadInst(Value *ptr, Value *offset ,BasicBlock *parent, bool is_loadoffset);
 
    public:
-    static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
-    static LoadInst *createLoad(Value *ptr, Value *offset ,BasicBlock *parent);
+    static LoadInst *createLoad(Value *ptr, BasicBlock *parent, bool is_loadoffset = false);
+    static LoadInst *createLoad(Value *ptr, Value *offset ,BasicBlock *parent, bool is_loadoffset = false);
     void accept(IrVisitorBase *v) override;
 
     bool hasOffset() { return getOperandNumber() >= 2; }
     void setLVal(Value *v) { setOperand(0, v); }
     void setOffset(Value *v) { setOperand(1, v); }
+    bool isLoadOff() { return this->is_loadoffset; }
 };
 
 // wuqi define

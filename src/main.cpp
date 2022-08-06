@@ -17,19 +17,12 @@
 #include "passes/mir_simplify_cfg.h"
 #include "passes/pass_manager.h"
 #include "passes/sccp.h"
+#include "passes/rmphi.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/sysy_builder.h"
 #include "visitor/tree_visitor_base.h"
-#include "passes/emit_ir.h"
-#include "passes/global_value_numbering.h"
-#include "passes/hir_to_mir.h"
-#include "passes/mir_simplify_cfg.h"
-#include "passes/lower_ir.h"
-#include "passes/mem2reg.h"
-#include "passes/pass_manager.h"
-#include "asm/asm_builder.h"
 
 extern int yyparse();
 extern int yyrestart(FILE *);
@@ -130,13 +123,10 @@ int main(int argc, char **argv) {
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
-    // if (!is_O2) {
-    //     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    //     PM.add_pass<Mem2Reg>("Mem2Reg");
-    // }
     PM.add_pass<LowerIR>("LowerIR");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+    PM.add_pass<RmPhi>("RmPhi");
+
     PM.run();
 
     if(is_emit_mir && !is_debug){

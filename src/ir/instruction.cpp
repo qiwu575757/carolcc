@@ -354,27 +354,29 @@ LoadOffset *LoadOffset::createLoadOffset(Value *value, int offset,
 void LoadOffset::accept(IrVisitorBase *v) { v->visit(this); }
 // DYB
 
-StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
+StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent,bool is_storeoffset)
     : Instruction(Type::getVoidTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
+    this->is_storeoffset = is_storeoffset;
 }
 
-StoreInst::StoreInst(Value *value, Value *ptr, Value *offset, BasicBlock *parent)
+StoreInst::StoreInst(Value *value, Value *ptr, Value *offset, BasicBlock *parent,bool is_storeoffset)
     : Instruction(Type::getVoidTy(), Instruction::STORE, 3, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
     setOperand(2, offset);
+    this->is_storeoffset = is_storeoffset;
 }
 
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
-                                  BasicBlock *parent) {
-    return new StoreInst(value, ptr, parent);
+                                  BasicBlock *parent,bool is_storeoffset) {
+    return new StoreInst(value, ptr, parent, is_storeoffset);
 }
 
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,Value *offset,
-                                  BasicBlock *parent) {
-    return new StoreInst(value, ptr, offset, parent);
+                                  BasicBlock *parent,bool is_storeoffset) {
+    return new StoreInst(value, ptr, offset, parent, is_storeoffset);
 }
 
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
@@ -383,25 +385,27 @@ std::string StoreInst::getPrintName() {
     return getOperand(0)->getPrintName() + "_" + getOperand(1)->getPrintName();
 }
 
-LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
+LoadInst::LoadInst(Value *ptr, BasicBlock *parent, bool is_loadoffset)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
     setOperand(0, ptr);
+    this->is_loadoffset = is_loadoffset;
 }
 
-LoadInst::LoadInst(Value *ptr,  Value *offset, BasicBlock *parent)
+LoadInst::LoadInst(Value *ptr,  Value *offset, BasicBlock *parent,bool is_loadoffset)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 2,
                   parent) {
     setOperand(0, ptr);
     setOperand(1, offset);
+    this->is_loadoffset = is_loadoffset;
 }
 
-LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
-    return new LoadInst(ptr, parent);
+LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent, bool is_loadoffset) {
+    return new LoadInst(ptr, parent,is_loadoffset);
 }
 
-LoadInst *LoadInst::createLoad(Value *ptr, Value *offset, BasicBlock *parent) {
-    return new LoadInst(ptr, offset, parent);
+LoadInst *LoadInst::createLoad(Value *ptr, Value *offset, BasicBlock *parent, bool is_loadoffset) {
+    return new LoadInst(ptr, offset, parent,is_loadoffset);
 }
 
 void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
