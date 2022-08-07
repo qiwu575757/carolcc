@@ -1,9 +1,8 @@
-/* A Bison parser, made by GNU Bison 3.7.6.  */
+/* A Bison parser, made by GNU Bison 3.0.4.  */
 
 /* Bison interface for Yacc-like parsers in C
 
-   Copyright (C) 1984, 1989-1990, 2000-2015, 2018-2021 Free Software Foundation,
-   Inc.
+   Copyright (C) 1984, 1989-1990, 2000-2015 Free Software Foundation, Inc.
 
    This program is free software: you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -16,7 +15,7 @@
    GNU General Public License for more details.
 
    You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <https://www.gnu.org/licenses/>.  */
+   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* As a special exception, you may create a larger work that contains
    part or all of the Bison parser skeleton and distribute that work
@@ -31,12 +30,8 @@
    This special exception was added by the Free Software Foundation in
    version 2.2 of Bison.  */
 
-/* DO NOT RELY ON FEATURES THAT ARE NOT DOCUMENTED in the manual,
-   especially those whose name start with YY_ or yy_.  They are
-   private implementation details that can be changed or removed.  */
-
-#ifndef YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
-# define YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
+#ifndef YY_YY_ROOT_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
+# define YY_YY_ROOT_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED
 /* Debug traces.  */
 #ifndef YYDEBUG
 # define YYDEBUG 0
@@ -45,60 +40,56 @@
 extern int yydebug;
 #endif
 
-/* Token kinds.  */
+/* Token type.  */
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
   enum yytokentype
   {
-    YYEMPTY = -2,
-    YYEOF = 0,                     /* "end of file"  */
-    YYerror = 256,                 /* error  */
-    YYUNDEF = 257,                 /* "invalid token"  */
-    TIDENTIFIER = 258,             /* TIDENTIFIER  */
-    TINTEGER = 259,                /* TINTEGER  */
-    TFLOATNUM = 260,               /* TFLOATNUM  */
-    TSEMICOLOM = 261,              /* ";"  */
-    TCOMMA = 262,                  /* ","  */
-    TINT = 263,                    /* "int"  */
-    TFLOAT = 264,                  /* "float"  */
-    TVOID = 265,                   /* "void"  */
-    TRETURN = 266,                 /* "return"  */
-    TCONST = 267,                  /* "const"  */
-    TBREAK = 268,                  /* "break"  */
-    TCONTINUE = 269,               /* "continue"  */
-    TIF = 270,                     /* "if"  */
-    TELSE = 271,                   /* "else"  */
-    TWHILE = 272,                  /* "while"  */
-    TLBPAREN = 273,                /* "{"  */
-    TRBPAREN = 274,                /* "}"  */
-    TMINUS = 275,                  /* "-"  */
-    TNOT = 276,                    /* "!"  */
-    TPLUS = 277,                   /* "+"  */
-    TDIV = 278,                    /* "/"  */
-    TMOD = 279,                    /* "%"  */
-    TMULTI = 280,                  /* "*"  */
-    TLPAREN = 281,                 /* "("  */
-    TRPAREN = 282,                 /* ")"  */
-    TLMPAREN = 283,                /* "["  */
-    TRMPAREN = 284,                /* "]"  */
-    TL = 285,                      /* "<"  */
-    TLE = 286,                     /* "<="  */
-    TG = 287,                      /* ">"  */
-    TGE = 288,                     /* ">="  */
-    TNE = 289,                     /* "!="  */
-    TE = 290,                      /* "=="  */
-    TLOGAND = 291,                 /* "&&"  */
-    TLOGOR = 292,                  /* "||"  */
-    TASSIGN = 293                  /* "="  */
+    TIDENTIFIER = 258,
+    TINTEGER = 259,
+    TFLOATNUM = 260,
+    TSEMICOLOM = 261,
+    TCOMMA = 262,
+    TINT = 263,
+    TFLOAT = 264,
+    TVOID = 265,
+    TRETURN = 266,
+    TCONST = 267,
+    TBREAK = 268,
+    TCONTINUE = 269,
+    TIF = 270,
+    TELSE = 271,
+    TWHILE = 272,
+    TLBPAREN = 273,
+    TRBPAREN = 274,
+    TMINUS = 275,
+    TNOT = 276,
+    TPLUS = 277,
+    TDIV = 278,
+    TMOD = 279,
+    TMULTI = 280,
+    TLPAREN = 281,
+    TRPAREN = 282,
+    TLMPAREN = 283,
+    TRMPAREN = 284,
+    TL = 285,
+    TLE = 286,
+    TG = 287,
+    TGE = 288,
+    TNE = 289,
+    TE = 290,
+    TLOGAND = 291,
+    TLOGOR = 292,
+    TASSIGN = 293
   };
-  typedef enum yytokentype yytoken_kind_t;
 #endif
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+
 union YYSTYPE
 {
-#line 36 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.yy"
+#line 36 "/root/carolcc/src/frontend/parser.yy" /* yacc.c:1909  */
 
 std::string            *string;
 int                    token;
@@ -152,9 +143,9 @@ tree_l_and_exp         *l_and_exp;
 tree_l_or_exp          *l_or_exp;
 
 
-#line 156 "/home/qiwu/文档/Compliers/carolcc/src/frontend/parser.h"
-
+#line 147 "/root/carolcc/src/frontend/parser.h" /* yacc.c:1909  */
 };
+
 typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define YYSTYPE_IS_DECLARED 1
@@ -165,4 +156,4 @@ extern YYSTYPE yylval;
 
 int yyparse (void);
 
-#endif /* !YY_YY_HOME_QIWU_COMPLIERS_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED  */
+#endif /* !YY_YY_ROOT_CAROLCC_SRC_FRONTEND_PARSER_H_INCLUDED  */
