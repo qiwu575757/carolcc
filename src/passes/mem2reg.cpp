@@ -1,20 +1,18 @@
-
 #include "mem2reg.h"
 #include "module.h"
-#include "dominators.h"
+#include "analysis/dominators.h"
 #include "ir/instruction.h"
 #include "ir/basic_block.h"
 #include "ir/constant.h"
 #include "ir/value.h"
-
+#include "utils.h"
+#include <chrono>
 #include <map>
 #include <set>
+#include <unordered_map>
 #include <vector>
 #include <queue>
 #include <stack>
-
-std::map<Value*,std::vector<Value*> > newest_live_var;
-
 void Mem2Reg::run() {
     Dominators dom(_m,"dominators");
     dom.run();
@@ -30,7 +28,7 @@ void Mem2Reg::run() {
 void Mem2Reg::genPhi() {
     std::vector<std::vector<BasicBlock*>> defBlocks ;
     std::vector<AllocaInst*> allocas ;
-   std::map<AllocaInst*, int> allocaLookup ;
+   std::unordered_map<AllocaInst*, int> allocaLookup ;
 
    // find defs block  -- has store
     for (auto bb : _cur_func->getBasicBlocks()) {
@@ -45,14 +43,9 @@ void Mem2Reg::genPhi() {
                     defBlocks.emplace_back();
                 }
             }
-        }
-    }
-
     // 记录定义 alloca指令的 block,即有对alloca 进行store操作的块
-    for (auto bb :_cur_func->getBasicBlocks()) {
-        for (auto inst : bb->getInstructions()) {
-            if (inst->isStore()) {
-                auto  storeInst = static_cast<StoreInst*> (inst);
+            else if (instr->isStore()) {
+                auto  storeInst = static_cast<StoreInst*> (instr);
                 auto ptr =  dynamic_cast<AllocaInst*>( storeInst->getLVal());
 
                 if (!dynamic_cast<AllocaInst*>(ptr)) {
@@ -69,8 +62,8 @@ void Mem2Reg::genPhi() {
 
     // 对store指令所在块的支配边界插入phi指令
     std::queue<BasicBlock*> W ;
-    std::map<PhiInstr*, int> phiToAllocaMap ;
-    std::set<BasicBlock*> visited;
+    std::unordered_map<PhiInstr*, int> phiToAllocaMap ;
+    std::unordered_set<BasicBlock*> visited;
     for (auto allocaInst : allocas) {
         auto index = allocaLookup.find(allocaInst)->second;
         auto alloca_type = allocaInst->getAllocaType();
@@ -98,6 +91,7 @@ void Mem2Reg::genPhi() {
         }
     }
     // TODO: 把这里的默认是0修改成undefValue来方便后续优化
+
     std::vector<Value*> values ;
     for (int i = 0; i < allocas.size(); i++) {
         //      values.add(new UndefValue());
@@ -143,6 +137,7 @@ void Mem2Reg::genPhi() {
         visited.insert(data->_bb);
 
         std::vector<Instruction*> wait_delete;
+        std::vector<Instruction*> wait_delete_alloca;
         for (auto inst : data->_bb->getInstructions()) {
             // AllocaInst
                 MEM2REG_LOG("visiting instr %s",inst->getPrintName().c_str());
@@ -150,7 +145,7 @@ void Mem2Reg::genPhi() {
                 MEM2REG_LOG("get ret");
             }
             if (inst->isAlloca() && allocaLookup.count(static_cast<AllocaInst*>(inst))) {
-                wait_delete.push_back(inst);
+                wait_delete_alloca.push_back(inst);
             }
                 // LoadInst
             else if (inst->isLoad()) {
@@ -199,8 +194,11 @@ void Mem2Reg::genPhi() {
                currValues[allocaIndex] = phiInst;
            }
        }
-        for(auto instr:wait_delete){
-            data->_bb->deleteInstr(instr);
+       for (auto instr : wait_delete_alloca) {
+           data->_bb->deleteInstr(instr);
+        }
+       for (auto instr : wait_delete) {
+           data->_bb->deleteInstr(instr);
         }
 
         for (auto b  : data->_bb->getSuccBasicBlockList()) {

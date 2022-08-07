@@ -6,29 +6,23 @@
 #include <string>
 
 #include "asm/asm_builder.h"
-#include "passes/dominators.h"
 #include "passes/emit_ir.h"
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/lower_ir.h"
+#include "passes/dead_code_elimination.h"
+#include "passes/analysis/inter_procedural_analysis.h"
+#include "passes/function_inline.h"
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/pass_manager.h"
 #include "passes/sccp.h"
+#include "passes/rmphi.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
 #include "visitor/sysy_builder.h"
 #include "visitor/tree_visitor_base.h"
-#include "passes/dominators.h"
-#include "passes/emit_ir.h"
-#include "passes/global_value_numbering.h"
-#include "passes/hir_to_mir.h"
-#include "passes/mir_simplify_cfg.h"
-#include "passes/lower_ir.h"
-#include "passes/mem2reg.h"
-#include "passes/pass_manager.h"
-#include "asm/asm_builder.h"
 
 extern int yyparse();
 extern int yyrestart(FILE *);
@@ -67,8 +61,6 @@ int main(int argc, char **argv) {
             i++;
         } else if (strcmp(argv[i], "-S") == 0 && i + 1 < argc) {
             is_emit_asm = true;
-            // output_file = std::string(argv[i + 1]);
-            // i++;
         } else if (strcmp(argv[i], "-emit-hir") == 0) {
             is_emit_hir = true;
         } else if (strcmp(argv[i], "-emit-mir") == 0) {
@@ -89,12 +81,14 @@ int main(int argc, char **argv) {
     }
 
     yyin = fopen(input_file.c_str(), "r");
+    if (!yyin) {
+        perror(input_file.c_str());
+        return 1;
+    }
     if (output_file.empty()) {
         output_file = input_file;
         output_file.replace(output_file.end() - 2, output_file.end(), "s");
     }
-    output = fopen(output_file.c_str(), "w");
-    if (!yyin) perror(input_file.c_str());
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
@@ -112,51 +106,39 @@ int main(int argc, char **argv) {
 
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    // if(is_emit_mir && is_debug)
-    //     PM.add_pass<EmitIR>("EmitIR");
+    if(is_emit_mir && is_debug)
+        PM.add_pass<EmitIR>("EmitIR");
+    PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if(is_O2){
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-
-
-        // if(is_emit_mir && is_debug)
-        // PM.add_pass<EmitIR>("EmitIR");
-        if(is_show_hir_pad_graph && is_debug)
-            PM.add_pass<EmitPadGraph>("EmitPadGraph");
+        PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
         PM.add_pass<Mem2Reg>("Mem2Reg");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-
         PM.add_pass<SCCP>("SCCP");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-        // PM.add_pass<SCCP>("SCCP");
-        //  if(is_emit_mir && is_debug)
-        //      PM.add_pass<EmitIR>("EmitIR");
-
-        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        // if(is_emit_mir && is_debug)
-        //     PM.add_pass<EmitIR>("EmitIR");
-
         PM.add_pass<GlobalVariableNumbering>("GVN");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<LowerIR>("LowerIR");
-        if(is_emit_mir && is_debug)
-            PM.add_pass<EmitIR>("EmitIR");
-
+        PM.add_pass<FunctionInline>("FunctionInline");
+        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
+    PM.add_pass<LowerIR>("LowerIR");
+    // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+    PM.add_pass<RmPhi>("RmPhi");
+
     PM.run();
 
     if(is_emit_mir && !is_debug){
         builder->getModule()->MIRMEMprint(output_file);
     }
+    std::cout<<"IR Finish\n";
 
     if (is_emit_asm) {
         builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);
         std::string asm_code = asm_builder.generate_asm(input_file.c_str());
+        output = fopen(output_file.c_str(), "w");
         fprintf(output,"%s",asm_code.c_str());
         fclose(output);
     }

@@ -3,10 +3,17 @@ cmake_minimum_required(VERSION 3.16)
 PROJECT(compiler)
 SET(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-SET(CMAKE_C_FLAGS " -O0 -Wall -g2 -ggdb")
-SET(CMAKE_CXX_FLAGS " -O0 -Wall -g2 -ggdb")
-SET(CMAKE_C_FLAGS_DEBUG " -O0 -Wall -g2 -ggdb")
-SET(CMAKE_CXX_FLAGS_DEBUG " -O0 -Wall -g2 -ggdb")
+set(CMAKE_CXX_STANDARD 17)
+# 条件判断
+if(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -O0")
+    message("-- [debug] version")
+
+elseif(CMAKE_BUILD_TYPE AND (CMAKE_BUILD_TYPE STREQUAL "Release"))
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -Wall -O2")
+    message("-- [release] version")
+endif()
+
 FIND_PACKAGE(BISON REQUIRED)
 SET(BISONOUTPUT ${CMAKE_SOURCE_DIR}/src/frontend/parser.cpp)
 
@@ -34,11 +41,8 @@ IF(FLEX_FOUND)
 ENDIF()
 
 FILE(GLOB_RECURSE source_files "src/*.cpp")
-ADD_COMPILE_OPTIONS(-g -std=c++17 -O2)
 
-MESSAGE("source is ${source_files}")
 SET(INCLUDE_DIRECTORIES ./src )
 INCLUDE_DIRECTORIES(src/)
 
 ADD_EXECUTABLE(${PROJECT_NAME} ${source_files} ${BISONOUTPUT} ${FLEXOUTPUT})
-

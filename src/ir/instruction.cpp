@@ -1,5 +1,8 @@
 #include "instruction.h"
+#include <algorithm>
+#include <ostream>
 
+#include "basic_block.h"
 #include "function.h"
 #include "passes/module.h"
 #include "type.h"
@@ -351,28 +354,96 @@ LoadOffset *LoadOffset::createLoadOffset(Value *value, int offset,
 void LoadOffset::accept(IrVisitorBase *v) { v->visit(this); }
 // DYB
 
-StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent)
+StoreInst::StoreInst(Value *value, Value *ptr, BasicBlock *parent,bool is_storeoffset)
     : Instruction(Type::getVoidTy(), Instruction::STORE, 2, parent) {
     setOperand(0, value);
     setOperand(1, ptr);
+    this->is_storeoffset = is_storeoffset;
 }
+
+StoreInst::StoreInst(Value *value, Value *ptr, Value *offset, BasicBlock *parent,bool is_storeoffset)
+    : Instruction(Type::getVoidTy(), Instruction::STORE, 3, parent) {
+    setOperand(0, value);
+    setOperand(1, ptr);
+    setOperand(2, offset);
+    this->is_storeoffset = is_storeoffset;
+}
+
 StoreInst *StoreInst::createStore(Value *value, Value *ptr,
-                                  BasicBlock *parent) {
-    return new StoreInst(value, ptr, parent);
+                                  BasicBlock *parent,bool is_storeoffset) {
+    return new StoreInst(value, ptr, parent, is_storeoffset);
 }
+
+StoreInst *StoreInst::createStore(Value *value, Value *ptr,Value *offset,
+                                  BasicBlock *parent,bool is_storeoffset) {
+    return new StoreInst(value, ptr, offset, parent, is_storeoffset);
+}
+
 void StoreInst::accept(IrVisitorBase *v) { v->visit(this); }
+
 std::string StoreInst::getPrintName() {
     return getOperand(0)->getPrintName() + "_" + getOperand(1)->getPrintName();
 }
-LoadInst::LoadInst(Value *ptr, BasicBlock *parent)
+
+LoadInst::LoadInst(Value *ptr, BasicBlock *parent, bool is_loadoffset)
     : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 1,
                   parent) {
     setOperand(0, ptr);
+    this->is_loadoffset = is_loadoffset;
 }
-LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent) {
-    return new LoadInst(ptr, parent);
+
+LoadInst::LoadInst(Value *ptr,  Value *offset, BasicBlock *parent,bool is_loadoffset)
+    : Instruction(ptr->getType()->getPointerElementType(), Instruction::LOAD, 2,
+                  parent) {
+    setOperand(0, ptr);
+    setOperand(1, offset);
+    this->is_loadoffset = is_loadoffset;
 }
+
+LoadInst *LoadInst::createLoad(Value *ptr, BasicBlock *parent, bool is_loadoffset) {
+    return new LoadInst(ptr, parent,is_loadoffset);
+}
+
+LoadInst *LoadInst::createLoad(Value *ptr, Value *offset, BasicBlock *parent, bool is_loadoffset) {
+    return new LoadInst(ptr, offset, parent,is_loadoffset);
+}
+
 void LoadInst::accept(IrVisitorBase *v) { v->visit(this); }
+
+// wuqi
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst::MlaInst(Type *ty,Value *v1, Value *v2, Value *v3)
+    : Instruction(ty, Instruction::MLA, 3) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst::MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent)
+    : Instruction(Type::getInt32Ty(), Instruction::MLA, 3, parent) {
+    setOperand(0, v1);
+    setOperand(1, v2);
+    setOperand(2, v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Type *ty, Value *v1, Value *v2,
+                        Value *v3) {
+    return new MlaInst(ty, v1,v2,v3);
+}
+MlaInst *MlaInst::createMlaInst(Value *v1, Value *v2,
+                        Value *v3, BasicBlock *parent) {
+    return new MlaInst(v1,v2,v3,parent);
+}
+void MlaInst::accept(IrVisitorBase *v) { v->visit(this); }
+//wuqi
+
 GetElementPtrInst::GetElementPtrInst(Type *ty, unsigned int num_ops,
                                      BasicBlock *parent, Type *elem_ty)
     : Instruction(ty, Instruction::GEP, num_ops, parent), _elem_ty(elem_ty) {
@@ -425,6 +496,7 @@ CallInst::CallInst(Function *func, BasicBlock *parent)
              EXIT_CODE_ERROR_320);
     setOperand(0, func);
 }
+
 CallInst::CallInst(Function *func, std::vector<Value *> &args,
                    BasicBlock *parent)
     : Instruction(func->getResultType(), Instruction::CALL, args.size() + 1,
@@ -435,6 +507,8 @@ CallInst::CallInst(Function *func, std::vector<Value *> &args,
     for (int i = 0; i < args.size(); i++) {
         setOperand(i + 1, args[i]);
     }
+    parent->getFunction()->addCallee(func);
+    func->addCaller(parent->getFunction());
 }
 CallInst *CallInst::createCall(Function *func, std::vector<Value *> &args,
                                BasicBlock *parent) {
@@ -458,9 +532,12 @@ ZExtInst *ZExtInst::creatZExtInst(Type *ty, Value *val, BasicBlock *parent) {
 Type *ZExtInst::getDestType() const { return _dest_ty; }
 void ZExtInst::accept(IrVisitorBase *v) { v->visit(this); }
 AllocaInst::AllocaInst(Type *ty, BasicBlock *parent)
-    : Instruction(PointerType::get(ty), Instruction::ALLOCA, 0, parent),
+    : Instruction(PointerType::get(ty), Instruction::ALLOCA, 0),
       _alloca_ty(ty),
-      _init(false) {}
+      _init(false) {
+        this->setParent(parent);
+        parent->getFunction()->addAlloca(this);
+      }
 AllocaInst *AllocaInst::createAlloca(Type *ty, BasicBlock *parent) {
     return new AllocaInst(ty, parent);
 }
@@ -491,7 +568,7 @@ PhiInstr *PhiInstr::createPhi(Type *ty, BasicBlock *bb) {
 void PhiInstr::accept(IrVisitorBase *v) { v->visit(this); }
 void MovInstr::accept(IrVisitorBase *v) { v->visit(this); }
 MovInstr::MovInstr(Type *ty, PhiInstr *phi, Value *r_val)
-    : Instruction(Type::getVoidTy(), Instruction::MOV, 1), _l_val(phi) {
+    : Instruction(ty, Instruction::MOV, 1), _l_val(phi) {
     // 设置成void类型，防止重命名的时候导致多余命名
     setOperand(0, r_val);
 }

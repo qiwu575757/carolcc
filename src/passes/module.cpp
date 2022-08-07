@@ -20,6 +20,7 @@ bool Scope::push(const std::string &name, Value *val) {
     auto _layer_num = this->_inner_value.size();
     auto res = this->_inner_value[_layer_num - 1].insert({name, val});
     return res.second;
+    // return true;
 }
 bool Scope::push(const std::string &name, Value *val, std::vector<Value *> params) {
     auto _layer_num = this->_inner_value.size();

@@ -1,6 +1,6 @@
-#line 2 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
+#line 2 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
 
-#line 4 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
+#line 4 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
 
 #define  YY_INT_ALIGNED short int
 
@@ -374,8 +374,8 @@ static void yynoreturn yy_fatal_error ( const char* msg  );
 	(yy_hold_char) = *yy_cp; \
 	*yy_cp = '\0'; \
 	(yy_c_buf_p) = yy_cp;
-#define YY_NUM_RULES 46
-#define YY_END_OF_BUFFER 47
+#define YY_NUM_RULES 50
+#define YY_END_OF_BUFFER 51
 /* This struct is not used in this scanner,
    but its presence is necessary. */
 struct yy_trans_info
@@ -383,20 +383,21 @@ struct yy_trans_info
 	flex_int32_t yy_verify;
 	flex_int32_t yy_nxt;
 	};
-static const flex_int16_t yy_accept[110] =
+static const flex_int16_t yy_accept[117] =
     {   0,
-        0,    0,   47,   46,    1,    2,   30,   34,   46,   23,
-       24,   33,   31,   22,   29,    8,   32,    3,    3,   21,
-       35,   43,   37,   20,   25,   26,   20,   20,   20,   20,
-       20,   20,   20,   20,   27,   46,   28,   39,   41,    8,
-        0,    0,    0,    8,    3,    0,    0,    3,    3,   36,
-       40,   38,   20,   20,   20,   20,   20,   17,   20,   20,
-       20,   20,   42,    0,    0,    0,    0,    0,   45,    0,
-        0,    4,    0,    3,   20,   20,   20,   20,   12,   20,
-       20,   20,    7,   44,    5,    6,    0,    0,   20,   20,
-       20,   18,   20,   20,   14,   20,    0,   15,   11,   20,
+        0,    0,    0,    0,    5,    5,   51,   50,    7,    8,
+       36,   40,   50,   29,   30,   39,   37,   28,   35,   14,
+       38,    9,    9,   27,   41,   49,   43,   26,   31,   32,
+       26,   26,   26,   26,   26,   26,   26,   26,   33,   50,
+       34,    3,    3,    3,    5,    6,   45,   47,   14,    0,
+        1,    4,   14,    9,    0,    0,    9,    9,   42,   46,
+       44,   26,   26,   26,   26,   26,   23,   26,   26,   26,
+       26,   48,    3,    3,    2,    5,    0,    0,    0,   10,
+        0,    9,   26,   26,   26,   26,   18,   26,   26,   26,
+       13,   11,   12,    0,    0,   26,   26,   26,   24,   26,
 
-       13,   20,   19,    9,   20,   10,   20,   16,    0
+       26,   20,   26,    0,   21,   17,   26,   19,   26,   25,
+       15,   26,   16,   26,   22,    0
     } ;
 
 static const YY_CHAR yy_ec[256] =
@@ -433,119 +434,123 @@ static const YY_CHAR yy_ec[256] =
 
 static const YY_CHAR yy_meta[51] =
     {   0,
-        1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-        1,    1,    2,    1,    3,    3,    3,    1,    1,    1,
-        1,    3,    3,    4,    5,    4,    1,    1,    3,    3,
-        3,    3,    3,    3,    4,    4,    4,    4,    4,    4,
-        4,    4,    4,    4,    4,    4,    4,    1,    1,    1
+        1,    1,    2,    1,    1,    1,    1,    1,    3,    1,
+        1,    1,    4,    1,    5,    5,    5,    1,    1,    1,
+        1,    5,    5,    6,    7,    6,    1,    1,    5,    5,
+        5,    5,    5,    5,    6,    6,    6,    6,    6,    6,
+        6,    6,    6,    6,    6,    6,    6,    1,    1,    1
     } ;
 
-static const flex_int16_t yy_base[116] =
+static const flex_int16_t yy_base[124] =
     {   0,
-        0,    0,  213,  214,  214,  214,  192,  214,  205,  214,
-      214,  214,  214,  214,  214,   36,   46,   57,   48,  214,
-      190,  189,  188,    0,  214,  214,  166,  166,  167,  166,
-       23,  170,  162,  166,  214,  151,  214,  214,  214,   61,
-       44,   73,  196,   76,   85,   90,  100,  185,  109,  214,
-      214,  214,    0,  164,  157,  153,  154,    0,  150,  149,
-      155,  154,  214,   51,  105,  119,  120,  186,  214,   80,
-      120,  123,  163,  174,  157,   43,  152,  155,    0,  138,
-      121,  103,  128,  214,  131,  134,  106,  142,   93,   84,
-       85,    0,   77,   70,    0,   56,  140,    0,    0,   49,
+        0,    0,   48,   49,  222,  221,  223,  226,  226,  226,
+      202,  226,  215,  226,  226,  226,  226,  226,  226,   38,
+       50,   59,   50,  226,  200,  199,  198,    0,  226,  226,
+      176,  176,  177,  176,   45,  180,  172,  176,  226,  161,
+      226,  206,  205,  193,    0,  226,  226,  226,   71,   50,
+      226,  226,   74,   85,   96,  105,  193,  110,  226,  226,
+      226,    0,  172,  165,  161,  162,    0,  158,  157,  163,
+      162,  226,  194,  193,  226,    0,   53,  115,  119,  122,
+      170,  181,  164,   35,  159,  161,    0,  137,  143,   90,
+      125,  129,  132,   99,   83,   79,   71,   74,    0,   62,
 
-        0,   40,    0,  143,   31,    0,   25,    0,  214,  158,
-      163,  168,  172,  175,  178
+       62,    0,   66,  135,    0,    0,   57,    0,   42,    0,
+      138,   36,    0,   23,    0,  226,  155,  162,  165,  172,
+      179,  183,  184
     } ;
 
-static const flex_int16_t yy_def[116] =
+static const flex_int16_t yy_def[124] =
     {   0,
-      109,    1,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  110,  109,  109,  110,  110,  110,  110,
-      110,  110,  110,  110,  109,  109,  109,  109,  109,  109,
-      109,  111,  112,  109,  109,  109,  109,  113,  109,  109,
-      109,  109,  110,  110,  110,  110,  110,  110,  110,  110,
-      110,  110,  109,  109,  111,  114,  111,  112,  109,  109,
-      109,  109,  115,  113,  110,  110,  110,  110,  110,  110,
-      110,  110,  109,  109,  109,  109,  115,  109,  110,  110,
-      110,  110,  110,  110,  110,  110,  109,  110,  110,  110,
+      116,    1,  117,  117,  118,  118,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  119,  116,  116,
+      119,  119,  119,  119,  119,  119,  119,  119,  116,  116,
+      116,  120,  120,  116,  121,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  122,  116,  116,  116,
+      116,  119,  119,  119,  119,  119,  119,  119,  119,  119,
+      119,  116,  120,  120,  116,  121,  116,  116,  116,  116,
+      123,  122,  119,  119,  119,  119,  119,  119,  119,  119,
+      116,  116,  116,  123,  116,  119,  119,  119,  119,  119,
 
-      110,  110,  110,  109,  110,  110,  110,  110,    0,  109,
-      109,  109,  109,  109,  109
+      119,  119,  119,  116,  119,  119,  119,  119,  119,  119,
+      116,  119,  119,  119,  119,    0,  116,  116,  116,  116,
+      116,  116,  116
     } ;
 
-static const flex_int16_t yy_nxt[265] =
+static const flex_int16_t yy_nxt[277] =
     {   0,
-        4,    5,    6,    7,    8,    9,   10,   11,   12,   13,
-       14,   15,   16,   17,   18,   19,   19,   20,   21,   22,
-       23,   24,   24,   24,   24,   24,   25,   26,   24,   27,
-       28,   24,   29,   30,   24,   31,   24,   24,   24,   24,
-       32,   24,   24,   24,   33,   34,   24,   35,   36,   37,
-       40,   40,   40,   64,   42,   64,   58,  108,   41,   43,
-       44,   59,   49,   49,   49,   83,   83,   83,   41,   44,
-       47,   45,   45,   46,  107,   40,   40,   40,  106,   47,
-       47,   66,   48,   41,   90,   91,   67,  105,  103,   47,
-       40,   40,   40,   41,   85,   85,   85,   44,   41,   45,
+        8,    9,   10,   11,   12,   13,   14,   15,   16,   17,
+       18,   19,   20,   21,   22,   23,   23,   24,   25,   26,
+       27,   28,   28,   28,   28,   28,   29,   30,   28,   31,
+       32,   28,   33,   34,   28,   35,   28,   28,   28,   28,
+       36,   28,   28,   28,   37,   38,   28,   39,   40,   41,
+       43,   43,   49,   49,   49,  115,   44,   44,   51,   77,
+       50,   77,   53,   52,   58,   58,   58,   91,   91,   91,
+       50,   53,   56,   54,   54,   55,   97,   98,   67,  114,
+      113,   56,   56,   68,   57,   49,   49,   49,   49,   49,
+       49,   56,  104,   50,  104,  112,   50,   53,  110,   54,
 
-       45,   46,   44,   48,   46,   46,   46,   47,   41,   70,
-      102,   71,   47,   66,   72,   72,   72,   47,   67,  101,
-      100,   44,   47,   49,   49,   49,   99,   66,   66,   98,
-       88,   47,   84,   67,   86,   86,   86,   72,   72,   72,
-       96,   47,   83,   83,   83,   85,   85,   85,   86,   86,
-       86,   97,   95,   97,  104,  104,  104,  104,  104,  104,
-       53,   53,   53,   65,   65,   65,   65,   65,   68,   68,
-       68,   68,   68,   74,   74,   67,   67,   67,   67,   67,
-       87,   94,   87,   93,   92,   89,   73,   88,   69,   82,
-       81,   80,   79,   78,   77,   76,   75,   73,   69,   63,
+       54,   55,  109,   50,  108,   57,   50,   56,   53,  107,
+       55,   55,   55,  106,   78,  105,   79,   56,   56,   80,
+       80,   80,   53,   95,   58,   58,   58,  103,   56,   92,
+       92,   92,   56,   93,   93,   93,   80,   80,   80,   91,
+       91,   91,   56,   92,   92,   92,   93,   93,   93,  111,
+      111,  111,  111,  111,  111,   42,   42,   42,   42,   42,
+       42,   42,   45,   45,   45,   45,   45,   45,   45,   62,
+       62,   62,   73,   73,  102,   73,   73,   73,   73,   76,
+      101,   76,   76,   76,   76,   76,   82,   82,   94,  100,
+       94,   99,   96,   81,   95,   74,   74,   90,   89,   88,
 
-       62,   61,   60,   57,   56,   55,   54,   52,   51,   50,
-       39,   38,  109,    3,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109
+       87,   86,   85,   84,   83,   81,   75,   74,   74,   72,
+       71,   70,   69,   66,   65,   64,   63,   61,   60,   59,
+       48,   47,  116,   46,   46,    7,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116
     } ;
 
-static const flex_int16_t yy_chk[265] =
+static const flex_int16_t yy_chk[277] =
     {   0,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
         1,    1,    1,    1,    1,    1,    1,    1,    1,    1,
-       16,   16,   16,   41,   17,   41,   31,  107,   16,   17,
-       19,   31,   19,   19,   19,   64,   64,   64,   16,   18,
-       19,   18,   18,   18,  105,   40,   40,   40,  102,   18,
-       19,   42,   18,   40,   76,   76,   42,  100,   96,   18,
-       44,   44,   44,   40,   70,   70,   70,   45,   44,   45,
+        3,    4,   20,   20,   20,  114,    3,    4,   21,   50,
+       20,   50,   23,   21,   23,   23,   23,   77,   77,   77,
+       20,   22,   23,   22,   22,   22,   84,   84,   35,  112,
+      109,   22,   23,   35,   22,   49,   49,   49,   53,   53,
+       53,   22,   95,   49,   95,  107,   53,   54,  103,   54,
 
-       45,   45,   46,   18,   46,   46,   46,   45,   44,   47,
-       94,   47,   46,   65,   47,   47,   47,   45,   65,   93,
-       91,   49,   46,   49,   49,   49,   90,   66,   67,   89,
-       87,   49,   66,   67,   71,   71,   71,   72,   72,   72,
-       82,   49,   83,   83,   83,   85,   85,   85,   86,   86,
-       86,   88,   81,   88,   97,   97,   97,  104,  104,  104,
-      110,  110,  110,  111,  111,  111,  111,  111,  112,  112,
-      112,  112,  112,  113,  113,  114,  114,  114,  114,  114,
-      115,   80,  115,   78,   77,   75,   74,   73,   68,   62,
-       61,   60,   59,   57,   56,   55,   54,   48,   43,   36,
+       54,   54,  101,   49,  100,   22,   53,   54,   55,   98,
+       55,   55,   55,   97,   56,   96,   56,   54,   55,   56,
+       56,   56,   58,   94,   58,   58,   58,   90,   55,   78,
+       78,   78,   58,   79,   79,   79,   80,   80,   80,   91,
+       91,   91,   58,   92,   92,   92,   93,   93,   93,  104,
+      104,  104,  111,  111,  111,  117,  117,  117,  117,  117,
+      117,  117,  118,  118,  118,  118,  118,  118,  118,  119,
+      119,  119,  120,  120,   89,  120,  120,  120,  120,  121,
+       88,  121,  121,  121,  121,  121,  122,  122,  123,   86,
+      123,   85,   83,   82,   81,   74,   73,   71,   70,   69,
 
-       34,   33,   32,   30,   29,   28,   27,   23,   22,   21,
-        9,    7,    3,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109,  109,  109,  109,  109,  109,  109,
-      109,  109,  109,  109
+       68,   66,   65,   64,   63,   57,   44,   43,   42,   40,
+       38,   37,   36,   34,   33,   32,   31,   27,   26,   25,
+       13,   11,    7,    6,    5,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116,  116,  116,  116,  116,
+      116,  116,  116,  116,  116,  116
     } ;
 
 /* Table of booleans, true if rule could match eol. */
-static const flex_int32_t yy_rule_can_match_eol[47] =
+static const flex_int32_t yy_rule_can_match_eol[51] =
     {   0,
-0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
+0, 0, 1, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
-    0, 0, 0, 0, 1, 0, 0,     };
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     };
 
 static yy_state_type yy_last_accepting_state;
 static char *yy_last_accepting_cpos;
@@ -561,8 +566,10 @@ int yy_flex_debug = 0;
 #define YY_MORE_ADJ 0
 #define YY_RESTORE_YY_MORE_OFFSET
 char *yytext;
-#line 1 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-#line 6 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
+#line 1 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+
+
+#line 6 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
 
 #include <string>
 #include <iostream>
@@ -572,10 +579,12 @@ extern int yyline;
 
 #define SAVE_TOKEN yylval.string = new std::string(yytext,yyleng)
 #define TOKEN(t) (yylval.token=t)
-#line 576 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
-#line 577 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
+#line 583 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
+#line 584 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
 
 #define INITIAL 0
+#define COMMENT 1
+#define SINGLELINECOMMENT 2
 
 #ifndef YY_NO_UNISTD_H
 /* Special case for "unistd.h", since it is non-ANSI. We include it way
@@ -790,10 +799,10 @@ YY_DECL
 		}
 
 	{
-#line 18 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
+#line 18 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
 
 
-#line 797 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
+#line 806 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -820,13 +829,13 @@ yy_match:
 			while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 				{
 				yy_current_state = (int) yy_def[yy_current_state];
-				if ( yy_current_state >= 110 )
+				if ( yy_current_state >= 117 )
 					yy_c = yy_meta[yy_c];
 				}
 			yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
 			++yy_cp;
 			}
-		while ( yy_base[yy_current_state] != 214 );
+		while ( yy_base[yy_current_state] != 226 );
 
 yy_find_action:
 		yy_act = yy_accept[yy_current_state];
@@ -862,244 +871,270 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 20 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{}
+#line 20 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{BEGIN(COMMENT);}
 	YY_BREAK
 case 2:
-/* rule 2 can match eol */
 YY_RULE_SETUP
-#line 21 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{yyline++;}
+#line 21 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{BEGIN(INITIAL);}
 	YY_BREAK
 case 3:
+/* rule 3 can match eol */
 YY_RULE_SETUP
-#line 22 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TINTEGER;}
+#line 22 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+
+	YY_BREAK
+case YY_STATE_EOF(COMMENT):
+#line 23 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{printf("Unterminated comment\n"); return 0;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 24 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}
+#line 24 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{BEGIN(SINGLELINECOMMENT);}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 25 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}
+#line 25 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+
 	YY_BREAK
 case 6:
+/* rule 6 can match eol */
 YY_RULE_SETUP
-#line 27 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}//here may have problems
+#line 26 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{BEGIN(INITIAL);}
+	YY_BREAK
+case YY_STATE_EOF(SINGLELINECOMMENT):
+#line 27 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{BEGIN(INITIAL);}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 28 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}
+#line 29 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{}
 	YY_BREAK
 case 8:
+/* rule 8 can match eol */
 YY_RULE_SETUP
-#line 29 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}
+#line 30 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{yyline++;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 30 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TFLOATNUM;}
+#line 31 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TINTEGER;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 32 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TRETURN);}
+#line 33 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 33 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TCONST);}
+#line 34 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 34 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TINT);}
+#line 36 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}//here may have problems
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 35 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TFLOAT);}
+#line 37 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 36 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TVOID);}
+#line 38 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 37 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TBREAK);}
+#line 39 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TFLOATNUM;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 38 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TCONTINUE);}
+#line 41 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TRETURN);}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 39 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TIF);}
+#line 42 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TCONST);}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 40 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TELSE);}
+#line 43 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TINT);}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 41 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TWHILE);}
+#line 44 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TFLOAT);}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 43 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{SAVE_TOKEN; return TIDENTIFIER;}
+#line 45 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TVOID);}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 45 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TSEMICOLOM);}
+#line 46 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TBREAK);}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 46 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TCOMMA);}
+#line 47 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TCONTINUE);}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 47 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLPAREN);}
+#line 48 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TIF);}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 48 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TRPAREN);}
+#line 49 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TELSE);}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 49 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLMPAREN);}
+#line 50 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TWHILE);}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 50 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TRMPAREN);}
+#line 52 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{SAVE_TOKEN; return TIDENTIFIER;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 51 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLBPAREN);}
+#line 54 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TSEMICOLOM);}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 52 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TRBPAREN);}
+#line 55 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TCOMMA);}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 54 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TMINUS);}
+#line 56 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLPAREN);}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 55 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TNOT);}
+#line 57 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TRPAREN);}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 57 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TPLUS);}
+#line 58 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLMPAREN);}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 58 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TDIV);}
+#line 59 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TRMPAREN);}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 59 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TMULTI);}
+#line 60 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLBPAREN);}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 60 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TMOD);}
+#line 61 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TRBPAREN);}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 62 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TL);}
+#line 63 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TMINUS);}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 63 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLE);}
+#line 64 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TNOT);}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 64 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TG);}
+#line 66 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TPLUS);}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 65 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TGE);}
+#line 67 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TDIV);}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 66 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TNE);}
+#line 68 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TMULTI);}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 67 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TE);}
+#line 69 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TMOD);}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 68 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLOGAND);}
+#line 71 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TL);}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 69 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TLOGOR);}
+#line 72 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLE);}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 71 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{return TOKEN(TASSIGN);}
+#line 73 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TG);}
 	YY_BREAK
 case 44:
-/* rule 44 can match eol */
 YY_RULE_SETUP
-#line 73 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{}//MultilineComment
+#line 74 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TGE);}
 	YY_BREAK
 case 45:
-*yy_cp = (yy_hold_char); /* undo effects of setting up yytext */
-(yy_c_buf_p) = yy_cp -= 1;
-YY_DO_BEFORE_ACTION; /* set up yytext again */
 YY_RULE_SETUP
-#line 74 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{}//SingleLineComment
-	YY_BREAK
-case YY_STATE_EOF(INITIAL):
-#line 76 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
-{yyterminate();}
+#line 75 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TNE);}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 77 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
+#line 76 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TE);}
+	YY_BREAK
+case 47:
+YY_RULE_SETUP
+#line 77 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLOGAND);}
+	YY_BREAK
+case 48:
+YY_RULE_SETUP
+#line 78 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TLOGOR);}
+	YY_BREAK
+case 49:
+YY_RULE_SETUP
+#line 80 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{return TOKEN(TASSIGN);}
+	YY_BREAK
+case YY_STATE_EOF(INITIAL):
+#line 82 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
+{yyterminate();}
+	YY_BREAK
+case 50:
+YY_RULE_SETUP
+#line 83 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
 ECHO;
 	YY_BREAK
-#line 1103 "/home/yonchicy/compiler/carolcc/src/frontend/token.cpp"
+#line 1138 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.cpp"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1394,7 +1429,7 @@ static int yy_get_next_buffer (void)
 		while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 			{
 			yy_current_state = (int) yy_def[yy_current_state];
-			if ( yy_current_state >= 110 )
+			if ( yy_current_state >= 117 )
 				yy_c = yy_meta[yy_c];
 			}
 		yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
@@ -1422,11 +1457,11 @@ static int yy_get_next_buffer (void)
 	while ( yy_chk[yy_base[yy_current_state] + yy_c] != yy_current_state )
 		{
 		yy_current_state = (int) yy_def[yy_current_state];
-		if ( yy_current_state >= 110 )
+		if ( yy_current_state >= 117 )
 			yy_c = yy_meta[yy_c];
 		}
 	yy_current_state = yy_nxt[yy_base[yy_current_state] + yy_c];
-	yy_is_jam = (yy_current_state == 109);
+	yy_is_jam = (yy_current_state == 116);
 
 		return yy_is_jam ? 0 : yy_current_state;
 }
@@ -2114,6 +2149,6 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 77 "/home/yonchicy/compiler/carolcc/src/frontend/token.l"
+#line 83 "/home/qiwu/文档/Compliers/carolcc/src/frontend/token.l"
 
 

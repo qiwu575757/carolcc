@@ -44,6 +44,7 @@ public:
     void setIDom(BasicBlock* idom){_idom = idom;}
     BasicBlock* getIDom(){return _idom;}
     std::list<Instruction *> _instructions;
+    
     std::unordered_set<Value *> _active_in, _active_out, _defined_vals; /*活跃变量进入，活跃变量输出，本模块定义的变量*/
     std::unordered_map<Value *, BasicBlock *> _inherited_vals;          /*继承莫个基本块的变量*/
     static BasicBlock *create(const std::string &name, Function *func);

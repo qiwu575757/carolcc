@@ -31,6 +31,7 @@ public:
 private:
     void visit(UnaryInst *node) final;
     void visit(BinaryInst *node) final;
+    void visit(MlaInst *node) final;
     void visit(AllocaInst *node) final;
     void visit(StoreInst *node) final;
     //  ---------
@@ -74,6 +75,7 @@ private:
     int depth;
     std::ofstream output_file;
     std::unordered_map<Value *, int> seq;
+    std::set<PhiInstr *> phi_pool;
 };
 
 #endif//COMPILER_LLVM_IR_PRINTER_H

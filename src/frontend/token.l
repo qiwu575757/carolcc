@@ -1,6 +1,6 @@
 %option noyywrap yylineno
-
-ILEN ([Uu](L|l|LL|ll)?|(L|l|LL|ll)[Uu]?)
+%x COMMENT
+%x SINGLELINECOMMENT
 
 %{
 
@@ -16,6 +16,15 @@ extern int yyline;
 
 
 %%
+
+"/*"		{BEGIN(COMMENT);}
+<COMMENT>"*/"  {BEGIN(INITIAL);}
+<COMMENT>([^*]|\n)+|.
+<COMMENT><<EOF>>   {printf("Unterminated comment\n"); return 0;}
+"//" {BEGIN(SINGLELINECOMMENT);}
+<SINGLELINECOMMENT>.*
+<SINGLELINECOMMENT>\n {BEGIN(INITIAL);}
+<SINGLELINECOMMENT><<EOF>> {BEGIN(INITIAL);}
 
 [ \t] {}
 \n {yyline++;}
@@ -69,9 +78,6 @@ while {return TOKEN(TWHILE);}
 "||" {return TOKEN(TLOGOR);}
 
 "=" {return TOKEN(TASSIGN);}
-
-"/*"([^\*]|(\*)*[^\*/])*(\*)*"*/"   {}//MultilineComment
-"//".*$                             {}//SingleLineComment
 
 <<EOF>> {yyterminate();}
 %%

@@ -21,6 +21,7 @@ private:
     void print_left(std::string type,std::string name);
     void visit(UnaryInst *node) final;
     void visit(BinaryInst *node) final;
+    void visit(MlaInst *node) final {};
     void visit(AllocaInst *node) final;
     void visit(StoreInst *node) final;
     //  ---------

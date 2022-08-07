@@ -28,6 +28,7 @@ public:
 private:
     void visit(UnaryInst *node){};
     void visit(BinaryInst *node){};
+    void visit(MlaInst *node){};
     void visit(AllocaInst *node){};
     void visit(StoreInst *node){};
     //  ---------
@@ -56,6 +57,7 @@ private:
 
     int depth;
     std::unordered_map<Value *, int> seq;
+    std::set<PhiInstr *> phi_pool;
 };
 
 #endif//COMPILER_LLVM_IR_INDEXER_H

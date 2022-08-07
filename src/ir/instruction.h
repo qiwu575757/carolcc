@@ -46,11 +46,12 @@ class Instruction : public User {
         // other instructions
         CMP,
         PHI,
-        GEP,  // get element ptr
+        GEP,  // get element ptr， will be replaced by mla
+        MLA,
         CALL,
         ZEXT,
         CAST,
-        
+
         // HIR
         BREAK,
         CONTINUE,
@@ -64,7 +65,7 @@ class Instruction : public User {
     //    bool isNeg()const { return _op_id == Instruction::NEG; }
     bool isNot() const { return _op_id == Instruction::NOT; }
     bool isCast() const { return _op_id == Instruction::CAST; }
-
+    // binary
     bool isAdd() const { return _op_id == Instruction::ADD; }
     bool isSub() const { return _op_id == Instruction::SUB; }
     bool isMul() const { return _op_id == Instruction::MUL; }
@@ -85,12 +86,12 @@ class Instruction : public User {
     bool isCmp() const { return _op_id == Instruction::CMP; }
     bool isPhi() const { return _op_id == Instruction::PHI; }
     bool isGep() const { return _op_id == Instruction::GEP; }
+    bool isMla() const { return _op_id == Instruction::MLA; }
     bool isCall() const { return _op_id == Instruction::CALL; }
     bool isZext() const { return _op_id == Instruction::ZEXT; }
     bool isBreak() const { return _op_id == Instruction::BREAK; }
     bool isContinue() const { return _op_id == Instruction::CONTINUE; }
-    bool isSTORE_OFFSET() const { return _op_id == Instruction::STORE_OFFSET; }
-    bool isLOAD_OFFSET() const { return _op_id == Instruction::LOAD_OFFSET; }
+    bool isMOV() const { return _op_id == Instruction::MOV; }
     BasicBlock *getParent() const { return _parent; }
     void setParent(BasicBlock *parent) { _parent = parent; }
     Function *getFunction() const { return getParent()->getParentFunc(); }
@@ -105,7 +106,7 @@ class Instruction : public User {
 };
 
 class UnaryInst : public Instruction {
-   private:
+   public:
     // UnaryInst(Type *type, OpKind op_id, Value *v1);
     UnaryInst(Type *type, OpKind op_id, Value *v1, BasicBlock *parent);
 
@@ -118,7 +119,7 @@ class UnaryInst : public Instruction {
 };
 
 class BinaryInst : public Instruction {
-   private:
+   public:
     // BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2);
     BinaryInst(Type *type, OpKind op_id, Value *v1, Value *v2,
                BasicBlock *parent);
@@ -167,7 +168,7 @@ class CmpInst : public Instruction {
     bool isLe() const{ return _cmp_op == CmpInst::LE; }
     CmpOp getCmpOp() { return _cmp_op; }
 
-   private:
+   public:
     // CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2);
     CmpInst(Type *type, CmpOp op_id, Value *v1, Value *v2, BasicBlock *parent);
 };
@@ -216,17 +217,6 @@ class BranchInst : public Instruction {
                                     BasicBlock *if_false, BasicBlock *bb);
 };
 
-class StoreInst : public Instruction {
-   private:
-    StoreInst(Value *value, Value *ptr, BasicBlock *parent);
-
-   public:
-    static StoreInst *createStore(Value *value, Value *ptr, BasicBlock *parent);
-    void accept(IrVisitorBase *v) override;
-    std::string getPrintName() override;
-    Value *getLVal() { return getOperand(1); }
-    Value *getRVal() { return getOperand(0); }
-};
 // DYB DEFINE
 class StoreOffset : public Instruction {
    private:
@@ -236,6 +226,7 @@ class StoreOffset : public Instruction {
     static StoreOffset *createStoreOffset(Value *value,int offset, BasicBlock *parent);
     void accept(IrVisitorBase *v) override;
 };
+
 class LoadOffset : public Instruction {
    private:
     LoadOffset(Value *value,int offset, BasicBlock *parent);
@@ -245,14 +236,65 @@ class LoadOffset : public Instruction {
     void accept(IrVisitorBase *v) override;
 };
 //
-class LoadInst : public Instruction {
+class StoreInst : public Instruction {
    private:
-    LoadInst(Value *ptr, BasicBlock *parent);
+    bool is_storeoffset;
+    StoreInst(Value *value, Value *ptr, BasicBlock *parent,bool is_storeoffset);
+    StoreInst(Value *value, Value *ptr, Value *offset ,BasicBlock *parent,bool is_storeoffset);
 
    public:
-    static LoadInst *createLoad(Value *ptr, BasicBlock *parent);
+    static StoreInst *createStore(Value *value, Value *ptr,
+                        BasicBlock *parent,bool is_storeoffset=false);
+    static StoreInst *createStore(Value *value, Value *ptr, Value *offset ,
+                        BasicBlock *parent,bool is_storeoffset=false);
+    void accept(IrVisitorBase *v) override;
+
+    std::string getPrintName() override;
+    Value *getLVal() { return getOperand(1); }
+    Value *getRVal() { return getOperand(0); }
+
+    bool hasOffset() { return getOperandNumber() >= 3; }
+    void setRVal(Value *v) { setOperand(0, v); }
+    Value *getPtr(){return getOperand(1);}
+    void setLVal(Value *v) { setOperand(1, v); }
+    void setOffset(Value *v) { setOperand(2, v); }
+    bool isStoreOff() { return this->is_storeoffset; }
+};
+
+class LoadInst : public Instruction {
+   private:
+    bool is_loadoffset;
+    LoadInst(Value *ptr, BasicBlock *parent, bool is_loadoffset);
+    LoadInst(Value *ptr, Value *offset ,BasicBlock *parent, bool is_loadoffset);
+
+   public:
+    static LoadInst *createLoad(Value *ptr, BasicBlock *parent, bool is_loadoffset = false);
+    static LoadInst *createLoad(Value *ptr, Value *offset ,BasicBlock *parent, bool is_loadoffset = false);
+    void accept(IrVisitorBase *v) override;
+
+    bool hasOffset() { return getOperandNumber() >= 2; }
+    void setLVal(Value *v) { setOperand(0, v); }
+    void setOffset(Value *v) { setOperand(1, v); }
+    bool isLoadOff() { return this->is_loadoffset; }
+};
+
+// wuqi define
+class MlaInst : public Instruction {
+   private:
+    MlaInst(Value *v1, Value *v2, Value *v3);
+    MlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    MlaInst(Value *v1, Value *v2, Value *v3, BasicBlock *parent);
+    MlaInst(Type *ty, OpKind id, BasicBlock *bb) : Instruction(ty, id, 3, bb) {}
+
+   public:
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Type *ty, Value *v1, Value *v2, Value *v3);
+    static MlaInst *createMlaInst(Value *v1, Value *v2, Value *v3,
+                                      BasicBlock *bb);
     void accept(IrVisitorBase *v) override;
 };
+//
+
 class GetElementPtrInst : public Instruction {
    private:
     GetElementPtrInst(Value *ptr, std::vector<Value *> &idxs,
@@ -343,7 +385,7 @@ class PhiInstr : public Instruction {
 };
 
 class MovInstr : public Instruction{
-    private : 
+    private :
     MovInstr (Type* ty,PhiInstr* phi,Value* r_val);
     PhiInstr* _l_val;
 

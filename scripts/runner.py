@@ -34,11 +34,11 @@ clang_llvm_scheme = {"scheme": "clang_llvm",
                      "frontend_instr": "clang{v} -Xclang -disable-O0-optnone -x c -c -O0 -S -emit-llvm -include stdlib/lib.h {sy} -o {ir} ",
                      "emit_llvm_ir": True}
 npu_llvm_scheme = {"scheme": "npu_llvm",
-                  "frontend_instr": "build/compiler" + " -emit-mir -o {ir} {sy}",
+                  "frontend_instr": "build/compiler" + " -emit-mir {O2} -o {ir} {sy}",
                    "emit_llvm_ir": True}
 
 npu_npu_scheme = {"scheme": "npu_npu",
-                  "frontend_instr": "build/compiler" + " -S  -o {asm} {sy}",
+                  "frontend_instr": "build/compiler" + " -S {O2} -o {asm} {sy}",
                   "emit_llvm_ir": True}
 
 
@@ -57,6 +57,7 @@ class Runner():
         parser.add_argument('-all_test', type=str, default="all", help='全部测试(default)')
         parser.add_argument('-remake', action='store_true', default=False, help='重新编译')
         parser.add_argument('-clean', action='store_true', default=False, help='-clean 清除生成物 : build/log build/test_result build/output test 保留 test/**.sy test/**.out')
+        parser.add_argument('-O2', action='store_true', default=False, help='O2优化')
         self.args = parser.parse_args()
 
         if self.args.v > 0:
@@ -83,7 +84,7 @@ class Runner():
         if self.args.remake:
             self.clean()
             self.remake()
-
+        self.O2 = "-O2" if self.args.O2 else ""
         self.generate_path()
 
     def remake(self):
@@ -215,9 +216,9 @@ class Runner():
             log_file = open(runner_log_index_path, "w+")
         Print_C().print_procedure("Generating {}/{}.ir".format(testcase, self.scheme))
         if self.args.debug:
-            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), bufsize=1)
+            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path,O2=self.O2, ir=ir).split(), bufsize=1)
         else:
-            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
+            subprocess.run(frontend_instr.format(v=self.v,sy=sy_path,O2=self.O2, ir=ir).split(), stdout=log_file, stderr=self.error_log_file, bufsize=1)
         log_file.close()
 
         if self.args.debug:
@@ -351,19 +352,19 @@ class Runner():
 
         Print_C().print_procedure("Generating {}.s".format(self.scheme))
         if self.args.asm:
-            subprocess.run(frontend_instr.format(asm=asm, sy=sy_path).split(), bufsize=1)
+            subprocess.run(frontend_instr.format(O2=self.O2, asm=asm, sy=sy_path).split(), bufsize=1)
         else:
             if self.args.debug:
                 if self.on_chip:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), bufsize=1)
+                    subprocess.run(frontend_instr.format(v=self.v,header=header,O2=self.O2, ir=asm, sy=sy_path).split(), bufsize=1)
                 else:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), bufsize=1)
+                    subprocess.run(frontend_instr.format(v=self.v,header=header,O2=self.O2, ir=asm, sy=sy_path).split(), bufsize=1)
             else:
                 if self.on_chip:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
+                    subprocess.run(frontend_instr.format(v=self.v,header=header,O2=self.O2, ir=asm, sy=sy_path).split(), stdout=log_file,
                                     stderr=self.error_log_file, bufsize=1)
                 else:
-                    subprocess.run(frontend_instr.format(v=self.v,header=header, ir=asm, sy=sy_path).split(), stdout=log_file,
+                    subprocess.run(frontend_instr.format(v=self.v,header=header,O2=self.O2, ir=asm, sy=sy_path).split(), stdout=log_file,
                                     stderr=self.error_log_file, bufsize=1)
         log_file.close()
         self.check("",testcase)

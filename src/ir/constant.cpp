@@ -94,7 +94,7 @@ ConstantArray *ConstantArray::turn(Type *basic_type,
     int dim_length = array_init.size() / cur_bound;
     if(dim_length==1){
         for(auto& ele:array_init)
-            if(ele->getType()->eq(*basic_type))
+            if(ele->getType()->eq(basic_type))
                 init_list.push_back(static_cast<Constant*>(ele));
             else {
                 if(ele->getType()->isIntegerTy() && basic_type->isFloatTy()){

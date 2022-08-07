@@ -20,6 +20,16 @@ extern Type *void_type;
 extern PointerType *int32ptr_type;
 extern PointerType *floatptr_type;
 
+// #define TTTT_LOGGG
+#ifdef TTTT_LOGGG
+#define TYPE_LOG(format, ...)                                  \
+    do {                                                                             \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
+#else
+#define TYPE_LOG(format, ...)
+#endif
 
 class Type {
 public:
@@ -62,11 +72,11 @@ public:
     int getSize(bool extended = true);
     int getDims();
 
-    void print(std::ofstream &output_file);
+    void print(std::ostream &output_file);
 
     std::string CommentPrint();
 
-    bool eq(Type rhs);
+    bool eq(Type* rhs);
 
 private:
     TypeID _id;
@@ -74,8 +84,8 @@ private:
 
 class IntegerType : public Type {
 public:
-    explicit IntegerType(unsigned num_bits);
-
+       explicit IntegerType(unsigned num_bits);
+    
     bool isInt1();
 
     bool isInt32();

@@ -5,8 +5,6 @@
 #include <unordered_map>
 #include "passes/module.h"
 
-static int var_no = 1;
-static const std::string head = "%";
 void LLVMIrPrinter::NameValue(Value *val) {
     if (seq.find(val) == seq.end() ) {
       if(!val->getName().empty()){
@@ -49,20 +47,23 @@ void LLVMIrPrinter::NameBaseBlock(BaseBlock *base_block) {
     }
 }
 void LLVMIrPrinter::NameInstr(Instruction *instr) {
-    if (seq.find(instr) == seq.end()  && !instr->getType()->isVoidTy()) {
-      if(!instr->getName().empty()){
-        WARNNING("renaming instr %s",instr->getName().c_str());
-      }
-        auto seq_num = seq.size();
-        instr->setName(std::to_string(seq_num));
-        seq.insert({instr, seq_num});
+    auto mov_instr = dynamic_cast<MovInstr*>(instr);
+    if(!mov_instr){
+        if (seq.find(instr) == seq.end() && !instr->getType()->isVoidTy()) {
+            if (!instr->getName().empty()) {
+                WARNNING("renaming instr %s", instr->getName().c_str());
+            }
+            auto seq_num = seq.size();
+            instr->setName(std::to_string(seq_num));
+            seq.insert({instr, seq_num});
+        }
     }
-}
-std::string getname(int n) {
-    if (!n) {
-        return "%" + std::to_string(var_no++);
-    } else {
-        return "%" + std::to_string(n + var_no);
+    else {
+        auto phi = dynamic_cast<PhiInstr*>(mov_instr->getLVal());
+        if(phi_pool.count(phi)==0){
+            NameValue(phi);
+            phi_pool.insert(phi);
+        }
     }
 }
 void LLVMIrPrinter::visit(AllocaInst *node) {
@@ -76,9 +77,10 @@ void LLVMIrPrinter::visit(AllocaInst *node) {
     }
 }
 void LLVMIrPrinter::visit(Function *node) {
+    seq.clear();
+    phi_pool.clear();
+    depth = 0;
     if(this->ir_level == Module::IRLevel::HIR){
-        seq.clear();
-        depth = 0;
 
         // 先给变量编号
         INFO("naming args");
@@ -119,7 +121,17 @@ void LLVMIrPrinter::visit(Function *node) {
                 }
                 arg->accept(this);
             }
-            output_file << ") {" << std::endl;
+            output_file << ") {" ;
+            output_file<<"; caller: ";
+            for(auto caller : node->getCallerSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+            output_file<<"callee: ";
+            for(auto caller : node->getCalleeSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+
+            output_file<<std::endl;
             INFO("base block size is %zu", node->getBaseBlocks().size());
             for (auto &base_block: node->getBaseBlocks()) {
                 base_block->accept(this);
@@ -127,9 +139,7 @@ void LLVMIrPrinter::visit(Function *node) {
             output_file << "}" << std::endl;
         }
     }
-    else if(this->ir_level == Module::IRLevel::MIR_MEM){
-        seq.clear();
-        depth = 0;
+    else {
 
         // 先给变量编号
         INFO("naming args");
@@ -170,7 +180,17 @@ void LLVMIrPrinter::visit(Function *node) {
                 }
                 arg->accept(this);
             }
-            output_file << ") {" << std::endl;
+            output_file << ") {" ;
+            output_file<<"; caller: ";
+            for(auto caller : node->getCallerSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+            output_file<<"callee: ";
+            for(auto caller : node->getCalleeSet()){
+                output_file << caller->getPrintName()<<" ";
+            }
+
+            output_file<<std::endl;
             INFO("base block size is %zu", node->getBasicBlocks().size());
             for (auto &base_block: node->getBasicBlocks()) {
                 base_block->accept(this);
@@ -202,6 +222,17 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
               output_file<<pred->getPrintName();
               i++;
               if(i!=basic_block->getPreBasicBlockList().size()){
+                  output_file<<", ";
+              }
+          }
+          if(!basic_block->getSuccBasicBlockList().empty()){
+              output_file<<" ;suc =";
+          }
+          i = 0;
+          for(auto& pred : basic_block->getSuccBasicBlockList()){
+              output_file<<pred->getPrintName();
+              i++;
+              if(i!=basic_block->getSuccBasicBlockList().size()){
                   output_file<<", ";
               }
           }
@@ -250,8 +281,11 @@ void LLVMIrPrinter::visit(LoadInst *node) {
         output_file << ", ";
         // 输出第一个操作数
         node->getOperand(0)->getType()->print(output_file);
-        output_file << node->getOperand(0)->getPrintName() << ", "
-                    << "align 4" << std::endl;
+        output_file << node->getOperand(0)->getPrintName() << ", ";
+        if (node->hasOffset()) {
+            output_file << node->getOperand(1)->getPrintName() << ", ";
+        }
+        output_file << "align 4" << std::endl;
     } else {
         ERROR("null LoadInst",EXIT_CODE_ERROR_359);
     }
@@ -302,13 +336,27 @@ void LLVMIrPrinter::visit(BinaryInst *node) {
     << node->getOperand(1)->getPrintName()<<std::endl;
 
 }
+void LLVMIrPrinter::visit(MlaInst *node) {
+    output_file << "%" << node->getName() << " = "
+                    << "mla ";
+    node->getOperand(0)->getType()->print(output_file);
+    output_file << node->getOperand(0)->getPrintName() << ", ";
+    node->getOperand(1)->getType()->print(output_file);
+    output_file << node->getOperand(1)->getPrintName() << ", ";
+    node->getOperand(2)->getType()->print(output_file);
+    output_file << node->getOperand(2)->getPrintName() <<std::endl;
+}
+
 void LLVMIrPrinter::visit(StoreInst *node) {
     output_file << "store ";
     node->getOperand(0)->getType()->print(output_file);
     output_file << node->getOperand(0)->getPrintName() << ", ";
     node->getOperand(1)->getType()->print(output_file);
-    output_file << node->getOperand(1)->getPrintName() << ", "
-                << "align 4" << std::endl;
+    output_file << node->getOperand(1)->getPrintName() << ", ";
+    if (node->hasOffset()) {
+        output_file << node->getOperand(2)->getPrintName() << ", ";
+    }
+    output_file << "align 4" << std::endl;
 }
 void LLVMIrPrinter::visit(Value *node) {
     ERROR("TODO",EXIT_CODE_ERROR_361);
@@ -393,7 +441,7 @@ void LLVMIrPrinter::visit(GetElementPtrInst *node) {
     output_file<<node->getPrintName()<<" = "<<"getelementptr inbounds ";
     node->getOperand(0)->getType()->getPointerElementType()->print(output_file);
     output_file<<", ";
-    MyAssert("ele",node->getOperandNumber() == 3,EXIT_CODE_ERROR_354);
+
     for(int i=0;i<node->getOperandNumber();i++){
         auto oprt = node->getOperand(i);
         if(i!=0){
@@ -572,7 +620,12 @@ void LLVMIrPrinter::visit(PhiInstr *node) {
     output_file<<std::endl;
 }
 void LLVMIrPrinter::visit(MovInstr *node) {
-    output_file<<"mov "<<node->getLVal()->getPrintName()<<" = "<<node->getOperand(0)->getPrintName()<<"\n";
+    output_file<<"mov "<<node->getLVal()->getPrintName()<<" = "<<node->getOperand(0)->getPrintName();
+    output_file<<"\t; from bb(";
+    auto phi =dynamic_cast<PhiInstr*>(node->getLVal());
+    output_file<<phi->getParent()->getPrintName();
+    output_file<<") phi : ";
+    node->getLVal()->accept(this);
 }
 
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,

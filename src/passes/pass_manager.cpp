@@ -25,4 +25,5 @@ void pass_manager::run() {
             exit(i * 2);
         }
     }
+    std::cout<<"all passes finish"<<std::endl;
 }

@@ -129,12 +129,12 @@ ZExtInst *IRBuilder::creatZExtInst(Type *ty, Value *val) {
 }
 AllocaInst *IRBuilder::createAlloca(Type *ty) {
     auto alloca = AllocaInst::createAlloca(ty, this->_basic_block);
-    this->_basic_block->getFunction()->setAllocaEnd(alloca);
+    // this->_basic_block->getFunction()->setAllocaEnd(alloca);
     return alloca;
 }
 AllocaInst *IRBuilder::createAllocaAtEntry(Type *ty) {
     auto alloca = AllocaInst::createAlloca(ty, this->_entry_block);
-    this->_entry_block->getFunction()->addAlloca(alloca);
+    // this->_entry_block->getFunction()->addAlloca(alloca);
     return alloca;
 }
 HIR *IRBuilder::createBreak() { return HIR::createBreak(this->_basic_block); }

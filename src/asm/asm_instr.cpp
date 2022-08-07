@@ -35,10 +35,13 @@ std::string condCode(const CmpOp &cond) {
 
 std::string push(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
-  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
+  if (reg_list.empty()) {
+    return asm_instr;
+  }
 
+  asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
   bool has_fp = false;
-  int total_push = 0;
+  // int total_push = 0;
 
   bool flag = false;
   asm_instr += spaces;
@@ -102,6 +105,10 @@ std::string push(const std::vector<Reg> &reg_list) {
 
 std::string pop(const std::vector<Reg> &reg_list) {
   std::string asm_instr;
+  if (reg_list.empty()) {
+    return asm_instr;
+  }
+
   asm_instr += comment("push regs = " + std::to_string(reg_list.size()), "");
   bool has_fp = false;
 
@@ -196,6 +203,9 @@ std::string mov(const Reg &dst, const Reg &src, const CmpOp &cond) {
   std::string asm_instr;
   if (src.is_reg() && dst.getName() == src.getName()) {
     return asm_instr;
+  }
+  if (dst.getID() < 0 || src.getID() < 0) {
+    ERROR("get neg reg %d, %d",GetNegRegError, dst.getID(), src.getID());
   }
   asm_instr += spaces;
   if (dst.is_fp() || src.is_fp())

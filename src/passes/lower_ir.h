@@ -10,7 +10,11 @@ public:
     LowerIR(Module *m, const std::string &name) : Transform(m,name) {}
     void run() override;
     void splitGEP(BasicBlock *bb);
-    void rmPhi(Function* f);
+    void convertRem2And(BasicBlock *bb);
+    void splitRem(BasicBlock *bb);
+    bool isPowerOfTwo(int x);
+    void convertMlaLoad2LoadOffset(BasicBlock *bb);
+    void deleteMla(BasicBlock *bb);
 };
 
 #endif

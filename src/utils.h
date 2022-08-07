@@ -1,4 +1,3 @@
-
 #ifndef EASYCC_ERROR_H
 #define EASYCC_ERROR_H
 
@@ -13,35 +12,28 @@
 #include <cstdio>
 #include <cstdlib>
 #include <string>
-
+#include <iostream>
+#include <chrono>
 #define __ERROR
 #define __ASSERT
 
 #define __DEBUG
-// #define __LSRA_WARN
-// #define __LSRA_SHOW
-// #define __WARN
+#define __LSRA_WARN
+#define __LSRA_SHOW
+#define __WARN
 //#define __TRACE
 //#define __INFO
 
 
 enum EXIT_CODE {
     virtual_reg_full_error,
-    CMPOPRANDREGERROR,
-    DIVOPRANDREGERROR,
-    RetReturnRegERROR,
-    SUBOPRANDREGERROR,
-    ADDOPRANDREGERROR,
-    CmpOperandFpError,
-    MULOPRANDREGERROR,
     FpNotInstrError,
     GetNegRegError,
-    LoadOffsetOperandNotOne,
     ToManyArgsInBr,
-    StorerOffsetOperandNotOne,
+    ShiftRegUseFp,
     UnknownIrInstruction,
-    ConfiglictRegNotInStack,
     PassArgsError,
+    ConfiglictRegNotInStack,
     GetIntRegsIsZero,
     CmpOpInValid,
     EXIT_CODE_ERROR_300,
@@ -205,13 +197,18 @@ enum EXIT_CODE {
     EXIT_CODE_ERROR_458,
     EXIT_CODE_ERROR_459,
     EXIT_CODE_ERROR_460,
+    ERROR_TYPE,
+    DYNAMIC_CAST_NULL_PTR,
+    deleteDeadCodeError,
+    YYERROR,
+    ERROR_DEFUALT,
 };
 
 #ifdef __ASSERT
 #define MyAssert(info, cond, exit_code)                                           \
     do {                                                               \
         if (!(cond)) {                                                 \
-            printf(RED "[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
+            fprintf(stderr,"[%s:%d]" info RESET "\n", __FILE__, __LINE__); \
             exit(exit_code);                                                   \
         }                                                              \
     } while (0)
@@ -222,7 +219,7 @@ enum EXIT_CODE {
 #ifdef __ERROR
 #define ERROR(format, exit_code, ...)                                                          \
     do {                                                                            \
-        printf(RED "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fprintf(stderr,"[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
         exit(exit_code);                                                                    \
     } while (0)
 #else
@@ -422,12 +419,41 @@ public:
 // #define SYSY_BUILDER_
 #ifdef SYSY_BUILDER_
 #define SYSY_BUILDER(format, ...)                                  \
-    // do {                                                                             \
-    //     printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-    //     fflush(stdout);                                                              \
-    // } while (0)
+    do {                                                                             \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
+        fflush(stdout);                                                              \
+    } while (0)
 #else
 #define SYSY_BUILDER(format, ...)
 #endif
+
+
+//timer
+class TimerClock {
+   public:
+    TimerClock(const std::string& name):_name(name) { update(); }
+
+    ~TimerClock() {}
+
+    void update() { _start = std::chrono::high_resolution_clock::now(); }
+    void stop(){
+        std::cout<<_name<<":"<<getTimerMilliSec()<<"ms"<<std::endl;
+    }
+    //获取秒
+    double getTimerSecond() { return getTimerMicroSec() * 0.000001; }
+    //获取毫秒
+    double getTimerMilliSec() { return getTimerMicroSec() * 0.001; }
+    //获取微妙
+    long long getTimerMicroSec() {
+        //当前时钟减去开始时钟的count
+        return std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() -
+                                           _start)
+            .count();
+    }
+
+   private:
+    std::string _name;
+    std::chrono::time_point<std::chrono::high_resolution_clock> _start;
+};
 
 #endif// EASYCC_ERROR_H

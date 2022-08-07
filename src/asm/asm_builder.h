@@ -53,6 +53,13 @@ const std::vector<InstGen::Reg> allocate_regs = {
     InstGen::Reg(12, false), InstGen::Reg(14, false) };
 const std::vector<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
 
+// 通过系统函数汇编推测出的其用到的浮点寄存器
+const std::vector<InstGen::Reg> sysfunc_used_fpregs = {
+      InstGen::Reg(0, true), InstGen::Reg(2, true),
+      InstGen::Reg(14, true), InstGen::Reg(15, true)
+    };
+
+
 const int cache_line_bits = 7;
 const int cache_line_size = 1 << cache_line_bits;
 const int mt_num_threads = 4;
@@ -77,7 +84,7 @@ enum interval_value_type{
   spill_var,
 };
 
-typedef struct interval{
+struct interval{
     int st_id;
     int ed_id;
     bool def=false;
@@ -92,35 +99,52 @@ typedef struct interval{
     int specific_reg_idx;
     int offset;
     bool is_float = false;
-    // std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
+    int conflict_reg = -1;
+    std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
-class AsmBuilder {
-private:
-  std::shared_ptr<Module> module;
-  std::map<std::string, int> stack_size_mapping;// func_name - stack size
-  std::map<std::string, int> callee_saved_regs_size_mapping;// func_name - callee saved reg size
-  std::map<std::string, Function*> name_func_mapping;// func_name - func
-  int stack_cur_size = 0;
-  int thread_stack_bits;
-  int thread_stack_size;
-  std::set<Value *> allocated;
-  std::map<Instruction *, std::set<Value *>> context_active_vars;
-  std::string getType(interval_value_type t);
-  // int stack_size = 65536;//131072 32768 16384 根据需要，可扩充 64k（对于87号测例，需要递归开辟栈空间，若使用128k,qemu跑会崩）
-  // int stack_size = 65536 - 100;//根据需要，可扩充 128k, 要求函数调用前栈保持16字节对齐
-  int stack_size;
-  int return_offset; // 注意维护
-  bool debug;
-
+class reg_map{
+  public:
   std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
   std::vector<interval> virtual_float_regs[virtual_reg_max];//虚拟寄存器
   std::vector<interval> stack_map;//args spill alloc return
   std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
   std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
-  std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
+  std::map<Value *,std::vector<interval> > v2reg;//指令列表
   int op_save[4];// 栈溢出时的保存寄存器
+  int stack_size;
+  int return_offset; // 注意维护
+};
+
+class AsmBuilder {
+private:
+  std::shared_ptr<Module> module;
+  std::map<std::string, int> stack_size_mapping;// func_name - stack size
+  std::map<std::string, int> return_offset_mapping;// func_name - return offset
+  std::map<std::string, int> callee_saved_regs_size_mapping;// func_name - callee saved reg size
+  std::map<std::string, Function*> name_func_mapping;// func_name - func
+  int thread_stack_bits;
+  int thread_stack_size;
+  std::set<Value *> allocated;
+  std::map<Instruction *, std::set<Value *>> context_active_vars;
+  std::string getType(interval_value_type t);
+ // int stack_size;
+  //int return_offset; // 注意维护
+  bool debug;
+  std::map<std::string, reg_map> func_reg_map;
+  std::string cur_func_name;
+
+
+  // std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
+  // std::vector<interval> virtual_float_regs[virtual_reg_max];//虚拟寄存器
+  // std::vector<interval> stack_map;//args spill alloc return
+  // std::set<int> virtual_int_reg_use[virtual_reg_max];// 每个整型寄存器的使用点
+  // std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
+  // std::map<Value *,int > linear_map;//指令列表
+  std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
+  // int op_save[4];// 栈溢出时的保存寄存器
+
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -157,7 +181,7 @@ public:
   // 浮点运算函数
   int float2int(ConstantFloat *val);
   // LSRA
-  std::vector<interval> live_interval_analysis(Function *fun,bool insert = false);
+  void live_interval_analysis(Function *fun,bool insert = false);
   void linear_scan_reg_alloc(std::vector<interval> live_range,Function *func, bool insert = false);
   bool value_in_reg(Value *v);
   bool force_reg_alloc(interval itv,int reg_idx);
@@ -168,6 +192,7 @@ public:
   int get_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
 
   std::vector<InstGen::Reg> getCalleeSavedRegisters(Function *func);
+  std::vector<InstGen::Reg> getSysFuncCallerSavedRegisters(std::string func_name);
   std::vector<InstGen::Reg> getCallerSavedRegisters(Function *func);
   std::vector<InstGen::Reg> getAllRegisters(Function *func);
   std::pair<int, int> getUsedRegisterNum(Function *func);
@@ -182,7 +207,7 @@ public:
   InstGen::CmpOp cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse);
   std::string getGlobalValAddress(int op_reg, Value *val);
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
-          std::string func_name,std::vector<InstGen::Reg> saved_registers);
+          std::string func_name,std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs);
 
 
 };

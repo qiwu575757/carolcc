@@ -3,8 +3,9 @@
 #include <cstdlib>
 #include <queue>
 #include <set>
+#include <vector>
 
-#include "dominators.h"
+#include "analysis/dominators.h"
 #include "ir/constant.h"
 #include "ir/function.h"
 #include "ir/instruction.h"
@@ -22,6 +23,7 @@ void GlobalVariableNumbering::run() {
 
     for (auto f : _m->getFunctions()) {
         if (!f->isBuiltin()) {
+        _value_table.clear();
             std::queue<BasicBlock*> work_list;
             std::set<BasicBlock*> is_visited;
             work_list.push(f->getEntryBlock());
@@ -71,6 +73,11 @@ void GlobalVariableNumbering::LVN(BasicBlock* bb) {
             if (val != instr) {
                 replace(instr, val);
             }
+        } else if(instr->isGep()) {
+            auto val = lookUpOrAdd(instr);
+            if (val != instr) {
+                replace(instr, val);
+            }
         } else {
             // TODO:其他类型指令的优化
         }
@@ -109,6 +116,38 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
                 }
             }
         }
+    } else if(instr->isGep()){
+        std::vector<Value*> oprds ;
+        for(auto oprd : instr->getOperandList()){
+            oprds.push_back(lookUpOrAdd(oprd));
+        }
+        for (auto map_it : _value_table) {
+            for (auto it : map_it) {
+                auto key_instr = dynamic_cast<Instruction*>(it.first);
+                auto val_instr = it.second;
+                if (key_instr && key_instr->isGep()) {
+                    std::vector<Value*> oprds2;
+                    bool all_same=true;
+                    for(auto oprd : key_instr->getOperandList()){
+                        oprds2.push_back(lookUpOrAdd(oprd));
+                    }
+                    if(oprds2.size()!=oprds.size()){
+                        all_same=false;
+                    }
+                    else {
+                        for(auto i = 0;i<oprds.size();i++ ){
+                            if(oprds.at(i)!=oprds2.at(i)){
+                                all_same=false;
+                                break;
+                            }
+                        }
+                        }
+                    if ( all_same ) {
+                        return val_instr;
+                    }
+                }
+            }
+        }
     } else {
         // TODO: 其他种类的指令
     }
@@ -120,9 +159,20 @@ Value* GlobalVariableNumbering::lookUpOrAdd(Value* val) {
         return vv;
     }
     if (val->isConstant()) {
+        auto find_val = findOnTable(val);
+        if(find_val !=nullptr){
+            return find_val;
+        }
         pushValueToTable(val, val);
     } else if (auto instr = dynamic_cast<Instruction*>(val)) {
-        pushValueToTable(val, findSameInstrInTable(instr));
+        auto find_instr = findSameInstrInTable(instr);
+        if(find_instr!=instr){
+            return find_instr;
+        }
+        pushValueToTable(instr, instr);
+    }
+    else {
+        pushValueToTable(val, val);
     }
     // } else {
     //     ERROR("error type");

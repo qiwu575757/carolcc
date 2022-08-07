@@ -14,17 +14,20 @@
     void yyerror(char*s)
     {
         extern char *yytext;	// defined and maintained in lex
-        int len=strlen(yytext);
-        int i;
-        char buf[512]={0};
-        for (i=0;i<len;++i)
-        {
-            //TODO: may have bugs
-            sprintf(buf,"%s%d ",buf,yytext[i]);
-        }
+        // int len=strlen(yytext);
+        // int i;
+        char buf[1024]={0};
+        strcpy(buf,yytext);
+        // for (i=0;i<len;++i)
+        // {
+        //     //TODO: may have bugs
+        //     sprintf(buf,"%s%d ",buf,yytext[i]);
+
+        // }
+        // std::string txt = "ERROR: text :"+to
         fprintf(stderr, "ERROR: text %s\n",yytext);
         fprintf(stderr, "ERROR: %s at symbol '%s' on line %d\n", s, buf, yyline);
-        exit(1);
+        exit(YYERROR);
     }
     void insertVarible(std::string& type,std::string& id);
     void insertFunction(std::string& type,std::string& id);
