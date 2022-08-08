@@ -38,7 +38,7 @@ std::string AsmBuilder::generate_asm(std::string file_name){
     asm_code += generate_module_header(file_name);
     for(auto &func: this->module->getFunctions()){
         if(func->getBasicBlocks().size() != 0){
-            WARNNING("[code gen]func name: %s", func->getPrintName().c_str());
+            // WARNNING("[code gen]func name: %s", func->getPrintName().c_str());
             live_interval_analysis(func,true);
             asm_code += generate_function_code(func);
         }
@@ -56,6 +56,8 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
     module_header_code += InstGen::spaces + ".file" + " " + "\"" +
                 file_name+"\"" + InstGen::newline;
     module_header_code += InstGen::spaces + ".text" + InstGen::newline;
+
+    module_header_code += AsmBuilder::generate_uninit_global_vars();
     for (auto &func : this->module->getFunctions()) {
         if (func->getBasicBlocks().size()) {
             module_header_code += InstGen::spaces + ".global" + " "
@@ -63,7 +65,11 @@ std::string AsmBuilder::generate_module_header(std::string file_name){
         }
     }
     module_header_code += InstGen::spaces + ".arm" + InstGen::newline;
-    module_header_code += ".macro mov32, cond, reg, val \n \tmovw\\cond \\reg, #:lower16:\\val\n \tmovt\\cond \\reg, #:upper16:\\val \n.endm" + InstGen::newline;
+    module_header_code +=
+      InstGen::spaces + ".macro mov32, cond, reg, val" + InstGen::newline +
+      InstGen::spaces + "\tmovw\\cond \\reg, #:lower16:\\val" + InstGen::newline +
+      InstGen::spaces + "\tmovt\\cond \\reg, #:upper16:\\val"+ InstGen::newline+
+      InstGen::spaces + ".endm" + InstGen::newline;
 
     return module_header_code;
 }
@@ -72,7 +78,7 @@ std::string AsmBuilder::generate_module_tail(){
     std::string module_tail_code;
     module_tail_code += generate_use_of_global_vars();
     module_tail_code += ".data" + InstGen::newline;
-    module_tail_code += AsmBuilder::generate_global_vars();
+    module_tail_code += AsmBuilder::generate_init_global_vars();
 
     return module_tail_code;
 }
@@ -80,24 +86,46 @@ std::string AsmBuilder::generate_module_tail(){
 std::string AsmBuilder::generate_use_of_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
-    asm_code += ".LCPI_"+global_var->getName() + ":" + InstGen::newline;
-    asm_code += InstGen::spaces+".long "+global_var->getName() + InstGen::newline;
+    if (global_var->getInit() != nullptr) {
+      asm_code += ".LCPI_"+global_var->getName() + ":" + InstGen::newline;
+      asm_code += InstGen::spaces+".long "+global_var->getName() + InstGen::newline;
+    }
   }
 
   return asm_code;
 }
 
-std::string AsmBuilder::generate_global_vars() {
+std::string AsmBuilder::generate_init_global_vars() {
   std::string asm_code;
   for (auto &global_var : this->module->getGlobalVariables()) {
-    asm_code += global_var->getName() + ":" + InstGen::newline;
-    if (global_var->getInit() == nullptr) { // 全局变量默认初始化
-      asm_code += InstGen::spaces + ".zero" + " " +
-                  std::to_string(global_var->getType()->getSize()) +
-                  InstGen::newline;
-    } else {
+    if (global_var->getInit() != nullptr) { // 全局变量默认初始化
+      asm_code += global_var->getName() + ":" + InstGen::newline;
       asm_code += AsmBuilder::generate_initializer(
           static_cast<Constant *>(global_var->getOperandList().at(0)));
+    }
+  }
+
+  return asm_code;
+}
+
+std::string AsmBuilder::generate_uninit_global_vars() {
+  std::string asm_code;
+  for (auto &global_var : this->module->getGlobalVariables()) {
+    if (global_var->getInit() == nullptr) { // 全局变量默认初始化,放到bss段
+      // asm_code += InstGen::spaces + ".global " + global_var->getName()+InstGen::newline;
+      // asm_code += InstGen::spaces + ".align 4"+InstGen::newline;
+      // asm_code += InstGen::spaces + ".type"+"\t"+global_var->getName()+", "+
+      //         "%object" + InstGen::newline;
+      // asm_code += InstGen::spaces + ".size"+"\t"+global_var->getName()+", "+
+      //         std::to_string(global_var->getType()->getSize()) + InstGen::newline;
+      // asm_code += global_var->getName() + ":" + InstGen::newline;
+      // asm_code += InstGen::spaces + ".space"+"\t"+
+      //         std::to_string(global_var->getType()->getSize()) + InstGen::newline;
+      asm_code += InstGen::spaces + ".comm " + global_var->getName() +
+              ", " + std::to_string(global_var->getType()->getSize()) + ", 4" +InstGen::newline;
+      global_in_bss[global_var->getName()] = true;
+    } else {
+      global_in_bss[global_var->getName()] = false;
     }
   }
 
@@ -179,7 +207,6 @@ std::string AsmBuilder::generate_function_code(Function *func){
     func_asm += generate_function_entry_code(func);
 
     for (auto &bb : func->getBasicBlocks()) {
-        // WARNNING("Enter basicblock: %s", bb->getName().c_str());
         func_asm += getLabelName(bb) + ":" + InstGen::newline;
         func_asm += generateBasicBlockCode(bb);
     }
@@ -237,9 +264,14 @@ std::string  AsmBuilder::generateBasicBlockCode(BasicBlock *bb){
 
 std::string AsmBuilder::getGlobalValAddress(int op_reg, Value *val) {
     std::string str;
-    InstGen::Label src_label = InstGen::Label(".LCPI_"+val->getName());
-    str += InstGen::getAddress(temp_reg, src_label);
-    str += InstGen::load(InstGen::Reg(op_reg,false),InstGen::Addr(temp_reg,0));
+    if (global_in_bss[val->getName()]) {
+      str += InstGen::spaces + "mov32, "+InstGen::Reg(op_reg,false).getName()
+                + ", " + val->getName()+InstGen::newline;
+    } else {
+      InstGen::Label src_label = InstGen::Label(".LCPI_"+val->getName());
+      str += InstGen::getAddress(temp_reg, src_label);
+      str += InstGen::load(InstGen::Reg(op_reg,false),InstGen::Addr(temp_reg,0));
+    }
 
     return str;
 }
@@ -815,19 +847,33 @@ std::string AsmBuilder::assignToTargetReg(Instruction *inst, Value *val, int tar
 std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
   std::vector<InstGen::Reg> registers;
 
-  #if 0
+  #if 1
   // 对于系统函数的处理
   for (auto &reg : getAllRegisters(func)) {
-    // WARNNING("===================================Caller Find Reg: %d",reg.getID());
+    // WARNNING("=============%s Caller Get Reg: %d, %d",func->getPrintName().c_str(),
+    //               reg.getID(),reg.is_fp());
     for (auto r : caller_save_regs) {
       if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
-        registers.insert(reg);
+        registers.push_back(reg);
       }
     }
   }
-  for (auto r : caller_save_regs) {
-    if (!r.is_fp())
-      registers.insert(r);
+
+  // 调用函数一定改变 fp， lr,需要在调用侧保存
+  bool has_fp = false, has_lr = false;
+  for (auto &reg : registers) {
+    if (reg.getID() == 12 && reg.is_fp() == false) {
+      has_fp = true;
+    }
+    if (reg.getID() == 14 && reg.is_fp() == false) {
+      has_lr = true;
+    }
+  }
+  if (!has_fp) {
+    registers.push_back(InstGen::fp);
+  }
+  if (!has_lr) {
+    registers.push_back(InstGen::lr);
   }
   #else
   std::pair<int, int> n = getUsedRegisterNum(func);
@@ -881,18 +927,13 @@ std::vector<InstGen::Reg> AsmBuilder::getSysFuncCallerSavedRegisters(std::string
 std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
   std::vector<InstGen::Reg> registers;
 
-  #if 0
+  #if 1
   for (auto &reg : AsmBuilder::getAllRegisters(func)) {
     for (auto r : callee_save_regs) {
       if(r.getID() == reg.getID() && r.is_fp() == reg.is_fp()){
-        registers.insert(reg);
+        registers.push_back(reg);
       }
     }
-  }
-  std::pair<int, int> n = getUsedRegisterNum(func);
-  for (auto r : callee_save_regs) {
-    if (!r.is_fp())
-      registers.insert(r);
   }
   #else
   std::pair<int, int> n = getUsedRegisterNum(func);
@@ -912,27 +953,48 @@ std::vector<InstGen::Reg> AsmBuilder::getCalleeSavedRegisters(Function *func) {
 
 // notice
 std::vector<InstGen::Reg> AsmBuilder::getAllRegisters(Function *func) {
-  std::set<InstGen::Reg> registers;
+  std::vector<InstGen::Reg> registers;
 
   std::pair<int, int> n = getUsedRegisterNum(func);// 返回整型寄存器、浮点寄存器各用多少个
-  WARNNING("====================================Func %s use %d rergs",func->getPrintName().c_str(),n.first);
-  MyAssert("Use reg num is 0.", n.first != 0, GetIntRegsIsZero);
+  // WARNNING("====================================Func %s use %d rergs",func->getPrintName().c_str(),n.first);
+  // MyAssert("Use reg num is 0.", n.first != 0, GetIntRegsIsZero);
+
+  // 系统函数
+  if (n.first == 0 && n.second == 0) {
+    for (auto r : allocate_regs) {
+      registers.push_back(r);
+    }
+
+    std::string func_name = func->getName();
+    if (func_name == "getfloat" || func_name == "putfloat" ||
+        func_name == "getfarray" || func_name == "putfarray"
+    ) {
+      // ERROR("",0); 验证是否进入
+      for (auto r : sysfunc_used_fpregs) {
+        registers.push_back(r);
+      }
+    }
+
+    WARNNING("====================================Func %s use %d rergs",func->getPrintName().c_str(),registers.size());
+    return registers;
+  }
+
   if (n.first == 13) {
-    registers.insert(InstGen::lr);
+    registers.push_back(InstGen::lr);
   }
   if (n.first == 12) {
-    registers.insert(InstGen::fp);
+    registers.push_back(InstGen::fp);
   }
 
   for (int i = 0; i < std::min((size_t)n.first, (size_t)11); i++ ) {
-    registers.insert(InstGen::Reg(i,false));
+    registers.push_back(InstGen::Reg(i,false));
   }
   // 可能有问题
   for (int i = 0; i < n.second; i++ ) {
-    registers.insert(InstGen::Reg(i,true));
+    registers.push_back(InstGen::Reg(i,true));
   }
 
-  return std::vector<InstGen::Reg>(registers.begin(), registers.end());
+  return registers;
 }
 
 InstGen::CmpOp AsmBuilder::cmpConvert(CmpInst::CmpOp myCmpOp, bool reverse) {

@@ -134,6 +134,7 @@ private:
   bool debug;
   std::map<std::string, reg_map> func_reg_map;
   std::string cur_func_name;
+  std::map<std::string, bool> global_in_bss; // 用于判断全局变量是否在bss段
 
 
   // std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
@@ -167,7 +168,8 @@ public:
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
   std::string getLabelName(BasicBlock *bb, std::string id);
-  std::string generate_global_vars();
+  std::string generate_init_global_vars();
+  std::string generate_uninit_global_vars();
   std::string generate_use_of_global_vars();
   std::string generate_initializer(Constant *init);
   std::pair<int, bool> get_const_val(Value *val);
