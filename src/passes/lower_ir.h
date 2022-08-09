@@ -15,6 +15,11 @@ public:
     bool isPowerOfTwo(int x);
     void convertMlaLoad2LoadOffset(BasicBlock *bb);
     void deleteMla(BasicBlock *bb);
+    void comvertMulDiv2Shift(BasicBlock *bb);
+    void deleteUnusedInstr(BasicBlock *bb);
+    void mergeConstShift(BasicBlock *bb);
+    void convert2Mla(BasicBlock *bb);
+    void mergeShiftArithmetic(BasicBlock *bb);
 };
 
 #endif

@@ -132,6 +132,7 @@ int main(int argc, char **argv) {
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<SCCP>("SCCP");
     }
     PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
