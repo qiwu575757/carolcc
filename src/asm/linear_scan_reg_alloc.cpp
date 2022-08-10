@@ -1270,7 +1270,6 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             if (inst->getType()->getSize() > 0) {
                 if(inst->isMOV()){
                     auto mov_inst = dynamic_cast<MovInstr *>(inst);
-                    live_map[mov_inst->getLVal()].def = true;
                     if(!live_map.count(mov_inst->getLVal())){ //对于phi进行变量区间分析
                         live_map[mov_inst->getLVal()].def = true;
                         live_map[mov_inst->getLVal()].st_id = linear_index;
@@ -1278,6 +1277,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         live_map[mov_inst->getLVal()].is_float = mov_inst->getLVal()->getType()->isFloatTy();
                     }
                     else{
+                        live_map[mov_inst->getLVal()].def = true;
                         live_map[mov_inst->getLVal()].ed_id = linear_index;
                     }
                     LSRA_WARNNING("is mov %d %d",live_map[mov_inst->getLVal()].st_id,live_map[mov_inst->getLVal()].ed_id);
@@ -1430,12 +1430,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         if(op->getType()->isFloatTy()){
                             float_param_id+=1;
                             if(float_param_id<16){
-                                live_map[op].weight = (16-op_id) * 100;
+                                live_map[op].weight = (16-float_param_id) * 100;
                             }
                         }
                         else{
                             if(int_param_id<4){
-                                live_map[op].weight = (4-op_id) * 100;
+                                live_map[op].weight = (4-int_param_id) * 100;
                             }
                             int_param_id+=1;
                         }
@@ -1499,15 +1499,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             func_reg_map[cur_func_name].linear_map[inst] >=
                                 itv.st_id) {  // 该指令在该循环中使用
                             if (live_map[op].def &&
-                                live_map[op].st_id < itv.st_id &&
-                                live_map[op].st_id <
-                                    live_map[op]
-                                        .ed_id) {  // 该变量是定义且使用过的变量
-                                live_map[op].ed_id =
-                                    live_map[op].ed_id > itv.ed_id
-                                        ? live_map[op].ed_id
-                                        : itv.ed_id;
-                            }
+                            live_map[op].st_id < itv.st_id &&
+                            live_map[op].ed_id < itv.ed_id &&
+                            live_map[op].ed_id >= itv.st_id ) {  // 该变量是定义且使用过的变量
+                            live_map[op].ed_id = itv.ed_id;
+                            live_map[op].weight += 0.2;
+                        }
                         }
                     }
                     live_map[op].use_id.insert(func_reg_map[cur_func_name].linear_map[inst]);
