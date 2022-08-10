@@ -321,7 +321,8 @@ std::string AsmBuilder::generateInstructionCode(Instruction *inst) {
     asm_code += generate_function_exit_code(inst->getFunction());
   } else if (inst->isAlloca()) {
     int offset = getAllocaSpOffset(inst);
-    if (inst->getType()->getPointerElementType()->isArrayTy()) { // 数组初始化
+    if (inst->getType()->getPointerElementType()->isArrayTy() &&
+          dynamic_cast<AllocaInst *>(inst)->getInit()) { // 有初始化值的数组进行初始化
       std::vector<Value *> args = {
           ConstantInt::get(offset), ConstantInt::get(0),
           ConstantInt::get(inst->getType()->getSize())};
