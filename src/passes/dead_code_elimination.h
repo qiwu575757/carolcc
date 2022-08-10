@@ -16,6 +16,7 @@ class DeadCodeElimination : public pass{
    void deleteDeadStore(Function * func);
    void deleteDeadInstr(Function* func);
    bool hasSideEffect(Instruction * instr);
+   bool isSamePtr(StoreInst * store,LoadInst* load);
    void markInstrUseful(Instruction* instr,std::unordered_set<Instruction*> &work_list);
    std::unordered_set<Function*> _has_side_effect_funcs;
 };

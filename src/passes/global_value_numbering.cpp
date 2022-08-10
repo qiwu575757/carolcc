@@ -66,9 +66,8 @@ void GlobalVariableNumbering::SVN(BasicBlock* bb,
 }
 void GlobalVariableNumbering::LVN(BasicBlock* bb) {
     for (auto instr : bb->getInstructions()) {
-        if (instr->isPhi()) {
-            // TODO
-        } else if (instr->isBinary()) {
+        
+        if (instr->isBinary()) {
             auto val = lookUpOrAdd(instr);
             if (val != instr) {
                 replace(instr, val);

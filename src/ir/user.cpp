@@ -40,6 +40,7 @@ void User::removeUseOps() {
         i++;
     }
     _use_number = 0;
+    _operands_list.clear();
 
 }
 void User::addOperand(Value *v) {

@@ -294,6 +294,7 @@ void SCCP::sparseConditionalConstantPropagation(Function *f) {
         while (!_block_work_list.empty()) {
             auto bb = _block_work_list.front();
             _block_work_list.pop_front();
+            SCCP_LOG("running on bb %s",bb->getPrintName().c_str());
             sccpOnBasicBlock(bb);
         }
         while (!_value_work_list.empty()) {
@@ -606,7 +607,7 @@ void SCCP::replaceConstant(Function *f) {
         auto key_instr = dynamic_cast<Instruction *>(vv.first);
         auto val_instr = vv.second;
         if (key_instr && isValueHasDefiniteValue(key_instr)) {
-            SCCP_LOG("replacing instr(%s)",key_instr->getPrintName().c_str());
+            SCCP_LOG("replacing instr(%s) to %s",key_instr->getPrintName().c_str(),val_instr->getPrintName().c_str());
             key_instr->removeUseOps();
             key_instr->replaceAllUse(val_instr);
             if (key_instr->getParent() == nullptr) {

@@ -32,20 +32,20 @@ class SCCP : public Transform {
 
     }
     void run() override;
+    static Constant* calConstantIntBinary(Instruction* pInstruction,
+                                   ConstantInt* oprt1_ptr,
+                                   ConstantInt* oprt2_ptr);
+    static Constant* calConstantFloatBinary(Instruction* instr,
+                                     ConstantFloat* oprt1_ptr,
+                                     ConstantFloat* oprt2_ptr);
+    static bool detectBinaryConstantFold(BinaryInst* inst);
+    static bool detectCastConstantFold(UnaryInst* pInst);
+    static bool detectCmpConstantFold(CmpInst* pInst);
+    static Constant* calConstantBinary(Instruction* inst, Value* oprt1, Value* oprt2);
 
    private:
 //    Function* _cur_fun;
     void constantFoldAndPropagation(Function* f);
-    Constant* calConstantIntBinary(Instruction* pInstruction,
-                                   ConstantInt* oprt1_ptr,
-                                   ConstantInt* oprt2_ptr);
-    Constant* calConstantFloatBinary(Instruction* instr,
-                                     ConstantFloat* oprt1_ptr,
-                                     ConstantFloat* oprt2_ptr);
-    bool detectBinaryConstantFold(BinaryInst* inst);
-    bool detectCastConstantFold(UnaryInst* pInst);
-    bool detectCmpConstantFold(CmpInst* pInst);
-    Constant* calConstantBinary(Instruction* inst, Value* oprt1, Value* oprt2);
 
 
     // for sparse conditional constant propagation

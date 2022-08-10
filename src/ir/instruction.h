@@ -254,6 +254,9 @@ class StoreInst : public Instruction {
     Value *getRVal() { return getOperand(0); }
 
     bool hasOffset() { return getOperandNumber() >= 3; }
+    bool hasShift(){return getOperandNumber()>=4;}
+    Value* getOffset() { return getOperand(2); }
+    Value* getShift(){return getOperand(3);}
     void setRVal(Value *v) { setOperand(0, v); }
     Value *getPtr(){return getOperand(1);}
     void setLVal(Value *v) { setOperand(1, v); }
@@ -276,6 +279,9 @@ class LoadInst : public Instruction {
     void setLVal(Value *v) { setOperand(0, v); }
     void setOffset(Value *v) { setOperand(1, v); }
     bool isLoadOff() { return this->is_loadoffset; }
+    bool hasShift(){return getOperandNumber()>=3;}
+    Value* getOffset() { return getOperand(1); }
+    Value* getShift(){return getOperand(2);}
 };
 
 // wuqi define
