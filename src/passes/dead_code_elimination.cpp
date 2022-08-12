@@ -1,4 +1,6 @@
 #include "dead_code_elimination.h"
+
+#include <unordered_map>
 #include <unordered_set>
 
 #include "ir/basic_block.h"
@@ -21,6 +23,9 @@ void DeadCodeElimination::run() {
         if (!func->isBuiltin()) {
             deleteDeadInstr(func);
             deleteDeadStore(func);
+            if (!_m->isLowerIR()) {
+                deleteRedundantLoad(func);
+            }
             deleteDeadInstr(func);
         }
     }
@@ -136,10 +141,10 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
                 auto store_instr = dynamic_cast<StoreInst*>(instr);
                 auto store_array_ptr =
                     AliasAnalysis::getArrayPtr(store_instr->getPtr());
-                 if(AliasAnalysis::isGlobal(store_array_ptr))  {
-                    auto gv = dynamic_cast<GlobalVariable* >(store_array_ptr);
+                if (AliasAnalysis::isGlobal(store_array_ptr)) {
+                    auto gv = dynamic_cast<GlobalVariable*>(store_array_ptr);
                     changd_gv.insert(gv);
-                 }
+                }
                 StoreInst* pre_useless_store = nullptr;
                 for (auto pre_store : pre_stores) {
                     if (pre_store->getPtr() == store_instr->getPtr()) {
@@ -154,14 +159,14 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
             } else if (instr->isLoad()) {
                 auto load_instr = dynamic_cast<LoadInst*>(instr);
                 std::list<StoreInst*> useful_stores;
-                auto find_store =false;
+                auto find_store = false;
                 for (auto pre_store : pre_stores) {
                     auto store_array_ptr =
                         AliasAnalysis::getArrayPtr(pre_store->getPtr());
                     auto load_array_ptr =
                         AliasAnalysis::getArrayPtr(load_instr->getOperand(0));
-                    if (isSamePtr(pre_store , load_instr)) {
-                        find_store=true;
+                    if (isSamePtr(pre_store, load_instr)) {
+                        find_store = true;
                         load_instr->replaceAllUse(pre_store->getRVal());
                         load_instr->removeUseOps();
                         wait_delete.push_back(load_instr);
@@ -169,20 +174,27 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
                     } else if (store_array_ptr && load_array_ptr &&
                                load_array_ptr == store_array_ptr) {
                         // 保守策略，load过这个array就算没白存
-                        find_store=true;
+                        find_store = true;
                         useful_stores.push_back(pre_store);
                     }
                 }
-                if(!find_store && AliasAnalysis::isGlobal(
-                        AliasAnalysis::getArrayPtr(load_instr->getOperand(0)))){
-                    auto gv = dynamic_cast<GlobalVariable* >(load_instr->getOperand(0));
-                    if(changd_gv.find(gv) == changd_gv.end()){
-                        load_instr->replaceAllUse(gv->getInit());
-                        load_instr->removeUseOps();
-                        wait_delete.push_back(load_instr);
+                if (!find_store) {
+                    if (AliasAnalysis::isGlobal(AliasAnalysis::getArrayPtr(
+                            load_instr->getOperand(0)))) {
+                        auto gv = dynamic_cast<GlobalVariable*>(
+                            AliasAnalysis::getArrayPtr(
+                                load_instr->getOperand(0)));
+                        if (changd_gv.find(gv) == changd_gv.end()) {
+                            if (gv->getType()->isInt32() ||
+                                gv->getType()->isFloatTy()) {
+                                load_instr->replaceAllUse(gv->getInit());
+                                load_instr->removeUseOps();
+                                wait_delete.push_back(load_instr);
+                            }
+                        }
                     }
                 }
-                
+
                 for (auto instr : useful_stores) {
                     pre_stores.erase(instr);
                 }
@@ -192,8 +204,13 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
                 if (call_instr->getFunction()->hasSideEffect()) {
                     pre_stores.clear();
                 }
-                if(call_instr->getFunction()->useGlobalVar() ){
-                    changd_gv.insert(call_instr->getFunction()->getStoreGlobalVarSet().begin(), call_instr->getFunction()->getStoreGlobalVarSet().end());
+                if (call_instr->getFunction()->useGlobalVar()) {
+                    changd_gv.insert(call_instr->getFunction()
+                                         ->getStoreGlobalVarSet()
+                                         .begin(),
+                                     call_instr->getFunction()
+                                         ->getStoreGlobalVarSet()
+                                         .end());
                 }
             }
         }
@@ -203,25 +220,82 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
     }
 }
 
-bool DeadCodeElimination::isSamePtr(StoreInst* store,LoadInst* load){
-    if(store->getPtr()!=load->getOperand(0)){
+bool DeadCodeElimination::isSamePtr(StoreInst* store, LoadInst* load) {
+    if (store->getPtr() != load->getOperand(0)) {
         return false;
-    }
-    else if(store->hasOffset() && load->hasOffset()){
-        if(store->getOffset() !=load->getOffset()){
+    } else if (store->hasOffset() && load->hasOffset()) {
+        if (store->getOffset() != load->getOffset()) {
             return false;
         }
-        int shift_load = 0,shift_store = 0;
-        if(store->hasShift()){
-            shift_store = dynamic_cast<ConstantInt*>(store->getShift())->getValue();
+        int shift_load = 0, shift_store = 0;
+        if (store->hasShift()) {
+            shift_store =
+                dynamic_cast<ConstantInt*>(store->getShift())->getValue();
         }
-        if(load->hasShift()){
-            shift_load = dynamic_cast<ConstantInt*>(load->getShift())->getValue();
+        if (load->hasShift()) {
+            shift_load =
+                dynamic_cast<ConstantInt*>(load->getShift())->getValue();
         }
-        return shift_load==shift_store;
-        
-    }else if(store->hasOffset() || load->hasOffset()){
+        return shift_load == shift_store;
+
+    } else if (store->hasOffset() || load->hasOffset()) {
         return false;
     }
     return true;
+}
+
+void DeadCodeElimination::deleteRedundantLoad(Function* func) {
+    for (auto bb : func->getBasicBlocks()) {
+        std::unordered_map<Value*, LoadInst*> ptr2load;
+        std::list<Instruction*> wait_delete;
+        for (auto instr : bb->getInstructions()) {
+            if (instr->isLoad()) {
+                auto load = dynamic_cast<LoadInst*>(instr);
+                if (ptr2load.find(load->getOperand(0)) != ptr2load.end()) {
+                    load->replaceAllUse(ptr2load[load->getOperand(0)]);
+                    load->removeUseOps();
+                    wait_delete.push_back(instr);
+                } else {
+                    ptr2load[load->getOperand(0)] = load;
+                }
+            } else if (instr->isStore()) {
+                auto store = dynamic_cast<StoreInst*>(instr);
+                std::list<Value*> killed_ptr;
+                for (auto load_it : ptr2load) {
+                    auto load_ptr = AliasAnalysis::getArrayPtr(load_it.first);
+                    auto store_ptr =
+                        AliasAnalysis::getArrayPtr(store->getPtr());
+                    if (AliasAnalysis::alias(load_ptr, store_ptr)) {
+                        killed_ptr.push_back(load_it.first);
+                    }
+                }
+                for (auto val : killed_ptr) {
+                    ptr2load.erase(val);
+                }
+            } else if (instr->isCall()) {
+                auto call = dynamic_cast<CallInst*>(instr);
+                auto called_func = call->getFunction();
+                if (called_func->hasSideEffect()) {
+                    for (auto i = 1; i < call->getOperandNumber(); i++) {
+                        auto arg = call->getOperand(i);
+                        if (arg->getType()->isArrayTy() || arg->getType()->isPointerTy()) {
+                            std::list<Value*> killed_ptr;
+                            for (auto load_it : ptr2load) {
+                                auto load_ptr =
+                                    AliasAnalysis::getArrayPtr(load_it.first);
+                                auto def_ptr =
+                                    AliasAnalysis::getArrayPtr(arg);
+                                if (AliasAnalysis::alias(load_ptr, def_ptr)) {
+                                    killed_ptr.push_back(load_it.first);
+                                }
+                            }
+                            for (auto val : killed_ptr) {
+                                ptr2load.erase(val);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

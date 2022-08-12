@@ -13,20 +13,20 @@
 #include "passes/sccp.h"
 #include "utils.h"
 #include "visitor/llvm_ir_printer.h"
-// static int index = 0;
+static int index = 0;
 void InstructionCombination::run() {
     for (auto fun : _m->getFunctions()) {
         simplifyInstruction(fun);
-        // LLVMIrPrinter a(_m->getModuleName() + ".a" + std::to_string(index),
-        //                 _m->getModuleName());
-        // fun->accept(&a);
+        LLVMIrPrinter a(_m->getModuleName() + ".a" + std::to_string(index),
+                        _m->getModuleName());
+        fun->accept(&a);
         instructionCombine(fun);
-        // LLVMIrPrinter b(_m->getModuleName() + ".a" + std::to_string(index + 1),
-                        // _m->getModuleName());
-        // fun->accept(&b);
+        LLVMIrPrinter b(_m->getModuleName() + ".a" + std::to_string(index + 1),
+                        _m->getModuleName());
+        fun->accept(&b);
         simplifyInstruction(fun);
     }
-    // index += 2;
+    index += 2;
 }
 void InstructionCombination::simplifyInstruction(Function *func) {
     for (auto bb : func->getBasicBlocks()) {
@@ -80,6 +80,7 @@ Value *InstructionCombination::simplifyInstruction(
     Instruction *instr, std::list<Instruction *> &wait_delete,
     std::vector<std::pair<Instruction *, Instruction *>> &insert_map) {
     Value *res = nullptr;
+    if(instr->getType()->isFloatTy()) return instr;
     switch (instr->getInstructionKind()) {
         case Instruction::ADD:
             res = simplifyAdd(dynamic_cast<BinaryInst *>(instr), wait_delete,
@@ -137,6 +138,7 @@ Value *InstructionCombination::simplifyInstruction(
         case Instruction::GEP:
         case Instruction::CALL:
         case Instruction::ZEXT:
+        case Instruction::CAST:
         case Instruction::BREAK:
         case Instruction::CONTINUE:
             res = instr;
@@ -190,7 +192,9 @@ Value *InstructionCombination::simplifyAdd(
     if (!can_recur) {
         return binary_instr;
     }
-
+    if(oprt1 == oprt2){
+        return binary_instr;
+    }
     // (a + b(constant)  )  + c(constant )
     // = a+ (b (const)+ c(const))
     auto oprt1_binary_instr = dynamic_cast<BinaryInst *>(oprt1);
@@ -242,6 +246,7 @@ Value *InstructionCombination::simplifyMul(
         auto new_val = SCCP::calConstantBinary(binary_instr, oprt1, oprt2);
         binary_instr->replaceAllUse(new_val);
         binary_instr->removeUseOps();
+        wait_delete.push_back(binary_instr);
         return new_val;
     }
     if (oprt1->isConstant()) {
@@ -329,6 +334,7 @@ Value *InstructionCombination::combineInstruction(
     Instruction *instr, std::list<Instruction *> &wait_delete,
     std::vector<std::pair<Instruction *, Instruction *>> &insert_map) {
     Value *res = nullptr;
+    if(instr->getType()->isFloatTy()) return instr;
     switch (instr->getInstructionKind()) {
         case Instruction::ADD:
             res = combineAdd(dynamic_cast<BinaryInst *>(instr), wait_delete,
@@ -383,6 +389,7 @@ Value *InstructionCombination::combineInstruction(
         case Instruction::STORE:
         case Instruction::PHI:
         case Instruction::GEP:
+        case Instruction::CAST:
         case Instruction::CALL:
         case Instruction::ZEXT:
         case Instruction::BREAK:

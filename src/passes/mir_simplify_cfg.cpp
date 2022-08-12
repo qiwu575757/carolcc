@@ -6,6 +6,7 @@
 #include "module.h"
 #include "pass_manager.h"
 #include "utils.h"
+#include "visitor/llvm_ir_printer.h"
 #include <vector>
 
 void MirSimplifyCFG::run() {
@@ -15,7 +16,15 @@ void MirSimplifyCFG::run() {
             SIMPLIFY_CFG_LOG("cur fun is %s", _func->getName().c_str());
             SIMPLIFY_CFG_LOG("removeNoPredecessorBasicBlocks");
             deleteCondBr(fun);
+            #ifdef __MIR_SIMPLIFY_CFG_LOG
+            LLVMIrPrinter a(_m->getModuleName()+".1"+_func->getName(),_m->getModuleName());
+            fun->accept(&a);
+            #endif // DEBUG
             removeNoPredecessorBasicBlocks();
+            #ifdef __MIR_SIMPLIFY_CFG_LOG
+            LLVMIrPrinter b(_m->getModuleName()+".2"+_func->getName(),_m->getModuleName());
+            fun->accept(&b);
+            #endif // DEBUG
             eliminateSinglePredecessorPhi();
             // SIMPLIFY_CFG_LOG("mergeSinglePredecessorBasicBlocks");
             mergeSinglePredecessorBasicBlocks();
@@ -50,11 +59,9 @@ void MirSimplifyCFG::removeNoPredecessorBasicBlocks() {
                 next_bb->removePreBasicBlock(bb);
                 for (auto instr: next_bb->getInstructions()) {
                     if (instr->isPhi()) {
-                        for (int i = 0; i < instr->getOperandNumber(); i++) {
-                            if (i % 2 == 1) {
-                                if (instr->getOperand(i) == bb) {
-                                    instr->rmOperand(i - 1, i);
-                                }
+                        for (int i = 1; i < instr->getOperandNumber(); i=i+2) {
+                            if (instr->getOperand(i) == bb) {
+                                instr->rmOperand(i - 1, i);
                             }
                         }
                     }
@@ -193,7 +200,9 @@ void MirSimplifyCFG::eliminateSinglePredecessorPhi() {
             std::vector<Instruction *> wait_delete;
             for (auto inst: bb->getInstructions()) {
                 if (inst->isPhi()) {
+                    if(inst->getOperandNumber()!=2){
                     MyAssert("error phi oprd number ", inst->getOperandNumber() == 2,EXIT_CODE_ERROR_346);
+                    }
                     MyAssert("error ", inst->getOperand(1) == _func->getEntryBlock() ||
                                        (inst->getOperand(1) == *bb->getPreBasicBlockList().begin()),EXIT_CODE_ERROR_347);
                     wait_delete.push_back(inst);

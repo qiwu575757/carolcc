@@ -200,6 +200,7 @@ enum EXIT_CODE {
     ERROR_TYPE,
     DYNAMIC_CAST_NULL_PTR,
     deleteDeadCodeError,
+    GVNError,
     simplifyInstrTypeError,
     YYERROR,
     ERROR_DEFUALT,

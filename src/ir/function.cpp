@@ -110,6 +110,7 @@ void Function::insertAlloca(AllocaInst *alloca) {
         }
         if(last_alloca==nullptr){
             entry->getInstructions().push_front(alloca);
+            alloca->setParent(entry);
         }
         else {
             entry->insertAfterInstr(last_alloca, alloca);

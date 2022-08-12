@@ -121,32 +121,26 @@ int main(int argc, char **argv) {
         PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
         PM.add_pass<Mem2Reg>("Mem2Reg");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        PM.add_pass<SCCP>("SCCP");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+
+        PM.add_pass<InstructionCombination>("InstructionCombination");
+        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<FunctionInline>("FunctionInline");
-        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<SCCP>("SCCP");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<InstructionCombination>("InstructionCombination");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<GlobalVariableNumbering>("GVN");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<InstructionCombination>("InstructionCombination");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        PM.add_pass<SCCP>("SCCP");
-        PM.add_pass<GlobalVariableNumbering>("GVN");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // PM.add_pass<InstructionCombination>("InstructionCombination");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        // PM.add_pass<InstructionCombination>("InstructionCombination");
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        PM.add_pass<SCCP>("SCCP");
     }
     // PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");

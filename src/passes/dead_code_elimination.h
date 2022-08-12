@@ -14,6 +14,7 @@ class DeadCodeElimination : public pass{
    void deleteDeadFunc();
    void deleteDeadRet(Function* func);
    void deleteDeadStore(Function * func);
+   void deleteRedundantLoad(Function * func);
    void deleteDeadInstr(Function* func);
    bool hasSideEffect(Instruction * instr);
    bool isSamePtr(StoreInst * store,LoadInst* load);
