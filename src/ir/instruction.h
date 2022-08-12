@@ -346,12 +346,12 @@ class AllocaInst : public Instruction {
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init;
+    bool _init = false;
 
    public:
     void accept(IrVisitorBase *v) override;
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
-    void setInit() { _init = false; }
+    void setInit() { _init = true; }
     bool getInit() { return _init; }
     Type *getAllocaType() const;
 };

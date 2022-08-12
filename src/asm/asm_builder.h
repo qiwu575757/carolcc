@@ -57,6 +57,12 @@ const std::vector<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
 const std::vector<InstGen::Reg> sysfunc_used_fpregs = {
       InstGen::Reg(0, true), InstGen::Reg(2, true),
       InstGen::Reg(14, true), InstGen::Reg(15, true)
+    // InstGen::Reg(0, true),  InstGen::Reg(1, true),   InstGen::Reg(2, true),
+    // InstGen::Reg(3, true),  InstGen::Reg(4, true),   InstGen::Reg(5, true),
+    // InstGen::Reg(6, true),  InstGen::Reg(7, true),   InstGen::Reg(8, true),
+    // InstGen::Reg(9, true),  InstGen::Reg(10, true),  InstGen::Reg(11, true),
+    // InstGen::Reg(12, true), InstGen::Reg(13, true), InstGen::Reg(14, true),
+    // InstGen::Reg(15, true)
     };
 
 
@@ -91,17 +97,15 @@ struct interval{
     bool spilled;
     bool is_allocated=false;
     bool is_data=false;
-    bool is_called=false;
     std::set<int>use_id;
     Value *v;
     float use_freq;
-    float weight=0;
+    float weight;
     interval_value_type type;
     int specific_reg_idx;
     int offset;
     bool is_float = false;
     int conflict_reg = -1;
-
     std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
@@ -147,7 +151,8 @@ private:
   // std::map<Value *,int > linear_map;//指令列表
   std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   // int op_save[4];// 栈溢出时的保存寄存器
-
+  std::vector<int> pushed_regs[16];
+  bool have_cal = false;
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -212,7 +217,7 @@ public:
   std::string getGlobalValAddress(int op_reg, Value *val);
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
           std::string func_name,std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs);
-
+  int calRegPosition(std::vector<InstGen::Reg> saved_registers, int id);
 
 };
 

@@ -599,6 +599,13 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
           saved_registers.push_back(r);
         }
       }
+      if (func_name == "memset") {
+        for (auto r : caller_save_regs) {
+          if (r.is_fp()) {
+            saved_registers.push_back(r);
+          }
+        }
+      }
   }
 
   WARNNING("calleer saved regs size: %d", saved_registers.size());
@@ -620,6 +627,15 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     return_register.push_back(returned_reg);
   }
 
+  // 若保存寄存器数为奇数，需要额外补充保存寄存器，保持栈8字节对齐
+  if (saved_registers.size() % 2 == 1) {
+    for (int i = 4; i < 10; i++) {
+      if (i != inst_pos.first) {
+        saved_registers.push_back(InstGen::Reg(i,false));
+        break;
+      }
+    }
+  }
   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
   if (!saved_registers.empty()) {
@@ -635,6 +651,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   // pass func args
   func_asm += passFunctionArgs(inst,args,func_name,saved_registers,return_register);
+
 
   func_asm += InstGen::bl(func_name);
 
@@ -728,7 +745,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                   if (saved_registers[k].getID() == arg_pos.first &&
                       saved_registers[k].is_fp() == is_fp){
                     if (is_fp) {
-                      off = 4 * (k - saved_int_regs);
+                      off = calRegPosition(saved_registers,arg_pos.first);
                     } else {
                       off = 4 * (k + saved_fp_regs);
                     }
@@ -738,7 +755,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
                   off = cur_sp_off;
                 }
-                WARNNING("11get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
+                // WARNNING("11get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
                                         InstGen::Addr(InstGen::sp,off));
@@ -747,6 +764,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                                         InstGen::Reg(arg_pos.first,is_fp));
             }
           } else { // 参数在栈中
+            // func_asm += InstGen::comment(std::to_string(arg_pos.first),"");
             func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp),
                   InstGen::Addr(InstGen::sp,arg_pos.first+saved_registers.size()*4));
           }
@@ -777,7 +795,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                   if (saved_registers[k].getID() == arg_pos.first &&
                       saved_registers[k].is_fp() == is_fp){
                     if (is_fp) {
-                      off = 4 * (k - saved_int_regs);
+                      off = calRegPosition(saved_registers,arg_pos.first);
                     } else {
                       off = 4 * (k + saved_fp_regs);
                     }
@@ -787,7 +805,7 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                 if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
                   off = cur_sp_off;
                 }
-                WARNNING("get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
+                // WARNNING("get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));
                 func_asm += InstGen::store(temp_reg,
@@ -811,6 +829,13 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
       else int_args++;
     }
 
+    // 恢复 pushed_reg
+    if (have_cal) {
+      for (int i = 0; i < 16; i++) {
+        pushed_regs[i].clear();
+      }
+      have_cal = false;
+    }
   }
 
   return func_asm;
@@ -843,6 +868,45 @@ std::string AsmBuilder::assignToTargetReg(Instruction *inst, Value *val, int tar
   }
 
   return assign_code;
+}
+
+int AsmBuilder::calRegPosition(std::vector<InstGen::Reg> saved_registers, int id) {
+    int j = 0;
+    int pre_index = -1;
+    bool flag = false;
+    if (!have_cal) {
+      for (int i = 0; i < saved_registers.size(); i++) {
+        if (saved_registers[i].is_fp()) {
+          if (flag && pre_index != saved_registers[i].getID()-1) {
+            pushed_regs[++j].push_back(saved_registers[i].getID());
+          } else {
+            pushed_regs[j].push_back(saved_registers[i].getID());
+          }
+          flag = true;
+          pre_index = saved_registers[i].getID();
+        }
+      }
+    }
+
+    // for (int i = 0; i < pushed_regs.size(); i++) {
+    //     WARNNING("--------------%d, %d",pushed_regs.size(),pushed_regs[i].size());
+    // }
+
+    int total = 0;
+    for (int i = 0; i < 16; i++) {
+      for (int m = 0; m < pushed_regs[i].size(); m++) {
+        if (pushed_regs[i][m] == id) {
+          for (int n = i+1; n < 16; n++) {
+            total += pushed_regs[n].size();
+          }
+          total += m;
+          break;
+        }
+      }
+    }
+
+    have_cal = true;
+    return 4*total;
 }
 
 std::vector<InstGen::Reg> AsmBuilder::getCallerSavedRegisters(Function *func) {
