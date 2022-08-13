@@ -5,6 +5,7 @@
 #include "passes/pass.h"
 class Module;
 class Function;
+// #definE __DCE_DEBUG
 class DeadCodeElimination : public pass{
    public:
     DeadCodeElimination(Module* m, const std::string& name) : pass(m, name) {}
