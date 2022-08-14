@@ -23,7 +23,7 @@ void LowerIR::run() {
     for (auto func : _m->getFunctions()) {
         for (auto bb : func->getBasicBlocks()) {
             comvertMulDiv2Shift(bb);
-            mergeConstShift(bb);
+            // mergeConstShift(bb);
         }
     }
 
@@ -138,7 +138,7 @@ void LowerIR::convertRem2And(BasicBlock *bb) {
       auto op2 = dynamic_cast<Constant *>(inst->getOperand(1));
       if (op2) {
         int v = static_cast<ConstantInt *>(op2)->getValue();
-        if (isPowerOfTwo(v)) {
+        if (isPowerOfTwo(v) && !(0 == (v & (v - 1)))) { // 目前仅处理取余正数
           int p = v - 1;
           auto tmp = BinaryInst::createAnd(inst->getOperand(0),
                             ConstantInt::get(p),nullptr);
@@ -187,7 +187,7 @@ void LowerIR::comvertMulDiv2Shift(BasicBlock *bb) {
     auto inst = *iter;
     if (inst->isMul() && inst->getType()->isIntegerTy()) {
       auto op0 = inst->getOperand(0);
-      if (op0->isConstant()) {
+      if (op0->isConstant() && op0->getType()->isIntegerTy()) {
         int val = static_cast<ConstantInt *>(op0)->getValue();
         if (isPowerOfTwo(val)) {
           int s = (int)std::ceil(std::log2(val));
@@ -203,7 +203,7 @@ void LowerIR::comvertMulDiv2Shift(BasicBlock *bb) {
       }
 
       auto op1 = inst->getOperand(1);
-      if (op1->isConstant()) {
+      if (op1->isConstant() && op1->getType()->isIntegerTy()) {
         int val = static_cast<ConstantInt *>(op1)->getValue();
         if (isPowerOfTwo(val)) {
           int s = (int)std::ceil(std::log2(val));
@@ -222,14 +222,43 @@ void LowerIR::comvertMulDiv2Shift(BasicBlock *bb) {
       if (op1->isConstant()) {
         int val = static_cast<ConstantInt *>(op1)->getValue();
         if (isPowerOfTwo(val)) {
+          if (val == 0) {
+            ERROR("divisor is 0.",DIVIDE_ZERO );
+          }
+
           int s = (int)std::ceil(std::log2(val));
-          auto ashr = BinaryInst::createAshr(inst->getOperand(0),
-                  ConstantInt::get(s),nullptr);
-          inst->replaceAllUse(ashr);
-          inst->removeUseOps();
-          ashr->setParent(bb);
-          insts.insert(iter,ashr);
-          iter = insts.erase(iter);
+          if (0 == (val & (val - 1))) {  // val < 0
+            // 可能有问题
+            auto ashr1 = BinaryInst::createAshr(inst->getOperand(0),
+                    ConstantInt::get(31),nullptr);
+            ashr1->setParent(bb);
+            auto lshr = BinaryInst::createLshr(ashr1,
+                    ConstantInt::get(32-s),nullptr);
+            lshr->setParent(bb);
+            auto add = BinaryInst::createAdd(lshr,
+                    inst->getOperand(0),nullptr);
+            add->setParent(bb);
+            auto ashr2 = BinaryInst::createAshr(add,
+                    ConstantInt::get(s),nullptr);
+            ashr2->setParent(bb);
+            insts.insert(iter, ashr1);
+            insts.insert(iter, lshr);
+            insts.insert(iter, add);
+            insts.insert(iter, ashr2);
+            inst->replaceAllUse(ashr2);
+            inst->removeUseOps();
+            iter = insts.erase(iter);
+          } else {
+            // 适用于被除数为正数
+            auto ashr = BinaryInst::createAshr(inst->getOperand(0),
+                    ConstantInt::get(s),nullptr);
+            inst->replaceAllUse(ashr);
+            inst->removeUseOps();
+            ashr->setParent(bb);
+            insts.insert(iter,ashr);
+            iter = insts.erase(iter);
+
+          }
           continue;
         }
       }
@@ -324,7 +353,7 @@ void LowerIR::mergeConstShift(BasicBlock *bb) {
   for (auto inst : bb->getInstructions()) {
     if (inst->isShl() && inst->getType()->isIntegerTy()) {
       auto op0 = dynamic_cast<Instruction *>(inst->getOperand(0));
-      if (op0 && op0->isShl()) {
+      if (op0 && op0->isShl()&&op0->getOperandNumber() > 1) {
         auto const_val1 = dynamic_cast<ConstantInt *>(inst->getOperand(1));
         auto const_val2 = dynamic_cast<ConstantInt *>(op0->getOperand(1));
         if (const_val1 && const_val2) {
@@ -336,7 +365,7 @@ void LowerIR::mergeConstShift(BasicBlock *bb) {
       }
     } else if (inst->isAshr() && inst->getType()->isIntegerTy()) {
       auto op0 = dynamic_cast<Instruction *>(inst->getOperand(0));
-      if (op0 && op0->isAshr()) {
+      if (op0 && op0->isAshr() &&op0->getOperandNumber() > 1) {
         auto const_val1 = dynamic_cast<ConstantInt *>(inst->getOperand(1));
         auto const_val2 = dynamic_cast<ConstantInt *>(op0->getOperand(1));
         if (const_val1 && const_val2) {
@@ -437,7 +466,6 @@ void LowerIR::convertMlaLoad2LoadOffset(BasicBlock *bb) {
           load->setNumOps(2);
           load->setLVal(ptr->getOperand(1));
           load->setOffset(ptr->getOperand(2));
-          WARNNING("come in");
         }
       }
     } else if (inst->isStore()) {
@@ -463,7 +491,7 @@ void LowerIR::deleteMla(BasicBlock *bb) {
         if (inst->isMla() && inst->getUseList().empty()) {
             inst->removeUseOps();
             iter = insts.erase(iter);
-            WARNNING("delete mla");
+            // WARNNING("delete mla");
         } else {
           iter++;
         }

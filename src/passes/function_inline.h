@@ -6,7 +6,7 @@
 class BasicBlock;
 class Function;
 
-#define _FUNC_LINE_LOG
+// #define _FUNC_LINE_LOG
 #ifdef _FUNC_LINE_LOG
 #define FUNC_LINE_LOG(format, ...)                                                            \
     do {                                                                             \

@@ -1444,13 +1444,31 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         op_id++;
                         continue;
                     }
-                    if((inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp())
+                    if((inst->isAdd() || inst->isSub() || inst->isDiv() || inst->isCmp() ||
+                        inst->isAshr() || inst->isLshr() || inst->isShl() || inst->isAnd() || inst->isOr())
                      && op_id == 1 && op->isConstant() && !op->getType()->isFloatTy()) {
                         op_id++;
                         continue;
                     }
                     if((inst->isRem()) && (op_id == 0 || op_id == 1 )
                     && op->isConstant() && !op->getType()->isFloatTy() ) {
+                        op_id++;
+                        continue;
+                    }
+                    if (inst->isLoad() && dynamic_cast<LoadInst *>(inst)->isLoadOff() && op_id == 1) {
+                        op_id++;
+                        continue;
+                    }
+                    if (inst->isStore() && dynamic_cast<StoreInst *>(inst)->isStoreOff() && op_id == 1) {
+                        op_id++;
+                        continue;
+                    }
+                    if (inst->isMla() && op_id == 0 && inst->getOperand(0)->isConstant() &&
+                            atoi(inst->getOperand(0)->getPrintName().c_str()) == 1) {
+                        op_id++;
+                        continue;
+                    }
+                    if (inst->isMOV() && op_id == 0 && inst->getOperand(0)->isConstant()) {
                         op_id++;
                         continue;
                     }

@@ -12,7 +12,7 @@ void User::setOperand(unsigned no, Value *v) {
                 //  EXIT_CODE_ERROR_327);
     // }
     // MyAssert("null ptr",v!=nullptr,EXIT_CODE_ERROR_329);
-    this->_operands_list.at(no) = v;
+    _operands_list[no] = v;
     v->addUse(this,no);
 }
 Value *User::getOperand(unsigned int no)const {

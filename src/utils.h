@@ -203,6 +203,7 @@ enum EXIT_CODE {
     GVNError,
     simplifyInstrTypeError,
     YYERROR,
+    DIVIDE_ZERO,
     ERROR_DEFUALT,
 };
 

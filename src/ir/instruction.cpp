@@ -15,7 +15,7 @@ Instruction::Instruction(Type *type, Instruction::OpKind op_id,
                          unsigned int op_nums, BasicBlock *parent)
     : User(type, "", op_nums), _parent(parent), _op_id(op_id) {
     if (_parent == nullptr) {
-        WARNNING("null parent");
+        // WARNNING("null parent");
     }
     if (_parent != nullptr) _parent->addInstr(this);
 }

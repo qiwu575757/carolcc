@@ -32,6 +32,7 @@ extern FILE *yyin;
 int yyline;
 tree_comp_unit *root;
 bool debug = true;
+bool is_emit_asm; // 用来控制底层优化是否开启以及 zeroinit
 // std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
 
 FILE *output;
@@ -65,7 +66,7 @@ int main(int argc, char **argv) {
     bool is_show_hir_pad_graph = false;
     bool is_O2 = false;
     bool is_debug = false;
-    bool is_emit_asm = false;
+    is_emit_asm = false;
     std::string input_file, output_file;
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-o") == 0 && i + 1 < argc) {
@@ -111,7 +112,7 @@ int main(int argc, char **argv) {
 
     pass_manager PM(builder->getModule().get());
 
-    if (is_emit_hir) PM.add_pass<EmitHir>("EmitHir");
+    // if (is_emit_hir) PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
@@ -119,7 +120,7 @@ int main(int argc, char **argv) {
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if (is_O2) {
         PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
-        PM.add_pass<Mem2Reg>("Mem2Reg");
+        // PM.add_pass<Mem2Reg>("Mem2Reg");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
@@ -128,9 +129,9 @@ int main(int argc, char **argv) {
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         PM.add_pass<GlobalVariableNumbering>("GVN");
-        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<FunctionInline>("FunctionInline");
-        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         // PM.add_pass<InstructionCombination>("InstructionCombination");
@@ -138,13 +139,15 @@ int main(int argc, char **argv) {
         PM.add_pass<GlobalVariableNumbering>("GVN");
         // PM.add_pass<InstructionCombination>("InstructionCombination");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
-    // PM.add_pass<LowerIR>("LowerIR");
-    // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-    // PM.add_pass<RmPhi>("RmPhi");
+    if (is_emit_asm) {
+        PM.add_pass<LowerIR>("LowerIR");
+        // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+        PM.add_pass<RmPhi>("RmPhi");
+    }
 
     PM.run();
 
