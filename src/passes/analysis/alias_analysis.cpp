@@ -58,7 +58,7 @@ bool AliasAnalysis::alias(Value *array1, Value *array2) {
     if ((isGlobal(array1) && isGlobal(array2)) ||
         (isParam(array1) && isParam(array2)) ||
         (isLocal(array1) && isLocal(array2))) {
-        return array2 == array2;
+        return array2 == array1;
     }
     return false;
 }

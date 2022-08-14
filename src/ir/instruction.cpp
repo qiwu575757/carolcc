@@ -193,6 +193,12 @@ std::string BinaryInst::getOperatorString() const {
         case Instruction::OR:
             return "or";
             //        case Instruction::XOR:return "xor";
+        case Instruction::SHL:
+            return "shl";
+        case Instruction::ASHR:
+            return "ashr";
+        case Instruction::LSHR:
+            return "lshr";
         default:
             ERROR("error binary op kind", EXIT_CODE_ERROR_315);
     }

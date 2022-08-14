@@ -17,3 +17,9 @@ echo $?
 # cd /home/pi/Documents/qiwu
 # ./run.sh
 # logout
+
+# scp -P 5693 build/test_results/median2.sy/arm_asm/npu_npu.s  pi@47.100.255.80:/home/pi/Documents/qiwu
+# ssh pi@47.100.255.80 -p 5693
+# gcc -g crypto-1.c sylib.c sylib.h -o crypto-test
+# gcc -g crypto-1.s sylib.c -o crypto-1
+# gcc sl1.c sylib.c sylib.h -S sl1.s

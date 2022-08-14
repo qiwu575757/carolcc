@@ -1,4 +1,5 @@
 #include <getopt.h>
+#include <sys/resource.h>
 
 #include <cstdio>
 #include <cstring>
@@ -6,18 +7,19 @@
 #include <string>
 
 #include "asm/asm_builder.h"
+#include "passes/analysis/inter_procedural_analysis.h"
+#include "passes/dead_code_elimination.h"
 #include "passes/emit_ir.h"
+#include "passes/function_inline.h"
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
+#include "passes/instruction_combine.h"
 #include "passes/lower_ir.h"
-#include "passes/dead_code_elimination.h"
-#include "passes/analysis/inter_procedural_analysis.h"
-#include "passes/function_inline.h"
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/pass_manager.h"
-#include "passes/sccp.h"
 #include "passes/rmphi.h"
+#include "passes/sccp.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
 #include "visitor/syntax_tree_shower.h"
@@ -48,6 +50,16 @@ int main(int argc, char **argv) {
     //        yyparse();
     //        return 0;
     //    }
+    const rlim_t kStackSize = 64L * 1024L * 1024L;  // min stack size = 128 Mb
+    struct rlimit rl;
+    int result;
+    result = getrlimit(RLIMIT_STACK, &rl);
+    if (result == 0) {
+        if (rl.rlim_cur < kStackSize) {
+            rl.rlim_cur = kStackSize;
+            setrlimit(RLIMIT_STACK, &rl);
+        }
+    }
     bool is_emit_hir = false;
     bool is_emit_mir = false;
     bool is_show_hir_pad_graph = false;
@@ -92,57 +104,63 @@ int main(int argc, char **argv) {
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
-    std::cout<<"building syntax tree...\n";
+    std::cout << "building syntax tree...\n";
     builder->build(root);
     // auto *shower = new syntax_detail_shower();
     // shower->visit(*root);
 
     pass_manager PM(builder->getModule().get());
 
-    if(is_emit_hir )
-        PM.add_pass<EmitHir>("EmitHir");
+    if (is_emit_hir) PM.add_pass<EmitHir>("EmitHir");
     // if(is_show_hir_pad_graph && is_debug)
     //     PM.add_pass<EmitPadGraph>("EmitPadGraph");
 
-
     PM.add_pass<HIRToMIR>("HIRToMIR");
-    if(is_emit_mir && is_debug)
-        PM.add_pass<EmitIR>("EmitIR");
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    if(is_O2){
+    if (is_O2) {
         PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
         PM.add_pass<Mem2Reg>("Mem2Reg");
-        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+
+        PM.add_pass<InstructionCombination>("InstructionCombination");
+        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         PM.add_pass<GlobalVariableNumbering>("GVN");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<FunctionInline>("FunctionInline");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // PM.add_pass<InstructionCombination>("InstructionCombination");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        PM.add_pass<SCCP>("SCCP");
+        PM.add_pass<GlobalVariableNumbering>("GVN");
+        // PM.add_pass<InstructionCombination>("InstructionCombination");
+        PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+        if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
-    PM.add_pass<LowerIR>("LowerIR");
+    // PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-    PM.add_pass<RmPhi>("RmPhi");
+    // PM.add_pass<RmPhi>("RmPhi");
 
     PM.run();
 
-    if(is_emit_mir && !is_debug){
+    if (is_emit_mir && !is_debug) {
         builder->getModule()->MIRMEMprint(output_file);
     }
-    std::cout<<"IR Finish\n";
+    std::cout << "IR Finish\n";
 
     if (is_emit_asm) {
         builder->getModule()->MIRMEMIndex();
         AsmBuilder asm_builder(builder->getModule(), debug);
         std::string asm_code = asm_builder.generate_asm(input_file.c_str());
         output = fopen(output_file.c_str(), "w");
-        fprintf(output,"%s",asm_code.c_str());
+        fprintf(output, "%s", asm_code.c_str());
         fclose(output);
     }
-
 
     return 0;
 }

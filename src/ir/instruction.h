@@ -254,6 +254,9 @@ class StoreInst : public Instruction {
     Value *getRVal() { return getOperand(0); }
 
     bool hasOffset() { return getOperandNumber() >= 3; }
+    bool hasShift(){return getOperandNumber()>=4;}
+    Value* getOffset() { return getOperand(2); }
+    Value* getShift(){return getOperand(3);}
     void setRVal(Value *v) { setOperand(0, v); }
     Value *getPtr(){return getOperand(1);}
     void setLVal(Value *v) { setOperand(1, v); }
@@ -276,6 +279,9 @@ class LoadInst : public Instruction {
     void setLVal(Value *v) { setOperand(0, v); }
     void setOffset(Value *v) { setOperand(1, v); }
     bool isLoadOff() { return this->is_loadoffset; }
+    bool hasShift(){return getOperandNumber()>=3;}
+    Value* getOffset() { return getOperand(1); }
+    Value* getShift(){return getOperand(2);}
 };
 
 // wuqi define
@@ -340,12 +346,12 @@ class AllocaInst : public Instruction {
     AllocaInst(Type *ty, BasicBlock *parent);
 
     Type *_alloca_ty;
-    bool _init;
+    bool _init = false;
 
    public:
     void accept(IrVisitorBase *v) override;
     static AllocaInst *createAlloca(Type *ty, BasicBlock *parent);
-    void setInit() { _init = false; }
+    void setInit() { _init = true; }
     bool getInit() { return _init; }
     Type *getAllocaType() const;
 };

@@ -19,7 +19,7 @@
 
 #define CONST_FLOAT(num) ConstantFloat::create(num)
 
-#define ZERO_INIT
+// #define ZERO_INIT
 
 // 如果以baseblock作为目标，则返回条件的第一个basic block 块
 BasicBlock * getTargetBasicBlock(BaseBlock * b){
@@ -743,6 +743,14 @@ void SYSYBuilder::visit(tree_stmt &node) {
     } else if (node.return_stmt != nullptr) {
         SYSY_BUILDER("return x");
         node.return_stmt->accept(*this);
+        BasicBlock *bb;
+        if (builder->GetBaseBlockFatherBlock() == nullptr) {
+            bb = BasicBlock::create("", G_cur_fun);
+        } else {
+            bb = BasicBlock::create("");
+            builder->pushBaseBlock(bb);
+        }
+        builder->SetInstrInsertPoint(bb);
         return;
     } else if (node.while_stmt != nullptr) {
         node.while_stmt->accept(*this);
@@ -1257,6 +1265,10 @@ void SYSYBuilder::visit(tree_if_stmt &node) {
     auto false_block = BasicBlock::create("");
     if_block->addElseBodyBaseBlock(false_block);
     G_true_bb = if_block->getIfBodyBaseBlockList()->front() ;
+    if(G_true_bb==nullptr) {
+        G_true_bb = BasicBlock::create("");
+    if_block->addIfBodyBaseBlock(G_true_bb);
+    }
     G_false_bb = false_block;
     auto cond_basic_block = BasicBlock::create("");
     SYSY_BUILDER("create BasicBlock 1064\n");
@@ -1339,7 +1351,15 @@ void SYSYBuilder::visit(tree_if_else_stmt &node) {
     builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
     G_true_bb = (if_block->getIfBodyBaseBlockList()->front()) ;
+    if(G_true_bb==nullptr) {
+        G_true_bb = BasicBlock::create("");
+    if_block->addIfBodyBaseBlock(G_true_bb);
+    }
     G_false_bb = (if_block->getElseBodyBaseBlockList()->front()) ;
+    if(G_false_bb==nullptr) {
+        G_false_bb = BasicBlock::create("");
+    if_block->addElseBodyBaseBlock(G_false_bb);
+    }
     node.cond->accept(*this);
     builder->SetBasicBlockInsertPoint(up_level_list);
 
@@ -1393,6 +1413,10 @@ void SYSYBuilder::visit(tree_while_stmt &node) {
     builder->pushBaseBlock(cond_basic_block);
     builder->SetInstrInsertPoint(cond_basic_block);
     G_true_bb = while_block->getBodyBaseBlockList()->front();
+    if(G_true_bb==nullptr) {
+        G_true_bb = BasicBlock::create("");
+        while_block->addBodyBaseBlock(G_true_bb);
+    }
     G_false_bb = while_end_bb;
     node.cond->accept(*this);
 

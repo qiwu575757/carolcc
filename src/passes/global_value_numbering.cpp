@@ -19,11 +19,10 @@ void GlobalVariableNumbering::run() {
     // rename for GVN
     // NamingValue name_pass(_m,"NamingValue");
     // name_pass.run();
-    _dom_analysis.run();
 
     for (auto f : _m->getFunctions()) {
         if (!f->isBuiltin()) {
-        _value_table.clear();
+            _value_table.clear();
             std::queue<BasicBlock*> work_list;
             std::set<BasicBlock*> is_visited;
             work_list.push(f->getEntryBlock());
@@ -39,7 +38,7 @@ void GlobalVariableNumbering::check() {
     for (auto f : _m->getFunctions()) {
         for (auto bb : f->getBasicBlocks()) {
             if (bb != f->getEntryBlock() && bb->getPreBasicBlocks().empty()) {
-                ERROR("there should not have dead blocks",EXIT_CODE_ERROR_430);
+                ERROR("there should not have dead blocks", EXIT_CODE_ERROR_430);
             }
         }
     }
@@ -50,6 +49,7 @@ void GlobalVariableNumbering::SVN(BasicBlock* bb,
     visited.insert(bb);
     pushTableScope();
     _wait_delete.clear();
+    GVN_LOG("visiting bb %s",bb->getPrintName().c_str());
     LVN(bb);
     for (auto instr : _wait_delete) {
         bb->deleteInstr(instr);
@@ -59,6 +59,7 @@ void GlobalVariableNumbering::SVN(BasicBlock* bb,
         if (suc_bb->getPreBasicBlockList().size() == 1) {
             SVN(suc_bb, work_list, visited);
         } else if (visited.find(suc_bb) == visited.end()) {
+            visited.insert(suc_bb);
             work_list.push(suc_bb);
         }
     }
@@ -66,14 +67,12 @@ void GlobalVariableNumbering::SVN(BasicBlock* bb,
 }
 void GlobalVariableNumbering::LVN(BasicBlock* bb) {
     for (auto instr : bb->getInstructions()) {
-        if (instr->isPhi()) {
-            // TODO
-        } else if (instr->isBinary()) {
+        if (instr->isBinary() && !instr->isCmp()) {
             auto val = lookUpOrAdd(instr);
             if (val != instr) {
                 replace(instr, val);
             }
-        } else if(instr->isGep()) {
+        } else if (instr->isGep()) {
             auto val = lookUpOrAdd(instr);
             if (val != instr) {
                 replace(instr, val);
@@ -84,65 +83,48 @@ void GlobalVariableNumbering::LVN(BasicBlock* bb) {
     }
 }
 Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
-    if (instr->isBinary()) {
+    if (instr->isBinary() && !instr->isCmp() ) {
         auto lhs = lookUpOrAdd(instr->getOperand(0));
         auto rhs = lookUpOrAdd(instr->getOperand(1));
-        for (auto map_it : _value_table) {
-            for (auto it : map_it) {
-                auto key_instr = dynamic_cast<Instruction*>(it.first);
-                auto val_instr = it.second;
-                if (key_instr && key_instr->isBinary()) {
-                    auto lhs2 = lookUpOrAdd(key_instr->getOperand(0));
-                    auto rhs2 = lookUpOrAdd(key_instr->getOperand(1));
-                    bool same_op = false;
-                    if ((key_instr->getInstructionKind() ==
-                         instr->getInstructionKind()) &&
-                        !key_instr->isCmp()) {
-                        same_op = true;
-                    } else if (key_instr->isCmp() && instr->isCmp()) {
-                        auto cmp1 = dynamic_cast<CmpInst*>(key_instr);
-                        auto cmp2 = dynamic_cast<CmpInst*>(instr);
-                        if(cmp1->getCmpOp() == cmp2->getCmpOp()){
-                            same_op=true;
-                        }
-                    }
-                    bool same_oprd = (lhs == lhs2 && rhs == rhs2) ||
-                                     (key_instr->isCommutative() &&
-                                      (lhs == rhs2 && rhs == lhs2));
-
-                    if (same_op && same_oprd) {
-                        return val_instr;
-                    }
+        for (auto map_it : _binary_table) {
+            auto res1 = map_it.find({lhs,rhs,instr->getInstructionKind()});
+            if(res1!=map_it.end()){
+                return res1->second;
+            }
+            if(instr->isCommutative()){
+                auto res2 =
+                    map_it.find({rhs, lhs, instr->getInstructionKind()});
+                if (res2 != map_it.end()) {
+                    return res2->second;
                 }
             }
         }
-    } else if(instr->isGep()){
-        std::vector<Value*> oprds ;
-        for(auto oprd : instr->getOperandList()){
+    } else if (instr->isGep()) {
+        std::vector<Value*> oprds;
+        for (auto oprd : instr->getOperandList()) {
             oprds.push_back(lookUpOrAdd(oprd));
         }
-        for (auto map_it : _value_table) {
+        for (auto map_it : _gep_table) {
             for (auto it : map_it) {
                 auto key_instr = dynamic_cast<Instruction*>(it.first);
                 auto val_instr = it.second;
                 if (key_instr && key_instr->isGep()) {
                     std::vector<Value*> oprds2;
-                    bool all_same=true;
-                    for(auto oprd : key_instr->getOperandList()){
+                    bool all_same = true;
+                    for (auto oprd : key_instr->getOperandList()) {
                         oprds2.push_back(lookUpOrAdd(oprd));
                     }
-                    if(oprds2.size()!=oprds.size()){
-                        all_same=false;
-                    }
-                    else {
-                        for(auto i = 0;i<oprds.size();i++ ){
-                            if(oprds.at(i)!=oprds2.at(i)){
-                                all_same=false;
+                    if (oprds2.size() != oprds.size()) {
+                        all_same = false;
+                    } else {
+                        for (auto i = 0; i < oprds.size(); i++) {
+                            if (oprds.at(i) != oprds2.at(i)) {
+                                all_same = false;
                                 break;
                             }
                         }
-                        }
-                    if ( all_same ) {
+                    }
+                    if (all_same) {
                         return val_instr;
                     }
                 }
@@ -160,18 +142,17 @@ Value* GlobalVariableNumbering::lookUpOrAdd(Value* val) {
     }
     if (val->isConstant()) {
         auto find_val = findOnTable(val);
-        if(find_val !=nullptr){
+        if (find_val != nullptr) {
             return find_val;
         }
         pushValueToTable(val, val);
     } else if (auto instr = dynamic_cast<Instruction*>(val)) {
         auto find_instr = findSameInstrInTable(instr);
-        if(find_instr!=instr){
+        if (find_instr != instr) {
             return find_instr;
         }
         pushValueToTable(instr, instr);
-    }
-    else {
+    } else {
         pushValueToTable(val, val);
     }
     // } else {
@@ -190,17 +171,62 @@ void GlobalVariableNumbering::replace(Instruction* old_val, Value* new_val) {
 }
 
 Value* GlobalVariableNumbering::findOnTable(Value* v) {
-    for (auto s = this->_value_table.rbegin(); s != this->_value_table.rend();
-         s++) {
-        auto iter = s->find(v);
-        if (iter != s->end()) {
-            return iter->second;
+    auto instr = dynamic_cast<Instruction*>(v);
+    if (instr) {
+        if (instr->isGep()) {
+            for (auto s = this->_gep_table.rbegin();
+                 s != this->_gep_table.rend(); s++) {
+                auto iter = s->find(v);
+                if (iter != s->end()) {
+                    return iter->second;
+                }
+            }
+        } else if (instr->isBinary() && !instr->isCmp()) {
+            for (auto s = this->_binary_table.rbegin();
+                 s != this->_binary_table.rend(); s++) {
+                auto iter1 =
+                    s->find({instr->getOperand(0), instr->getOperand(1),
+                             instr->getInstructionKind()});
+                if (iter1 != s->end()) {
+                    return iter1->second;
+                } else if (instr->isCommutative() ) {
+                    auto iter2 =
+                        s->find({instr->getOperand(1), instr->getOperand(0),
+                                 instr->getInstructionKind()});
+                    if (iter2 != s->end()) return iter2->second;
+                }
+            }
+        } else {
+            for (auto s = this->_value_table.rbegin();
+                 s != this->_value_table.rend(); s++) {
+                auto iter = s->find(v);
+                if (iter != s->end()) {
+                    return iter->second;
+                }
+                if (v->isConstant()) {
+                    for (auto it : *s) {
+                        if (it.first->isConstant()) {
+                            if (it.first->getPrintName() == v->getPrintName()) {
+                                return it.second;
+                            }
+                        }
+                    }
+                }
+            }
         }
-        if (v->isConstant()) {
-            for (auto it : *s) {
-                if (it.first->isConstant()) {
-                    if (it.first->getPrintName() == v->getPrintName()) {
-                        return it.second;
+    } else {
+        for (auto s = this->_value_table.rbegin();
+             s != this->_value_table.rend(); s++) {
+            auto iter = s->find(v);
+            if (iter != s->end()) {
+                return iter->second;
+            }
+            if (v->isConstant()) {
+                for (auto it : *s) {
+                    if (it.first->isConstant()) {
+                        if (it.first->getPrintName() == v->getPrintName()) {
+                            return it.second;
+                        }
                     }
                 }
             }
@@ -209,7 +235,26 @@ Value* GlobalVariableNumbering::findOnTable(Value* v) {
     return nullptr;
 }
 void GlobalVariableNumbering::deleteValueFromTable(Value* key_val) {
-    for (auto& m : _value_table) {
-        m.erase(key_val);
+    auto instr = dynamic_cast<Instruction*>(key_val);
+    if (instr) {
+        if (instr->isGep()) {
+            for (auto& m : _gep_table) {
+                m.erase(key_val);
+            }
+        } else if (instr->isBinary() && !instr->isCmp()) {
+            for (auto& m : _binary_table) {
+                m.erase({instr->getOperand(0), instr->getOperand(1),
+                         instr->getInstructionKind()});
+                if (instr->isCommutative())
+                    m.erase({instr->getOperand(1), instr->getOperand(0),
+                             instr->getInstructionKind()});
+            }
+        } else {
+            ERROR("unsupport instr type", GVNError);
+        }
+    } else {
+        for (auto& m : _value_table) {
+            m.erase(key_val);
+        }
     }
 }

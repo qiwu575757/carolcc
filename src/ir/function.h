@@ -118,13 +118,15 @@ public:
     bool hasSideEffect(){return _has_side_effects;}
     void setUseGlobalVar(bool flag){_if_use_global_var = flag;}
     bool useGlobalVar(){return _if_use_global_var;}
-    std::set<GlobalVariable*> & getUsedGlobalVarSet(){return _used_global_var_set;}
+    std::set<GlobalVariable*> & getLoadGlobalVarSet(){return _load_gv_set;}
+    std::set<GlobalVariable*> & getStoreGlobalVarSet(){return _store_gv_set;}
 
 
 private:
     bool _has_side_effects;
     bool _if_use_global_var;
-    std::set <GlobalVariable*> _used_global_var_set;
+    std::set <GlobalVariable*> _load_gv_set;
+    std::set <GlobalVariable*> _store_gv_set;
     Instruction* _alloca_end = nullptr;
     std::vector<Argument *> _args;
     std::list<BaseBlock *> _base_block_list;

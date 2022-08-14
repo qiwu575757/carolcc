@@ -57,6 +57,12 @@ const std::vector<InstGen::Reg> extended_regs = { InstGen::fp, InstGen::lr };
 const std::vector<InstGen::Reg> sysfunc_used_fpregs = {
       InstGen::Reg(0, true), InstGen::Reg(2, true),
       InstGen::Reg(14, true), InstGen::Reg(15, true)
+    // InstGen::Reg(0, true),  InstGen::Reg(1, true),   InstGen::Reg(2, true),
+    // InstGen::Reg(3, true),  InstGen::Reg(4, true),   InstGen::Reg(5, true),
+    // InstGen::Reg(6, true),  InstGen::Reg(7, true),   InstGen::Reg(8, true),
+    // InstGen::Reg(9, true),  InstGen::Reg(10, true),  InstGen::Reg(11, true),
+    // InstGen::Reg(12, true), InstGen::Reg(13, true), InstGen::Reg(14, true),
+    // InstGen::Reg(15, true)
     };
 
 
@@ -134,6 +140,7 @@ private:
   bool debug;
   std::map<std::string, reg_map> func_reg_map;
   std::string cur_func_name;
+  std::map<std::string, bool> global_in_bss; // 用于判断全局变量是否在bss段
 
 
   // std::vector<interval> virtual_int_regs[virtual_reg_max];//虚拟寄存器
@@ -144,7 +151,8 @@ private:
   // std::map<Value *,int > linear_map;//指令列表
   std::map<std::string,std::pair<int,int>> func_used_reg_map;//函数使用的寄存器数
   // int op_save[4];// 栈溢出时的保存寄存器
-
+  std::vector<int> pushed_regs[16];
+  bool have_cal = false;
 
 public:
   AsmBuilder(std::shared_ptr<Module> module, bool debug = false) {
@@ -167,7 +175,8 @@ public:
   std::string getLabelName(BasicBlock *bb);
   std::string getLabelName(Function *func, int type);
   std::string getLabelName(BasicBlock *bb, std::string id);
-  std::string generate_global_vars();
+  std::string generate_init_global_vars();
+  std::string generate_uninit_global_vars();
   std::string generate_use_of_global_vars();
   std::string generate_initializer(Constant *init);
   std::pair<int, bool> get_const_val(Value *val);
@@ -208,7 +217,7 @@ public:
   std::string getGlobalValAddress(int op_reg, Value *val);
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
           std::string func_name,std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs);
-
+  int calRegPosition(std::vector<InstGen::Reg> saved_registers, int id);
 
 };
 

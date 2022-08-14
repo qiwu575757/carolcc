@@ -57,6 +57,9 @@ public:
     bool isMIRSSALevel() {
         return _ir_level == MIR_SSA;
     }
+    bool isLowerIR(){
+        return _ir_level==LIR;
+    }
 
     Function *getMainFunction() {
         for (auto func: _function_list) {

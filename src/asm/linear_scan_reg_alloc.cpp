@@ -364,19 +364,28 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // cal weight
     //栈溢出处理 检查
     // 对于浮点和整型共同处理
-    for (auto p : live_range) {
+    for (auto &p : live_range) {
+        if(p.v->isConstant()){
+            p.weight = 1e-4;
+            continue;
+        }
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
-        p.use_freq = (total_use_num + 1e-4) / (sum_range + 1e-4);
-        p.weight = sum_range;  // 暂时考虑按这个
+        p.use_freq = (total_use_num + 1e-4) / (sum_range + 1);
+        p.weight += p.use_freq;  // 暂时考虑按这个
     }
 
 // sort by weight
-    // LSRA_WARNNING("[sort by weight]");
+    LSRA_WARNNING("[sort by weight]");
 
     sort(live_range.begin(), live_range.end(), cmp);
-
-    for (auto itv : live_range) {
+    for (auto p : live_range) {
+        LSRA_WARNNING(
+                "[%d,%d] v:%s w:%f type:%s",p.st_id, p.ed_id,
+                p.v->getPrintName().c_str(),
+                p.weight, getType(p.type).c_str());
+    }
+    for (auto &itv : live_range) {
         if (itv.type == interval_value_type::arg_var) { //#
             // 已经处理过arg，不再计算
             continue;
@@ -531,17 +540,17 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     for (int i = 0; i < virtual_reg_max; i++) {
         for (int j = 0; j < func_reg_map[cur_func_name].virtual_int_regs[i].size(); j++) {
             LSRA_WARNNING(
-                "[Ireg %d] [%d,%d] v:%s w:%lf type:%s", i,
+                "[Ireg %d] [%d,%d] v:%s type:%s", i,
                 func_reg_map[cur_func_name].virtual_int_regs[i][j].st_id, func_reg_map[cur_func_name].virtual_int_regs[i][j].ed_id,
                 func_reg_map[cur_func_name].virtual_int_regs[i][j].v->getPrintName().c_str(),
-                func_reg_map[cur_func_name].virtual_int_regs[i][j].weight, getType(func_reg_map[cur_func_name].virtual_int_regs[i][j].type).c_str());
+                getType(func_reg_map[cur_func_name].virtual_int_regs[i][j].type).c_str());
         }
         for (int j = 0; j < func_reg_map[cur_func_name].virtual_float_regs[i].size(); j++) {
             LSRA_WARNNING(
-                "[Freg %d] [%d,%d] v:%s w:%lf type:%s", i,
+                "[Freg %d] [%d,%d] v:%s  type:%s", i,
                 func_reg_map[cur_func_name].virtual_float_regs[i][j].st_id, func_reg_map[cur_func_name].virtual_float_regs[i][j].ed_id,
                 func_reg_map[cur_func_name].virtual_float_regs[i][j].v->getPrintName().c_str(),
-                func_reg_map[cur_func_name].virtual_float_regs[i][j].weight, getType(func_reg_map[cur_func_name].virtual_float_regs[i][j].type).c_str());
+                getType(func_reg_map[cur_func_name].virtual_float_regs[i][j].type).c_str());
         }
     }
     LSRA_SHOW("-- [reg alloc int graph] --\n");
@@ -611,7 +620,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     //     LSRA_SHOW("[reg %02d]\n", i);
     // }
     // 进行栈空间计算，首先分配函数传参从第五个开始，栈溢出的变量需要分配四个保护位置，替换寄存器值，分配alloc空间，分配ret，对齐
-    for (auto itv : live_range) {
+    for (auto &itv : live_range) {
         if (itv.type == interval_value_type::arg_var && itv.spilled) {
             itv.offset = (itv.specific_reg_idx) * 4;
             func_reg_map[cur_func_name].stack_size += 4;
@@ -663,7 +672,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
 
 
     // alloca space
-    for (auto itv : live_range) {
+    for (auto &itv : live_range) {
         if (itv.is_allocated) {
             bool extended = true;
             auto sizeof_arg = itv.v->getType()->getSize(extended);
@@ -699,7 +708,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
     #ifdef __LSRA_WARN
 
-    for (auto &itv : func_reg_map[cur_func_name].stack_map) {
+    for (auto itv : func_reg_map[cur_func_name].stack_map) {
         LSRA_WARNNING("type: %d V: %s -> sp + %d ", itv.is_data,
                       itv.v->getPrintName().c_str(), itv.offset);
     }
@@ -1261,7 +1270,6 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             if (inst->getType()->getSize() > 0) {
                 if(inst->isMOV()){
                     auto mov_inst = dynamic_cast<MovInstr *>(inst);
-                    live_map[mov_inst->getLVal()].def = true;
                     if(!live_map.count(mov_inst->getLVal())){ //对于phi进行变量区间分析
                         live_map[mov_inst->getLVal()].def = true;
                         live_map[mov_inst->getLVal()].st_id = linear_index;
@@ -1269,6 +1277,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         live_map[mov_inst->getLVal()].is_float = mov_inst->getLVal()->getType()->isFloatTy();
                     }
                     else{
+                        live_map[mov_inst->getLVal()].def = true;
                         live_map[mov_inst->getLVal()].ed_id = linear_index;
                     }
                     LSRA_WARNNING("is mov %d %d",live_map[mov_inst->getLVal()].st_id,live_map[mov_inst->getLVal()].ed_id);
@@ -1399,23 +1408,37 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             itv.st_id) {  // 该指令在该循环中使用
                         if (live_map[op].def &&
                             live_map[op].st_id < itv.st_id &&
-                            live_map[op].st_id <
-                                live_map[op]
-                                    .ed_id) {  // 该变量是定义且使用过的变量
-                            live_map[op].ed_id = live_map[op].ed_id > itv.ed_id
-                                                     ? live_map[op].ed_id
-                                                     : itv.ed_id;
+                            live_map[op].ed_id < itv.ed_id &&
+                            live_map[op].ed_id >= itv.st_id ) {  // 该变量是定义且使用过的变量
+                            live_map[op].ed_id = itv.ed_id;
+                            live_map[op].weight += 0.2;
                         }
                     }
                 }
                 live_map[op].use_id.insert(func_reg_map[cur_func_name].linear_map[inst]);
             } else {
                 int op_id = 0;
+                int int_param_id=0;
+                int float_param_id=0;
                 for (auto op : inst->getOperandList()) {
                     // ?
                     if (inst->isCall() && op_id == 0) {
                         op_id++;
                         continue;
+                    }
+                    if(inst->isCall() && op_id != 0) {
+                        if(op->getType()->isFloatTy()){
+                            float_param_id+=1;
+                            if(float_param_id<16){
+                                live_map[op].weight = (16-float_param_id) * 100;
+                            }
+                        }
+                        else{
+                            if(int_param_id<4){
+                                live_map[op].weight = (4-int_param_id) * 100;
+                            }
+                            int_param_id+=1;
+                        }
                     }
                     if (inst->isMOV() && op_id == 0 && op->isConstant()) {
                         op_id++;
@@ -1476,15 +1499,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             func_reg_map[cur_func_name].linear_map[inst] >=
                                 itv.st_id) {  // 该指令在该循环中使用
                             if (live_map[op].def &&
-                                live_map[op].st_id < itv.st_id &&
-                                live_map[op].st_id <
-                                    live_map[op]
-                                        .ed_id) {  // 该变量是定义且使用过的变量
-                                live_map[op].ed_id =
-                                    live_map[op].ed_id > itv.ed_id
-                                        ? live_map[op].ed_id
-                                        : itv.ed_id;
-                            }
+                            live_map[op].st_id < itv.st_id &&
+                            live_map[op].ed_id < itv.ed_id &&
+                            live_map[op].ed_id >= itv.st_id ) {  // 该变量是定义且使用过的变量
+                            live_map[op].ed_id = itv.ed_id;
+                            live_map[op].weight += 0.2;
+                        }
                         }
                     }
                     live_map[op].use_id.insert(func_reg_map[cur_func_name].linear_map[inst]);
@@ -1520,6 +1540,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             itv.is_allocated = p.second.is_allocated;
             itv.specific_reg_idx = p.second.specific_reg_idx;
             itv.v = p.first;
+            itv.weight = p.second.weight;
             itv.use_id = p.second.use_id;
             live_res.push_back(itv);
 
@@ -1536,6 +1557,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                 itv.is_allocated = p.second.is_allocated;
                 itv.specific_reg_idx = p.second.specific_reg_idx;
                 itv.use_id = p.second.use_id;
+                itv.weight = p.second.weight;
                 itv.v = p.first;
                 live_res.push_back(itv);
             }

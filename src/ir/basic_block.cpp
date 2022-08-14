@@ -67,6 +67,7 @@ void BasicBlock::insertInstr(Instruction *pos, Instruction *insertInstr) {
     WARNNING("insert instr not find");
 }
 void BasicBlock::insertAfterInstr(Instruction *pos, Instruction *insertInstr) {
+    insertInstr->setParent(this);
     for (auto instr = this->_instructions.begin(); instr != this->_instructions.end(); instr++) {
         if (*instr == pos) {
             instr++;

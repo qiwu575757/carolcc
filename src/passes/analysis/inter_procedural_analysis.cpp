@@ -9,7 +9,7 @@
 void InterProceduralAnalysis::run() {
     for (auto func : _m->getFunctions()) {
         func->setSideEffect(func->isBuiltin());
-        func->setUseGlobalVar(func->isBuiltin());
+        func->setUseGlobalVar(false);
     }
 
     for(auto func : _m->getFunctions() ){
@@ -28,7 +28,7 @@ void InterProceduralAnalysis::run() {
                     if(AliasAnalysis::isGlobal(ptr)){
                         func->setUseGlobalVar(true);
                         auto gv = dynamic_cast<GlobalVariable*>(ptr);
-                        func->getUsedGlobalVarSet().insert(gv);
+                        func->getLoadGlobalVarSet().insert(gv);
                     }
                 }
                 else if(instr->isStore()){
@@ -46,7 +46,7 @@ void InterProceduralAnalysis::run() {
                         if(AliasAnalysis::isGlobal(ptr)){
                             func->setUseGlobalVar(true);
                             auto gv = dynamic_cast<GlobalVariable*>(ptr);
-                            func->getUsedGlobalVarSet().insert(gv);
+                            func->getStoreGlobalVarSet().insert(gv);
                         }
                     }
 

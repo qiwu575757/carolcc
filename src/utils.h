@@ -18,9 +18,9 @@
 #define __ASSERT
 
 #define __DEBUG
-#define __LSRA_WARN
-#define __LSRA_SHOW
-#define __WARN
+// #define __LSRA_WARN
+// #define __LSRA_SHOW
+// #define __WARN
 //#define __TRACE
 //#define __INFO
 
@@ -200,6 +200,8 @@ enum EXIT_CODE {
     ERROR_TYPE,
     DYNAMIC_CAST_NULL_PTR,
     deleteDeadCodeError,
+    GVNError,
+    simplifyInstrTypeError,
     YYERROR,
     ERROR_DEFUALT,
 };
