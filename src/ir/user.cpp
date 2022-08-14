@@ -40,7 +40,7 @@ void User::removeUseOps() {
         i++;
     }
     _use_number = 0;
-    _operands_list.clear();
+    // _operands_list.clear();
 
 }
 void User::addOperand(Value *v) {
@@ -50,9 +50,12 @@ void User::addOperand(Value *v) {
 }
 void User::rmOperand(unsigned  index) {
 
-    std::vector<Value* > old_operands ;
-    old_operands.assign(_operands_list.begin(),_operands_list.end());
     removeUseOps();
+    std::vector<Value* > old_operands ;
+    old_operands.swap(_operands_list);
+    // std::vector<Value* > old_operands ;
+    // old_operands.assign(_operands_list.begin(),_operands_list.end());
+    // removeUseOps();
     for (int i = 0; i < old_operands.size(); ++i) {
         if( i == index)
             continue ;
@@ -62,12 +65,12 @@ void User::rmOperand(unsigned  index) {
 }
 void User::rmOperand(unsigned  i1,unsigned  i2) {
 
-    // removeUseOps();
-    // std::vector<Value* > old_operands ;
-    // old_operands.swap(_operands_list);
-    std::vector<Value* > old_operands ;
-    old_operands.assign(_operands_list.begin(),_operands_list.end());
     removeUseOps();
+    std::vector<Value* > old_operands ;
+    old_operands.swap(_operands_list);
+    // std::vector<Value* > old_operands ;
+    // old_operands.assign(_operands_list.begin(),_operands_list.end());
+    // removeUseOps();
     for (int i = 0; i < old_operands.size(); ++i) {
         if( i == i1|| i == i2)
             continue ;

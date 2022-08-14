@@ -11,6 +11,7 @@
 #include "passes/analysis/alias_analysis.h"
 #include "passes/module.h"
 #include "utils.h"
+#include "visitor/llvm_ir_printer.h"
 
 void DeadCodeElimination::run() {
     deleteDeadFunc();
@@ -22,9 +23,21 @@ void DeadCodeElimination::run() {
     for (auto func : _m->getFunctions()) {
         if (!func->isBuiltin()) {
             deleteDeadInstr(func);
+#ifdef __DCE_DEBUG
+            LLVMIrPrinter a(func->getPrintName() + ".ir1", _m->getModuleName());
+            func->accept(&a);
+#endif  // __DCE_DEBUG
             deleteDeadStore(func);
+#ifdef __DCE_DEBUG
+            LLVMIrPrinter b(func->getPrintName() + ".ir2", _m->getModuleName());
+            func->accept(&b);
+#endif  // __DCE_DEBUG
             if (!_m->isLowerIR()) {
                 deleteRedundantLoad(func);
+#ifdef __DCE_DEBUG
+            LLVMIrPrinter c(func->getPrintName() + ".ir3", _m->getModuleName());
+            func->accept(&c);
+#endif  // __DCE_DEBUG
             }
             deleteDeadInstr(func);
         }
@@ -278,13 +291,13 @@ void DeadCodeElimination::deleteRedundantLoad(Function* func) {
                 if (called_func->hasSideEffect()) {
                     for (auto i = 1; i < call->getOperandNumber(); i++) {
                         auto arg = call->getOperand(i);
-                        if (arg->getType()->isArrayTy() || arg->getType()->isPointerTy()) {
+                        if (arg->getType()->isArrayTy() ||
+                            arg->getType()->isPointerTy()) {
                             std::list<Value*> killed_ptr;
                             for (auto load_it : ptr2load) {
                                 auto load_ptr =
                                     AliasAnalysis::getArrayPtr(load_it.first);
-                                auto def_ptr =
-                                    AliasAnalysis::getArrayPtr(arg);
+                                auto def_ptr = AliasAnalysis::getArrayPtr(arg);
                                 if (AliasAnalysis::alias(load_ptr, def_ptr)) {
                                     killed_ptr.push_back(load_it.first);
                                 }
@@ -297,5 +310,8 @@ void DeadCodeElimination::deleteRedundantLoad(Function* func) {
                 }
             }
         }
+    for(auto instr : wait_delete){
+        bb->deleteInstr(instr);
+    }
     }
 }
