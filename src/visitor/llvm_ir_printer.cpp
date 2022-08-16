@@ -2,6 +2,7 @@
 #include "ir/function.h"
 #include "ir/instruction.h"
 #include "utils.h"
+#include <type_traits>
 #include <unordered_map>
 #include "passes/module.h"
 
@@ -214,8 +215,9 @@ void LLVMIrPrinter::visit(BaseBlock *node) {
         }
         else if(node->getFunction()->getBaseBlocks().empty()&&*(node->getFunction()->getBasicBlocks().cbegin())!=node ){
           output_file << node->getName() << ":" ;
+          output_file << "\t\t\t\t\t\t\t\t\t\t";
           if(!basic_block->getPreBasicBlockList().empty()){
-              output_file<<"\t\t\t\t\t\t\t\t\t\t;preds =";
+              output_file<<";preds =";
           }
           int i = 0;
           for(auto& pred : basic_block->getPreBasicBlockList()){
@@ -627,6 +629,10 @@ void LLVMIrPrinter::visit(MovInstr *node) {
     output_file<<") phi : ";
     node->getLVal()->accept(this);
 }
+void LLVMIrPrinter::visit(ParallelCopyInstr *node) {
+    output_file<<node->getPrintName()<<" = "<<node->getOperand(0)->getPrintName() << std::endl;
+}
+
 
 //void LLVMIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){

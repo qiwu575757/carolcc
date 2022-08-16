@@ -583,8 +583,35 @@ MovInstr *MovInstr::createMov(PhiInstr *phi, Value *r_val, BasicBlock *parent) {
     auto term_instr = parent->getTerminator();
     MyAssert(
         "mov instr should be inserted into block whose terminator instr is br",
-        term_instr->isBr(), EXIT_CODE_ERROR_460);
-    parent->insertInstr(parent->getTerminator(), instr);
+        term_instr->isBr() || term_instr== nullptr, EXIT_CODE_ERROR_460);
+    if(term_instr !=nullptr){
+        parent->insertInstr(parent->getTerminator(), instr);
+    }
+    else {
+        parent->addInstr(instr);
+    }
     instr->setParent(parent);
-    return instr;
+    return   instr;
 }
+ParallelCopyInstr::ParallelCopyInstr(Value* r_val)
+:Instruction(r_val->getType(),Instruction::PC,1){
+    setOperand(0, r_val);
+}
+ParallelCopyInstr* ParallelCopyInstr::createParallelCopy(Value *r_val, BasicBlock *parent){
+    auto instr = new ParallelCopyInstr(r_val);
+    auto term_instr = parent->getTerminator();
+    MyAssert(
+        "mov instr should be inserted into block whose terminator instr is br",
+        term_instr->isBr() || term_instr== nullptr, EXIT_CODE_ERROR_460);
+    if(term_instr !=nullptr){
+        parent->insertInstr(parent->getTerminator(), instr);
+    }
+    else {
+        parent->addInstr(instr);
+    }
+    instr->setParent(parent);
+    return   instr;
+    
+
+}
+void ParallelCopyInstr::accept(IrVisitorBase *v) { v->visit(this); }

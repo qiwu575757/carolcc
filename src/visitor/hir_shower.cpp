@@ -155,6 +155,9 @@ void HIrPrinter::visit(PhiInstr *node) {
 void HIrPrinter::visit(MovInstr *node) {
     ERROR("HIR should not has mov instr",EXIT_CODE_ERROR_460);
 }
+void HIrPrinter::visit(ParallelCopyInstr *node) {
+    ERROR("HIR should not has mov instr",EXIT_CODE_ERROR_460);
+}
 //void HIrPrinter::visit(BranchInst*node) {//WHILE,IF,BRANCH,
 //    if(node->isWhile()){
 //        if(node->getType()->isIntegerTy()){// %5 = load i32, i32* %2, align 4

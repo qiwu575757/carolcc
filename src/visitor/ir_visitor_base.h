@@ -31,5 +31,6 @@ public:
     virtual void visit(ConstantArray *node) = 0;
     virtual void visit(PhiInstr *node) = 0;
     virtual void visit(MovInstr* node) = 0;
+    virtual void visit(ParallelCopyInstr* node) = 0;
 };
 #endif//COMPILER_IR_VISITOR_BASE_H

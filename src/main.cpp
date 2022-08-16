@@ -18,7 +18,7 @@
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
 #include "passes/pass_manager.h"
-#include "passes/rmphi.h"
+#include "passes/rm_phi.h"
 #include "passes/sccp.h"
 #include "utils.h"
 #include "visitor/syntax_detail_shower.h"
@@ -139,15 +139,14 @@ int main(int argc, char **argv) {
         PM.add_pass<GlobalVariableNumbering>("GVN");
         // PM.add_pass<InstructionCombination>("InstructionCombination");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
-    if (is_emit_asm) {
-        PM.add_pass<LowerIR>("LowerIR");
-        // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-        PM.add_pass<RmPhi>("RmPhi");
-    }
+    // PM.add_pass<LowerIR>("LowerIR");
+    // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+    if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+    PM.add_pass<RmPhi>("RmPhi");
+    if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
 
     PM.run();
 

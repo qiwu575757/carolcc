@@ -78,3 +78,9 @@ void User::rmOperand(unsigned  i1,unsigned  i2) {
 
     }
 }
+
+void User::changeOperand(int index, Value *new_val) {
+    auto old_val = getOperand(index);
+    old_val->removeUse(this, index);
+    setOperand(index, new_val);
+}

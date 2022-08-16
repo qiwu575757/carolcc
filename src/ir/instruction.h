@@ -56,7 +56,8 @@ class Instruction : public User {
         BREAK,
         CONTINUE,
         // Mov
-        MOV
+        MOV,
+        PC,
     };
 
     OpKind getInstructionKind() const { return _op_id; }
@@ -401,5 +402,13 @@ class MovInstr : public Instruction{
     Value* getLVal(){return _l_val;}
     void setLVal(PhiInstr* v){_l_val = v;}
 
+};
+class ParallelCopyInstr : public Instruction{
+    private :
+    ParallelCopyInstr (Value* r_val);
+
+    public :
+    static ParallelCopyInstr* createParallelCopy(Value* r_val,BasicBlock* parent);
+    void accept(IrVisitorBase *v) override;
 };
 #endif  // COMPILER_INSTRUCTION_H

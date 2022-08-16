@@ -53,6 +53,7 @@ private:
     void visit(ConstantArray *node) final;
     void visit(PhiInstr *node) final;
     void visit(MovInstr *node) final;
+    void visit(ParallelCopyInstr *node) final;
 
     void NameValue(Value *val);
     void NameBaseBlock(BaseBlock *base_block);
