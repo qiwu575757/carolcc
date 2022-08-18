@@ -102,10 +102,11 @@ int main(int argc, char **argv) {
         output_file = input_file;
         output_file.replace(output_file.end() - 2, output_file.end(), "s");
     }
+    std::cout << "building syntax tree...\n";
     yyparse();
 
     auto *builder = new SYSYBuilder(input_file);
-    std::cout << "building syntax tree...\n";
+    std::cout << "turning to ir...\n";
     builder->build(root);
     // auto *shower = new syntax_detail_shower();
     // shower->visit(*root);
