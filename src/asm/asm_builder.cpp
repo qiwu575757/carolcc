@@ -638,7 +638,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
-  if (!saved_registers.empty()) {
+  if (!inst->isCall() && !saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
   }
   func_asm += InstGen::comment(" call " + func_name, "");
@@ -668,7 +668,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     }
   }
 
-  if (!saved_registers.empty()) {
+  if (!inst->isCall() && !saved_registers.empty()) {
     func_asm += InstGen::pop(saved_registers);
   }
 
