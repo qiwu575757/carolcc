@@ -64,6 +64,8 @@ void RmPhi::splitCriticalEdge(Function* func) {
                     for(auto br_instr_index =0;br_instr_index< pre_bb_br_instr->getOperandNumber() ; br_instr_index ++){
                         if(pre_bb_br_instr->getOperand(br_instr_index) == bb){
                             pre_bb_br_instr->changeOperand(br_instr_index, new_bb);
+                            pre_bb->addSuccBasicBlock(new_bb);
+                            new_bb->addPreBasicBlock(pre_bb);
                             break;
                         }
                     }
