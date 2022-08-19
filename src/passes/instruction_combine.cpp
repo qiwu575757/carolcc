@@ -17,13 +17,13 @@ static int index = 0;
 void InstructionCombination::run() {
     for (auto fun : _m->getFunctions()) {
         simplifyInstruction(fun);
-        LLVMIrPrinter a(_m->getModuleName() + ".a" + std::to_string(index),
-                        _m->getModuleName());
-        fun->accept(&a);
+        // LLVMIrPrinter a(_m->getModuleName() + ".a" + std::to_string(index),
+        //                 _m->getModuleName());
+        // fun->accept(&a);
         instructionCombine(fun);
-        LLVMIrPrinter b(_m->getModuleName() + ".a" + std::to_string(index + 1),
-                        _m->getModuleName());
-        fun->accept(&b);
+        // LLVMIrPrinter b(_m->getModuleName() + ".a" + std::to_string(index + 1),
+        //                 _m->getModuleName());
+        // fun->accept(&b);
         simplifyInstruction(fun);
     }
     index += 2;
@@ -167,7 +167,7 @@ Value *InstructionCombination::simplifyAdd(
         return new_val;
     }
     if (oprt1->isConstant()) {
-        binary_instr->removeUseOps();
+        binary_instr->clearOperands();
         binary_instr->addOperand(oprt2);
         binary_instr->addOperand(oprt1);
         oprt1 = binary_instr->getOperand(0);
@@ -250,7 +250,7 @@ Value *InstructionCombination::simplifyMul(
         return new_val;
     }
     if (oprt1->isConstant()) {
-        binary_instr->removeUseOps();
+        binary_instr->clearOperands();
         binary_instr->addOperand(oprt2);
         binary_instr->addOperand(oprt1);
         oprt1 = binary_instr->getOperand(0);

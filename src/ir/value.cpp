@@ -77,8 +77,9 @@ void Value::removeUse(Value *user, unsigned value_no) {
 }
 
 bool Value::isConstant() {
-    auto constant = dynamic_cast<Constant *>(this);
-    return constant != nullptr;
+    auto a = dynamic_cast<ConstantInt *>(this);
+    auto b = dynamic_cast<ConstantFloat *>(this);
+    return a != nullptr || b !=nullptr;
 }
 std::string Value::getName()const { return _name; }
 void Value::accept(IrVisitorBase *v) { v->visit(this); }

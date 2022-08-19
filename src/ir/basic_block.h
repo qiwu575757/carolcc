@@ -45,8 +45,10 @@ public:
     BasicBlock* getIDom(){return _idom;}
     std::list<Instruction *> _instructions;
     
-    std::unordered_set<Value *> _active_in, _active_out, _defined_vals; /*活跃变量进入，活跃变量输出，本模块定义的变量*/
-    std::unordered_map<Value *, BasicBlock *> _inherited_vals;          /*继承莫个基本块的变量*/
+    std::unordered_set<Value *> _ue_exprs, _avail_out,_expr_kills ;
+    auto& getUEExprs(){return _ue_exprs;}
+    auto& getAvailOuts(){return _avail_out;}
+    auto& getExprKills(){return _expr_kills;}
     static BasicBlock *create(const std::string &name, Function *func);
     static BasicBlock *create(const std::string &name);
     std::list<Instruction *> &getInstructions();
@@ -72,17 +74,6 @@ public:
     
     bool hasRet();
     bool isEntry();
-    /*活跃变量分析*/
-    auto &getActiveIns();
-    auto &getActiveOuts();
-    auto &getDefinedVals();
-    auto &getInheritedVals();
-    void addActiveIn(Value *val);
-    void addActiveOut(Value *val);
-    void initAuxilliaryValsOfActiveSet(
-            std::unordered_set<Value *> *,
-            std::unordered_map<BasicBlock *, std::unordered_set<Value *>> *);
-    void initDefinedVals(std::unordered_set<Value *> *);
     void insertAfterInstr(Instruction *pos, Instruction *insertInstr);
 };
 

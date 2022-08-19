@@ -78,6 +78,8 @@ void  InterProceduralAnalysis::setCallerUseGobalVar(Function* f){
         if(!caller_func->useGlobalVar()){
             caller_func->setUseGlobalVar(true);
             setCallerUseGobalVar(caller_func);
+            caller_func->getLoadGlobalVarSet().insert(f->getLoadGlobalVarSet().begin(), f->getLoadGlobalVarSet().end());
+            caller_func->getStoreGlobalVarSet().insert(f->getStoreGlobalVarSet().begin(), f->getStoreGlobalVarSet().end());
         }
     }
 }

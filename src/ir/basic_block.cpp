@@ -47,9 +47,13 @@ Instruction *BasicBlock::getTerminator() const {
   return nullptr;
 }
 void BasicBlock::addInstr(Instruction *instr) {
-    this->_instructions.push_back(instr); }
+    this->_instructions.push_back(instr);
+    instr->setParent(this);
+     }
 void BasicBlock::addInstrBegin(Instruction *instr) {
-    this->_instructions.push_front(instr);
+    this->_instructions.push_front(instr
+    );
+    instr->setParent(this);
 }
 bool BasicBlock::empty() {
     return this->_instructions.empty();
@@ -61,6 +65,7 @@ void BasicBlock::insertInstr(Instruction *pos, Instruction *insertInstr) {
     for (auto instr = this->_instructions.begin(); instr != this->_instructions.end(); instr++) {
         if (*instr == pos) {
         this->_instructions.insert(instr, insertInstr);
+        insertInstr->setParent(this);
         return;
         }
     }

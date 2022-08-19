@@ -178,7 +178,7 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
                         AliasAnalysis::getArrayPtr(pre_store->getPtr());
                     auto load_array_ptr =
                         AliasAnalysis::getArrayPtr(load_instr->getOperand(0));
-                    if (isSamePtr(pre_store, load_instr)) {
+                    if (AliasAnalysis:: isSamePtr(pre_store, load_instr)) {
                         find_store = true;
                         load_instr->replaceAllUse(pre_store->getRVal());
                         load_instr->removeUseOps();
@@ -233,29 +233,6 @@ void DeadCodeElimination::deleteDeadStore(Function* func) {
     }
 }
 
-bool DeadCodeElimination::isSamePtr(StoreInst* store, LoadInst* load) {
-    if (store->getPtr() != load->getOperand(0)) {
-        return false;
-    } else if (store->hasOffset() && load->hasOffset()) {
-        if (store->getOffset() != load->getOffset()) {
-            return false;
-        }
-        int shift_load = 0, shift_store = 0;
-        if (store->hasShift()) {
-            shift_store =
-                dynamic_cast<ConstantInt*>(store->getShift())->getValue();
-        }
-        if (load->hasShift()) {
-            shift_load =
-                dynamic_cast<ConstantInt*>(load->getShift())->getValue();
-        }
-        return shift_load == shift_store;
-
-    } else if (store->hasOffset() || load->hasOffset()) {
-        return false;
-    }
-    return true;
-}
 
 void DeadCodeElimination::deleteRedundantLoad(Function* func) {
     for (auto bb : func->getBasicBlocks()) {

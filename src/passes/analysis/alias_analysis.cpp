@@ -62,3 +62,27 @@ bool AliasAnalysis::alias(Value *array1, Value *array2) {
     }
     return false;
 }
+
+bool AliasAnalysis::isSamePtr(StoreInst* store, LoadInst* load) {
+    if (store->getPtr() != load->getOperand(0)) {
+        return false;
+    } else if (store->hasOffset() && load->hasOffset()) {
+        if (store->getOffset() != load->getOffset()) {
+            return false;
+        }
+        int shift_load = 0, shift_store = 0;
+        if (store->hasShift()) {
+            shift_store =
+                dynamic_cast<ConstantInt*>(store->getShift())->getValue();
+        }
+        if (load->hasShift()) {
+            shift_load =
+                dynamic_cast<ConstantInt*>(load->getShift())->getValue();
+        }
+        return shift_load == shift_store;
+
+    } else if (store->hasOffset() || load->hasOffset()) {
+        return false;
+    }
+    return true;
+}
