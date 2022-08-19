@@ -366,7 +366,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     // 对于浮点和整型共同处理
     for (auto &p : live_range) {
         if(p.type == interval_value_type::call_val){
-            p.weight = 10000;
+            p.weight = (1000000-p.st_id)*100;
             continue;
         }
         if(p.v->isConstant()){
@@ -1467,7 +1467,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                     if(inst->isCall() && op_id != 0) {
                         if(op->getType()->isFloatTy()){
                             if(float_param_id<16){
-                                live_map[op].weight = (16-float_param_id) * 100;
+                                live_map[op].weight = (16-float_param_id) * 10;
                                 interval itv;
                                 itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
                                 itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
@@ -1482,7 +1482,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         }
                         else{
                             if(int_param_id<4){
-                                live_map[op].weight = (4-int_param_id) * 100;
+                                live_map[op].weight = (4-int_param_id) * 10;
                                 interval itv;
                                 itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
                                 itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
