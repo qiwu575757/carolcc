@@ -240,14 +240,17 @@ std::string AsmBuilder::dealFuncArgRegs(Function *func) {
   int int_arg = 0, float_arg = 0;
   std::string arg_string;
   for (auto arg : func->getArgs()) {
-    if (arg->getType()->isIntegerTy() && int_arg < 4) {
-      arg_string += InstGen::mov(InstGen::Reg(int_arg,false),InstGen::Reg(int_arg+4,false));
-      int_arg++;
-    } else if (arg->getType()->isFloatTy() && float_arg < 16) {
-      arg_string += InstGen::mov(InstGen::Reg(float_arg,false),InstGen::Reg(float_arg+16,false));
+     if (arg->getType()->isFloatTy() && float_arg < 16) {
+      arg_string += InstGen::mov(InstGen::Reg(11,false),InstGen::Reg(float_arg,true));
+      arg_string += InstGen::mov(InstGen::Reg(float_arg+16,true),InstGen::Reg(11,false));
       float_arg++;
+    } else if(int_arg < 4) {
+      arg_string += InstGen::mov(InstGen::Reg(int_arg+4,false),InstGen::Reg(int_arg,false));
+      int_arg++;
     }
   }
+
+  return arg_string;
 }
 
 std::string AsmBuilder::generate_function_exit_code(Function *func) {
