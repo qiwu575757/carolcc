@@ -386,6 +386,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                 p.weight, getType(p.type).c_str());
     }
     for (auto &itv : live_range) {
+        if(itv.type == interval_value_type::call_val){ // 特殊占位
+            if(itv.is_float){
+                func_reg_map[cur_func_name].virtual_float_regs[itv.specific_reg_idx].push_back(itv);
+            }
+            else{
+                func_reg_map[cur_func_name].virtual_int_regs[itv.specific_reg_idx].push_back(itv);
+            }
+        }
         if (itv.type == interval_value_type::arg_var) { //#
             // 已经处理过arg，不再计算
             continue;
@@ -1429,14 +1437,34 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                     }
                     if(inst->isCall() && op_id != 0) {
                         if(op->getType()->isFloatTy()){
-                            float_param_id+=1;
                             if(float_param_id<16){
                                 live_map[op].weight = (16-float_param_id) * 100;
+                                interval itv;
+                                itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
+                                itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
+                                itv.def = true;
+                                itv.type = interval_value_type::call_val;
+                                itv.is_float = op->getType()->isFloatTy();
+                                itv.specific_reg_idx = op_id;
+                                itv.v = op;
+                                itv.weight = 10000;
+                                live_res.push_back(itv);
                             }
+                            float_param_id+=1;
                         }
                         else{
-                            if(int_param_id<4){
+                            if(int_param_id<4 || int_param_id==12 || int_param_id == 14){
                                 live_map[op].weight = (4-int_param_id) * 100;
+                                interval itv;
+                                itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
+                                itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
+                                itv.def = true;
+                                itv.type = interval_value_type::call_val;
+                                itv.is_float = op->getType()->isFloatTy();
+                                itv.specific_reg_idx = op_id;
+                                itv.v = op;
+                                itv.weight = 10000;
+                                live_res.push_back(itv);
                             }
                             int_param_id+=1;
                         }

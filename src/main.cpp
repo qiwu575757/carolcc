@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     if (is_O2) {
         PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
-        // PM.add_pass<Mem2Reg>("Mem2Reg");
+        PM.add_pass<Mem2Reg>("Mem2Reg");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
@@ -143,7 +143,7 @@ int main(int argc, char **argv) {
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
     }
-    // PM.add_pass<LowerIR>("LowerIR");
+    PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
     if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
     PM.add_pass<RmPhi>("RmPhi");

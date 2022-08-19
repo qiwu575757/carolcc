@@ -88,6 +88,7 @@ enum interval_value_type{
   imm_var,
   arg_var,
   spill_var,
+  call_val,
 };
 
 struct interval{
