@@ -393,6 +393,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             else{
                 func_reg_map[cur_func_name].virtual_int_regs[itv.specific_reg_idx].push_back(itv);
             }
+            continue;
         }
         if (itv.type == interval_value_type::arg_var) { //#
             // 已经处理过arg，不再计算
@@ -1445,7 +1446,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                                 itv.def = true;
                                 itv.type = interval_value_type::call_val;
                                 itv.is_float = op->getType()->isFloatTy();
-                                itv.specific_reg_idx = op_id;
+                                itv.specific_reg_idx = float_param_id;
                                 itv.v = op;
                                 itv.weight = 10000;
                                 live_res.push_back(itv);
@@ -1461,7 +1462,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                                 itv.def = true;
                                 itv.type = interval_value_type::call_val;
                                 itv.is_float = op->getType()->isFloatTy();
-                                itv.specific_reg_idx = op_id;
+                                itv.specific_reg_idx = int_param_id;
                                 itv.v = op;
                                 itv.weight = 10000;
                                 live_res.push_back(itv);
