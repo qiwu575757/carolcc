@@ -1438,26 +1438,38 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                 for (auto op : inst->getOperandList()) {
                     // ?
                     if(inst->isCall() && op_id == 0) {
-                        {
+                        // int
+                        for(int i=0;i<4;i++){
                             interval itv;
                             itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
                             itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
                             itv.def = true;
                             itv.type = interval_value_type::call_val;
-                            itv.is_float = op->getType()->isFloatTy();
-                            itv.specific_reg_idx = 11;
+                            itv.is_float = false;
+                            itv.specific_reg_idx = i;
                             itv.v = op;
                             live_res.push_back(itv);
                         }
-
-                        {
+                        for(int i=11;i<13;i++){
                             interval itv;
                             itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
                             itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
                             itv.def = true;
                             itv.type = interval_value_type::call_val;
-                            itv.is_float = op->getType()->isFloatTy();
-                            itv.specific_reg_idx = 12;
+                            itv.is_float = false;
+                            itv.specific_reg_idx = i;
+                            itv.v = op;
+                            live_res.push_back(itv);
+                        }
+                        // float
+                        for(int i=0;i<16;i++){
+                            interval itv;
+                            itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.def = true;
+                            itv.type = interval_value_type::call_val;
+                            itv.is_float = true;
+                            itv.specific_reg_idx = i;
                             itv.v = op;
                             live_res.push_back(itv);
                         }
@@ -1468,30 +1480,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         if(op->getType()->isFloatTy()){
                             if(float_param_id<16){
                                 live_map[op].weight = (16-float_param_id) * 10;
-                                interval itv;
-                                itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
-                                itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
-                                itv.def = true;
-                                itv.type = interval_value_type::call_val;
-                                itv.is_float = op->getType()->isFloatTy();
-                                itv.specific_reg_idx = float_param_id;
-                                itv.v = op;
-                                live_res.push_back(itv);
                             }
                             float_param_id+=1;
                         }
                         else{
                             if(int_param_id<4){
                                 live_map[op].weight = (4-int_param_id) * 10;
-                                interval itv;
-                                itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
-                                itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
-                                itv.def = true;
-                                itv.type = interval_value_type::call_val;
-                                itv.is_float = op->getType()->isFloatTy();
-                                itv.specific_reg_idx = int_param_id;
-                                itv.v = op;
-                                live_res.push_back(itv);
                             }
                             int_param_id+=1;
                         }
