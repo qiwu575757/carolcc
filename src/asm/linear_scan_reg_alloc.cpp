@@ -1432,7 +1432,32 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                 int float_param_id=0;
                 for (auto op : inst->getOperandList()) {
                     // ?
-                    if (inst->isCall() && op_id == 0) {
+                    if(inst->isCall() && op_id == 0) {
+                        {
+                            interval itv;
+                            itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.def = true;
+                            itv.type = interval_value_type::call_val;
+                            itv.is_float = op->getType()->isFloatTy();
+                            itv.specific_reg_idx = 12;
+                            itv.v = op;
+                            itv.weight = 10000;
+                            live_res.push_back(itv);
+                        }
+
+                        {
+                            interval itv;
+                            itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.ed_id = func_reg_map[cur_func_name].linear_map[inst];
+                            itv.def = true;
+                            itv.type = interval_value_type::call_val;
+                            itv.is_float = op->getType()->isFloatTy();
+                            itv.specific_reg_idx = 14;
+                            itv.v = op;
+                            itv.weight = 10000;
+                            live_res.push_back(itv);
+                        }
                         op_id++;
                         continue;
                     }
