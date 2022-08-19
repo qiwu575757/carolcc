@@ -365,10 +365,15 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     //栈溢出处理 检查
     // 对于浮点和整型共同处理
     for (auto &p : live_range) {
+        if(p.type == interval_value_type::call_val){
+            p.weight = 10000;
+            continue;
+        }
         if(p.v->isConstant()){
             p.weight = 1e-4;
             continue;
         }
+        
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
         p.use_freq = (total_use_num + 1e-4) / (sum_range + 1);
@@ -1440,9 +1445,8 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             itv.def = true;
                             itv.type = interval_value_type::call_val;
                             itv.is_float = op->getType()->isFloatTy();
-                            itv.specific_reg_idx = 12;
+                            itv.specific_reg_idx = 11;
                             itv.v = op;
-                            itv.weight = 10000;
                             live_res.push_back(itv);
                         }
 
@@ -1453,9 +1457,8 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             itv.def = true;
                             itv.type = interval_value_type::call_val;
                             itv.is_float = op->getType()->isFloatTy();
-                            itv.specific_reg_idx = 14;
+                            itv.specific_reg_idx = 12;
                             itv.v = op;
-                            itv.weight = 10000;
                             live_res.push_back(itv);
                         }
                         op_id++;
@@ -1473,13 +1476,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                                 itv.is_float = op->getType()->isFloatTy();
                                 itv.specific_reg_idx = float_param_id;
                                 itv.v = op;
-                                itv.weight = 10000;
                                 live_res.push_back(itv);
                             }
                             float_param_id+=1;
                         }
                         else{
-                            if(int_param_id<4 || int_param_id==12 || int_param_id == 14){
+                            if(int_param_id<4){
                                 live_map[op].weight = (4-int_param_id) * 100;
                                 interval itv;
                                 itv.st_id = func_reg_map[cur_func_name].linear_map[inst];
@@ -1489,7 +1491,6 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                                 itv.is_float = op->getType()->isFloatTy();
                                 itv.specific_reg_idx = int_param_id;
                                 itv.v = op;
-                                itv.weight = 10000;
                                 live_res.push_back(itv);
                             }
                             int_param_id+=1;
@@ -1668,6 +1669,9 @@ std::string AsmBuilder::getType(interval_value_type t){
     }
     if(t == interval_value_type::spill_var){
         return "spill_var";
+    }
+    if(t == interval_value_type::call_val){
+        return "call_var";
     }
     return "unknown type";
 }
