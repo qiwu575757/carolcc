@@ -14,7 +14,7 @@ class Module;
 class Function;
 class BasicBlock;
 class Value;
-#define LOG_LOOP_ANALYSIS
+// #define LOG_LOOP_ANALYSIS
 #ifdef LOG_LOOP_ANALYSIS
 #define LOOP_ANALYSIS(format, ...)                                  \
     do {                                                                             \
