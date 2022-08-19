@@ -230,9 +230,24 @@ std::string AsmBuilder::generate_function_entry_code(Function *func){
     func_head_code += InstGen::comment("alloca stack space", "");
     func_head_code += InstGen::instConst(InstGen::sub, InstGen::sp, InstGen::sp,
                                  InstGen::Constant(func_stack_size, false));
+    func_head_code += dealFuncArgRegs(func);
 
     // 参数的映射认为已经处理好了
     return func_head_code;
+}
+
+std::string AsmBuilder::dealFuncArgRegs(Function *func) {
+  int int_arg = 0, float_arg = 0;
+  std::string arg_string;
+  for (auto arg : func->getArgs()) {
+    if (arg->getType()->isIntegerTy() && int_arg < 4) {
+      arg_string += InstGen::mov(InstGen::Reg(int_arg,false),InstGen::Reg(int_arg+4,false));
+      int_arg++;
+    } else if (arg->getType()->isFloatTy() && float_arg < 16) {
+      arg_string += InstGen::mov(InstGen::Reg(float_arg,false),InstGen::Reg(float_arg+16,false));
+      float_arg++;
+    }
+  }
 }
 
 std::string AsmBuilder::generate_function_exit_code(Function *func) {

@@ -219,7 +219,7 @@ public:
   std::string passFunctionArgs(Instruction *inst,std::vector<Value *>args,
           std::string func_name,std::vector<InstGen::Reg> saved_registers, std::vector<InstGen::Reg> return_regs);
   int calRegPosition(std::vector<InstGen::Reg> saved_registers, int id);
-
+  std::string dealFuncArgRegs(Function *func);
 };
 
 const InstGen::Reg temp_reg = InstGen::Reg(11, false);
