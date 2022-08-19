@@ -87,13 +87,13 @@ Value* GlobalVariableNumbering::findSameInstrInTable(Instruction* instr) {
         auto lhs = lookUpOrAdd(instr->getOperand(0));
         auto rhs = lookUpOrAdd(instr->getOperand(1));
         for (auto map_it : _binary_table) {
-            auto res1 = map_it.find({lhs,rhs,instr->getInstructionKind()});
+            auto res1 = map_it.find(_my_tuple(lhs,rhs,instr->getInstructionKind()));
             if(res1!=map_it.end()){
                 return res1->second;
             }
             if(instr->isCommutative()){
                 auto res2 =
-                    map_it.find({rhs, lhs, instr->getInstructionKind()});
+                    map_it.find(_my_tuple(lhs,rhs,instr->getInstructionKind()));
                 if (res2 != map_it.end()) {
                     return res2->second;
                 }
@@ -184,15 +184,17 @@ Value* GlobalVariableNumbering::findOnTable(Value* v) {
         } else if (instr->isBinary() && !instr->isCmp()) {
             for (auto s = this->_binary_table.rbegin();
                  s != this->_binary_table.rend(); s++) {
+                _my_tuple _t_tmp(instr->getOperand(0), instr->getOperand(1),
+                             instr->getInstructionKind());
                 auto iter1 =
-                    s->find({instr->getOperand(0), instr->getOperand(1),
-                             instr->getInstructionKind()});
+                    s->find(_t_tmp);
                 if (iter1 != s->end()) {
                     return iter1->second;
                 } else if (instr->isCommutative() ) {
+                    _my_tuple _t_tmp(instr->getOperand(1), instr->getOperand(0),
+                                 instr->getInstructionKind());
                     auto iter2 =
-                        s->find({instr->getOperand(1), instr->getOperand(0),
-                                 instr->getInstructionKind()});
+                        s->find(_t_tmp);
                     if (iter2 != s->end()) return iter2->second;
                 }
             }
@@ -243,11 +245,13 @@ void GlobalVariableNumbering::deleteValueFromTable(Value* key_val) {
             }
         } else if (instr->isBinary() && !instr->isCmp()) {
             for (auto& m : _binary_table) {
-                m.erase({instr->getOperand(0), instr->getOperand(1),
-                         instr->getInstructionKind()});
+                _my_tuple _t_tmp(instr->getOperand(0), instr->getOperand(1),
+                             instr->getInstructionKind());
+                m.erase(_t_tmp);
                 if (instr->isCommutative())
-                    m.erase({instr->getOperand(1), instr->getOperand(0),
-                             instr->getInstructionKind()});
+                _my_tuple _t_tmp(instr->getOperand(1), instr->getOperand(0),
+                             instr->getInstructionKind());
+                    m.erase(_t_tmp);
             }
         } else {
             ERROR("unsupport instr type", GVNError);

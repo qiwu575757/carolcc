@@ -1264,6 +1264,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
         if(bb_map.count(bb)){
             continue;
         }
+        LSRA_WARNNING(" [BFS] basic block: %s",bb->getPrintName().c_str());
         for(auto b: bb->getSuccBasicBlocks()) bbq.push(b);
         bb_map[bb] = bb_index++;
         for (auto inst : bb->getInstructions()) {
@@ -1295,10 +1296,10 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             }
             if(!func_reg_map[cur_func_name].linear_map.count(inst)){ // 此处需要对不同mov加以区分
                 func_reg_map[cur_func_name].linear_map[inst] = linear_index++;
-                // if(dynamic_cast<MovInstr*>(inst))
-                //     LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],dynamic_cast<MovInstr*>(inst)->getLVal()->getPrintName().c_str());
-                // else
-                //     LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],inst->getPrintName().c_str());
+                if(dynamic_cast<MovInstr*>(inst))
+                    LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],dynamic_cast<MovInstr*>(inst)->getLVal()->getPrintName().c_str());
+                else
+                    LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],inst->getPrintName().c_str());
             }
         }
     }

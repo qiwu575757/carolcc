@@ -23,6 +23,7 @@ class BinaryInst;
 // * 目前只完成了lvn
 //
 //
+typedef std::tuple<Value* ,Value* ,Instruction::OpKind> _my_tuple;
 class GlobalVariableNumbering : public Transform {
    public:
     GlobalVariableNumbering(Module* m, const std::string& name)
@@ -63,10 +64,10 @@ class GlobalVariableNumbering : public Transform {
               _gep_table[_layer_num - 1].insert(std::make_pair(key, val));
           }
           else if(instr->isBinary() && !instr->isCmp()){
-              _binary_table[_layer_num - 1].insert(
-                  {{instr->getOperand(0), instr->getOperand(1),
-                    instr->getInstructionKind()},
-                   val});
+              _my_tuple _tmp_t(instr->getOperand(0), instr->getOperand(1),
+                    instr->getInstructionKind());
+                    
+              _binary_table[_layer_num - 1].insert({_tmp_t, val});
           }
           else {
               _value_table[_layer_num - 1].insert(std::make_pair(key, val));
