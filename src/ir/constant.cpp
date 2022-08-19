@@ -107,10 +107,8 @@ ConstantArray *ConstantArray::turn(Type *basic_type,
         }
         ArrayType *array_type;
         if (basic_type->isFloatTy()) {
-                printf("create 1");
             array_type = ArrayType::get(Type::getFloatTy(), init_list.size());
         } else if (basic_type->isIntegerTy()) {
-                printf("create 2");
             array_type = ArrayType::get(Type::getInt32Ty(), init_list.size());
         } else {
             ERROR("error type", EXIT_CODE_ERROR_432);

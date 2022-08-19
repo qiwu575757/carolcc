@@ -14,6 +14,7 @@
 #include "passes/global_value_numbering.h"
 #include "passes/hir_to_mir.h"
 #include "passes/instruction_combine.h"
+#include "passes/loop_invariant.h"
 #include "passes/lower_ir.h"
 #include "passes/mem2reg.h"
 #include "passes/mir_simplify_cfg.h"
@@ -32,7 +33,7 @@ extern FILE *yyin;
 int yyline;
 tree_comp_unit *root;
 bool debug = true;
-bool is_emit_asm; // 用来控制底层优化是否开启以及 zeroinit
+bool is_emit_asm;  // 用来控制底层优化是否开启以及 zeroinit
 // std::shared_ptr<tree_comp_unit> root(new tree_comp_unit());
 
 FILE *output;
@@ -108,6 +109,7 @@ int main(int argc, char **argv) {
     auto *builder = new SYSYBuilder(input_file);
     std::cout << "turning to ir...\n";
     builder->build(root);
+    delete root;
     // auto *shower = new syntax_detail_shower();
     // shower->visit(*root);
 
@@ -126,13 +128,16 @@ int main(int argc, char **argv) {
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
 
+        PM.add_pass<LoopInvariant>("LoopInvariant");
+
         PM.add_pass<InstructionCombination>("InstructionCombination");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<GlobalVariableNumbering>("GVN");
-        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        // if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<FunctionInline>("FunctionInline");
-        //if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        // if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
         PM.add_pass<SCCP>("SCCP");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
         // PM.add_pass<InstructionCombination>("InstructionCombination");
@@ -142,16 +147,18 @@ int main(int argc, char **argv) {
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
+        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
     }
-    PM.add_pass<LowerIR>("LowerIR");
+    // PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
-    // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
-    PM.add_pass<RmPhi>("RmPhi");
+    // // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+    // PM.add_pass<RmPhi>("RmPhi");
     // if(is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
 
     PM.run();
 
     if (is_emit_mir && !is_debug) {
+        // if (is_emit_mir ) {
         builder->getModule()->MIRMEMprint(output_file);
     }
     std::cout << "IR Finish\n";
