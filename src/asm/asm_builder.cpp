@@ -638,9 +638,14 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
-  if (!inst->isCall() && !saved_registers.empty()) {
+  if (inst->isCall()) { // 对于call指令，无需push,pop
+    saved_registers.clear();
+  }
+
+  if (!saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
   }
+
   func_asm += InstGen::comment(" call " + func_name, "");
 
   // 保存可能发生冲突的 return reg, 不一起保存的原因是将结果传递给目标寄存器简单
@@ -668,7 +673,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     }
   }
 
-  if (!inst->isCall() && !saved_registers.empty()) {
+  if (!saved_registers.empty()) {
     func_asm += InstGen::pop(saved_registers);
   }
 

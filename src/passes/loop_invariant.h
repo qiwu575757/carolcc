@@ -13,7 +13,7 @@
 class Module;
 class Function;
 
-#define LOG_LOOP_INVARIANT
+// #define LOG_LOOP_INVARIANT
 #ifdef LOG_LOOP_INVARIANT
 #define LOOP_INVARIANT(format, ...)                                  \
     do {                                                                             \

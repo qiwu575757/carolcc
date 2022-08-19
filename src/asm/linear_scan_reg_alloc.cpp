@@ -354,11 +354,13 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     func_reg_map[cur_func_name].stack_size = 0;
     //
     // 优先处理入口参数
+    std::vector<interval> arg_live_range;
     for (auto p : live_range) {
         if (p.type == interval_value_type::arg_var && !p.spilled) {
             if (!force_reg_alloc(p, p.specific_reg_idx)) {
                 ERROR("can't use force reg alloc when conflict exist!",EXIT_CODE_ERROR_307);
             }
+            arg_live_range.push_back(p);
         }
     }
     // cal weight
@@ -373,7 +375,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             p.weight = 1e-4;
             continue;
         }
-        
+
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
         p.use_freq = (total_use_num + 1e-4) / (sum_range + 1);
@@ -392,6 +394,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     for (auto &itv : live_range) {
         if(itv.type == interval_value_type::call_val){ // 特殊占位
+            bool hit = false;
+            for (auto p : arg_live_range) {
+                if(itv.is_float == p.is_float &&itv.specific_reg_idx == p.specific_reg_idx&&itv.st_id>=p.st_id && itv.ed_id <= p.ed_id){
+                    hit = true;
+                    break;
+                }
+            }
+            if(hit)continue;
             if(itv.is_float){
                 func_reg_map[cur_func_name].virtual_float_regs[itv.specific_reg_idx].push_back(itv);
             }
