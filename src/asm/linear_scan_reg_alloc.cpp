@@ -1094,36 +1094,28 @@ Value *AsmBuilder::value_in_reg_at(
 
 int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存器
     int tag = func_reg_map[cur_func_name].linear_map[inst];
-    // 优先尝试分配未使用寄存器
+    //优先尝试分配未使用寄存器
     if(v_is_fp){
-        for (int i = float_reg_number-1; i >=0 ; i--) {
-            if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
-                func_reg_map[cur_func_name].virtual_float_reg_use[i]
-                    .end()) {  // 
-                if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
+        for (int i = 0; i < float_reg_number ; i++) {
+            if (value_in_reg_at(inst, i, v_is_fp)==nullptr){
                     func_reg_map[cur_func_name].virtual_float_reg_use[i].insert(
                         tag);  //表示此处已经有使用需求了，防止再次请求
                     return i;
                 }
-            }
         }
     }
     else{
-        for (int i = int_reg_number-1; i >= 0; i--) {
-            if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
-                func_reg_map[cur_func_name].virtual_int_reg_use[i]
-                    .end()) {  // 没找到使用点说明，不冲突，暂时如下 。
-                if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
+        for (int i = 0; i < int_reg_number; i++) {
+            if (value_in_reg_at(inst, i, v_is_fp)==nullptr){
                     func_reg_map[cur_func_name].virtual_int_reg_use[i].insert(
                         tag);  //表示此处已经有使用需求了，防止再次请求
                     return i;
                 }
-            }
         }
     }
-    
+
     if(v_is_fp){
-        for (int i = float_reg_number-1; i >=0 ; i--) {
+        for (int i = 0; i < float_reg_number ; i++) {
             if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_float_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
@@ -1134,7 +1126,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
         }
     }
     else{
-        for (int i = int_reg_number-1; i >= 0; i--) {
+        for (int i = 0; i < int_reg_number; i++) {
             if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
