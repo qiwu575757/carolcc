@@ -107,6 +107,7 @@ struct interval{
     int offset;
     bool is_float = false;
     int conflict_reg = -1;
+    int loop_depth = 0;
     std::vector<std::pair<int,int>> use_def_itv; // 用于将区间进行分割，可以是在过长区间未使用时进行 中间加mov，也可能是重新def导致（目前ssa应该不会）
 };
 
