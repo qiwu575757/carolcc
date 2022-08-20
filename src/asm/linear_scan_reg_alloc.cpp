@@ -654,11 +654,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             func_reg_map[cur_func_name].stack_map.push_back(itv);
         }
     }
+    // LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
     for (int i = 0; i < op_save_stack_num; i++) {
         func_reg_map[cur_func_name].op_save[i] = func_reg_map[cur_func_name].stack_size + i * 4;
+        // LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
     }
     func_reg_map[cur_func_name].stack_size += op_save_stack_num * 4;  //压入四个保护位置
     //计算变量栈溢出空间
+    // LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
     // int use_reg_num = 0;
     for (int i = int_reg_number; i < virtual_reg_max; i++) {
         if (func_reg_map[cur_func_name].virtual_int_regs[i].size() == 0) {
@@ -678,6 +681,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             func_reg_map[cur_func_name].stack_size += 4;
         }
     }
+    // LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
     for (int i = float_reg_number; i < virtual_reg_max; i++) {
         if (func_reg_map[cur_func_name].virtual_float_regs[i].size() == 0) {
             break;
@@ -696,7 +700,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             func_reg_map[cur_func_name].stack_size += 4;
         }
     }
-
+    // LSRA_SHOW("-- stack size %d --\n", func_reg_map[cur_func_name].stack_size);
 
     // alloca space
     for (auto &itv : live_range) {
@@ -718,7 +722,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     }
     // 分配 ret
     func_reg_map[cur_func_name].return_offset = func_reg_map[cur_func_name].stack_size;
-    func_reg_map[cur_func_name].stack_size += 8;
+    // func_reg_map[cur_func_name].stack_size += 8;
     // 扩大栈空间
     // func_reg_map[cur_func_name].stack_size += 128;
     // 参数栈表示
