@@ -663,11 +663,11 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   func_asm += InstGen::comment(" call " + func_name, "");
 
   // 保存可能发生冲突的 return reg, 不一起保存的原因是将结果传递给目标寄存器简单
-  if (!return_register.empty()) {
-    int return_offset = return_offset_mapping[inst->getParent()->getParentFunc()->getName()];
-    func_asm += InstGen::store(return_register[0],
-        InstGen::Addr(InstGen::sp,return_offset+4*saved_registers.size()));
-  }
+  // if (!return_register.empty()) {
+  //   int return_offset = return_offset_mapping[inst->getParent()->getParentFunc()->getName()];
+  //   func_asm += InstGen::store(return_register[0],
+  //       InstGen::Addr(InstGen::sp,return_offset+4*saved_registers.size()));
+  // }
   // pass func args
   func_asm += passFunctionArgs(inst,args,func_name,saved_registers,return_register);
 
@@ -768,9 +768,9 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
-                if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
-                  off = cur_sp_off;
-                }
+                // if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
+                //   off = cur_sp_off;
+                // }
                 // WARNNING("11get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(InstGen::Reg(used_reg,use_fp) ,
@@ -818,9 +818,9 @@ std::string AsmBuilder::passFunctionArgs(Instruction *inst,std::vector<Value *>a
                     break;
                   }
                 }
-                if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
-                  off = cur_sp_off;
-                }
+                // if (has_return && return_reg.getID() == arg_pos.first && return_reg.is_fp() == is_fp) {
+                //   off = cur_sp_off;
+                // }
                 // WARNNING("get func: %s, arg: %s, reg %d",func_name.c_str(),args[i]->getPrintName().c_str(),arg_pos.first);
                 MyAssert("Conflict reg not in stack.", off != -1, ConfiglictRegNotInStack);
                 func_asm += InstGen::load(temp_reg,InstGen::Addr(InstGen::sp,off));

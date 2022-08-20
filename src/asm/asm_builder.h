@@ -74,7 +74,7 @@ const int L1_cache_size = 32 * (1 << 10); // 32KiB per core
 const int L2_cache_size = 1 * (1 << 20);  // 1MB shared
 
 const int thread_id_reg = 13;
-const int op_save_stack_num = 8;
+const int op_save_stack_num = 4;
 const int clone_flag = CLONE_VM | SIGCHLD;
 
 const int int_reg_number = 13;
@@ -120,7 +120,7 @@ class reg_map{
   std::set<int> virtual_float_reg_use[virtual_reg_max];// 每个浮点寄存器的使用点 冲突识别
   std::map<Value *,int > linear_map;//指令列表
   std::map<Value *,std::vector<interval> > v2reg;//指令列表
-  int op_save[4];// 栈溢出时的保存寄存器
+  int op_save[op_save_stack_num];// 栈溢出时的保存寄存器
   int stack_size;
   int return_offset; // 注意维护
 };
