@@ -376,7 +376,8 @@ class Runner():
                 self.sy_to_asm(frontend_instr=npu_npu_scheme["frontend_instr"], testcase=testcase)
                 self.asm_to_obj(testcase=testcase)
                 self.obj_to_bin(testcase=testcase)
-                self.sy_to_ir(frontend_instr=npu_llvm_scheme["frontend_instr"], testcase=testcase)
+                if self.args.debug:
+                    self.sy_to_ir(frontend_instr=npu_llvm_scheme["frontend_instr"], testcase=testcase)
                 return self.run_single_test(testcase=testcase)
             else:
                 Print_C().print_subheader("[Compiling {} | {}]".format(self.scheme, testcase))

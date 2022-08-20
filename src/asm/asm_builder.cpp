@@ -610,7 +610,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   std::vector<InstGen::Reg> saved_registers;
   std::vector<InstGen::Reg> return_register;
   if (inst->isCall()) {
-    saved_registers = getCallerSavedRegisters(name_func_mapping[func_name]);
+    // saved_registers = getCallerSavedRegisters(name_func_mapping[func_name]);
   } else { // 对于 abi 的处理
       for (auto r : caller_save_regs) {
         if (!r.is_fp()) {
@@ -632,7 +632,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   if (has_return_value) inst_pos = getValuePosition(inst,inst);
 
   // 这里对于浮点寄存器的保存需要注意，需要保持连续
-  if (has_return_value && inst_pos.second) {
+  if (!inst->isCall() && has_return_value && inst_pos.second) {
     auto returned_reg = InstGen::Reg(inst_pos.first, is_fp);
     decltype(saved_registers) new_save_registers;
     for (auto &reg : saved_registers) {
@@ -656,10 +656,6 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
   }
   std::sort(saved_registers.begin(), saved_registers. end(), cmp);
 
-  if (inst->isCall()) { // 对于call指令，无需push,pop
-    saved_registers.clear();
-  }
-
   if (!saved_registers.empty()) {
     func_asm += InstGen::push(saved_registers);
   }
@@ -680,7 +676,7 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
 
   if (has_return_value) {
     if (inst_pos.second) { // inst value in reg
-      if (inst_pos.first == 14) { // lr寄存器必须被保存和恢复
+      if (inst_pos.first == 14 && inst->isCall()) { // lr寄存器必须被保存和恢复
         func_asm += InstGen::mov(temp_reg, InstGen::Reg(return_reg,use_fp));
       } else {
         func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,is_fp), InstGen::Reg(return_reg,use_fp));
@@ -695,12 +691,9 @@ std::string AsmBuilder::generateFunctionCall(Instruction *inst, std::vector<Valu
     func_asm += InstGen::pop(saved_registers);
   }
 
-  if (inst_pos.second&&inst_pos.first==14) {
+  if (inst_pos.second && inst_pos.first==14 && inst->isCall()) {
     func_asm += InstGen::mov(InstGen::Reg(inst_pos.first,false), temp_reg);
   }
-
-  saved_registers.clear();
-  return_register.clear();
 
   return func_asm;
 }

@@ -121,7 +121,7 @@ int main(int argc, char **argv) {
 
     PM.add_pass<HIRToMIR>("HIRToMIR");
     PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-    if (is_O2) {
+    if (1) {
         PM.add_pass<InterProceduralAnalysis>("InterProceduralAnalysis");
         PM.add_pass<Mem2Reg>("Mem2Reg");
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
@@ -147,7 +147,7 @@ int main(int argc, char **argv) {
         PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
 
         PM.add_pass<MirSimplifyCFG>("MirSimplifyCFG");
-        if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
+        // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
     }
     PM.add_pass<LowerIR>("LowerIR");
     // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
@@ -158,7 +158,6 @@ int main(int argc, char **argv) {
     PM.run();
 
     if (is_emit_mir && !is_debug) {
-        // if (is_emit_mir ) {
         builder->getModule()->MIRMEMprint(output_file);
     }
     std::cout << "IR Finish\n";
