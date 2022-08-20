@@ -1112,7 +1112,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
         for (int i = int_reg_number-1; i >= 0; i--) {
             if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
-                    .end()) {  // 没找到使用点说明，不冲突，暂时如下
+                    .end()) {  // 没找到使用点说明，不冲突，暂时如下 。
                 if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
                     func_reg_map[cur_func_name].virtual_int_reg_use[i].insert(
                         tag);  //表示此处已经有使用需求了，防止再次请求
