@@ -219,9 +219,9 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     //         }
     //     }
     // }
-    LSRA_WARNNING("inst %s val %s idx %d",inst->getPrintName().c_str(),
-    val->getPrintName().c_str(),tag);
-    LSRA_WARNNING("cant find this value in reg alloc!");
+    // LSRA_WARNNING("inst %s val %s idx %d",inst->getPrintName().c_str(),
+    // val->getPrintName().c_str(),tag);
+    // LSRA_WARNNING("cant find this value in reg alloc!");
     return -1;
 }
 //获得函数调用返回值变量的位置，int - reg_index/sp off, bool true - in reg/stack
@@ -378,10 +378,14 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             p.weight = 1e-4;
             continue;
         }
+        if(p.type == interval_value_type::global_var){
+            p.weight = 1e-4;
+            continue;
+        }
 
         int total_use_num = p.use_id.size();
         int sum_range = p.ed_id - p.st_id;
-        p.use_freq = (total_use_num + 1e-4) / (sum_range + 1);
+        p.use_freq = (total_use_num + 1e-4) / (sum_range + 1) * p.loop_depth;
         p.weight += p.use_freq;  // 暂时考虑按这个
     }
 
@@ -553,7 +557,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
             use_float_reg_num ++ ;
         };
     }
-    LSRA_WARNNING("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);
+    // LSRA_WARNNING("vir ireg %d freg %d\n",use_int_reg_num,use_float_reg_num);
     if(use_int_reg_num > virtual_reg_max - 10 || use_float_reg_num > virtual_reg_max - 10){
         ERROR("virtual reg is going to crash!",virtual_reg_full_error);
     }
@@ -561,7 +565,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
     func_used_reg_map[func->getPrintName()].second = std::min(use_float_reg_num,float_reg_number);
 
 
-
+    #ifdef __LSRA_WARN
     LSRA_WARNNING(" LSRA REG ALLOC");
     // debug
     for (int i = 0; i < virtual_reg_max; i++) {
@@ -614,6 +618,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
         }
         LSRA_SHOW("\n");
     }
+    #endif
 
     // 虚拟寄存器使用点合并
     for (int i = 0; i < int_reg_number; i++) {
@@ -1096,7 +1101,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
     int tag = func_reg_map[cur_func_name].linear_map[inst];
     // 优先尝试分配未使用寄存器
     if(v_is_fp){
-        for (int i = float_reg_number-1; i >=0 ; i--) {
+        for (int i = 0; i < float_reg_number ; i++) {
             if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_float_reg_use[i]
                     .end()) {  // 
@@ -1109,7 +1114,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
         }
     }
     else{
-        for (int i = int_reg_number-1; i >= 0; i--) {
+        for (int i = 0; i < int_reg_number; i++) {
             if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下 。
@@ -1123,7 +1128,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
     }
     
     if(v_is_fp){
-        for (int i = float_reg_number-1; i >=0 ; i--) {
+        for (int i = 0; i < float_reg_number ; i++) {
             if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_float_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
@@ -1134,7 +1139,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
         }
     }
     else{
-        for (int i = int_reg_number-1; i >= 0; i--) {
+        for (int i = 0; i < int_reg_number; i++) {
             if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
@@ -1350,10 +1355,10 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             }
             if(!func_reg_map[cur_func_name].linear_map.count(inst)){ // 此处需要对不同mov加以区分
                 func_reg_map[cur_func_name].linear_map[inst] = linear_index++;
-                if(dynamic_cast<MovInstr*>(inst))
-                    LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],dynamic_cast<MovInstr*>(inst)->getLVal()->getPrintName().c_str());
-                else
-                    LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],inst->getPrintName().c_str());
+                // if(dynamic_cast<MovInstr*>(inst))
+                //     LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],dynamic_cast<MovInstr*>(inst)->getLVal()->getPrintName().c_str());
+                // else
+                //     LSRA_WARNNING("scan Line :[%d:%s]",func_reg_map[cur_func_name].linear_map[inst],inst->getPrintName().c_str());
             }
         }
     }
@@ -1362,12 +1367,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
     for (auto bb : func->getBasicBlocks()) {
         for (auto pb : bb->getPreBasicBlocks()) {
             if (bb_map[pb] >= bb_map[bb]) {
-                LSRA_WARNNING(" LOOP BLOCK CHECK: bb %d %s -- bb %d %s",
-                              bb_map[bb], bb->getPrintName().c_str(),
-                              bb_map[pb], pb->getPrintName().c_str());
-                LSRA_WARNNING(" LOOP CHECK: from %d to %d",
-                              func_reg_map[cur_func_name].linear_map[bb->getInstructions().front()],
-                              func_reg_map[cur_func_name].linear_map[pb->getInstructions().back()]);
+                // LSRA_WARNNING(" LOOP BLOCK CHECK: bb %d %s -- bb %d %s",
+                //               bb_map[bb], bb->getPrintName().c_str(),
+                //               bb_map[pb], pb->getPrintName().c_str());
+                // LSRA_WARNNING(" LOOP CHECK: from %d to %d",
+                //               func_reg_map[cur_func_name].linear_map[bb->getInstructions().front()],
+                //               func_reg_map[cur_func_name].linear_map[pb->getInstructions().back()]);
                 interval itv;
                 itv.st_id = func_reg_map[cur_func_name].linear_map[bb->getInstructions().front()];
                 itv.ed_id = func_reg_map[cur_func_name].linear_map[pb->getInstructions().back()];
@@ -1407,7 +1412,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
         if(res_loop.empty()){
             break;
         }
-        LSRA_WARNNING("next turn");
+        // LSRA_WARNNING("next turn");
         loop_set.insert(loop_set.end(),res_loop.begin(),res_loop.end());
         tmp_loop.clear();
         tmp_loop = res_loop;
@@ -1457,6 +1462,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                         live_map[op].st_id = func_reg_map[cur_func_name].linear_map[inst];
                     }
                 }
+                int loop_cnt=0;
                 for (auto itv : loop_set) {
                     if (func_reg_map[cur_func_name].linear_map[inst] <= itv.ed_id &&
                         func_reg_map[cur_func_name].linear_map[inst] >=
@@ -1466,10 +1472,12 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             live_map[op].ed_id < itv.ed_id &&
                             live_map[op].ed_id >= itv.st_id ) {  // 该变量是定义且使用过的变量
                             live_map[op].ed_id = itv.ed_id;
-                            live_map[op].weight += 0.2;
                         }
+                        loop_cnt++;
                     }
                 }
+                loop_cnt = std::min(loop_cnt,4);
+                live_map[op].loop_depth += pow(2,loop_cnt);
                 live_map[op].use_id.insert(func_reg_map[cur_func_name].linear_map[inst]);
             } else {
                 int op_id = 0;
@@ -1602,6 +1610,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             live_map[op].st_id = func_reg_map[cur_func_name].linear_map[inst];
                         }
                     }
+                    int loop_cnt=0;
                     for (auto itv : loop_set) {
                         if (func_reg_map[cur_func_name].linear_map[inst] <= itv.ed_id &&
                             func_reg_map[cur_func_name].linear_map[inst] >=
@@ -1610,11 +1619,13 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                             live_map[op].st_id < itv.st_id &&
                             live_map[op].ed_id < itv.ed_id &&
                             live_map[op].ed_id >= itv.st_id ) {  // 该变量是定义且使用过的变量
-                            live_map[op].ed_id = itv.ed_id;
-                            live_map[op].weight += 0.2;
-                        }
+                                live_map[op].ed_id = itv.ed_id;
+                            }
+                            loop_cnt++;
                         }
                     }
+                    loop_cnt = std::min(loop_cnt,4);
+                    live_map[op].loop_depth += pow(2,loop_cnt);
                     live_map[op].use_id.insert(func_reg_map[cur_func_name].linear_map[inst]);
                     op_id++;
                 }
@@ -1650,6 +1661,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
             itv.v = p.first;
             itv.weight = p.second.weight;
             itv.use_id = p.second.use_id;
+            itv.loop_depth = p.second.loop_depth;
             live_res.push_back(itv);
 
         } else {
@@ -1667,6 +1679,7 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
                 itv.use_id = p.second.use_id;
                 itv.weight = p.second.weight;
                 itv.v = p.first;
+                itv.loop_depth = p.second.loop_depth;
                 live_res.push_back(itv);
             }
         }
@@ -1674,15 +1687,15 @@ void AsmBuilder::live_interval_analysis(Function *func, bool insert) {
     // debug
     #ifdef __LSRA_WARN
 
-    LSRA_WARNNING(" LIVE INTERVAL");
-    for (auto p : live_res) {
-        if(dynamic_cast<MovInstr*>(p.v)){
-            LSRA_WARNNING("#!!!!!! %s [%d,%d] float ? %d type: %s",dynamic_cast<MovInstr*>(p.v)->getLVal()->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
-        }
-        else{
-            LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
-        }
-    }
+    // LSRA_WARNNING(" LIVE INTERVAL");
+    // for (auto p : live_res) {
+    //     if(dynamic_cast<MovInstr*>(p.v)){
+    //         LSRA_WARNNING("#!!!!!! %s [%d,%d] float ? %d type: %s",dynamic_cast<MovInstr*>(p.v)->getLVal()->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
+    //     }
+    //     else{
+    //         LSRA_WARNNING(" %s [%d,%d] float ? %d type: %s",p.v->getPrintName().c_str(),p.st_id,p.ed_id,p.is_float,getType(p.type).c_str());
+    //     }
+    // }
     #endif // DEBUG
     linear_scan_reg_alloc(live_res, func, insert);
     return;
