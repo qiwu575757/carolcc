@@ -57,7 +57,7 @@ int AsmBuilder::acquireForReg(Value *inst, int val_pos, std::string &str) {
     if (val_pos >= op_save_stack_num) {
         ERROR("overwrite op_idx",EXIT_CODE_ERROR_303);
     }
-    int reg_get = give_reg_at(inst);  // LVAL REG NUM
+    int reg_get = give_reg_at(inst,inst->getType()->isFloatTy());  // LVAL REG NUM
     if (reg_get == -1) {
         // debug
         LSRA_WARNNING("-- int reg set --");
@@ -138,7 +138,7 @@ int AsmBuilder::getRegIndexOfValue(Value *inst, Value *val, bool global_label) {
     // if(func_reg_map[cur_func_name].v2reg[val].size() < 100){
 
         for(auto itv: func_reg_map[cur_func_name].v2reg[val]){
-            LSRA_WARNNING("%s value %d %d ", val->getPrintName().c_str(), itv.st_id,itv.ed_id);
+            // LSRA_WARNNING("%s value %d %d ", val->getPrintName().c_str(), itv.st_id,itv.ed_id);
             if (tag >= itv.st_id &&
                 tag <= itv.ed_id) {
 
@@ -758,7 +758,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                 before_inst.first = idx;
                 if (op_in_inst_is_spilled(inst, inst))  // inst冲突考虑 左值
                 {
-                    int reg_get = give_reg_at(inst);
+                    int reg_get = give_reg_at(inst,inst->getType()->isFloatTy());
                     if (reg_get == -1) {
                         ERROR(
                             "can't give any reg because all the reg is "
@@ -853,7 +853,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         ERROR("overwrite op_idx",EXIT_CODE_ERROR_309);
                     }
                     if (op_in_inst_is_spilled(inst, op)) {  // 冲突 右值
-                        int reg_get = give_reg_at(inst);
+                        int reg_get = give_reg_at(inst,op->getType()->isFloatTy());
                         if (reg_get == -1) {
                             ERROR(
                                 "can't give any reg because all the reg is "
@@ -1093,10 +1093,38 @@ Value *AsmBuilder::value_in_reg_at(
     return nullptr;
 }
 
-int AsmBuilder::give_reg_at(Value *inst) {  // 请求分配寄存器
+int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存器
     int tag = func_reg_map[cur_func_name].linear_map[inst];
-    if(inst->getType()->isFloatTy()){
-        for (int i = 0; i < float_reg_number; i++) {
+    // 优先尝试分配未使用寄存器
+    if(v_is_fp){
+        for (int i = float_reg_number-1; i >=0 ; i--) {
+            if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
+                func_reg_map[cur_func_name].virtual_float_reg_use[i]
+                    .end()) {  // 
+                if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
+                    func_reg_map[cur_func_name].virtual_float_reg_use[i].insert(
+                        tag);  //表示此处已经有使用需求了，防止再次请求
+                    return i;
+                }
+            }
+        }
+    }
+    else{
+        for (int i = int_reg_number-1; i >= 0; i--) {
+            if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
+                func_reg_map[cur_func_name].virtual_int_reg_use[i]
+                    .end()) {  // 没找到使用点说明，不冲突，暂时如下
+                if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
+                    func_reg_map[cur_func_name].virtual_float_reg_use[i].insert(
+                        tag);  //表示此处已经有使用需求了，防止再次请求
+                    return i;
+                }
+            }
+        }
+    }
+    
+    if(v_is_fp){
+        for (int i = float_reg_number-1; i >=0 ; i--) {
             if (func_reg_map[cur_func_name].virtual_float_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_float_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
@@ -1107,7 +1135,7 @@ int AsmBuilder::give_reg_at(Value *inst) {  // 请求分配寄存器
         }
     }
     else{
-        for (int i = 0; i < int_reg_number; i++) {
+        for (int i = int_reg_number-1; i >= 0; i--) {
             if (func_reg_map[cur_func_name].virtual_int_reg_use[i].find(tag) ==
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
