@@ -861,8 +861,7 @@ void AsmBuilder::linear_scan_reg_alloc(std::vector<interval> live_range,
                         }
 
                         auto global = dynamic_cast<GlobalVariable *>(op);
-                        if (global ||
-                            op->isConstant()) {  // 全局变量，给一个寄存器，并把值存栈
+                        if (global || op->isConstant()) {  // 全局变量，给一个寄存器，并把值存栈
                             Value *reg_v =
                                 value_in_reg_at(inst, reg_get,op->getType()->isFloatTy());
                             if (reg_v != nullptr) {  // 说明占用了寄存器
@@ -1115,7 +1114,7 @@ int AsmBuilder::give_reg_at(Value *inst,bool v_is_fp) {  // 请求分配寄存�
                 func_reg_map[cur_func_name].virtual_int_reg_use[i]
                     .end()) {  // 没找到使用点说明，不冲突，暂时如下
                 if(value_in_reg_at(inst, i, v_is_fp)==nullptr){
-                    func_reg_map[cur_func_name].virtual_float_reg_use[i].insert(
+                    func_reg_map[cur_func_name].virtual_int_reg_use[i].insert(
                         tag);  //表示此处已经有使用需求了，防止再次请求
                     return i;
                 }
