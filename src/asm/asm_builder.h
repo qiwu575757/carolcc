@@ -196,7 +196,7 @@ public:
   bool value_in_reg(Value *v);
   bool force_reg_alloc(interval itv,int reg_idx);
   bool op_in_inst_is_spilled(Value *inst,Value *op);
-  int give_reg_at(Value *inst); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
+  int give_reg_at(Value *inst, bool is_fp); // 请求分配寄存器std::pair<int, bool> askForReg(Instruction *inst);
   int give_used_reg_at(Value *inst);
   Value * value_in_reg_at(Value *inst,int reg_idx,bool is_fp);
   int get_value_sp_offset(Value *inst,Value *op);// 查看变量在栈上的偏移
