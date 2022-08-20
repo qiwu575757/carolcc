@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+
 #include "utils.h"
 
 class IntegerType;
@@ -22,31 +23,38 @@ extern PointerType *floatptr_type;
 
 // #define TTTT_LOGGG
 #ifdef TTTT_LOGGG
-#define TYPE_LOG(format, ...)                                  \
-    do {                                                                             \
-        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, ##__VA_ARGS__); \
-        fflush(stdout);                                                              \
+#define TYPE_LOG(format, ...)                                          \
+    do {                                                               \
+        printf(YELLOW "[%s:%d]" format RESET "\n", __FILE__, __LINE__, \
+               ##__VA_ARGS__);                                         \
+        fflush(stdout);                                                \
     } while (0)
 #else
 #define TYPE_LOG(format, ...)
 #endif
 
 class Type {
-public:
+   public:
     enum TypeID {
-        VoidTyID,    // Void
-        LabelTyID,   // Labels, e.g., BasicBlock
-        IntegerTyID, // Integers, include 32 bits and 1 bit
-        FloatTyID,   // Float
-        FunctionTyID,// Functions
-        ArrayTyID,   // Arrays
-        PointerTyID, // Pointer
+        VoidTyID,      // Void
+        LabelTyID,     // Labels, e.g., BasicBlock
+        IntegerTyID,   // Integers, include 32 bits and 1 bit
+        FloatTyID,     // Float
+        FunctionTyID,  // Functions
+        ArrayTyID,     // Arrays
+        PointerTyID,   // Pointer
     };
 
     explicit Type(TypeID id);
     ~Type() = default;
 
-public:
+   public:
+    static IntegerType *int32_type;
+    static FloatType *float_type;
+    static Type *label_type;
+    static Type *void_type;
+    static PointerType *int32ptr_type;
+    static PointerType *floatptr_type;
     TypeID getTypeID() const { return _id; }
     bool isVoidTy() const { return getTypeID() == VoidTyID; }
     bool isLabelTy() const { return getTypeID() == LabelTyID; }
@@ -56,8 +64,8 @@ public:
     bool isFunctionTy() const { return getTypeID() == FunctionTyID; }
     bool isArrayTy() const { return getTypeID() == ArrayTyID; }
     bool isPointerTy() const { return getTypeID() == PointerTyID; }
-    bool isBool() ;//Bool 还没加
-    bool isInt32();//int32和integer有什么区别
+    bool isBool();   // Bool 还没加
+    bool isInt32();  // int32和integer有什么区别
 
     static Type *getVoidTy();
     static Type *getLabelTy();
@@ -76,89 +84,98 @@ public:
 
     std::string CommentPrint();
 
-    bool eq(Type* rhs);
+    bool eq(Type *rhs);
 
-private:
+   private:
     TypeID _id;
 };
 
 class IntegerType : public Type {
-public:
-       explicit IntegerType(unsigned num_bits);
-    
+   public:
+    explicit IntegerType(unsigned num_bits);
+
     bool isInt1();
 
     bool isInt32();
 
-    static IntegerType *get(unsigned num_bits) { return new IntegerType(num_bits); }
+    static IntegerType *get(unsigned num_bits) {
+        return new IntegerType(num_bits);
+    }
 
     unsigned getNumBits() { return _num_bits; };
 
-private:
+   private:
     unsigned _num_bits;
 };
 
 class FloatType : public Type {
-private:
+   public:
     FloatType();
 
-public:
+   public:
     static FloatType *get();
 };
 
 class FunctionType : public Type {
-public:
+   public:
     FunctionType(Type *result, std::vector<Type *> &params);
 
     static bool isValidReturnType(Type *ty);
     static bool isValidArgumentType(Type *ty);
 
-    static FunctionType *get(Type *result, std::vector<Type *> params) { return new FunctionType(result, params); }
+    static FunctionType *get(Type *result, std::vector<Type *> params) {
+        return new FunctionType(result, params);
+    }
 
     unsigned getNumArgs() const;
 
     Type *getArgType(unsigned i) const;
     Type *getResultType() const;
 
-private:
+   private:
     Type *_result;
     std::vector<Type *> _args;
 };
 
 class ArrayType : public Type {
-public:
+   public:
     ArrayType(Type *contained, unsigned num_elements);
 
     static bool isValidElementType(Type *ty);
 
-    static ArrayType *get(Type *contained, unsigned num_elements) { return new ArrayType(contained, num_elements); }
+    static ArrayType *get(Type *contained, unsigned num_elements) {
+        return new ArrayType(contained, num_elements);
+    }
 
     Type *getElementType() const { return _contained; }
     unsigned getNumOfElements() const { return _num_elements; }
     std::vector<unsigned> getDims() const;
-    Type* getBasicType(){
-        Type * ty = _contained;
-        while(ty->isArrayTy()){
-            ty = static_cast<ArrayType*>(ty)->getElementType();
+    Type *getBasicType() {
+        Type *ty = _contained;
+        while (ty->isArrayTy()) {
+            ty = static_cast<ArrayType *>(ty)->getElementType();
         }
-        MyAssert("error type",ty->isFloatTy() || ty->isIntegerTy(),EXIT_CODE_ERROR_326);
+        MyAssert("error type", ty->isFloatTy() || ty->isIntegerTy(),
+                 EXIT_CODE_ERROR_326);
         return ty;
     }
 
-private:
-    Type *_contained;      // The element type of the array.
-    unsigned _num_elements;// Number of elements in the array.
+   private:
+    Type *_contained;        // The element type of the array.
+    unsigned _num_elements;  // Number of elements in the array.
 };
 
 class PointerType : public Type {
-public:
+   public:
     PointerType(Type *contained);
 
     Type *getElementType() const { return _contained; }
 
-    static PointerType *get(Type *contained) { return new PointerType(contained); }
+    static PointerType *get(Type *contained) {
+        return new PointerType(contained);
+    }
 
-private:
-    Type *_contained;// The element type of the ptr.
+   private:
+    Type *_contained;  // The element type of the ptr.
 };
-#endif// COMPILER_TYPE_H
+#endif  // COMPILER_TYPE_H
