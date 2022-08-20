@@ -8,16 +8,38 @@
 #include "passes/module.h"
 #include "utils.h"
 
-IntegerType *int1_type = IntegerType::get(1);
-IntegerType *int32_type = IntegerType::get(32);
-FloatType *float_type = FloatType::get();
-Type *label_type = new Type(Type::LabelTyID);
-Type *void_type = new Type(Type::VoidTyID);
-PointerType *int32ptr_type = PointerType::get(int32_type);
-PointerType *floatptr_type = PointerType::get(float_type);
-
 Type::Type(TypeID id) : _id(id) {}
 
+// IntegerType *int32_type = IntegerType::get(32);
+// FloatType *float_type =
+Type *Type::getVoidTy() {
+    static Type _void_type(Type::VoidTyID);
+    return &_void_type;
+}
+Type *Type::getLabelTy() {
+    static Type _label_ty(Type::LabelTyID);
+    return &_label_ty;
+}
+IntegerType *Type::getInt1Ty() {
+    static IntegerType _int1_ty(1);
+    return &_int1_ty;
+}
+IntegerType *Type::getInt32Ty() {
+    static IntegerType _int32_ty(32);
+    return &_int32_ty;
+}
+FloatType *Type::getFloatTy() {
+    static FloatType _float_ty;
+    return &_float_ty;
+}
+PointerType *Type::getInt32PtrTy(){
+    static PointerType _int32_ptr_ty(Type::getInt32Ty());
+    return &_int32_ptr_ty;
+}
+PointerType *Type::getFloatPtrTy(){
+    static PointerType _float_ptr_ty(Type::getFloatTy());
+    return &_float_ptr_ty;
+}
 Type *Type::getPointerElementType() {
     if (this->isPointerTy())
         return static_cast<PointerType *>(this)->getElementType();
@@ -59,10 +81,10 @@ void Type::print(std::ostream &output_file) {
 
         case IntegerTyID:
             if (static_cast<IntegerType *>(this)->getNumBits() == 1) {
-            TYPE_LOG("get i1");
+                TYPE_LOG("get i1");
                 output_file << "i1 ";
             } else {
-            TYPE_LOG("get i32");
+                TYPE_LOG("get i32");
                 output_file << "i32 ";
             }
             break;
@@ -93,7 +115,7 @@ void Type::print(std::ostream &output_file) {
             break;
         case FunctionTyID:
             TYPE_LOG("get func type");
-            ERROR("should not print func type",ERROR_TYPE);
+            ERROR("should not print func type", ERROR_TYPE);
 
         default:
             TYPE_LOG("get error type");
@@ -141,7 +163,7 @@ std::string Type::CommentPrint() {
     return typeString;
 }
 
-bool Type::eq(Type* rhs) {
+bool Type::eq(Type *rhs) {
 #ifdef TTTT_LOGGG
     TYPE_LOG("lhs type:");
     this->print(std::cout);
@@ -155,11 +177,11 @@ bool Type::eq(Type* rhs) {
     if (this->_id != rhs->_id) {
         return false;
     } else if (this->isPointerTy()) {
-        #ifdef TTTT_LOGGG
+#ifdef TTTT_LOGGG
         this->getPointerElementType()->print(std::cout);
         rhs->getPointerElementType()->print(std::cout);
         std::flush(std::cout);
-        #endif // DEBUG
+#endif  // DEBUG
         return this->getPointerElementType()->eq(rhs->getPointerElementType());
     } else {
         return true;
@@ -188,13 +210,6 @@ bool Type::isInt32() {
         return false;
     }
 }
-Type *Type::getVoidTy() { return void_type; }
-Type *Type::getLabelTy() { return label_type; }
-IntegerType *Type::getInt1Ty() { return int1_type; }
-IntegerType *Type::getInt32Ty() { return int32_type; }
-FloatType *Type::getFloatTy() { return float_type; }
-PointerType *Type::getInt32PtrTy() { return int32ptr_type; }
-PointerType *Type::getFloatPtrTy() { return floatptr_type; }
 int Type::getDims() {
     int res = 0;
     switch (_id) {

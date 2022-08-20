@@ -238,8 +238,12 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
                                             new_parent_bb);
     } else if (old_instr->isAlloca()) {
         auto old_alloca_instr = dynamic_cast<AllocaInst*>(old_instr);
-        new_instr =
+        auto new_alloca =
             AllocaInst::createAlloca(old_alloca_instr->getAllocaType(), new_parent_bb);
+            if(old_alloca_instr->getInit()){
+                new_alloca->setInit();
+            }
+        new_instr=  new_alloca;
     } else if (old_instr->isPhi()) {
         new_instr = PhiInstr::createPhi(
             old_instr->getType(), new_parent_bb);

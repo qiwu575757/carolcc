@@ -42,11 +42,6 @@ BasicBlock * getTargetBasicBlock(BaseBlock * b){
     ERROR("error",EXIT_CODE_ERROR_439);
     return nullptr;
 }
-auto TyVoid = Type::getVoidTy();          // 改
-auto TyFloat = Type::getFloatTy();        // 改
-auto TyInt32 = Type::getInt32Ty();        // 改
-auto TyInt32Ptr = Type::getInt32PtrTy();  // 改
-auto TyFloatPtr = Type::getFloatPtrTy();  // 改
 /*** 全局变量 ***/
 // 用于实现短路求值
 BaseBlock *G_true_bb;
@@ -101,11 +96,11 @@ void SYSYBuilder::visit(tree_func_def &node) {
 
     Type *ret_type;
     if (node.type->type == type_helper::INT) {
-        ret_type = TyInt32;
+        ret_type = Type::getInt32Ty();
     } else if (node.type->type == type_helper::FLOAT) {
-        ret_type = TyFloat;
+        ret_type = Type::getFloatTy();
     } else {
-        ret_type = TyVoid;
+        ret_type = Type::getVoidTy();
     }
 
     std::vector<Type *> param_types;
@@ -113,10 +108,10 @@ void SYSYBuilder::visit(tree_func_def &node) {
         for (auto &param : node.funcfparams->funcfparamlist) {
             if (param->funcfparamone != nullptr) {
                 if (param->funcfparamone->b_type->type == type_helper::INT) {
-                    param_types.push_back(TyInt32);
+                    param_types.push_back(Type::getInt32Ty());
                 } else if (param->funcfparamone->b_type->type ==
                            type_helper::FLOAT) {
-                    param_types.push_back(TyFloat);
+                    param_types.push_back(Type::getFloatTy());
                 } else {
                     ERROR("illegal parameter type",EXIT_CODE_ERROR_381);
                 }
@@ -649,7 +644,7 @@ void SYSYBuilder::visit(tree_var_def &node) {
                 GlobalVariable* var;
                 if(G_tmp_type->isInt32()){
                 SYSY_BUILDER("global variable %c",node.id.c_str());
-                    var = GlobalVariable::create(node.id, &*module, TyInt32,
+                    var = GlobalVariable::create(node.id, &*module, Type::getInt32Ty(),
                                                       false, CONST_INT(0));
                 }
                 else if(G_tmp_type->isFloatTy()){
@@ -966,7 +961,7 @@ void SYSYBuilder::visit(tree_unary_exp &node) {
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, G_tmp_val);
             } else if (G_tmp_val->getType()->isBool()) {  // (! a == b)
-                auto val_i32 = builder->creatZExtInst(TyInt32, G_tmp_val);
+                auto val_i32 = builder->creatZExtInst(Type::getInt32Ty(), G_tmp_val);
                 auto const0 = CONST_INT(0);
                 G_tmp_val = builder->createSub(const0, val_i32);
             } else {
@@ -1748,10 +1743,10 @@ void SYSYBuilder::buildBinary(const std::string oprt){
     _oprt_stack.pop();
 
     if (oprt1->getType()->isBool()) {
-        oprt1 = builder->creatZExtInst(TyInt32, oprt1);
+        oprt1 = builder->creatZExtInst(Type::getInt32Ty(), oprt1);
     }
     if (oprt2->getType()->isBool()) {
-        oprt2 = builder->creatZExtInst(TyInt32, oprt2);
+        oprt2 = builder->creatZExtInst(Type::getInt32Ty(), oprt2);
     }
 
     if (!oprt1->getType()->eq(oprt2->getType())) {
