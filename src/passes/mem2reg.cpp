@@ -96,10 +96,10 @@ void Mem2Reg::genPhi() {
     for (int i = 0; i < allocas.size(); i++) {
         //      values.add(new UndefValue());
         if(allocas.at(i)->getAllocaType()->isIntegerTy()){
-            // values.push_back(Value::getUncertainValue());
-            values.push_back(ConstantInt::create(0));
+            values.push_back(Value::getUncertainValue());
+            // values.push_back(ConstantInt::create(0));
         }else if (allocas.at(i)->getAllocaType()->isFloatTy()) {
-            values.push_back(ConstantFloat::create(0));
+            values.push_back(Value::getUncertainValue());
         }
     }
     visited.clear();

@@ -275,7 +275,7 @@ Instruction *ValueCloner::copyInstr(Instruction *old_instr) {
     return new_instr;
 }
 Value *ValueCloner::findValue(Value *old_val) {
-    if (dynamic_cast<Constant *>(old_val)) {
+    if (dynamic_cast<Constant *>(old_val) || old_val == Value::getUncertainValue()) {
         return old_val;
     }
     return _old2new[old_val];

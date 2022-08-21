@@ -52,6 +52,9 @@ void RmPhi::splitCriticalEdge(Function* func) {
             for(auto i = 0;i<phi->getOperandNumber();i=i+2){
                 auto pre_val = phi->getOperand(i);
                 auto pre_bb =  dynamic_cast<BasicBlock*>(phi->getOperand(i+1)) ;
+                if (pre_val == Value::getUncertainValue()) {
+                    continue;
+                }
                 if(bb_map.find(pre_bb) !=bb_map.end()){
                     pre_bb = bb_map[pre_bb];
                 }
