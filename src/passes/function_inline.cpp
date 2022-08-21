@@ -26,7 +26,7 @@ bool FunctionInline::canFunctionInline(Function* f) {
     for(auto bb : f->getBasicBlocks()){
         num +=bb->getInstructions().size();
     }
-    if(num > 500){
+    if(num > 400){
         return false;
     }
     if (!f->isBuiltin() && _m->getMainFunction() != f) {
@@ -133,7 +133,7 @@ void FunctionInline::inlineCallInstr(CallInst* callInstr) {
                     // 如果有对参数的赋值会怎么样？
                     // ssa 不存在这种情况
                     for (auto allca_use : alloca->getUseList()) {
-                        
+
                         auto load_instr = dynamic_cast<LoadInst*>(allca_use->_user);
                         if (load_instr) {
                             load_instr->replaceAllUse(call_instr_arg);

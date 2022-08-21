@@ -37,6 +37,7 @@ void LowerIR::run() {
     for (auto func : _m->getFunctions()) {
         for (auto bb : func->getBasicBlocks()) {
           convert2Mla(bb);
+          deleteAddMul(bb); 
         }
     }
 
@@ -492,6 +493,19 @@ void LowerIR::deleteMla(BasicBlock *bb) {
             inst->removeUseOps();
             iter = insts.erase(iter);
             // WARNNING("delete mla");
+        } else {
+          iter++;
+        }
+    }
+}
+
+void LowerIR::deleteAddMul(BasicBlock *bb) {
+    auto &insts = bb->getInstructions();
+    for (auto iter = insts.begin(); iter != insts.end(); ) {
+        auto inst = *iter;
+        if ((inst->isAdd() || inst->isMul())&& inst->getUseList().empty()) {
+            inst->removeUseOps();
+            iter = insts.erase(iter);
         } else {
           iter++;
         }

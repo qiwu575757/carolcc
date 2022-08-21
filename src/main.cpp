@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
         // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
     }
     PM.add_pass<LowerIR>("LowerIR");
-    // PM.add_pass<DeadCodeElimination>("DeadCodeElimination");
+    PM.add_pass<LoopInvariant>("LoopInvariant");
     // // if (is_emit_mir && is_debug) PM.add_pass<EmitIR>("EmitIR");
     PM.add_pass<RmPhi>("RmPhi");
     // PM.add_pass<EmitIR>("EmitIR");
