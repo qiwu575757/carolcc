@@ -22,6 +22,13 @@ void FunctionInline::run() {
 }
 
 bool FunctionInline::canFunctionInline(Function* f) {
+    int num = 0;
+    for(auto bb : f->getBasicBlocks()){
+        num +=bb->getInstructions().size();
+    }
+    if(num > 500){
+        return false;
+    }
     if (!f->isBuiltin() && _m->getMainFunction() != f) {
         for (auto caller : f->getCallerSet()) {
             for (auto callee : f->getCalleeSet()) {
